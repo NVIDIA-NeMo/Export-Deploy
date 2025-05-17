@@ -16,7 +16,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Install PyTorch and other dependencies
 ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 RUN pip install --no-cache-dir \
-    "torch==2.6.0" \
+    "torch==2.7.0" \
     wheel_stub \
     pybind11 \
     "Cython>=3.0.0"
