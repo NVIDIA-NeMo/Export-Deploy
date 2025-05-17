@@ -29,6 +29,7 @@ COPY nemo_export_deploy/package_info.py nemo_export_deploy/
 COPY README.md .
 COPY requirements/ requirements/
 RUN pip install --no-build-isolation --no-cache-dir '.[all]'
+ENV PYTHONPATH=/workspace
 
 # Install development versions
 RUN pip install --no-cache-dir --upgrade \
