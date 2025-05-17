@@ -23,8 +23,8 @@ import torch
 import wrapt
 from transformers import AutoModel, AutoTokenizer
 
-from nemo.deploy import ITritonDeployable
-from nemo.export.utils import get_example_inputs, get_model_device_type, is_nemo2_checkpoint, validate_fp8_network
+from nemo_export_deploy.deploy import ITritonDeployable
+from nemo_export_deploy.export.utils import get_example_inputs, get_model_device_type, is_nemo2_checkpoint, validate_fp8_network
 from nemo.utils import logging
 
 
@@ -61,7 +61,7 @@ class OnnxLLMExporter(ITritonDeployable):
     Exports models to ONNX and run fast inference.
 
     Example:
-        from nemo.export.onnx_llm_exporter import OnnxLLMExporter
+        from nemo_export_deploy.export.onnx_llm_exporter import OnnxLLMExporter
 
         onnx_llm_exporter = OnnxLLMExporter(
             onnx_model_dir="/path/for/onnx_model/files",

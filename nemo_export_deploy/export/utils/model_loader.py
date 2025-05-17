@@ -27,8 +27,8 @@ import torch
 from torch.distributed.checkpoint import FileSystemReader, load
 from torch.distributed.checkpoint.metadata import BytesStorageMetadata, TensorStorageMetadata
 
-from nemo.export.tarutils import TarPath, ZarrPathStore
-from nemo.export.utils._mock_import import _mock_import
+from nemo_export_deploy.export.tarutils import TarPath, ZarrPathStore
+from nemo_export_deploy.export.utils._mock_import import _mock_import
 
 LOGGER = logging.getLogger("NeMo")
 

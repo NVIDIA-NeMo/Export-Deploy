@@ -33,7 +33,7 @@ class TestUtils:
 
     @pytest.mark.run_only_on('GPU')
     def test_is_nemo2_checkpoint(self, temp_dir):
-        from nemo.export.utils.utils import is_nemo2_checkpoint
+        from nemo_export_deploy.export.utils.utils import is_nemo2_checkpoint
 
         # Test with non-existent path
         assert not is_nemo2_checkpoint("/non/existent/path")
@@ -48,7 +48,7 @@ class TestUtils:
 
     @pytest.mark.run_only_on('GPU')
     def test_prepare_directory_for_export(self, temp_dir):
-        from nemo.export.utils.utils import prepare_directory_for_export
+        from nemo_export_deploy.export.utils.utils import prepare_directory_for_export
 
         # Test creating new directory
         model_dir = os.path.join(temp_dir, "new_dir")
@@ -78,7 +78,7 @@ class TestUtils:
 
     @pytest.mark.run_only_on('GPU')
     def test_is_nemo_tarfile(self, temp_dir):
-        from nemo.export.utils.utils import is_nemo_tarfile
+        from nemo_export_deploy.export.utils.utils import is_nemo_tarfile
 
         # Test with non-existent file
         assert not is_nemo_tarfile("/non/existent/file.nemo")
@@ -97,7 +97,7 @@ class TestUtils:
 
     @pytest.mark.run_only_on('GPU')
     def test_torch_dtype_from_precision(self):
-        from nemo.export.utils.utils import torch_dtype_from_precision
+        from nemo_export_deploy.export.utils.utils import torch_dtype_from_precision
 
         # Test with megatron_amp_O2=False
         assert torch_dtype_from_precision("bf16", megatron_amp_O2=False) == torch.float32
@@ -118,7 +118,7 @@ class TestUtils:
 
     @pytest.mark.run_only_on('GPU')
     def test_get_example_inputs(self):
-        from nemo.export.utils.utils import get_example_inputs
+        from nemo_export_deploy.export.utils.utils import get_example_inputs
 
         # Mock tokenizer
         mock_tokenizer = MagicMock()

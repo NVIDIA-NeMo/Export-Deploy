@@ -20,9 +20,9 @@ from transformers import PreTrainedTokenizerBase
 from vllm import LLMEngine
 from vllm.transformers_utils.tokenizer_group import TokenizerGroup
 
-from nemo.export.sentencepiece_tokenizer import SentencePieceTokenizer
-from nemo.export.tarutils import TarPath
-from nemo.export.vllm.tokenizer_group import NemoTokenizerGroup
+from nemo_export_deploy.export.sentencepiece_tokenizer import SentencePieceTokenizer
+from nemo_export_deploy.export.tarutils import TarPath
+from nemo_export_deploy.export.vllm.tokenizer_group import NemoTokenizerGroup
 
 LOGGER = logging.getLogger("NeMo")
 

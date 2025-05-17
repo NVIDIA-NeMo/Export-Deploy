@@ -21,14 +21,14 @@ import pytest
 
 @pytest.fixture
 def exporter():
-    from nemo.export.vllm_hf_exporter import vLLMHFExporter
+    from nemo_export_deploy.export.vllm_hf_exporter import vLLMHFExporter
 
     return vLLMHFExporter()
 
 
 @pytest.fixture
 def mock_llm():
-    with patch('nemo.export.vllm_hf_exporter.LLM') as mock:
+    with patch('nemo_export_deploy.export.vllm_hf_exporter.LLM') as mock:
         mock_instance = MagicMock()
         mock.return_value = mock_instance
         yield mock_instance

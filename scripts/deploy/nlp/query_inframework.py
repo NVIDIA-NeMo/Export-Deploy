@@ -17,7 +17,7 @@ import logging
 import sys
 import time
 
-from nemo.deploy.nlp import NemoQueryLLMPyTorch
+from nemo_export_deploy.deploy.nlp import NemoQueryLLMPyTorch
 
 LOGGER = logging.getLogger("NeMo")
 

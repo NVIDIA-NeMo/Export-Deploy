@@ -22,7 +22,7 @@ try:
 except Exception:
     use_pytorch_lightning = False
 
-from nemo.deploy.triton_deployable import ITritonDeployable
+from nemo_export_deploy.deploy.triton_deployable import ITritonDeployable
 
 use_nemo = True
 try:
@@ -105,7 +105,7 @@ class DeployBase(ABC):
     def _is_model_deployable(self):
         if not issubclass(type(self.model), ITritonDeployable):
             raise Exception(
-                "This model is not deployable to Triton." "nemo.deploy.ITritonDeployable class should be inherited"
+                "This model is not deployable to Triton." "nemo_export_deploy.deploy.ITritonDeployable class should be inherited"
             )
         else:
             return True

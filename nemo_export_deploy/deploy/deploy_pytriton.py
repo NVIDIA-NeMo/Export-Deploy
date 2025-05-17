@@ -20,16 +20,16 @@ try:
 except Exception:
     use_pytriton = False
 
-from nemo.deploy.deploy_base import DeployBase
+from nemo_export_deploy.deploy.deploy_base import DeployBase
 
 
 class DeployPyTriton(DeployBase):
     """
-    Deploys any models to Triton Inference Server that implements ITritonDeployable interface in nemo.deploy.
+    Deploys any models to Triton Inference Server that implements ITritonDeployable interface in nemo_export_deploy.deploy.
 
     Example:
-        from nemo.deploy import DeployPyTriton, NemoQueryLLM
-        from nemo.export.tensorrt_llm import TensorRTLLM
+        from nemo_export_deploy.deploy import DeployPyTriton, NemoQueryLLM
+        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
 
         trt_llm_exporter = TensorRTLLM(model_dir="/path/for/model/files")
         trt_llm_exporter.export(
@@ -81,7 +81,7 @@ class DeployPyTriton(DeployBase):
             triton_model_name (str): Name for the service
             triton_model_version(int): Version for the service
             checkpoint_path (str): path of the nemo file
-            model (ITritonDeployable): A model that implements the ITritonDeployable from nemo.deploy import ITritonDeployable
+            model (ITritonDeployable): A model that implements the ITritonDeployable from nemo_export_deploy.deploy import ITritonDeployable
             max_batch_size (int): max batch size
             port (int) : port for the Triton server
             address (str): http address for Triton server to bind.

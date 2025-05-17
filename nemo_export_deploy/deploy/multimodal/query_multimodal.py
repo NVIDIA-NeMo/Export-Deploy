@@ -19,7 +19,7 @@ import requests
 import soundfile as sf
 from PIL import Image
 
-from nemo.deploy.utils import str_list2numpy
+from nemo_export_deploy.deploy.utils import str_list2numpy
 
 use_pytriton = True
 try:
@@ -40,7 +40,7 @@ class NemoQueryMultimodal:
     Sends a query to Triton for Multimodal inference
 
     Example:
-        from nemo.deploy.multimodal import NemoQueryMultimodal
+        from nemo_export_deploy.deploy.multimodal import NemoQueryMultimodal
 
         nq = NemoQueryMultimodal(url="localhost", model_name="neva", model_type="neva")
 

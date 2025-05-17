@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from nemo.export.tarutils import TarPath
+from nemo_export_deploy.export.tarutils import TarPath
 
 
 @pytest.fixture

@@ -18,7 +18,7 @@ from vllm.config import TokenizerPoolConfig
 from vllm.lora.request import LoRARequest
 from vllm.transformers_utils.tokenizer_group import TokenizerGroup
 
-from nemo.export.sentencepiece_tokenizer import SentencePieceTokenizer
+from nemo_export_deploy.export.sentencepiece_tokenizer import SentencePieceTokenizer
 
 
 class NemoTokenizerGroup(TokenizerGroup):

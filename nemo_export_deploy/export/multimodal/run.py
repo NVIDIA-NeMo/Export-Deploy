@@ -39,7 +39,7 @@ from torch.nn import functional as F
 from torchvision import transforms
 from transformers import AutoProcessor, CLIPImageProcessor
 
-from nemo.export.utils.constants import TRTLLM_ENGINE_DIR
+from nemo_export_deploy.export.utils.constants import TRTLLM_ENGINE_DIR
 
 
 def trt_dtype_to_torch(dtype):

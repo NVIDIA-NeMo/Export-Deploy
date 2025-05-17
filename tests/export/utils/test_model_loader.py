@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 import torch
 
-from nemo.export.utils.model_loader import (
+from nemo_export_deploy.export.utils.model_loader import (
     TarFileSystemReader,
     load_model_weights,
     load_sharded_metadata_zarr,
@@ -100,8 +100,8 @@ def test_nemo_weights_directory(mock_checkpoint_dir):
     assert result == mock_checkpoint_dir
 
 
-@patch("nemo.export.utils.model_loader.load_sharded_metadata_zarr")
-@patch("nemo.export.utils.model_loader.load_sharded_metadata_torch_dist")
+@patch("nemo_export_deploy.export.utils.model_loader.load_sharded_metadata_zarr")
+@patch("nemo_export_deploy.export.utils.model_loader.load_sharded_metadata_torch_dist")
 def test_load_model_weights(mock_torch_dist, mock_zarr, mock_checkpoint_dir):
     # Test torch_dist backend
     load_model_weights(mock_checkpoint_dir)

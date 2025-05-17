@@ -16,7 +16,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
-from nemo.deploy.nlp import NemoQueryLLM
+from nemo_export_deploy.deploy.nlp import NemoQueryLLM
 from nemo.utils import logging
 
 
