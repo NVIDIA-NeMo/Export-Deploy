@@ -31,7 +31,7 @@ COPY requirements/ requirements/
 RUN pip install --no-build-isolation --no-cache-dir '.[all]'
 
 # Install development versions
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --upgrade \
     git+https://github.com/NVIDIA/Megatron-LM.git \
     git+https://github.com/NVIDIA/NeMo-Run.git
 
