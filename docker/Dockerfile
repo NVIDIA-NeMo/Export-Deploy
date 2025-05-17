@@ -26,6 +26,7 @@ WORKDIR /workspace
 COPY setup.py .
 COPY nemo_export_deploy/__init__.py nemo_export_deploy/
 COPY nemo_export_deploy/package_info.py nemo_export_deploy/
+COPY README.md .
 COPY requirements/ requirements/
 RUN pip install --no-build-isolation --no-cache-dir '.[all]'
 
