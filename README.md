@@ -29,35 +29,18 @@ Getting started with NeMo ...
 - Pytorch 2.5 or above (Recommended: Pytorch 2.6)
 - NVIDIA GPU (if you intend to do model training)
 
-## Install NeMo Export and Deploy
+## Build and run NeMo Export and Deploy container
+
+Build a container with all dependencies:
+
+```bash
+docker build -f docker/Dockerfile -t nemo-export-deploy .
+```
 
 Start an interactive terminal inside a `nvidia/cuda` container:
 
 ```bash
-docker run --rm -it --entrypoint bash --runtime nvidia --gpus all nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
-```
-
-Install NeMo Export-Deploy:
-
-```bash
-apt update
-apt install -y python3-pip python3-venv git libopenmpi-dev vim
-git clone https://github.com/nvidia/nemo
-cd nemo
-git switch ko3n1g/onur/nemo-export-deploy-repo
-python3 -m venv venv
-source venv/bin/activate
-
-# Required for TransformerEngine 2.2
-pip install "torch==2.6.0" wheel_stub pybind11 "Cython>=3.0.0"
-export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
-
-# Install NeMo Export-Deploy
-pip install --no-build-isolation --no-cache-dir '.[all]'
-
-# Use devel version of NeMo-Run and Mcore
-pip install git+https://github.com/NVIDIA/Megatron-LM.git 
-pip install git+https://github.com/NVIDIA/NeMo-Run.git 
+docker run --rm -it --entrypoint bash --runtime nvidia --gpus all nemo-export-deploy
 ```
 
 ### Support matrix
