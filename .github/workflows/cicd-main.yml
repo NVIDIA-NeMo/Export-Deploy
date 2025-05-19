@@ -138,7 +138,7 @@ jobs:
       - pre-flight
       - cicd-test-container-build
       - cicd-main-unit-tests
-      - cicd-main-e2e
+      - cicd-main-e2e-tests
     if: always()
     runs-on: ubuntu-latest
     permissions: write-all
