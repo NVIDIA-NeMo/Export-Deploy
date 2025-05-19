@@ -19,7 +19,9 @@ on:
     branches:
       - main
       - r**
-    types: [labeled]
+    types: [labeled, opened, synchronize, reopened]
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ github.event.label.name || 'main' }}-${{ github.event_name }}
