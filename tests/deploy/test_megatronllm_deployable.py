@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 
-from nemo.deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
+from nemo_export_deploy.deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 
 
 @pytest.fixture
@@ -137,7 +137,7 @@ def test_apply_chat_template(deployable):
     template_mock = MagicMock()
     template_mock.render.return_value = "Rendered template with Hello"
     
-    with patch('nemo.deploy.nlp.megatronllm_deployable.Template', return_value=template_mock):
+    with patch('nemo_export_deploy.deploy.nlp.megatronllm_deployable.Template', return_value=template_mock):
         template = deployable.apply_chat_template(messages)
         assert template == "Rendered template with Hello"
         template_mock.render.assert_called_once()
@@ -164,7 +164,7 @@ def test_str_to_dict(deployable):
 def test_triton_input_output(deployable):
     """Test Triton input and output tensor definitions."""
     # Mock the Tensor class from pytriton.model_config
-    with patch('nemo.deploy.nlp.megatronllm_deployable.Tensor') as mock_tensor:
+    with patch('nemo_export_deploy.deploy.nlp.megatronllm_deployable.Tensor') as mock_tensor:
         # Set up mock to return itself for testing
         mock_tensor.side_effect = lambda name, shape, dtype, optional=False: MagicMock(name=name, shape=shape, dtype=dtype, optional=optional)
         

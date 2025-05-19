@@ -57,13 +57,13 @@ class TestBuild(unittest.TestCase):
             os.rmdir(self.temp_dir)
 
     @pytest.mark.run_only_on('GPU')
-    @patch('nemo.export.multimodal.build.TensorRTLLM')
+    @patch('nemo_export_deploy.export.multimodal.build.TensorRTLLM')
     def test_build_trtllm_engine(self, mock_trtllm):
         # Test basic functionality
         mock_exporter = MagicMock()
         mock_trtllm.return_value = mock_exporter
 
-        from nemo.export.multimodal.build import build_trtllm_engine
+        from nemo_export_deploy.export.multimodal.build import build_trtllm_engine
 
         build_trtllm_engine(
             model_dir=self.temp_dir,
@@ -80,15 +80,15 @@ class TestBuild(unittest.TestCase):
         mock_exporter.export.assert_called_once()
 
     @pytest.mark.run_only_on('GPU')
-    @patch('nemo.export.multimodal.build.MLLaMAForCausalLM')
-    @patch('nemo.export.multimodal.build.build_trtllm')
+    @patch('nemo_export_deploy.export.multimodal.build.MLLaMAForCausalLM')
+    @patch('nemo_export_deploy.export.multimodal.build.build_trtllm')
     def test_build_mllama_trtllm_engine(self, mock_build_trtllm, mock_mllama):
         # Test basic functionality
         mock_model = MagicMock()
         mock_mllama.from_hugging_face.return_value = mock_model
         mock_build_trtllm.return_value = MagicMock()
 
-        from nemo.export.multimodal.build import build_mllama_trtllm_engine
+        from nemo_export_deploy.export.multimodal.build import build_mllama_trtllm_engine
 
         build_mllama_trtllm_engine(
             model_dir=self.temp_dir,

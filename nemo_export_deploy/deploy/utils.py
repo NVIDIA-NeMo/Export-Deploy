@@ -21,7 +21,7 @@ import torch
 from PIL import Image
 from pytriton.model_config import Tensor
 
-from nemo.export.tarutils import TarPath
+from nemo_export_deploy.export.tarutils import TarPath
 
 NEMO2 = "NEMO 2.0"
 NEMO1 = "NEMO 1.0"

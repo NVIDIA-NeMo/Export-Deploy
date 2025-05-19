@@ -23,8 +23,8 @@ from pytriton.decorators import batch
 from pytriton.model_config import Tensor
 from transformers import AutoModel, AutoModelForCausalLM, AutoTokenizer
 
-from nemo.deploy import ITritonDeployable
-from nemo.deploy.utils import broadcast_list, cast_output, str_ndarray2list
+from nemo_export_deploy.deploy import ITritonDeployable
+from nemo_export_deploy.deploy.utils import broadcast_list, cast_output, str_ndarray2list
 
 LOGGER = logging.getLogger("NeMo")
 

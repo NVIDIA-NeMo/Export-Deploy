@@ -20,8 +20,8 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-from nemo.deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
-from nemo.deploy.utils import broadcast_list
+from nemo_export_deploy.deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from nemo_export_deploy.deploy.utils import broadcast_list
 
 
 @pytest.mark.run_only_on('GPU')

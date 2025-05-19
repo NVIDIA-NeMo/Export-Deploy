@@ -36,8 +36,8 @@ from transformers import AutoModel, AutoProcessor, MllamaForConditionalGeneratio
 
 from nemo.collections.multimodal.speech_llm.modules.perception_modules import AudioPerceptionModule
 from nemo.core.classes.common import typecheck
-from nemo.export.tensorrt_llm import TensorRTLLM
-from nemo.export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
+from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
+from nemo_export_deploy.export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 
 from .converter import convert_mllama_nemo_to_hf
 

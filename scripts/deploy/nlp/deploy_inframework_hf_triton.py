@@ -21,8 +21,8 @@ import sys
 import torch
 import torch.distributed as dist
 
-from nemo.deploy import DeployPyTriton
-from nemo.deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from nemo_export_deploy.deploy import DeployPyTriton
+from nemo_export_deploy.deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
 
 LOGGER = logging.getLogger("NeMo")
 

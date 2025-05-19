@@ -17,13 +17,13 @@ import logging
 import sys
 import torch
 
-from nemo.deploy import DeployPyTriton
+from nemo_export_deploy.deploy import DeployPyTriton
 
 LOGGER = logging.getLogger("NeMo")
 
 megatron_llm_supported = True
 try:
-    from nemo.deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
+    from nemo_export_deploy.deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 except Exception as e:
     LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False

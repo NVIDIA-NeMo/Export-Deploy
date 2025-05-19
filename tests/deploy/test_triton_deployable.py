@@ -15,7 +15,7 @@
 
 import numpy as np
 import pytest
-from nemo.deploy.triton_deployable import ITritonDeployable
+from nemo_export_deploy.deploy.triton_deployable import ITritonDeployable
 
 
 class MockTritonDeployable(ITritonDeployable):

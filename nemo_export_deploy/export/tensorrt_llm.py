@@ -77,23 +77,23 @@ from tensorrt_llm.models import (
 from tensorrt_llm.plugin import PluginConfig
 from transformers import PreTrainedTokenizerBase
 
-from nemo.deploy import ITritonDeployable
-from nemo.export.tarutils import TarPath, unpack_tarball
-from nemo.export.trt_llm.converter.model_converter import determine_quantization_settings, model_to_trtllm_ckpt
-from nemo.export.trt_llm.converter.model_to_trt_llm_ckpt import dist_model_to_trt_llm_ckpt, get_layer_prefix
-from nemo.export.trt_llm.converter.utils import init_model_parallel_from_nemo
-from nemo.export.trt_llm.nemo_ckpt_loader.nemo_file import (
+from nemo_export_deploy.deploy import ITritonDeployable
+from nemo_export_deploy.export.tarutils import TarPath, unpack_tarball
+from nemo_export_deploy.export.trt_llm.converter.model_converter import determine_quantization_settings, model_to_trtllm_ckpt
+from nemo_export_deploy.export.trt_llm.converter.model_to_trt_llm_ckpt import dist_model_to_trt_llm_ckpt, get_layer_prefix
+from nemo_export_deploy.export.trt_llm.converter.utils import init_model_parallel_from_nemo
+from nemo_export_deploy.export.trt_llm.nemo_ckpt_loader.nemo_file import (
     build_tokenizer,
     get_model_type,
     get_tokenizer,
     get_weights_dtype,
     load_nemo_model,
 )
-from nemo.export.trt_llm.qnemo import qnemo_to_tensorrt_llm
-from nemo.export.trt_llm.qnemo.tokenizer_utils import TOKENIZER_CONFIG_FILE, get_nmt_tokenizer
-from nemo.export.trt_llm.qnemo.utils import is_qnemo_checkpoint
-from nemo.export.trt_llm.tensorrt_llm_build import build_and_save_engine
-from nemo.export.trt_llm.tensorrt_llm_run import (
+from nemo_export_deploy.export.trt_llm.qnemo import qnemo_to_tensorrt_llm
+from nemo_export_deploy.export.trt_llm.qnemo.tokenizer_utils import TOKENIZER_CONFIG_FILE, get_nmt_tokenizer
+from nemo_export_deploy.export.trt_llm.qnemo.utils import is_qnemo_checkpoint
+from nemo_export_deploy.export.trt_llm.tensorrt_llm_build import build_and_save_engine
+from nemo_export_deploy.export.trt_llm.tensorrt_llm_run import (
     generate,
     generate_streaming,
     load,
@@ -101,13 +101,13 @@ from nemo.export.trt_llm.tensorrt_llm_run import (
     refit,
     unload_engine,
 )
-from nemo.export.trt_llm.utils import is_rank
-from nemo.export.utils import is_nemo_tarfile, prepare_directory_for_export, torch_dtype_from_precision
-from nemo.export.utils.constants import TRTLLM_ENGINE_DIR
+from nemo_export_deploy.export.trt_llm.utils import is_rank
+from nemo_export_deploy.export.utils import is_nemo_tarfile, prepare_directory_for_export, torch_dtype_from_precision
+from nemo_export_deploy.export.utils.constants import TRTLLM_ENGINE_DIR
 
 use_deploy = True
 try:
-    from nemo.deploy.utils import cast_output, str_ndarray2list
+    from nemo_export_deploy.deploy.utils import cast_output, str_ndarray2list
 except Exception:
     use_deploy = False
 
@@ -139,7 +139,7 @@ class TensorRTLLM(ITritonDeployable):
     Exports nemo and huggingface checkpoints to TensorRT-LLM and run fast inference.
 
     Example:
-        from nemo.export.tensorrt_llm import TensorRTLLM
+        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
 
         trt_llm_exporter = TensorRTLLM(model_dir="/path/for/model/files")
         trt_llm_exporter.export(

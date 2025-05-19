@@ -20,7 +20,7 @@ import torch
 @pytest.mark.run_only_on('GPU')
 def test_determine_quantization_settings():
     # Test with default NeMo config (no fp8)
-    from nemo.export.trt_llm.converter.model_converter import determine_quantization_settings
+    from nemo_export_deploy.export.trt_llm.converter.model_converter import determine_quantization_settings
 
     nemo_config = {'fp8': False}
     fp8_quant, fp8_kv = determine_quantization_settings(nemo_config)
@@ -42,7 +42,7 @@ def test_determine_quantization_settings():
 @pytest.mark.run_only_on('GPU')
 def test_prompt_convert_task_templates():
     # Test with task templates
-    from nemo.export.trt_llm.converter.model_converter import prompt_convert
+    from nemo_export_deploy.export.trt_llm.converter.model_converter import prompt_convert
 
     prompt_config = {
         'task_templates': [
@@ -67,7 +67,7 @@ def test_prompt_convert_task_templates():
 @pytest.mark.run_only_on('GPU')
 def test_prompt_convert_direct_embeddings():
     # Test with direct embeddings
-    from nemo.export.trt_llm.converter.model_converter import prompt_convert
+    from nemo_export_deploy.export.trt_llm.converter.model_converter import prompt_convert
 
     prompt_config = {}
     prompt_weights = {'prompt_embeddings_weights': torch.ones(2, 3, 4)}

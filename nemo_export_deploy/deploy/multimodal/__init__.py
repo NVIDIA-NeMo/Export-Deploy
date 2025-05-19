@@ -13,4 +13,4 @@
 # limitations under the License.
 
 
-from nemo.deploy.multimodal.query_multimodal import NemoQueryMultimodal
+from nemo_export_deploy.deploy.multimodal.query_multimodal import NemoQueryMultimodal

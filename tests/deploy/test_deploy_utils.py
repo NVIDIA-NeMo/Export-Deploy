@@ -23,7 +23,7 @@ import torch
 from PIL import Image
 from pytriton.model_config import Tensor
 
-from nemo.deploy.utils import (
+from nemo_export_deploy.deploy.utils import (
     NEMO1,
     NEMO2,
     broadcast_list,

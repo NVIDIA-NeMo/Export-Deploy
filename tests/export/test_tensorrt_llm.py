@@ -23,7 +23,7 @@ import torch
 @pytest.mark.unit
 def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
     try:
-        from nemo.export.tensorrt_llm import TensorRTLLM
+        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
     except ImportError:
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
@@ -51,7 +51,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
     try:
         from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import DEFAULT_CONVERSION_DICT
 
-        from nemo.export.tensorrt_llm import TensorRTLLM
+        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
     except ImportError:
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
@@ -71,7 +71,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
 @pytest.mark.unit
 def test_tensorrt_llm_initialization():
     try:
-        from nemo.export.tensorrt_llm import TensorRTLLM
+        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
     except ImportError:
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
@@ -107,7 +107,7 @@ def test_tensorrt_llm_initialization():
 @pytest.mark.unit
 def test_tensorrt_llm_supported_models():
     try:
-        from nemo.export.tensorrt_llm import TensorRTLLM
+        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
     except ImportError:
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
@@ -131,7 +131,7 @@ def test_tensorrt_llm_supported_models():
 @pytest.mark.unit
 def test_tensorrt_llm_input_dtype():
     try:
-        from nemo.export.tensorrt_llm import TensorRTLLM
+        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
     except ImportError:
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
@@ -157,7 +157,7 @@ def test_tensorrt_llm_input_dtype():
 @pytest.mark.unit
 def test_tensorrt_llm_hidden_size():
     try:
-        from nemo.export.tensorrt_llm import TensorRTLLM
+        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
     except ImportError:
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
@@ -178,7 +178,7 @@ def test_tensorrt_llm_hidden_size():
 @pytest.mark.unit
 def test_tensorrt_llm_triton_io():
     try:
-        from nemo.export.tensorrt_llm import TensorRTLLM
+        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
     except ImportError:
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
@@ -211,7 +211,7 @@ def test_tensorrt_llm_triton_io():
 @pytest.mark.unit
 def test_tensorrt_llm_pad_logits():
     try:
-        from nemo.export.tensorrt_llm import TensorRTLLM
+        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
     except ImportError:
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return

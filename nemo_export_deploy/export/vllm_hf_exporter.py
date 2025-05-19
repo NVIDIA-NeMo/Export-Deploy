@@ -21,8 +21,8 @@ from pytriton.model_config import Tensor
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
 
-from nemo.deploy import ITritonDeployable
-from nemo.deploy.utils import cast_output, str_ndarray2list
+from nemo_export_deploy.deploy import ITritonDeployable
+from nemo_export_deploy.deploy.utils import cast_output, str_ndarray2list
 
 
 class vLLMHFExporter(ITritonDeployable):
@@ -31,8 +31,8 @@ class vLLMHFExporter(ITritonDeployable):
     deployable with Triton server.
 
     Example:
-        from nemo.export import vLLMHFExporter
-        from nemo.deploy import DeployPyTriton
+        from nemo_export_deploy.export import vLLMHFExporter
+        from nemo_export_deploy.deploy import DeployPyTriton
 
         exporter = vLLMHFExporter()
         exporter.export(model="/path/to/model/")

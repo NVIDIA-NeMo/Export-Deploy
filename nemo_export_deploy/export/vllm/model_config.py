@@ -24,9 +24,9 @@ from transformers import AutoConfig
 from vllm.config import ModelConfig, ModelImpl, PoolerConfig, _get_and_verify_dtype, _get_and_verify_max_len
 from vllm.transformers_utils.config import get_hf_text_config
 
-from nemo.export.tarutils import TarPath
-from nemo.export.utils import is_nemo2_checkpoint
-from nemo.export.vllm.model_converters import get_model_converter
+from nemo_export_deploy.export.tarutils import TarPath
+from nemo_export_deploy.export.utils import is_nemo2_checkpoint
+from nemo_export_deploy.export.vllm.model_converters import get_model_converter
 
 
 class NemoModelConfig(ModelConfig):

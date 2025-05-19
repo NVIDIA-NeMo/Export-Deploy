@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from nemo.export.tiktoken_tokenizer import TiktokenTokenizer, reload_mergeable_ranks
+from nemo_export_deploy.export.tiktoken_tokenizer import TiktokenTokenizer, reload_mergeable_ranks
 
 
 @pytest.fixture

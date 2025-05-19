@@ -18,7 +18,7 @@ from typing import List, Optional
 
 import numpy as np
 
-from nemo.deploy.utils import str_list2numpy
+from nemo_export_deploy.deploy.utils import str_list2numpy
 
 use_pytriton = True
 try:
@@ -46,7 +46,7 @@ class NemoQueryLLMPyTorch(NemoQueryLLMBase):
     Sends a query to Triton for LLM inference
 
     Example:
-        from nemo.deploy import NemoTritonQueryLLMPyTorch
+        from nemo_export_deploy.deploy import NemoTritonQueryLLMPyTorch
 
         nq = NemoTritonQueryLLMPyTorch(url="localhost", model_name="GPT-2B")
 
@@ -172,7 +172,7 @@ class NemoQueryLLMHF(NemoQueryLLMBase):
     Sends a query to Triton for LLM inference
 
     Example:
-        from nemo.deploy import NemoQueryLLMHF
+        from nemo_export_deploy.deploy import NemoQueryLLMHF
 
         nq = NemoQueryLLMHF(url="localhost", model_name="GPT-2B")
 
@@ -292,7 +292,7 @@ class NemoQueryLLM(NemoQueryLLMBase):
     Sends a query to Triton for LLM inference
 
     Example:
-        from nemo.deploy import NemoQueryLLM
+        from nemo_export_deploy.deploy import NemoQueryLLM
 
         nq = NemoQueryLLM(url="localhost", model_name="GPT-2B")
 

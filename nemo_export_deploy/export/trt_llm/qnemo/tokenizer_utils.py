@@ -18,8 +18,8 @@ import os
 from omegaconf import OmegaConf
 from transformers import AutoTokenizer
 
-from nemo.export.sentencepiece_tokenizer import SentencePieceTokenizer
-from nemo.export.tiktoken_tokenizer import TiktokenTokenizer
+from nemo_export_deploy.export.sentencepiece_tokenizer import SentencePieceTokenizer
+from nemo_export_deploy.export.tiktoken_tokenizer import TiktokenTokenizer
 
 # TODO: use get_nmt_tokenizer helper below to instantiate tokenizer once environment / dependencies get stable
 # from nemo.collections.nlp.modules.common.tokenizer_utils import get_nmt_tokenizer

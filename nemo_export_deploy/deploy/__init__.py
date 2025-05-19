@@ -13,6 +13,6 @@
 # limitations under the License.
 
 
-from nemo.deploy.deploy_base import DeployBase
-from nemo.deploy.deploy_pytriton import DeployPyTriton
-from nemo.deploy.triton_deployable import ITritonDeployable
+from nemo_export_deploy.deploy.deploy_base import DeployBase
+from nemo_export_deploy.deploy.deploy_pytriton import DeployPyTriton
+from nemo_export_deploy.deploy.triton_deployable import ITritonDeployable

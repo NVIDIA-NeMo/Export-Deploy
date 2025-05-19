@@ -22,8 +22,8 @@ from vllm.config import ModelConfig
 from vllm.model_executor.model_loader.loader import BaseModelLoader, _initialize_model
 from vllm.model_executor.model_loader.utils import set_default_torch_dtype
 
-from nemo.export.utils import load_model_weights
-from nemo.export.vllm.model_config import NemoModelConfig
+from nemo_export_deploy.export.utils import load_model_weights
+from nemo_export_deploy.export.vllm.model_config import NemoModelConfig
 
 LOGGER = logging.getLogger("NeMo")
 

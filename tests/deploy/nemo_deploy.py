@@ -21,13 +21,13 @@ from pathlib import Path
 
 import torch
 
-from nemo.deploy.nlp.megatronllm_deployable import MegatronLLMDeployable
+from nemo_export_deploy.deploy.nlp.megatronllm_deployable import MegatronLLMDeployable
 
 run_export_tests = True
 try:
-    from nemo.deploy import DeployPyTriton
-    from nemo.deploy.nlp import NemoQueryLLM, NemoQueryLLMPyTorch
-    from nemo.export.tensorrt_llm import TensorRTLLM
+    from nemo_export_deploy.deploy import DeployPyTriton
+    from nemo_export_deploy.deploy.nlp import NemoQueryLLM, NemoQueryLLMPyTorch
+    from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
 except Exception as e:
     run_export_tests = False
 

@@ -20,7 +20,7 @@ from typing import List, Optional
 
 from tensorrt_llm.models import PretrainedConfig
 
-from nemo.export.trt_llm.qnemo.utils import CONFIG_NAME, WEIGHTS_NAME
+from nemo_export_deploy.export.trt_llm.qnemo.utils import CONFIG_NAME, WEIGHTS_NAME
 
 
 def qnemo_to_tensorrt_llm(
