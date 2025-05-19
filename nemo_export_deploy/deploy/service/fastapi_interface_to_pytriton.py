@@ -17,8 +17,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, model_validator
 from pydantic_settings import BaseSettings
 
-from nemo_export_deploy.deploy.nlp import NemoQueryLLMPyTorch
 from nemo.utils import logging
+from nemo_export_deploy.deploy.nlp import NemoQueryLLMPyTorch
 
 
 class TritonSettings(BaseSettings):

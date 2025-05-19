@@ -105,7 +105,8 @@ class DeployBase(ABC):
     def _is_model_deployable(self):
         if not issubclass(type(self.model), ITritonDeployable):
             raise Exception(
-                "This model is not deployable to Triton." "nemo_export_deploy.deploy.ITritonDeployable class should be inherited"
+                "This model is not deployable to Triton."
+                "nemo_export_deploy.deploy.ITritonDeployable class should be inherited"
             )
         else:
             return True

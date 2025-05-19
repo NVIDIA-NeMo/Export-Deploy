@@ -18,8 +18,8 @@ import os
 import tensorrt as trt
 
 from nemo.collections.llm.gpt.model.hf_llama_embedding import get_llama_bidirectional_hf_model
-from nemo_export_deploy.export.onnx_llm_exporter import OnnxLLMExporter
 from nemo.utils import logging
+from nemo_export_deploy.export.onnx_llm_exporter import OnnxLLMExporter
 
 
 def get_args():
