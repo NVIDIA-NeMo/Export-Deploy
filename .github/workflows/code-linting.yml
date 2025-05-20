@@ -15,6 +15,9 @@ jobs:
       - name: Get changed files
         id: changed-files
         uses: step-security/changed-files@v45.0.1
+        with:
+          files: |
+            **/*.py
 
       - name: Run PyLint
         id: pylint
