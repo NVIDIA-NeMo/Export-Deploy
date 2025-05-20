@@ -137,7 +137,7 @@ class StyleCommand(distutils_cmd.Command):
     def _fail(self):
         self.announce(msg='\033[31mFAIL\x1b[0m', level=distutils_log.INFO)
 
-    # noinspection PyAttributeOutsideInit
+    # pylint: disable=C0116
     def initialize_options(self):
         self.scope = '.'
         self.fix = ''
@@ -155,6 +155,8 @@ class StyleCommand(distutils_cmd.Command):
 
     def finalize_options(self):
         pass
+
+    # pylint: enable=C0116
 
 
 ###############################################################################
