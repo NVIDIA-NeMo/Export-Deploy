@@ -26,6 +26,12 @@ from itertools import chain
 import setuptools
 
 spec = importlib.util.spec_from_file_location('package_info', 'nemo_export_deploy/package_info.py')
+if spec is None:
+    raise ImportError("Failed to import package_info")
+
+if spec.loader is None:
+    raise ImportError("Failed to load package_info")
+
 package_info = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(package_info)
 
@@ -47,6 +53,15 @@ with open("README.md", "r", encoding='utf-8') as fh:
 
 
 def req_file(filename, folder="requirements"):
+    """Helper function to read requirements from a file.
+
+    Args:
+        filename (str): Requirements file name.
+        folder (str, optional): Directory containing the requirements file. Defaults to "requirements".
+
+    Returns:
+        list[str]: List of requirements.
+    """
     files = [filename] if not isinstance(filename, list) else filename
     ans = []
     for file in files:
@@ -55,7 +70,7 @@ def req_file(filename, folder="requirements"):
     return ans
 
 
-install_requires = req_file("requirements.txt") 
+install_requires = req_file("requirements.txt")
 
 extras_require = {
     'test': req_file("requirements_test.txt"),
@@ -70,6 +85,7 @@ extras_require['all'] = list(chain(*extras_require.values()))
 ###############################################################################
 #                            Code style checkers                              #
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 class StyleCommand(distutils_cmd.Command):
     __ISORT_BASE = 'isort'
@@ -187,6 +203,8 @@ setuptools.setup(
         # Supported python versions
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         # Additional Setting
         'Environment :: Console',
         'Natural Language :: English',
@@ -202,7 +220,7 @@ setuptools.setup(
     extras_require=extras_require,
     # Add in any packaged data.
     include_package_data=True,
-    exclude=['nemo/automodel', 'nemo/collections', 'nemo/core', 'nemo/lightning', 'nemo/utils', 'tests'],
+    exclude=['tests'],
     package_data={'': ['*.tsv', '*.txt', '*.far', '*.fst', '*.cpp', 'Makefile']},
     zip_safe=False,
     # PyPI package information.
