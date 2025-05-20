@@ -25,10 +25,6 @@ inputs:
   script:
     description: "Test script to execute"
     required: true
-  after_script:
-    description: "Script to run after main test"
-    required: false
-    default: ":"
   is_optional:
     description: "Failure will cancel all other tests if set to true"
     required: false
@@ -37,10 +33,6 @@ inputs:
     description: "Upload coverage as unit test"
     required: false
     default: "false"
-  tests_to_run:
-    description: "Tests to run"
-    required: false
-    default: '["all"]'
   image:
     description: "Image to use for test"
     required: false
@@ -120,11 +112,11 @@ runs:
 
         cmd=$(cat <<RUN_TEST_EOF
         #!/bin/bash
-        docker container rm -f nemo_container_${{ github.run_id }}_${{ inputs.runner }} || true
+        docker container rm -f nemo_container_${{ github.run_id }} || true
         docker run \
           --rm \
           -d \
-          --name nemo_container_${{ github.run_id }}_${{ inputs.runner }} ${ARG[@]} \
+          --name nemo_container_${{ github.run_id }} ${ARG[@]} \
           --shm-size=64g \
           --env TRANSFORMERS_OFFLINE=0 \
           --env HYDRA_FULL_ERROR=1 \
@@ -157,7 +149,7 @@ runs:
         (
           set -e
 
-          docker exec -t nemo_container_${{ github.run_id }}_${{ inputs.runner }} bash -c '\
+          docker exec -t nemo_container_${{ github.run_id }} bash -c '\
             bash tests/functional_tests/${{ inputs.script }}.sh && \
             echo "Finished successfully." || echo "Did not finish."'
         ) 2>&1 | tee $DIR/err.log
@@ -192,10 +184,10 @@ runs:
         potential_infra_failure=$(cat $DIR/err.log | grep -Eqiw "device" && echo true || echo false)
         echo "potential_infra_failure=$potential_infra_failure" >> "$GITHUB_OUTPUT"
 
-        docker exec nemo_container_${{ github.run_id }}_${{ inputs.runner }} coverage combine
-        docker exec nemo_container_${{ github.run_id }}_${{ inputs.runner }} coverage xml
-        docker cp nemo_container_${{ github.run_id }}_${{ inputs.runner }}:/workspace/.coverage $DIR/.coverage
-        docker cp nemo_container_${{ github.run_id }}_${{ inputs.runner }}:/workspace/coverage.xml $DIR/coverage.xml
+        docker exec nemo_container_${{ github.run_id }} coverage combine
+        docker exec nemo_container_${{ github.run_id }} coverage xml
+        docker cp nemo_container_${{ github.run_id }}:/workspace/.coverage $DIR/.coverage
+        docker cp nemo_container_${{ github.run_id }}:/workspace/coverage.xml $DIR/coverage.xml
 
         coverage_report=coverage-${{ steps.create.outputs.coverage-prefix }}-${{ github.run_id }}-$(uuidgen)
         echo "coverage_report=$coverage_report" >> "$GITHUB_OUTPUT"
@@ -217,7 +209,7 @@ runs:
     - name: Test coverage
       shell: bash -x -e -u -o pipefail {0}
       run: |
-        docker exec -t nemo_container_${{ github.run_id }}_${{ inputs.runner }} coverage report -i
+        docker exec -t nemo_container_${{ github.run_id }} coverage report -i
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -233,6 +225,6 @@ runs:
       if: always()
       shell: bash
       run: |
-        docker exec nemo_container_${{ github.run_id }}_${{ inputs.runner }} bash -c "chown -R $(id -u):$(id -g) /workspace"
+        docker exec nemo_container_${{ github.run_id }} bash -c "chown -R $(id -u):$(id -g) /workspace"
         rm -rf $(pwd)/${{ github.run_id }}/${{steps.uuid.outputs.id }} || true
-        docker container rm -f nemo_container_${{ github.run_id }}_${{ inputs.runner }} || true
+        docker container rm -f nemo_container_${{ github.run_id }} || true

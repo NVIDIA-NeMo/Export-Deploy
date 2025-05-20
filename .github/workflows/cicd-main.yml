@@ -133,8 +133,7 @@ jobs:
           runner: ${{ runner.name }}
           script: ${{ matrix.script }}
           is_unit_test: true
-          tests_to_run: ${{ inputs.test_to_run }}
-          image: ${{ inputs.image-name }}
+          image: nemo_container
           cpu-only: ${{ matrix.cpu-only || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -169,8 +168,7 @@ jobs:
         with:
           runner: ${{ runner.name }}
           script: ${{ matrix.script }}
-          tests_to_run: ${{ inputs.test_to_run }}
-          image: ${{ inputs.image-name }}
+          image: nemo_container
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
