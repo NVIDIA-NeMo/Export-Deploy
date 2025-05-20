@@ -73,6 +73,7 @@ jobs:
         nemoci.azurecr.io/${{ inputs.image-name }}-buildcache:${{ github.event.pull_request.number || 0 }}
         ${{ needs.pre-flight.outputs.cache-from }}
       runner: ${{ inputs.runner }}
+      has-azure-credentials: true
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
