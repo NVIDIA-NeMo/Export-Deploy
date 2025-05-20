@@ -36,9 +36,6 @@ RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
     --mount=type=bind,source=requirements,target=/workspace/requirements \
     pip install --no-build-isolation --no-cache-dir '.[all]'
 
-# Set PYTHONPATH
-ENV PYTHONPATH=/workspace
-
 # Install development versions
 RUN pip install --no-cache-dir --upgrade \
     git+https://github.com/NVIDIA/Megatron-LM.git \
@@ -48,6 +45,6 @@ RUN pip install --no-cache-dir --upgrade \
 RUN pip uninstall -y nemo_toolkit && \
     git clone https://github.com/NVIDIA/NeMo.git && \
     cd NeMo && \
-    pip install .
+    pip install -e .
 
 
