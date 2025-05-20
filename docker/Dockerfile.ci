@@ -16,17 +16,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Align C++ ABI for PyTorch and trt-llm
 ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 
-RUN pip install -U pip setuptools
-
-# Install basic deps
-WORKDIR /workspace
-RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
-    --mount=type=bind,source=nemo_export_deploy/__init__.py,target=/workspace/nemo_export_deploy/__init__.py \
-    --mount=type=bind,source=nemo_export_deploy/package_info.py,target=/workspace/nemo_export_deploy/package_info.py \
-    --mount=type=bind,source=README.md,target=/workspace/README.md \
-    --mount=type=bind,source=requirements/requirements.txt,target=/workspace/requirements/requirements.txt \
-    pip install --no-build-isolation --no-cache-dir '.'
-
 # Install all extras
 WORKDIR /workspace
 RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
