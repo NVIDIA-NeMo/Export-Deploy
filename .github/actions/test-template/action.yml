@@ -62,17 +62,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Noop
-      shell: bash
-      run: |
-        chmod -R u+rwX ${{ github.run_id }}
-        echo "noop"
-
-    - name: Docker system cleanup
-      shell: bash
-      run: |
-        docker system prune -af --filter "until=24h" --filter "label!=nemo.pr_number=${{ github.event.pull_request.number || 0 }}" --force || true
-
     - name: Install Azure CLI
       if: ${{ inputs.has-azure-credentials }}
       shell: bash
@@ -108,13 +97,10 @@ runs:
       run: |
         echo "id=$(uuidgen)" >> "$GITHUB_OUTPUT"
 
-    - name: Checkout NeMo
+    - name: Checkout repository
       uses: actions/checkout@v2
-      env:
-        DIR: ${{ github.run_id }}
       with:
-        repository: NVIDIA/NeMo
-        path: ${{ github.run_id }}/${{steps.uuid.outputs.id }}/NeMo
+        path: NeMo-Export-Deploy
 
     - name: Start container
       shell: bash
@@ -140,8 +126,7 @@ runs:
           --env HYDRA_FULL_ERROR=1 \
           --env HF_HOME=/home/TestData/HF_HOME \
           --env RUN_ID=${{ github.run_id }} \
-          --volume $(pwd)/${{ github.run_id }}/${{steps.uuid.outputs.id }}/NeMo:/workspace \
-          --volume /mnt/datadrive/TestData:/home/TestData nemoci.azurecr.io/${{ inputs.image }}:${{ github.run_id }} \
+          --volume $(pwd)/NeMo-Export-Deploy:/workspace \
           bash -c "sleep $(( ${{ inputs.timeout }} * 60 + 60 ))"
         RUN_TEST_EOF
         )
