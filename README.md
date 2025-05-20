@@ -34,7 +34,7 @@ Getting started with NeMo ...
 Build a container with all dependencies:
 
 ```bash
-docker build -f docker/Dockerfile -t nemo-export-deploy .
+docker build -f docker/Dockerfile.ci -t nemo-export-deploy .
 ```
 
 Start an interactive terminal inside a `nvidia/cuda` container:
