@@ -55,19 +55,17 @@ def req_file(filename, folder="requirements"):
     return ans
 
 
-install_requires = req_file("requirements.txt")
+install_requires = req_file("requirements.txt") 
 
 extras_require = {
     'test': req_file("requirements_test.txt"),
     'export': req_file(["requirements_export.txt"]),
     'deploy': req_file('requirements_deploy.txt'),
     'lightning': req_file('requirements_lightning.txt'),
+    'te': req_file('requirements_te.txt'),
 }
 
 extras_require['all'] = list(chain(*extras_require.values()))
-
-extras_require['export_deploy'] = req_file(["requirements_export.txt", "requirements_deploy.txt"])
-
 
 ###############################################################################
 #                            Code style checkers                              #
