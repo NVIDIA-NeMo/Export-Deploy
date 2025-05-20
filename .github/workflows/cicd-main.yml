@@ -82,7 +82,7 @@ jobs:
         run: |
           echo "Running CI tests"
 
-  cicd-test-container-build:
+  cicd-container-build:
     uses: ./.github/workflows/_build_container.yml
     needs: [pre-flight, code-linting, cicd-wait-in-queue]
     if: |
@@ -104,7 +104,7 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-  unit-tests:
+  cicd-unit-tests:
     strategy:
       fail-fast: false
       matrix:
@@ -116,7 +116,7 @@ jobs:
             cpu-only: true
           - script: L0_Unit_Tests_Eval
             runner: self-hosted-azure
-    needs: [build]
+    needs: [cicd-container-build]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.script }}
     steps:
@@ -137,7 +137,7 @@ jobs:
           azure-tenant-id: ${{ secrets.azure-tenant-id }}
           azure-subscription-id: ${{ secrets.azure-subscription-id }}
 
-  e2e-tests:
+  cicd-e2e-tests:
     strategy:
       fail-fast: false
       matrix:
@@ -156,7 +156,7 @@ jobs:
             runner: self-hosted-azure
           - script: L2_NeMo_2_VLLM_VISION
             runner: self-hosted-azure
-    needs: [unit-tests]
+    needs: [cicd-unit-tests]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     steps:
