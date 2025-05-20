@@ -8,14 +8,23 @@ RUN apt-get update && apt-get install -y \
     libopenmpi-dev \
     vim \
     && rm -rf /var/lib/apt/lists/* && \
-    pip install --no-cache-dir -U pip setuptools
+    python3 -m venv /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir -U pip setuptools
 
-# Create and activate virtual environment
-RUN python3 -m venv /opt/venv
+# Set venv as default
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Align C++ ABI for PyTorch and trt-llm
 ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+
+# Install build deps
+RUN pip install --no-cache-dir -U \
+    setuptools>=45 \
+    wheel \
+    torch==2.6.0 \
+    wheel_stub \
+    pybind11 \
+    Cython>=3.0.0
 
 # Install all extras
 WORKDIR /workspace
