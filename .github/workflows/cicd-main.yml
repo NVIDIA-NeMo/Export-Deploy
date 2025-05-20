@@ -104,40 +104,77 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-  # cicd-main-unit-tests:
-  #   needs: [pre-flight, cicd-test-container-build]
-  #   uses: ./.github/workflows/cicd-main-unit-tests.yml
-  #   if: |
-  #     (
-  #       success()
-  #       || (
-  #         needs.cicd-wait-in-queue.result == 'skipped'
-  #         && needs.pre-flight.outputs.is_ci_workload == 'true'
-  #       )
-  #     )
-  #     && !cancelled()
-  #   with:
-  #     test_to_run: ${{ needs.pre-flight.outputs.test_to_run }}
+  unit-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L0_Unit_Tests_GPU_Export_Deploy
+            runner: self-hosted-azure
+          - script: L0_Unit_Tests_CPU_Export_Deploy
+            runner: self-hosted-azure-cpu
+            cpu-only: true
+          - script: L0_Unit_Tests_Eval
+            runner: self-hosted-azure
+    needs: [build]
+    runs-on: ${{ matrix.runner }}
+    name: ${{ matrix.script }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ${{ github.run_id }}
+      - name: main
+        uses: NVIDIA/NeMo/.github/actions/test-template@main
+        with:
+          runner: ${{ runner.name }}
+          script: ${{ matrix.script }}
+          is_unit_test: true
+          tests_to_run: ${{ inputs.test_to_run }}
+          image: ${{ inputs.image-name }}
+          cpu-only: ${{ matrix.cpu-only || false }}
+          azure-client-id: ${{ secrets.azure-client-id }}
+          azure-tenant-id: ${{ secrets.azure-tenant-id }}
+          azure-subscription-id: ${{ secrets.azure-subscription-id }}
 
-  #   secrets:
-  #     AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  #     AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  #     AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-  # cicd-main-e2e-tests:
-  #   needs: [pre-flight, cicd-test-container-build, cicd-main-unit-tests]
-  #   uses: ./.github/workflows/cicd-main-e2e-tests.yml
-  #   if: |
-  #     (
-  #       success()
-  #       || (
-  #         needs.cicd-wait-in-queue.result == 'skipped'
-  #         && needs.pre-flight.outputs.is_ci_workload == 'true'
-  #       )
-  #     )
-  #     && !cancelled()
-  #   with:
-  #     test_to_run: ${{ needs.pre-flight.outputs.test_to_run }}
+  e2e-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L2_NeMo_2_Export_HF_TRT_LLM
+            runner: self-hosted-azure
+          - script: L2_NeMo_2_Export_Deploy_Query_In_Framework
+            runner: self-hosted-azure
+          - script: L2_ONNX_TRT_LLM_Embedding_Export
+            runner: self-hosted-azure
+          - script: L2_NeMo_2_Export_TRT_LLM
+            runner: self-hosted-azure
+          - script: L2_NeMo_2_VLLM_EXPORT
+            runner: self-hosted-azure
+          - script: L2_NeMo_2_Export_In_Framework
+            runner: self-hosted-azure
+          - script: L2_NeMo_2_VLLM_VISION
+            runner: self-hosted-azure
+    needs: [unit-tests]
+    runs-on: ${{ matrix.runner }}
+    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ${{ github.run_id }}
+      - name: main
+        uses: NVIDIA/NeMo/.github/actions/test-template@main
+        with:
+          runner: ${{ runner.name }}
+          script: ${{ matrix.script }}
+          tests_to_run: ${{ inputs.test_to_run }}
+          image: ${{ inputs.image-name }}
+          is_optional: ${{ matrix.is_optional || false }}
+          azure-client-id: ${{ secrets.azure-client-id }}
+          azure-tenant-id: ${{ secrets.azure-tenant-id }}
+          azure-subscription-id: ${{ secrets.azure-subscription-id }}
 
   # Nemo_CICD_Test:
   #   needs:
