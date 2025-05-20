@@ -7,50 +7,14 @@ on:
 
 jobs:
   linting:
-    name: "Domain: ${{ matrix.domain }}"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        domain: [speech, other]
-    env:
-      DOMAIN: ${{ matrix.domain }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select filter
-        id: filter
-        run: |
-          if [[ "$DOMAIN" == "speech" ]]; then
-            FILTER=$(jq -crn '[
-              "nemo/collections/asr/**/*.py",
-              "nemo/collections/tts/**/*.py",
-              "nemo/collections/audio/**/*.py",
-              "nemo/collections/multimodal/speech_llm/**/*.py",
-              "nemo/collections/speechlm/**/*.py"
-            ] | join(",")')
-
-          else
-            FILTER=$(jq -crn '[
-              "nemo/**/*.py",
-              "!nemo/collections/asr/**/*.py",
-              "!nemo/collections/tts/**/*.py",
-              "!nemo/collections/audio/**/*.py",
-              "!nemo/collections/multimodal/speech_llm/**/*.py",
-              "!nemo/collections/speechlm/**/*.py"
-            ] | join(",")')
-          fi
-
-          echo "main=$FILTER" | tee -a "$GITHUB_OUTPUT"
-
       - name: Get changed files
         id: changed-files
         uses: step-security/changed-files@v45.0.1
-        with:
-          files: ${{ steps.filter.outputs.main }}
-          files_separator: ","
-          separator: " "
 
       - name: Run PyLint
         id: pylint
@@ -77,7 +41,7 @@ jobs:
 
           pip install pylint
           set +e
-          pylint $ADDITIONAL_PYLINT_ARGS --output "pylintrc.$DOMAIN.txt" --rcfile ".pylintrc.$DOMAIN" ${CHANGED_FILES[@]}
+          pylint $ADDITIONAL_PYLINT_ARGS --output "pylintrc.txt" --rcfile ".pylintrc" ${CHANGED_FILES[@]}
           echo "exit-code=$?" | tee -a "$GITHUB_OUTPUT"
 
       - name: Run flake8
