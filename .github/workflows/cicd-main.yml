@@ -169,6 +169,7 @@ jobs:
           azure-client-id: ${{ secrets.azure-client-id }}
           azure-tenant-id: ${{ secrets.azure-tenant-id }}
           azure-subscription-id: ${{ secrets.azure-subscription-id }}
+          has-azure-credentials: true
 
   # Nemo_CICD_Test:
   #   needs:

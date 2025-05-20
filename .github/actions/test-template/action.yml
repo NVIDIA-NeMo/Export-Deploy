@@ -58,6 +58,10 @@ inputs:
   azure-subscription-id:
     description: "Azure Subscription ID"
     required: true
+  has-azure-credentials:
+    description: "Has Azure credentials"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
