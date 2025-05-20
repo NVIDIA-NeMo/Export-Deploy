@@ -83,16 +83,6 @@ runs:
       run: |
         docker pull nemoci.azurecr.io/${{ inputs.image }}:${{ github.run_id }}
 
-    - name: Clean repos
-      shell: bash
-      run: |
-
-    - name: Create UUID
-      id: uuid
-      shell: bash
-      run: |
-        echo "id=$(uuidgen)" >> "$GITHUB_OUTPUT"
-
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
