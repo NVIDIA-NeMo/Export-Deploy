@@ -1,1 +1,1 @@
-nemo_toolkit[automodel,common-only,nlp-only,eval]@git+https://github.com/NVIDIA/NeMo.git@main
+nemo_toolkit[automodel,common-only,nlp-only,eval,multimodal-only]@git+https://github.com/NVIDIA/NeMo.git@main
