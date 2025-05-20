@@ -83,7 +83,7 @@ jobs:
 
   cicd-container-build:
     uses: ./.github/workflows/_build_container.yml
-    needs: [pre-flight, code-linting, cicd-wait-in-queue]
+    needs: [pre-flight, cicd-wait-in-queue]
     if: |
       needs.pre-flight.outputs.test_to_run != '[]' 
       && needs.pre-flight.outputs.components_to_run != '[]'
