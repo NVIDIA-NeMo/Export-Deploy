@@ -101,7 +101,6 @@ runs:
     - name: Start container
       shell: bash
       run: |
-        mkdir -p $DIR
 
         ARG=("")
         if [[ "${{ inputs.cpu-only }}" == "false" ]]; then
