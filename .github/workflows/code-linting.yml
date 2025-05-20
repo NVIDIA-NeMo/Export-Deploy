@@ -77,7 +77,7 @@ jobs:
             echo "Pylint output:" | tee -a $GITHUB_STEP_SUMMARY
 
             echo '```' | tee -a $GITHUB_STEP_SUMMARY
-            cat pylintrc..txt | tee -a $GITHUB_STEP_SUMMARY
+            cat pylintrc.txt | tee -a $GITHUB_STEP_SUMMARY
             echo '```' | tee -a $GITHUB_STEP_SUMMARY
           fi
 
