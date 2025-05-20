@@ -17,7 +17,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Align C++ ABI for PyTorch and trt-llm
 ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 
-# Install build deps
+# Install build deps: Mostly required since TransformerEngine needs `--no-build-isolation` 
+# and therefore these deps need to be installed in the global scope.
 RUN pip install --no-cache-dir -U \
     setuptools>=45 \
     wheel \
@@ -26,7 +27,7 @@ RUN pip install --no-cache-dir -U \
     pybind11 \
     Cython>=3.0.0
 
-# Install all extras
+# Install all
 WORKDIR /workspace
 RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
     --mount=type=bind,source=nemo_export_deploy/__init__.py,target=/workspace/nemo_export_deploy/__init__.py \
