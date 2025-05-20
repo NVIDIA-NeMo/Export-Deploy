@@ -69,8 +69,7 @@ extras_require['all'] = list(chain(*extras_require.values()))
 
 ###############################################################################
 #                            Code style checkers                              #
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% #
-
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 class StyleCommand(distutils_cmd.Command):
     __ISORT_BASE = 'isort'
