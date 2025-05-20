@@ -131,9 +131,9 @@ jobs:
           tests_to_run: ${{ inputs.test_to_run }}
           image: ${{ inputs.image-name }}
           cpu-only: ${{ matrix.cpu-only || false }}
-          azure-client-id: ${{ secrets.azure-client-id }}
-          azure-tenant-id: ${{ secrets.azure-tenant-id }}
-          azure-subscription-id: ${{ secrets.azure-subscription-id }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   cicd-e2e-tests:
     strategy:
@@ -166,9 +166,9 @@ jobs:
           tests_to_run: ${{ inputs.test_to_run }}
           image: ${{ inputs.image-name }}
           is_optional: ${{ matrix.is_optional || false }}
-          azure-client-id: ${{ secrets.azure-client-id }}
-          azure-tenant-id: ${{ secrets.azure-tenant-id }}
-          azure-subscription-id: ${{ secrets.azure-subscription-id }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           has-azure-credentials: true
 
   # Nemo_CICD_Test:
