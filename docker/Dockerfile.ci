@@ -7,7 +7,8 @@ RUN apt-get update && apt-get install -y \
     git \
     libopenmpi-dev \
     vim \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir -U pip setuptools
 
 # Create and activate virtual environment
 RUN python3 -m venv /opt/venv
