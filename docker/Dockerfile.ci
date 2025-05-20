@@ -16,6 +16,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Align C++ ABI for PyTorch and trt-llm
 ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 
+RUN pip install -U pip setuptools
+
 # Install basic deps
 WORKDIR /workspace
 RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
