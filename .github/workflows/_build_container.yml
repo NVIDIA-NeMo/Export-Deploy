@@ -11,7 +11,7 @@ on:
         type: string
       runner:
         required: false
-        default: self-hosted-azure-builder
+        default: linux-amd64-gpu-rtxa6000-latest-2-nemo
         type: string
         description: "The runner to use for the build"
 
