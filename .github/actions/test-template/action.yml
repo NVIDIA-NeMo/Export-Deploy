@@ -212,15 +212,7 @@ runs:
       id: check
       shell: bash
       run: |
-        cat err.log
-
-        log=$(tail -c 2000 err.log |  base64 -w 0)
-        echo "log=$log" >> "$GITHUB_OUTPUT"
-
-        potential_infra_failure=$(cat err.log | grep -Eqiw "device" && echo true || echo false)
-        echo "potential_infra_failure=$potential_infra_failure" >> "$GITHUB_OUTPUT"
-
-        docker exec nemo_container_${{ github.run_id }} coverage combine
+        docker exec nemo_container_${{ github.run_id }} coverage combine || true
         docker exec nemo_container_${{ github.run_id }} coverage xml
         docker cp nemo_container_${{ github.run_id }}:/workspace/.coverage .coverage
         docker cp nemo_container_${{ github.run_id }}:/workspace/coverage.xml coverage.xml
