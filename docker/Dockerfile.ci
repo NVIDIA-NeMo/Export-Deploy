@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
     vim \
     && rm -rf /var/lib/apt/lists/* && \
     python3 -m venv /opt/venv && \
-    /opt/venv/bin/pip install --no-cache-dir -U pip setuptools
+    /opt/venv/bin/pip install --no-cache-dir -U pip setuptools uv
 
 # Set venv as default
 ENV PATH="/opt/venv/bin:$PATH"
@@ -48,10 +48,10 @@ RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
     --mount=type=bind,source=package_info.py,target=/workspace/package_info.py \
     --mount=type=bind,source=README.md,target=/workspace/README.md \
     --mount=type=bind,source=requirements,target=/workspace/requirements \
-    pip install --no-build-isolation --no-cache-dir '.[all]'
+    uv pip install --no-build-isolation --no-cache-dir '.[all]'
 
 # Install development versions
-RUN pip install --no-cache-dir --upgrade \
+RUN uv pip install --no-cache-dir --upgrade \
     git+https://github.com/NVIDIA/Megatron-LM.git \
     git+https://github.com/NVIDIA/NeMo-Run.git \
     git+https://github.com/NVIDIA/NeMo.git@ko3n1g/ci/init-file-checker
