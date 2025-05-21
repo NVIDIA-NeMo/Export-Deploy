@@ -38,7 +38,7 @@ class TestTensorRTMMExporter:
     @pytest.mark.run_only_on('GPU')
     def test_init(self, model_dir):
         # Test basic initialization
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         assert exporter.model_dir == model_dir
@@ -48,15 +48,15 @@ class TestTensorRTMMExporter:
     @pytest.mark.run_only_on('GPU')
     def test_init_invalid_modality(self, model_dir):
         # Test initialization with invalid modality
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         with pytest.raises(AssertionError):
             TensorRTMMExporter(model_dir, modality="invalid")
 
     @pytest.mark.run_only_on('GPU')
-    @patch("nemo_export_deploy.export.tensorrt_mm_exporter.build_mllama_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.build_mllama_engine")
     def test_export_mllama(self, mock_build, model_dir):
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         exporter.export(
@@ -65,10 +65,10 @@ class TestTensorRTMMExporter:
         mock_build.assert_called_once()
 
     @pytest.mark.run_only_on('GPU')
-    @patch("nemo_export_deploy.export.tensorrt_mm_exporter.build_trtllm_engine")
-    @patch("nemo_export_deploy.export.tensorrt_mm_exporter.build_visual_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.build_visual_engine")
     def test_export_neva(self, mock_visual, mock_trtllm, model_dir):
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         exporter.export(
@@ -79,7 +79,7 @@ class TestTensorRTMMExporter:
 
     @pytest.mark.run_only_on('GPU')
     def test_forward_without_loading(self, model_dir):
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         with pytest.raises(Exception) as exc_info:
@@ -88,7 +88,7 @@ class TestTensorRTMMExporter:
 
     @pytest.mark.run_only_on('GPU')
     def test_forward(self, model_dir, mock_runner):
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         exporter.runner = mock_runner
@@ -103,7 +103,7 @@ class TestTensorRTMMExporter:
 
     @pytest.mark.run_only_on('GPU')
     def test_get_triton_input(self, model_dir):
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         inputs = exporter.get_triton_input
@@ -117,7 +117,7 @@ class TestTensorRTMMExporter:
 
     @pytest.mark.run_only_on('GPU')
     def test_get_triton_output(self, model_dir):
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         outputs = exporter.get_triton_output
@@ -128,7 +128,7 @@ class TestTensorRTMMExporter:
 
     @pytest.mark.run_only_on('GPU')
     def test_forward_with_all_params(self, model_dir, mock_runner):
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         exporter.runner = mock_runner
@@ -163,7 +163,7 @@ class TestTensorRTMMExporter:
 
     @pytest.mark.run_only_on('GPU')
     def test_get_input_media_tensors_vision(self, model_dir):
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False, modality="vision")
         tensors = exporter.get_input_media_tensors()
@@ -175,7 +175,7 @@ class TestTensorRTMMExporter:
 
     @pytest.mark.run_only_on('GPU')
     def test_get_input_media_tensors_audio(self, model_dir):
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False, modality="audio")
         tensors = exporter.get_input_media_tensors()
@@ -190,7 +190,7 @@ class TestTensorRTMMExporter:
 
     @pytest.mark.run_only_on('GPU')
     def test_export_with_invalid_model_type(self, model_dir):
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         with pytest.raises(Exception):
@@ -205,7 +205,7 @@ class TestTensorRTMMExporter:
     def test_export_with_existing_files(self, model_dir):
         import os
 
-        from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         # Create some files in the model directory
         os.makedirs(model_dir, exist_ok=True)

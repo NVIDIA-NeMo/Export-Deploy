@@ -24,7 +24,7 @@ LOGGER = logging.getLogger("NeMo")
 
 multimodal_supported = True
 try:
-    from nemo_export_deploy.export.tensorrt_mm_exporter import TensorRTMMExporter
+    from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 except Exception as e:
     LOGGER.warning(f"Cannot import the TensorRTMMExporter exporter, it will not be available. {type(e).__name__}: {e}")
     multimodal_supported = False

@@ -16,9 +16,8 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from nemo_export.quantize.quantizer import QUANT_CFG_CHOICES, Quantizer
 from omegaconf import DictConfig
-
-from nemo_export_deploy.export.quantize.quantizer import QUANT_CFG_CHOICES, Quantizer
 
 
 @pytest.fixture
@@ -63,7 +62,7 @@ class TestQuantizer:
         quantizer = Quantizer(basic_quantization_config, basic_export_config)
         assert quantizer.quant_cfg is None
 
-    @patch('nemo_export_deploy.export.quantize.quantizer.dist')
+    @patch('nemo_export.quantize.quantizer.dist')
     def test_quantize_method(self, mock_dist, basic_quantization_config, basic_export_config):
         mock_dist.get_rank.return_value = 0
 
@@ -80,7 +79,7 @@ class TestQuantizer:
                 # Verify quantize was called with correct arguments
                 mock_quantize.assert_called_once_with(mock_model, QUANT_CFG_CHOICES['int8'], mock_forward_loop)
 
-    @patch('nemo_export_deploy.export.quantize.quantizer.dist')
+    @patch('nemo_export.quantize.quantizer.dist')
     def test_modify_model_config(self, mock_dist):
         mock_config = DictConfig({'sequence_parallel': True})
         modified_config = Quantizer.modify_model_config(mock_config)
@@ -89,8 +88,8 @@ class TestQuantizer:
         assert modified_config.name == 'modelopt'
         assert modified_config.apply_rope_fusion is False
 
-    @patch('nemo_export_deploy.export.quantize.quantizer.dist')
-    @patch('nemo_export_deploy.export.quantize.quantizer.export_tensorrt_llm_checkpoint')
+    @patch('nemo_export.quantize.quantizer.dist')
+    @patch('nemo_export.quantize.quantizer.export_tensorrt_llm_checkpoint')
     def test_export_method(self, mock_export, mock_dist, basic_quantization_config, basic_export_config):
         mock_dist.get_rank.return_value = 0
         mock_model = MagicMock()
@@ -99,7 +98,7 @@ class TestQuantizer:
 
         quantizer = Quantizer(basic_quantization_config, basic_export_config)
 
-        with patch('nemo_export_deploy.export.quantize.quantizer.save_artifacts'):
+        with patch('nemo_export.quantize.quantizer.save_artifacts'):
             quantizer.export(mock_model)
 
             # Verify export was called with correct arguments

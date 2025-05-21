@@ -38,7 +38,10 @@ try:
     from megatron.core.inference.common_inference_params import CommonInferenceParams
 
     from nemo_export_deploy.deploy.nlp import NemoQueryLLMPyTorch
-    from nemo_export_deploy.deploy.nlp.megatronllm_deployable import MegatronLLMDeploy, MegatronLLMDeployableNemo2
+    from nemo_export_deploy.deploy.nlp.megatronllm_deployable import (
+        MegatronLLMDeploy,
+        MegatronLLMDeployableNemo2,
+    )
 except Exception as e:
     LOGGER.warning(
         "Cannot import MegatronLLMDeploy* classes, or NemoQueryLLMPyTorch, or CommonInferenceParams, "
@@ -48,14 +51,14 @@ except Exception as e:
 
 trt_llm_supported = True
 try:
-    from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
+    from nemo_export.tensorrt_llm import TensorRTLLM
 except Exception as e:
     LOGGER.warning(f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}")
     trt_llm_supported = False
 
 vllm_supported = True
 try:
-    from nemo_export_deploy.export.vllm_exporter import vLLMExporter
+    from nemo_export.vllm_exporter import vLLMExporter
 except Exception as e:
     LOGGER.warning(f"Cannot import the vLLM exporter, it will not be available. {type(e).__name__}: {e}")
     vllm_supported = False

@@ -20,6 +20,13 @@ from typing import Iterable, List, Optional, Union
 import numpy
 import vllm.envs as envs
 import wrapt
+from nemo_export.utils import (
+    convert_lora_nemo_to_canonical,
+    prepare_directory_for_export,
+)
+from nemo_export.vllm.engine import NemoLLMEngine
+from nemo_export.vllm.model_config import NemoModelConfig
+from nemo_export.vllm.model_loader import NemoModelLoader
 from vllm import RequestOutput, SamplingParams
 from vllm.config import (
     CacheConfig,
@@ -37,10 +44,6 @@ from vllm.lora.request import LoRARequest
 
 from nemo_export_deploy.deploy import ITritonDeployable
 from nemo_export_deploy.deploy.utils import cast_output
-from nemo_export_deploy.export.utils import convert_lora_nemo_to_canonical, prepare_directory_for_export
-from nemo_export_deploy.export.vllm.engine import NemoLLMEngine
-from nemo_export_deploy.export.vllm.model_config import NemoModelConfig
-from nemo_export_deploy.export.vllm.model_loader import NemoModelLoader
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -70,7 +73,7 @@ class vLLMExporter(ITritonDeployable):
     loading the model in vLLM, and binding that model to a Triton server.
 
     Example:
-        from nemo_export_deploy.export.vllm_exporter import vLLMExporter
+        from nemo_export.vllm_exporter import vLLMExporter
         from nemo_export_deploy.deploy import DeployPyTriton
 
         exporter = vLLMExporter()
@@ -266,7 +269,9 @@ class vLLMExporter(ITritonDeployable):
             executor_class = RayDistributedExecutor
 
         elif parallel_config.distributed_executor_backend == "mp":
-            from vllm.executor.mp_distributed_executor import MultiprocessingDistributedExecutor
+            from vllm.executor.mp_distributed_executor import (
+                MultiprocessingDistributedExecutor,
+            )
 
             executor_class = MultiprocessingDistributedExecutor
 

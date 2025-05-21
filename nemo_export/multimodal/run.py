@@ -31,6 +31,7 @@ import tensorrt_llm
 import tensorrt_llm.profiler as profiler
 import torch
 import yaml
+from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
 from PIL import Image
 from tensorrt_llm import logger
 from tensorrt_llm._utils import str_dtype_to_trt, torch_dtype_to_trt
@@ -38,8 +39,6 @@ from tensorrt_llm.runtime import ModelRunner, Session, TensorInfo
 from torch.nn import functional as F
 from torchvision import transforms
 from transformers import AutoProcessor, CLIPImageProcessor
-
-from nemo_export_deploy.export.utils.constants import TRTLLM_ENGINE_DIR
 
 
 def trt_dtype_to_torch(dtype):

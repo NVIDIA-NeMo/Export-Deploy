@@ -24,6 +24,12 @@ from typing import List
 import tensorrt as trt
 import torch
 import yaml
+from nemo.collections.multimodal.speech_llm.modules.perception_modules import (
+    AudioPerceptionModule,
+)
+from nemo.core.classes.common import typecheck
+from nemo_export.tensorrt_llm import TensorRTLLM
+from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 from omegaconf import OmegaConf
 from PIL import Image
 from tensorrt_llm._common import check_max_num_tokens
@@ -33,11 +39,6 @@ from tensorrt_llm.mapping import Mapping
 from tensorrt_llm.models import MLLaMAForCausalLM
 from tensorrt_llm.plugin import PluginConfig
 from transformers import AutoModel, AutoProcessor, MllamaForConditionalGeneration
-
-from nemo.collections.multimodal.speech_llm.modules.perception_modules import AudioPerceptionModule
-from nemo.core.classes.common import typecheck
-from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
-from nemo_export_deploy.export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 
 from .converter import convert_mllama_nemo_to_hf
 

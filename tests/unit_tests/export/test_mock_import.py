@@ -13,8 +13,7 @@
 # limitations under the License.
 
 import pytest
-
-from nemo_export_deploy.export.utils._mock_import import _mock_import
+from nemo_export.utils._mock_import import _mock_import
 
 
 def test_mock_import_existing_module():

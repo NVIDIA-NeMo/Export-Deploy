@@ -19,11 +19,15 @@ from collections import defaultdict
 from pathlib import Path
 
 import torch
+from nemo_export.trt_llm.converter.utils import (
+    save_scaling_factor,
+    save_val,
+    split_and_save_weight,
+    weights_dict,
+)
+from nemo_export.utils import torch_dtype_from_precision
 from tensorrt_llm._utils import pad_vocab_size, str_dtype_to_torch
 from tqdm import tqdm
-
-from nemo_export_deploy.export.trt_llm.converter.utils import save_scaling_factor, save_val, split_and_save_weight, weights_dict
-from nemo_export_deploy.export.utils import torch_dtype_from_precision
 
 LOGGER = logging.getLogger("NeMo")
 

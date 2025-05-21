@@ -26,12 +26,15 @@ from typing import Any, Dict, Optional, Union
 import numpy as np
 import torch
 import yaml
+from nemo_export.sentencepiece_tokenizer import SentencePieceTokenizer
+from nemo_export.tarutils import TarPath
+from nemo_export.tiktoken_tokenizer import TiktokenTokenizer
+from nemo_export.utils import (
+    load_model_weights,
+    nemo_to_path,
+    torch_dtype_from_precision,
+)
 from transformers import AutoTokenizer, GPT2Tokenizer, PreTrainedTokenizer
-
-from nemo_export_deploy.export.sentencepiece_tokenizer import SentencePieceTokenizer
-from nemo_export_deploy.export.tarutils import TarPath
-from nemo_export_deploy.export.tiktoken_tokenizer import TiktokenTokenizer
-from nemo_export_deploy.export.utils import load_model_weights, nemo_to_path, torch_dtype_from_precision
 
 try:
     from nemo.lightning import io
@@ -241,7 +244,7 @@ def get_tokenizer_from_nemo2_context(model_context_dir: Path):
         tokenizer_spec = io.load_context(model_context_dir, subpath="model.tokenizer")
         return build_tokenizer(tokenizer_spec)
     else:
-        # Use local nemo_export_deploy.export SentencePieceTokenizer implementation
+        # Use local nemo_export SentencePieceTokenizer implementation
         # or directly a HuggingFace tokenizer based on the model config
         with (model_context_dir / "model.yaml").open("r") as stream:
             model_config = yaml.safe_load(stream)

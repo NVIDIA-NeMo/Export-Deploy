@@ -29,7 +29,7 @@ class DeployPyTriton(DeployBase):
 
     Example:
         from nemo_export_deploy.deploy import DeployPyTriton, NemoQueryLLM
-        from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
+        from nemo_export.tensorrt_llm import TensorRTLLM
 
         trt_llm_exporter = TensorRTLLM(model_dir="/path/for/model/files")
         trt_llm_exporter.export(

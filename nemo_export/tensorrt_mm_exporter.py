@@ -21,22 +21,26 @@ from typing import List
 
 import numpy as np
 import wrapt
-from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
-
-from nemo_export_deploy.deploy import ITritonDeployable
-from nemo_export_deploy.export.multimodal.build import (
+from nemo_export.multimodal.build import (
     build_mllama_engine,
     build_perception_engine,
     build_trtllm_engine,
     build_visual_engine,
     extract_lora_ckpt,
 )
-from nemo_export_deploy.export.multimodal.run import MultimodalModelRunner, SpeechllmModelRunner
-from nemo_export_deploy.export.tarutils import unpack_tarball
+from nemo_export.multimodal.run import MultimodalModelRunner, SpeechllmModelRunner
+from nemo_export.tarutils import unpack_tarball
+from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
+
+from nemo_export_deploy.deploy import ITritonDeployable
 
 use_deploy = True
 try:
-    from nemo_export_deploy.deploy.utils import cast_output, ndarray2img, str_ndarray2list
+    from nemo_export_deploy.deploy.utils import (
+        cast_output,
+        ndarray2img,
+        str_ndarray2list,
+    )
 except Exception:
     use_deploy = False
 
@@ -68,7 +72,7 @@ class TensorRTMMExporter(ITritonDeployable):
     Exports nemo checkpoints to TensorRT and run fast inference.
 
     Example:
-        from nemo_export_deploy.export import TensorRTMMExporter
+        from nemo_export import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir="/path/for/model/files")
         exporter.export(

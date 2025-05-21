@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from nemo_export_deploy.export.utils.lora_converter import convert_lora_nemo_to_canonical
-from nemo_export_deploy.export.utils.model_loader import (
+from nemo_export.utils.lora_converter import convert_lora_nemo_to_canonical
+from nemo_export.utils.model_loader import (
     load_model_weights,
     load_sharded_metadata_torch_dist,
     load_sharded_metadata_zarr,
     nemo_to_path,
 )
-from nemo_export_deploy.export.utils.utils import (
+from nemo_export.utils.utils import (
     get_example_inputs,
     get_model_device_type,
     is_nemo2_checkpoint,

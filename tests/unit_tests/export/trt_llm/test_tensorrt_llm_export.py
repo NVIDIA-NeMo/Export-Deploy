@@ -26,7 +26,7 @@ def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_paralle
     """
     from pathlib import Path
 
-    from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
+    from nemo_export.tensorrt_llm import TensorRTLLM
 
     trt_llm_exporter = TensorRTLLM(model_dir="/tmp/safe_tensor_test/")
     trt_llm_exporter.convert_to_safe_tensors(
@@ -58,7 +58,7 @@ def test_nemo2_convert_to_export():
     """
     from pathlib import Path
 
-    from nemo_export_deploy.export.tensorrt_llm import TensorRTLLM
+    from nemo_export.tensorrt_llm import TensorRTLLM
 
     trt_llm_exporter = TensorRTLLM(model_dir="/tmp/safe_tensor_test_2/")
     trt_llm_exporter.export(

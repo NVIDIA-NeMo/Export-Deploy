@@ -19,7 +19,7 @@ import torch
 
 @pytest.mark.run_only_on('GPU')
 def test_replace_number_add_offset():
-    from nemo_export_deploy.export.utils.lora_converter import replace_number_add_offset
+    from nemo_export.utils.lora_converter import replace_number_add_offset
 
     # Test with no offset
     key = "layers.0.self_attention.lora_kqv_adapter.linear_in.weight"
@@ -38,7 +38,7 @@ def test_replace_number_add_offset():
 
 @pytest.mark.run_only_on('GPU')
 def test_rename_qkv_keys():
-    from nemo_export_deploy.export.utils.lora_converter import rename_qkv_keys
+    from nemo_export.utils.lora_converter import rename_qkv_keys
 
     key = "layers.0.self_attention.lora_kqv_adapter.linear_in.weight"
     new_keys = rename_qkv_keys(key)
@@ -51,7 +51,7 @@ def test_rename_qkv_keys():
 
 @pytest.mark.run_only_on('GPU')
 def test_reformat_module_names_to_hf():
-    from nemo_export_deploy.export.utils.lora_converter import reformat_module_names_to_hf
+    from nemo_export.utils.lora_converter import reformat_module_names_to_hf
 
     # Create sample tensors with NeMo-style names
     tensors = {
@@ -81,7 +81,7 @@ def test_reformat_module_names_to_hf():
 
 @pytest.mark.run_only_on('GPU')
 def test_convert_lora_weights_to_canonical():
-    from nemo_export_deploy.export.utils.lora_converter import convert_lora_weights_to_canonical
+    from nemo_export.utils.lora_converter import convert_lora_weights_to_canonical
 
     # Create a sample config
     config = {

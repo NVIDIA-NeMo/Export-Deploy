@@ -25,7 +25,7 @@ logging.basicConfig(format="%(levelname)s %(asctime)s %(filename)s:%(lineno)d] %
 LOGGER = logging.getLogger("NeMo")
 
 try:
-    from nemo_export_deploy.export.vllm_exporter import vLLMExporter
+    from nemo_export.vllm_exporter import vLLMExporter
 except Exception as e:
     LOGGER.error(f"Cannot import the vLLM exporter. {type(e).__name__}: {e}")
     sys.exit(1)

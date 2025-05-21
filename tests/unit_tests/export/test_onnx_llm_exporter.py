@@ -17,8 +17,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import torch
-
-from nemo_export_deploy.export.onnx_llm_exporter import OnnxLLMExporter
+from nemo_export.onnx_llm_exporter import OnnxLLMExporter
 
 
 class DummyModel(torch.nn.Module):

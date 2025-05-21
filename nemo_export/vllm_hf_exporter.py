@@ -31,7 +31,7 @@ class vLLMHFExporter(ITritonDeployable):
     deployable with Triton server.
 
     Example:
-        from nemo_export_deploy.export import vLLMHFExporter
+        from nemo_export import vLLMHFExporter
         from nemo_export_deploy.deploy import DeployPyTriton
 
         exporter = vLLMHFExporter()

@@ -15,7 +15,7 @@
 import os
 from pathlib import Path
 
-from nemo_export_deploy.export.tarutils import TarPath
+from nemo_export.tarutils import TarPath
 
 CONFIG_NAME = "config.json"
 WEIGHTS_NAME = "rank{}.safetensors"

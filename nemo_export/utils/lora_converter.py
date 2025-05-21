@@ -22,8 +22,7 @@ from typing import Any, Dict, List, Tuple
 
 import torch
 import yaml
-
-from nemo_export_deploy.export.tarutils import TarPath
+from nemo_export.tarutils import TarPath
 
 
 def replace_number_add_offset(key, offset_value):
