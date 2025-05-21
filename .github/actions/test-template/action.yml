@@ -83,6 +83,9 @@ runs:
       shell: bash
       id: azure-fileshare
       run: |
+        sudo apt update
+        sudo apt install -y cifs-utils
+
         RESOURCE_GROUP_NAME="azure-gpu-vm-runner_group"
         STORAGE_ACCOUNT_NAME="nemocistorageaccount2"
         FILE_SHARE_NAME="fileshare"
