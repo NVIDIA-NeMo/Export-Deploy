@@ -183,7 +183,7 @@ def main():
             device_map=args.device_map,
             max_memory=args.max_memory,
             max_batch_size=args.max_batch_size,
-            batch_wait_timeout_s=args.batch_wait_timeout_s
+            batch_wait_timeout_s=args.batch_wait_timeout_s,
         )
 
         # Deploy the model

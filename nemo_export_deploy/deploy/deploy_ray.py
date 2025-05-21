@@ -24,6 +24,7 @@ from .ray_utils import find_available_port
 
 LOGGER = logging.getLogger("NeMo")
 
+
 class DeployRay:
     """
     A class for managing Ray deployment and serving of models.

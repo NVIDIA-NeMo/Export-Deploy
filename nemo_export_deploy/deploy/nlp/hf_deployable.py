@@ -107,10 +107,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         assert self.task is not None, "A task has to be given for the generation task."
 
         if self.task == "text-generation":
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.hf_model_id_path, 
-                **hf_kwargs
-            )
+            self.model = AutoModelForCausalLM.from_pretrained(self.hf_model_id_path, **hf_kwargs)
 
             if self.hf_peft_model_id_path is not None:
                 self.model = PeftModel.from_pretrained(self.model, self.hf_peft_model_id_path)

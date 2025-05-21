@@ -155,7 +155,7 @@ def initialize_distributed(
         init_process_group_kwargs = {
             "backend": dist_config.distributed_backend,
             "world_size": get_world_size_safe(),
-            "rank": get_rank_safe()
+            "rank": get_rank_safe(),
         }
 
         torch.distributed.init_process_group(**init_process_group_kwargs)

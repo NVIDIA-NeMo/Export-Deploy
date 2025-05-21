@@ -1,5 +1,6 @@
 import socket
 
+
 def is_port_in_use(port: int, host: str = "0.0.0.0") -> bool:
     """
     Check if a given port is already in use.
