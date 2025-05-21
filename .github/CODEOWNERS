@@ -1,0 +1,11 @@
+.github/ @ko3n1g @chtruong814
+docker/ @ko3n1g @chtruong814
+.pylintrc.* @ko3n1g @chtruong814
+.flake8.* @ko3n1g @chtruong814
+setup.py @ko3n1g @chtruong814
+pyproject.toml @ko3n1g @chtruong814
+requirements/ @ko3n1g @chtruong814
+
+nemo_export_deploy @janekl @Laplasjan107 @oyilmaz-nvidia
+scripts @janekl @Laplasjan107 @oyilmaz-nvidia
+README.md @janekl @Laplasjan107 @oyilmaz-nvidia
