@@ -79,7 +79,7 @@ runs:
         az acr login --name nemoci
 
     - name: Azure Fileshare
-      if: ${{ inputs.has-azure-credentials }}
+      if: ${{ inputs.has-azure-credentials && !inputs.is_unit_test }}
       shell: bash
       id: azure-fileshare
       run: |
