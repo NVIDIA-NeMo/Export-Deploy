@@ -132,7 +132,7 @@ jobs:
           is_unit_test: "true"
           image: nemo_container
           cpu-only: ${{ matrix.cpu-only || false }}
-          has-azure-credentials: true
+          has-azure-credentials: "true"
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
