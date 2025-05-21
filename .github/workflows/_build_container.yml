@@ -35,6 +35,11 @@ on:
       AZURE_SUBSCRIPTION_ID:
         required: true
 
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+
 jobs:
   pre-flight:
     runs-on: ubuntu-latest
