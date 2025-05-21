@@ -18,12 +18,13 @@ from typing import Any, List, Optional
 
 import numpy as np
 import torch
-from nemo_deploy import ITritonDeployable
-from nemo_deploy.utils import broadcast_list, cast_output, str_ndarray2list
 from peft import PeftModel
 from pytriton.decorators import batch
 from pytriton.model_config import Tensor
 from transformers import AutoModel, AutoModelForCausalLM, AutoTokenizer
+
+from nemo_deploy import ITritonDeployable
+from nemo_deploy.utils import broadcast_list, cast_output, str_ndarray2list
 
 LOGGER = logging.getLogger("NeMo")
 

@@ -18,15 +18,16 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import tensorrt_llm
 import torch
+from tensorrt_llm._utils import pad_vocab_size
+from tensorrt_llm.functional import non_gated_version
+from tensorrt_llm.layers import MoeConfig
+from tensorrt_llm.models.modeling_utils import PretrainedConfig
+
 from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import (
     convert_model_to_trt_llm_ckpt,
     dist_model_to_trt_llm_ckpt,
 )
 from nemo_export.trt_llm.converter.utils import DECODER_MODEL_TYPE, split
-from tensorrt_llm._utils import pad_vocab_size
-from tensorrt_llm.functional import non_gated_version
-from tensorrt_llm.layers import MoeConfig
-from tensorrt_llm.models.modeling_utils import PretrainedConfig
 
 LOGGER = logging.getLogger("NeMo")
 

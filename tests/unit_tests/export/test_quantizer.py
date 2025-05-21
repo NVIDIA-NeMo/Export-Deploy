@@ -16,8 +16,9 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from nemo_export.quantize.quantizer import QUANT_CFG_CHOICES, Quantizer
 from omegaconf import DictConfig
+
+from nemo_export.quantize.quantizer import QUANT_CFG_CHOICES, Quantizer
 
 
 @pytest.fixture

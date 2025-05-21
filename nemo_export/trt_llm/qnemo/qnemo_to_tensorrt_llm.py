@@ -18,8 +18,9 @@ import subprocess
 import warnings
 from typing import List, Optional
 
-from nemo_export.trt_llm.qnemo.utils import CONFIG_NAME, WEIGHTS_NAME
 from tensorrt_llm.models import PretrainedConfig
+
+from nemo_export.trt_llm.qnemo.utils import CONFIG_NAME, WEIGHTS_NAME
 
 
 def qnemo_to_tensorrt_llm(

@@ -21,8 +21,9 @@ from pathlib import Path
 from typing import Optional
 
 import uvicorn
-from nemo_deploy import DeployPyTriton
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
+
+from nemo_deploy import DeployPyTriton
 
 LOGGER = logging.getLogger("NeMo")
 

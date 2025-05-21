@@ -19,6 +19,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
+
 from nemo_deploy.service.fastapi_interface_to_pytriton import (
     CompletionRequest,
     TritonSettings,
@@ -28,9 +29,7 @@ from nemo_deploy.service.fastapi_interface_to_pytriton import (
     dict_to_str,
     query_llm_async,
 )
-from nemo_deploy.service.rest_model_api import (
-    CompletionRequest as RestCompletionRequest,
-)
+from nemo_deploy.service.rest_model_api import CompletionRequest as RestCompletionRequest
 from nemo_deploy.service.rest_model_api import TritonSettings as RestTritonSettings
 from nemo_deploy.service.rest_model_api import app as rest_app
 

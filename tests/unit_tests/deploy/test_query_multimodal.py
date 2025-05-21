@@ -18,8 +18,9 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-from nemo_deploy.multimodal.query_multimodal import NemoQueryMultimodal
 from PIL import Image
+
+from nemo_deploy.multimodal.query_multimodal import NemoQueryMultimodal
 
 
 class TestNemoQueryMultimodal:

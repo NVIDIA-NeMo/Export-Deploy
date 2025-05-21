@@ -15,13 +15,14 @@
 import logging
 from pathlib import Path
 
-from nemo_export.sentencepiece_tokenizer import SentencePieceTokenizer
-from nemo_export.tarutils import TarPath
-from nemo_export.vllm.tokenizer_group import NemoTokenizerGroup
 from sentencepiece import SentencePieceProcessor
 from transformers import PreTrainedTokenizerBase
 from vllm import LLMEngine
 from vllm.transformers_utils.tokenizer_group import TokenizerGroup
+
+from nemo_export.sentencepiece_tokenizer import SentencePieceTokenizer
+from nemo_export.tarutils import TarPath
+from nemo_export.vllm.tokenizer_group import NemoTokenizerGroup
 
 LOGGER = logging.getLogger("NeMo")
 

@@ -13,10 +13,11 @@ from pathlib import Path
 
 import requests
 from fastapi import FastAPI, HTTPException
-from nemo.utils import logging
-from nemo_deploy.nlp import NemoQueryLLM
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
+
+from nemo.utils import logging
+from nemo_deploy.nlp import NemoQueryLLM
 
 
 class TritonSettings(BaseSettings):

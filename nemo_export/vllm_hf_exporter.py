@@ -16,12 +16,13 @@
 from typing import List
 
 import numpy as np
-from nemo_deploy import ITritonDeployable
-from nemo_deploy.utils import cast_output, str_ndarray2list
 from pytriton.decorators import batch, first_value
 from pytriton.model_config import Tensor
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
+
+from nemo_deploy import ITritonDeployable
+from nemo_deploy.utils import cast_output, str_ndarray2list
 
 
 class vLLMHFExporter(ITritonDeployable):

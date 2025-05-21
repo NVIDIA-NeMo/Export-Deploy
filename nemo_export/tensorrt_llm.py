@@ -30,7 +30,6 @@ import tensorrt_llm
 import torch
 import torch.nn.functional as F
 import wrapt
-from nemo_deploy import ITritonDeployable
 from tensorrt_llm._common import check_max_num_tokens
 from tensorrt_llm._utils import numpy_to_torch
 from tensorrt_llm.builder import BuildConfig
@@ -78,15 +77,10 @@ from tensorrt_llm.models import (
 from tensorrt_llm.plugin import PluginConfig
 from transformers import PreTrainedTokenizerBase
 
+from nemo_deploy import ITritonDeployable
 from nemo_export.tarutils import TarPath, unpack_tarball
-from nemo_export.trt_llm.converter.model_converter import (
-    determine_quantization_settings,
-    model_to_trtllm_ckpt,
-)
-from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import (
-    dist_model_to_trt_llm_ckpt,
-    get_layer_prefix,
-)
+from nemo_export.trt_llm.converter.model_converter import determine_quantization_settings, model_to_trtllm_ckpt
+from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import dist_model_to_trt_llm_ckpt, get_layer_prefix
 from nemo_export.trt_llm.converter.utils import init_model_parallel_from_nemo
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
     build_tokenizer,
@@ -96,10 +90,7 @@ from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
     load_nemo_model,
 )
 from nemo_export.trt_llm.qnemo import qnemo_to_tensorrt_llm
-from nemo_export.trt_llm.qnemo.tokenizer_utils import (
-    TOKENIZER_CONFIG_FILE,
-    get_nmt_tokenizer,
-)
+from nemo_export.trt_llm.qnemo.tokenizer_utils import TOKENIZER_CONFIG_FILE, get_nmt_tokenizer
 from nemo_export.trt_llm.qnemo.utils import is_qnemo_checkpoint
 from nemo_export.trt_llm.tensorrt_llm_build import build_and_save_engine
 from nemo_export.trt_llm.tensorrt_llm_run import (
@@ -111,11 +102,7 @@ from nemo_export.trt_llm.tensorrt_llm_run import (
     unload_engine,
 )
 from nemo_export.trt_llm.utils import is_rank
-from nemo_export.utils import (
-    is_nemo_tarfile,
-    prepare_directory_for_export,
-    torch_dtype_from_precision,
-)
+from nemo_export.utils import is_nemo_tarfile, prepare_directory_for_export, torch_dtype_from_precision
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
 
 use_deploy = True
@@ -1054,9 +1041,7 @@ class TensorRTLLM(ITritonDeployable):
         """MCore export supports some default conversion dictionaries
         All Mcore conversion dicts start with "decoder.layers.4.blah.blah" , while nemo models sometimes start with "model.decoder.layers.4.blahblah". so we append model prefix. to the keys
         """
-        from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
-            DEFAULT_CONVERSION_DICT,
-        )
+        from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import DEFAULT_CONVERSION_DICT
 
         model_prefix, _ = get_layer_prefix(layer_names=model_state_dict.keys(), is_mcore=True)
 

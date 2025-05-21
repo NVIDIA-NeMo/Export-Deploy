@@ -18,10 +18,9 @@ from unittest.mock import MagicMock, patch
 
 import torch
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
-from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
-    GPTInferenceWrapper,
-)
+from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import GPTInferenceWrapper
 from megatron.core.transformer.module import MegatronModule
+
 from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
 from nemo_deploy.nlp.inference.inference_base import (
