@@ -22,12 +22,11 @@ import asyncio
 import logging
 import time
 from typing import Any, Dict, List
-
 import torch
 from fastapi import FastAPI, HTTPException
 
 from .hf_deployable import HuggingFaceLLMDeploy
-
+from ..ray_utils import find_available_port
 LOGGER = logging.getLogger("NeMo")
 
 app = FastAPI()
@@ -89,7 +88,8 @@ class HFRayDeployable:
         if not use_ray:
             raise ImportError("Ray is not installed")
         try:
-            max_memory_dict = None
+            max_memory_dict = None  
+            self._setup_unique_distributed_parameters(device_map)
             if device_map == "balanced":
                 if not max_memory:
                     raise ValueError("max_memory must be provided when device_map is 'balanced'")
@@ -107,9 +107,40 @@ class HFRayDeployable:
             self.model_id = model_id
             self.max_batch_size = max_batch_size
             self.batch_wait_timeout_s = batch_wait_timeout_s
+            
+            # Dynamically apply the serve.batch decorator with the user-configured parameters
+            # This allows the batch size and timeout to be configured when instantiating the class
+            self.batched_inference = serve.batch(
+                max_batch_size=self.max_batch_size,
+                batch_wait_timeout_s=self.batch_wait_timeout_s
+            )(self._batched_inference)
+            
         except Exception as e:
             LOGGER.error(f"Error initializing HuggingFaceLLMServe replica: {str(e)}")
             raise
+    
+    def _setup_unique_distributed_parameters(self, device_map):
+        """Configure unique distributed communication parameters for each model replica.
+        
+        This function sets up unique MASTER_PORT environment variables for each Ray Serve
+        replica to ensure they can initialize their own torch.distributed process groups
+        without port conflicts. Only runs for 'balanced' or 'auto' device maps.
+        
+        Args:
+            device_map (str): The device mapping strategy ('auto', 'balanced', etc.)
+        """
+        if device_map == "balanced" or device_map == "auto":
+            import os
+            import torch.distributed as dist
+            
+            # Check if torch.distributed is already initialized
+            if not dist.is_initialized():
+                # Get a unique port based on current process ID to avoid conflicts
+                
+                unique_port = find_available_port(29500, "127.0.0.1")
+                # Set environment variables for torch.distributed
+                os.environ["MASTER_ADDR"] = "127.0.0.1"
+                os.environ["MASTER_PORT"] = str(unique_port)
 
     @app.post("/v1/completions/")
     async def completions(self, request: Dict[Any, Any]):
@@ -140,52 +171,16 @@ class HFRayDeployable:
             HTTPException: If inference fails.
         """
         try:
-            loop = asyncio.get_event_loop()
-            model_name = request.get('model', 'nemo-model')
-            if "prompt" in request:
-                request["prompts"] = [request["prompt"]]
-            # Run tokenization and model inference in the thread pool
-            results = await loop.run_in_executor(
-                None, self.model.ray_infer_fn, request  # Use default ThreadPoolExecutor
-            )
-            # Extract generated texts from results
-            generated_texts = results.get("sentences", [])
-
-            # Calculate token counts asynchronously
-            prompt_tokens = sum(len(p.split()) for p in request.get("prompts", []))
-            completion_tokens = sum(len(r.split()) for r in generated_texts)
-            total_tokens = prompt_tokens + completion_tokens
-            output = {
-                "id": f"cmpl-{int(time.time())}",
-                "object": "text_completion",
-                "created": int(time.time()),
-                "model": model_name,
-                "choices": [
-                    {
-                        "text": " ".join(generated_texts),
-                        "index": 0,
-                        "logprobs": (
-                            {
-                                "token_logprobs": results.get("logits", None),
-                                "top_logprobs": results.get("scores", None),
-                            }
-                            if results.get("logits") is not None
-                            else None
-                        ),
-                        "finish_reason": (
-                            "length" if len(generated_texts[0]) >= request.get('max_tokens', 50) else "stop"
-                        ),
-                    }
-                ],
-                "usage": {
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "total_tokens": total_tokens,
-                },
-            }
-            return output
+            # Call the batched method
+            result = await self.batched_inference(request, "completion")
+            
+            if "error" in result:
+                raise HTTPException(status_code=500, detail=result["error"])
+                
+            return result
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")
+            LOGGER.error(f"Request: {request}")
             raise HTTPException(status_code=500, detail=f"Error during inference: {str(e)}")
 
     @app.post("/v1/chat/completions/")
@@ -224,48 +219,144 @@ class HFRayDeployable:
             prompt = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages])
             prompt += "\nassistant:"
 
-            # Convert prompt to list and add to request
-            request["prompts"] = [prompt]
+            # Create a modified request with the prompt
+            chat_request = request.copy()
+            chat_request["prompt"] = prompt
 
-            loop = asyncio.get_event_loop()
-
-            # Run tokenization and model inference in the thread pool
-            results = await loop.run_in_executor(
-                None, self.model.ray_infer_fn, request  # Use default ThreadPoolExecutor
-            )
-
-            # Extract generated texts from results
-            generated_texts = results.get("sentences", [])
-
-            # Calculate token counts
-            prompt_tokens = len(prompt.split())
-            completion_tokens = sum(len(r.split()) for r in generated_texts)
-            total_tokens = prompt_tokens + completion_tokens
-
-            output = {
-                "id": f"chatcmpl-{int(time.time())}",
-                "object": "chat.completion",
-                "created": int(time.time()),
-                "model": request.get('model', 'nemo-model'),
-                "choices": [
-                    {
-                        "message": {"role": "assistant", "content": generated_texts},
-                        "index": 0,
-                        "finish_reason": (
-                            "length" if len(generated_texts[0]) >= request.get('max_tokens', 50) else "stop"
-                        ),
-                    }
-                ],
-                "usage": {
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "total_tokens": total_tokens,
-                },
-            }
-            return output
+            # Call the batched method with a single request
+            results = await self.batched_inference(chat_request, "chat")
+            
+            if not results or len(results) == 0:
+                raise HTTPException(status_code=500, detail="No results returned from model")
+                
+            return results
+            
         except Exception as e:
             LOGGER.error(f"Error during chat completion: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Error during chat completion: {str(e)}")
+            
+    async def _batched_inference(self, requests: List[Dict[Any, Any]], request_type: str = "completion"):
+        """Internal method for processing batched inference requests.
+        
+        This method is decorated with serve.batch in the constructor with the configured
+        max_batch_size and batch_wait_timeout_s parameters. It's called by the completions
+        and chat_completions endpoints as self.batched_inference, which is the decorated version.
+
+        Args:
+            requests (List[Dict[Any, Any]]): List of request dictionaries.
+            request_type (str): Type of request, either "completion" or "chat".
+
+        Returns:
+            List[Dict]: List of results for each request.
+        """
+        LOGGER.error(f"Received {len(requests)} {request_type} requests")
+        
+        if not requests:
+            return []
+            
+        try:
+            # Extract parameters from the first request
+            first_request = requests[0]
+            model_name = first_request.get('model', 'nemo-model')
+            max_length = first_request.get("max_tokens", 256)
+            temperature = first_request.get("temperature", 1.0)
+            top_k = first_request.get("top_k", 1)
+            
+            # Collect all prompts from all requests
+            all_prompts = [request.get("prompt", "") for request in requests]
+            
+            LOGGER.error(f"Combined {len(all_prompts)} prompts")
+            
+            # Prepare a single inference input with all prompts
+            inference_inputs = {
+                "prompts": all_prompts,
+                "max_length": max_length,
+                "temperature": temperature,
+                "top_k": top_k,
+                "top_p": 0.0,
+                "compute_logprob": request_type == "completion",  # Only compute logprobs for text completions
+                "apply_chat_template": False,
+            }
+            
+            # Run model inference once with all prompts
+            loop = asyncio.get_event_loop()
+            combined_result = await loop.run_in_executor(None, self.model.ray_infer_fn, inference_inputs)
+            
+            # Distribute results back to individual responses
+            results = []
+            
+            for i, request in enumerate(requests):
+                try:
+                    # Get this request's result
+                    request_sentence = combined_result["sentences"][i]
+                    
+                    # Calculate token counts
+                    prompt_tokens = len(all_prompts[i].split())
+                    completion_tokens = len(request_sentence.split())
+                    total_tokens = prompt_tokens + completion_tokens
+                    
+                    # Get log probs if available
+                    log_probs = None
+                    if "log_probs" in combined_result and i < len(combined_result["log_probs"]):
+                        log_probs = combined_result["log_probs"][i]
+                    
+                    # Format response based on request type
+                    if request_type == "chat":
+                        output = {
+                            "id": f"chatcmpl-{int(time.time())}",
+                            "object": "chat.completion",
+                            "created": int(time.time()),
+                            "model": model_name,
+                            "choices": [
+                                {
+                                    "message": {"role": "assistant", "content": request_sentence},
+                                    "index": 0,
+                                    "finish_reason": (
+                                        "length" if len(request_sentence) >= max_length else "stop"
+                                    ),
+                                }
+                            ],
+                            "usage": {
+                                "prompt_tokens": prompt_tokens,
+                                "completion_tokens": completion_tokens,
+                                "total_tokens": total_tokens,
+                            },
+                        }
+                    else:  # completion
+                        output = {
+                            "id": f"cmpl-{int(time.time())}",
+                            "object": "text_completion",
+                            "created": int(time.time()),
+                            "model": model_name,
+                            "choices": [
+                                {
+                                    "text": request_sentence,
+                                    "index": 0,
+                                    "logprobs": log_probs,
+                                    "finish_reason": (
+                                        "length" if len(request_sentence) >= max_length else "stop"
+                                    ),
+                                }
+                            ],
+                            "usage": {
+                                "prompt_tokens": prompt_tokens,
+                                "completion_tokens": completion_tokens,
+                                "total_tokens": total_tokens,
+                            },
+                        }
+                    
+                    results.append(output)
+                    
+                except Exception as e:
+                    LOGGER.error(f"Error processing {request_type} result for request {i}: {str(e)}")
+                    results.append({"error": str(e)})
+                    
+        except Exception as e:
+            LOGGER.error(f"Error in batched {request_type} processing: {str(e)}")
+            # If the batched approach fails, return error for all requests
+            results = [{"error": str(e)} for _ in requests]
+            
+        return results
 
     @app.get("/v1/models")
     async def list_models(self):

@@ -20,47 +20,9 @@ try:
 except Exception:
     use_ray = False
 import logging
-import socket
+from .ray_utils import find_available_port
 
 LOGGER = logging.getLogger("NeMo")
-
-used_ports = set()
-
-
-def is_port_in_use(port: int, host: str = "0.0.0.0") -> bool:
-    """
-    Check if a given port is already in use.
-
-    Args:
-        port (int): The port number to check.
-
-    Returns:
-        bool: True if the port is in use, False otherwise.
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.bind((host, port))
-            return False
-        except socket.error:
-            return True
-
-
-def find_available_port(start_port: int, host: str = "0.0.0.0") -> int:
-    """
-    Find the next available port starting from a given port number.
-
-    Args:
-        start_port (int): The port number to start checking from.
-
-    Returns:
-        int: The first available port number found.
-    """
-    port = start_port
-    while is_port_in_use(port, host) and port not in used_ports:
-        port += 1
-    used_ports.add(port)
-    return port
-
 
 class DeployRay:
     """
