@@ -15,8 +15,8 @@
 import shutil
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-import pytest
 
+import pytest
 from nemo.collections import llm
 
 HF_PATH = "/home/TestData/nlp/megatron_llama/llama-ci-hf"
@@ -26,6 +26,7 @@ dummy_module = MagicMock()
 dummy_module.torch_to_numpy = lambda torch_tensor: torch_tensor.detach().cpu().numpy()
 
 
+@pytest.mark.pleasefixme  # disabled since it required data
 @pytest.mark.run_only_on('GPU')
 @pytest.mark.unit
 def test_model_loading() -> None:
@@ -52,7 +53,9 @@ def test_model_loading() -> None:
             'tensorrt_llm._utils': dummy_module,
         },
     ):
-        from nemo_export_deploy.export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
+        from nemo_export_deploy.export.trt_llm.nemo_ckpt_loader.nemo_file import (
+            load_nemo_model,
+        )
 
         load_nemo_model(nemo_path, export_path_local, False)
         load_nemo_model(nemo_path, export_path_mcore, True)
