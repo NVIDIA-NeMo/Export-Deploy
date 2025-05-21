@@ -27,8 +27,8 @@ LOGGER = logging.getLogger("NeMo")
 
 triton_supported = True
 try:
-    from nemo_export_deploy.deploy import DeployPyTriton
-    from nemo_export_deploy.deploy.nlp import NemoQueryLLM
+    from nemo_deploy import DeployPyTriton
+    from nemo_deploy.nlp import NemoQueryLLM
 except Exception as e:
     LOGGER.warning(f"Cannot import Triton, deployment will not be available. {type(e).__name__}: {e}")
     triton_supported = False
@@ -36,9 +36,8 @@ except Exception as e:
 in_framework_supported = True
 try:
     from megatron.core.inference.common_inference_params import CommonInferenceParams
-
-    from nemo_export_deploy.deploy.nlp import NemoQueryLLMPyTorch
-    from nemo_export_deploy.deploy.nlp.megatronllm_deployable import (
+    from nemo_deploy.nlp import NemoQueryLLMPyTorch
+    from nemo_deploy.nlp.megatronllm_deployable import (
         MegatronLLMDeploy,
         MegatronLLMDeployableNemo2,
     )

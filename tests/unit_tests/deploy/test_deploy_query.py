@@ -14,12 +14,11 @@
 
 
 import numpy as np
+from nemo_deploy import DeployPyTriton, ITritonDeployable
+from nemo_deploy.nlp import NemoQueryLLM
+from nemo_deploy.utils import cast_output, str_ndarray2list
 from pytriton.decorators import batch
 from pytriton.model_config import Tensor
-
-from nemo_export_deploy.deploy import DeployPyTriton, ITritonDeployable
-from nemo_export_deploy.deploy.nlp import NemoQueryLLM
-from nemo_export_deploy.deploy.utils import cast_output, str_ndarray2list
 
 
 class MockModel(ITritonDeployable):

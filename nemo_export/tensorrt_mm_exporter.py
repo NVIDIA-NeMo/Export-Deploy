@@ -21,6 +21,9 @@ from typing import List
 
 import numpy as np
 import wrapt
+from nemo_deploy import ITritonDeployable
+from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
+
 from nemo_export.multimodal.build import (
     build_mllama_engine,
     build_perception_engine,
@@ -30,17 +33,10 @@ from nemo_export.multimodal.build import (
 )
 from nemo_export.multimodal.run import MultimodalModelRunner, SpeechllmModelRunner
 from nemo_export.tarutils import unpack_tarball
-from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
-
-from nemo_export_deploy.deploy import ITritonDeployable
 
 use_deploy = True
 try:
-    from nemo_export_deploy.deploy.utils import (
-        cast_output,
-        ndarray2img,
-        str_ndarray2list,
-    )
+    from nemo_deploy.utils import cast_output, ndarray2img, str_ndarray2list
 except Exception:
     use_deploy = False
 

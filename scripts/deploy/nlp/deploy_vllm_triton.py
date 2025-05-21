@@ -18,7 +18,7 @@ import os
 import sys
 import tempfile
 
-from nemo_export_deploy.deploy import DeployPyTriton
+from nemo_deploy import DeployPyTriton
 
 # Configure the NeMo logger to look the same as vLLM
 logging.basicConfig(format="%(levelname)s %(asctime)s %(filename)s:%(lineno)d] %(message)s", datefmt="%m-%d %H:%M:%S")

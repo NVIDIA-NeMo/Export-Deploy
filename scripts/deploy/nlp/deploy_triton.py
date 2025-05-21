@@ -21,9 +21,8 @@ from pathlib import Path
 from typing import Optional
 
 import uvicorn
+from nemo_deploy import DeployPyTriton
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
-
-from nemo_export_deploy.deploy import DeployPyTriton
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -34,9 +33,7 @@ class UsageError(Exception):
 
 megatron_llm_supported = True
 try:
-    from nemo_export_deploy.deploy.nlp.megatronllm_deployable import (
-        MegatronLLMDeployable,
-    )
+    from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployable
 except Exception as e:
     LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False
@@ -483,7 +480,7 @@ def nemo_deploy(argv):
             try:
                 LOGGER.info("REST service will be started.")
                 uvicorn.run(
-                    'nemo_export_deploy.deploy.service.rest_model_api:app',
+                    'nemo_deploy.service.rest_model_api:app',
                     host=args.service_http_address,
                     port=args.service_port,
                     reload=True,

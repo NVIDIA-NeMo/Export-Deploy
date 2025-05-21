@@ -19,8 +19,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
-
-from nemo_export_deploy.deploy.service.fastapi_interface_to_pytriton import (
+from nemo_deploy.service.fastapi_interface_to_pytriton import (
     CompletionRequest,
     TritonSettings,
     _helper_fun,
@@ -29,9 +28,11 @@ from nemo_export_deploy.deploy.service.fastapi_interface_to_pytriton import (
     dict_to_str,
     query_llm_async,
 )
-from nemo_export_deploy.deploy.service.rest_model_api import CompletionRequest as RestCompletionRequest
-from nemo_export_deploy.deploy.service.rest_model_api import TritonSettings as RestTritonSettings
-from nemo_export_deploy.deploy.service.rest_model_api import app as rest_app
+from nemo_deploy.service.rest_model_api import (
+    CompletionRequest as RestCompletionRequest,
+)
+from nemo_deploy.service.rest_model_api import TritonSettings as RestTritonSettings
+from nemo_deploy.service.rest_model_api import app as rest_app
 
 
 @pytest.fixture
@@ -41,7 +42,7 @@ def client():
 
 @pytest.fixture
 def mock_triton_settings():
-    with patch('nemo_export_deploy.deploy.service.fastapi_interface_to_pytriton.TritonSettings') as mock:
+    with patch('nemo_deploy.service.fastapi_interface_to_pytriton.TritonSettings') as mock:
         instance = mock.return_value
         instance.triton_service_port = 8000
         instance.triton_service_ip = "localhost"
@@ -55,7 +56,7 @@ def rest_client():
 
 @pytest.fixture
 def mock_rest_triton_settings():
-    with patch('nemo_export_deploy.deploy.service.rest_model_api.TritonSettings') as mock:
+    with patch('nemo_deploy.service.rest_model_api.TritonSettings') as mock:
         instance = mock.return_value
         instance.triton_service_port = 8080
         instance.triton_service_ip = "localhost"
@@ -129,7 +130,7 @@ class TestLLMQueryFunctions:
         mock_nq = MagicMock()
         mock_nq.query_llm.return_value = {"test": "response"}
 
-        with patch('nemo_export_deploy.deploy.service.fastapi_interface_to_pytriton.NemoQueryLLMPyTorch', return_value=mock_nq):
+        with patch('nemo_deploy.service.fastapi_interface_to_pytriton.NemoQueryLLMPyTorch', return_value=mock_nq):
             result = _helper_fun(
                 url="http://test",
                 model="test_model",
@@ -146,7 +147,7 @@ class TestLLMQueryFunctions:
 
     def test_query_llm_async(self):
         mock_result = {"test": "response"}
-        with patch('nemo_export_deploy.deploy.service.fastapi_interface_to_pytriton._helper_fun', return_value=mock_result):
+        with patch('nemo_deploy.service.fastapi_interface_to_pytriton._helper_fun', return_value=mock_result):
             # Create an event loop and run the async function
             import asyncio
 
@@ -178,7 +179,7 @@ class TestAPIEndpoints:
             ]
         }
 
-        with patch('nemo_export_deploy.deploy.service.fastapi_interface_to_pytriton.query_llm_async', return_value=mock_output):
+        with patch('nemo_deploy.service.fastapi_interface_to_pytriton.query_llm_async', return_value=mock_output):
             response = client.post(
                 "/v1/completions/", json={"model": "test_model", "prompt": "test prompt", "logprobs": 1}
             )
@@ -190,7 +191,7 @@ class TestAPIEndpoints:
     def test_chat_completions_v1(self, client):
         mock_output = {"choices": [{"text": [["test response"]]}]}
 
-        with patch('nemo_export_deploy.deploy.service.fastapi_interface_to_pytriton.query_llm_async', return_value=mock_output):
+        with patch('nemo_deploy.service.fastapi_interface_to_pytriton.query_llm_async', return_value=mock_output):
             response = client.post(
                 "/v1/chat/completions/",
                 json={"model": "test_model", "messages": [{"role": "user", "content": "test message"}]},
@@ -265,7 +266,7 @@ class TestRestHealthEndpoints:
 class TestRestCompletionsEndpoint:
     def test_completions_success(self, rest_client):
         mock_output = [["test response"]]
-        with patch('nemo_export_deploy.deploy.service.rest_model_api.NemoQueryLLM') as mock_llm:
+        with patch('nemo_deploy.service.rest_model_api.NemoQueryLLM') as mock_llm:
             mock_instance = mock_llm.return_value
             mock_instance.query_llm.return_value = mock_output
 
@@ -287,7 +288,7 @@ class TestRestCompletionsEndpoint:
         mock_output = [["test response"]]
         mock_rest_triton_settings.openai_format_response = False
 
-        with patch('nemo_export_deploy.deploy.service.rest_model_api.NemoQueryLLM') as mock_llm:
+        with patch('nemo_deploy.service.rest_model_api.NemoQueryLLM') as mock_llm:
             mock_instance = mock_llm.return_value
             mock_instance.query_llm.return_value = mock_output
 
@@ -296,7 +297,7 @@ class TestRestCompletionsEndpoint:
             assert response.json() == {"output": "test response"}
 
     def test_completions_error_handling(self, rest_client):
-        with patch('nemo_export_deploy.deploy.service.rest_model_api.NemoQueryLLM') as mock_llm:
+        with patch('nemo_deploy.service.rest_model_api.NemoQueryLLM') as mock_llm:
             mock_instance = mock_llm.return_value
             mock_instance.query_llm.side_effect = Exception("Test error")
 

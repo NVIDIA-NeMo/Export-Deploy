@@ -18,9 +18,8 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+from nemo_deploy.multimodal.query_multimodal import NemoQueryMultimodal
 from PIL import Image
-
-from nemo_export_deploy.deploy.multimodal.query_multimodal import NemoQueryMultimodal
 
 
 class TestNemoQueryMultimodal:
@@ -95,7 +94,7 @@ class TestNemoQueryMultimodal:
         result = query_multimodal.get_subsampled_frames(frames, subsample_len)
         assert len(result) == subsample_len
 
-    @patch('nemo_export_deploy.deploy.multimodal.query_multimodal.ModelClient')
+    @patch('nemo_deploy.multimodal.query_multimodal.ModelClient')
     def test_query(self, mock_model_client, query_multimodal, mock_image):
         # Mock the ModelClient context manager
         mock_client_instance = MagicMock()
@@ -116,7 +115,7 @@ class TestNemoQueryMultimodal:
         assert result[0] == "test response"
         os.unlink(mock_image)
 
-    @patch('nemo_export_deploy.deploy.multimodal.query_multimodal.VideoReader')
+    @patch('nemo_deploy.multimodal.query_multimodal.VideoReader')
     def test_setup_media_video(self, mock_video_reader, mock_video):
         nq = NemoQueryMultimodal(url="localhost", model_name="test_model", model_type="video-neva")
 

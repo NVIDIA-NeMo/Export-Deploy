@@ -18,7 +18,7 @@ import os
 import sys
 from pathlib import Path
 
-from nemo_export_deploy.deploy import DeployPyTriton
+from nemo_deploy import DeployPyTriton
 
 LOGGER = logging.getLogger("NeMo")
 

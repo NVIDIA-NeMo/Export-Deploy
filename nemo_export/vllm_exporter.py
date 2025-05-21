@@ -20,13 +20,8 @@ from typing import Iterable, List, Optional, Union
 import numpy
 import vllm.envs as envs
 import wrapt
-from nemo_export.utils import (
-    convert_lora_nemo_to_canonical,
-    prepare_directory_for_export,
-)
-from nemo_export.vllm.engine import NemoLLMEngine
-from nemo_export.vllm.model_config import NemoModelConfig
-from nemo_export.vllm.model_loader import NemoModelLoader
+from nemo_deploy import ITritonDeployable
+from nemo_deploy.utils import cast_output
 from vllm import RequestOutput, SamplingParams
 from vllm.config import (
     CacheConfig,
@@ -42,8 +37,13 @@ from vllm.config import (
 from vllm.executor.ray_utils import initialize_ray_cluster
 from vllm.lora.request import LoRARequest
 
-from nemo_export_deploy.deploy import ITritonDeployable
-from nemo_export_deploy.deploy.utils import cast_output
+from nemo_export.utils import (
+    convert_lora_nemo_to_canonical,
+    prepare_directory_for_export,
+)
+from nemo_export.vllm.engine import NemoLLMEngine
+from nemo_export.vllm.model_config import NemoModelConfig
+from nemo_export.vllm.model_loader import NemoModelLoader
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -74,7 +74,7 @@ class vLLMExporter(ITritonDeployable):
 
     Example:
         from nemo_export.vllm_exporter import vLLMExporter
-        from nemo_export_deploy.deploy import DeployPyTriton
+        from nemo_deploy import DeployPyTriton
 
         exporter = vLLMExporter()
 

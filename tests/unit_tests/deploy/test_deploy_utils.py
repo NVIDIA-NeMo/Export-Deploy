@@ -20,10 +20,7 @@ import typing
 import numpy as np
 import pytest
 import torch
-from PIL import Image
-from pytriton.model_config import Tensor
-
-from nemo_export_deploy.deploy.utils import (
+from nemo_deploy.utils import (
     NEMO1,
     NEMO2,
     broadcast_list,
@@ -34,6 +31,8 @@ from nemo_export_deploy.deploy.utils import (
     str_ndarray2list,
     typedict2tensor,
 )
+from PIL import Image
+from pytriton.model_config import Tensor
 
 
 class TestTypedict2Tensor:
