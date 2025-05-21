@@ -26,6 +26,12 @@ from itertools import chain
 import setuptools
 
 spec = importlib.util.spec_from_file_location('package_info', 'nemo_export_deploy/package_info.py')
+if spec is None:
+    raise ImportError("Failed to import package_info")
+
+if spec.loader is None:
+    raise ImportError("Failed to load package_info")
+
 package_info = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(package_info)
 
@@ -47,6 +53,15 @@ with open("README.md", "r", encoding='utf-8') as fh:
 
 
 def req_file(filename, folder="requirements"):
+    """Helper function to read requirements from a file.
+
+    Args:
+        filename (str): Requirements file name.
+        folder (str, optional): Directory containing the requirements file. Defaults to "requirements".
+
+    Returns:
+        list[str]: List of requirements.
+    """
     files = [filename] if not isinstance(filename, list) else filename
     ans = []
     for file in files:
@@ -62,19 +77,21 @@ extras_require = {
     'export': req_file(["requirements_export.txt"]),
     'deploy': req_file('requirements_deploy.txt'),
     'lightning': req_file('requirements_lightning.txt'),
+    'te': req_file('requirements_te.txt'),
 }
 
 extras_require['all'] = list(chain(*extras_require.values()))
 
-extras_require['export_deploy'] = req_file(["requirements_export.txt", "requirements_deploy.txt"])
-
-
 ###############################################################################
 #                            Code style checkers                              #
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% #
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 class StyleCommand(distutils_cmd.Command):
+    """
+    Custom command to check code style.
+    """
+
     __ISORT_BASE = 'isort'
     __BLACK_BASE = 'black'
     description = 'Checks overall project code style.'
@@ -120,7 +137,7 @@ class StyleCommand(distutils_cmd.Command):
     def _fail(self):
         self.announce(msg='\033[31mFAIL\x1b[0m', level=distutils_log.INFO)
 
-    # noinspection PyAttributeOutsideInit
+    # pylint: disable=C0116
     def initialize_options(self):
         self.scope = '.'
         self.fix = ''
@@ -138,6 +155,8 @@ class StyleCommand(distutils_cmd.Command):
 
     def finalize_options(self):
         pass
+
+    # pylint: enable=C0116
 
 
 ###############################################################################
@@ -190,6 +209,8 @@ setuptools.setup(
         # Supported python versions
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         # Additional Setting
         'Environment :: Console',
         'Natural Language :: English',
@@ -205,7 +226,7 @@ setuptools.setup(
     extras_require=extras_require,
     # Add in any packaged data.
     include_package_data=True,
-    exclude=['nemo/automodel', 'nemo/collections', 'nemo/core', 'nemo/lightning', 'nemo/utils', 'tests'],
+    exclude=['tests'],
     package_data={'': ['*.tsv', '*.txt', '*.far', '*.fst', '*.cpp', 'Makefile']},
     zip_safe=False,
     # PyPI package information.
