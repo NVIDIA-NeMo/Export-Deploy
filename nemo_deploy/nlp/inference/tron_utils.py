@@ -158,7 +158,7 @@ def initialize_distributed(
             "backend": dist_config.distributed_backend,
             "world_size": get_world_size_safe(),
             "rank": get_rank_safe(),
-            "timeout": datetime.timedelta(minutes=dist_config.distributed_timeout_minutes)
+            "timeout": datetime.timedelta(minutes=dist_config.distributed_timeout_minutes),
         }
 
         torch.distributed.init_process_group(**init_process_group_kwargs)
