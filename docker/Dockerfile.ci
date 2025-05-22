@@ -43,8 +43,9 @@ RUN pip install --no-cache-dir -U \
 # Install all
 WORKDIR /workspace
 RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
-    --mount=type=bind,source=nemo_export_deploy/__init__.py,target=/workspace/nemo_export_deploy/__init__.py \
-    --mount=type=bind,source=nemo_export_deploy/package_info.py,target=/workspace/nemo_export_deploy/package_info.py \
+    --mount=type=bind,source=nemo_export/__init__.py,target=/workspace/nemo_export/__init__.py \
+    --mount=type=bind,source=nemo_deploy/__init__.py,target=/workspace/nemo_deploy/__init__.py \
+    --mount=type=bind,source=package_info.py,target=/workspace/package_info.py \
     --mount=type=bind,source=README.md,target=/workspace/README.md \
     --mount=type=bind,source=requirements,target=/workspace/requirements \
     pip install --no-build-isolation --no-cache-dir '.[all]'

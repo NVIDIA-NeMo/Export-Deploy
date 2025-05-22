@@ -21,8 +21,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import sentencepiece
 import torch
-
-from nemo_export_deploy.export.sentencepiece_tokenizer import SentencePieceTokenizer
+from nemo_export.sentencepiece_tokenizer import SentencePieceTokenizer
 
 
 class TestSentencePieceTokenizer(unittest.TestCase):

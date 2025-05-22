@@ -20,7 +20,7 @@ import torch
 @pytest.mark.run_only_on('GPU')
 def test_any_word_in_key():
     # Test positive cases
-    from nemo_export_deploy.export.trt_llm.converter.utils import any_word_in_key
+    from nemo_export.trt_llm.converter.utils import any_word_in_key
 
     assert any_word_in_key("model.layer1.attention.dense.weight", ["attention", "mlp"]) == True
     assert any_word_in_key("model.layer1.mlp.weight", ["attention", "mlp"]) == True
@@ -33,7 +33,7 @@ def test_any_word_in_key():
 @pytest.mark.run_only_on('GPU')
 def test_get_trt_llm_keyname():
     # Test final layernorm case
-    from nemo_export_deploy.export.trt_llm.converter.utils import get_trt_llm_keyname
+    from nemo_export.trt_llm.converter.utils import get_trt_llm_keyname
 
     assert get_trt_llm_keyname("final_layernorm.weight") == "transformer.ln_f.weight"
 
@@ -44,7 +44,7 @@ def test_get_trt_llm_keyname():
 
 @pytest.mark.run_only_on('GPU')
 def test_is_scaling_factor():
-    from nemo_export_deploy.export.trt_llm.converter.utils import is_scaling_factor
+    from nemo_export.trt_llm.converter.utils import is_scaling_factor
 
     assert is_scaling_factor("model.layer1.scale_fwd.weight") == True
     assert is_scaling_factor("model.layer1.weight") == False
@@ -53,7 +53,7 @@ def test_is_scaling_factor():
 
 @pytest.mark.run_only_on('GPU')
 def test_get_scaling_factor_keys():
-    from nemo_export_deploy.export.trt_llm.converter.utils import get_scaling_factor_keys
+    from nemo_export.trt_llm.converter.utils import get_scaling_factor_keys
 
     key = "layers.1.mlp.dense_h_to_4h.scale_fwd"
     keys, gate_keys = get_scaling_factor_keys(key)
@@ -70,7 +70,7 @@ def test_get_scaling_factor_keys():
 @pytest.mark.run_only_on('GPU')
 def test_split():
     # Test numpy array splitting
-    from nemo_export_deploy.export.trt_llm.converter.utils import split
+    from nemo_export.trt_llm.converter.utils import split
 
     arr = np.array([1, 2, 3, 4])
     assert np.array_equal(split(arr, tp_size=2, idx=0), np.array([1, 2]))
@@ -88,7 +88,7 @@ def test_split():
 @pytest.mark.run_only_on('GPU')
 def test_generate_int8():
     # Create test weights and activation ranges
-    from nemo_export_deploy.export.trt_llm.converter.utils import generate_int8
+    from nemo_export.trt_llm.converter.utils import generate_int8
 
     weights = np.random.randn(4, 4).astype(np.float32)
     act_range = {"w": torch.tensor(2.0), "x": torch.tensor(3.0), "y": torch.tensor(4.0)}

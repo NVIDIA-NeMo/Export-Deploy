@@ -25,7 +25,7 @@ from itertools import chain
 
 import setuptools
 
-spec = importlib.util.spec_from_file_location('package_info', 'nemo_export_deploy/package_info.py')
+spec = importlib.util.spec_from_file_location('package_info', './package_info.py')
 if spec is None:
     raise ImportError("Failed to import package_info")
 
@@ -216,7 +216,7 @@ setuptools.setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
     ],
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(include=['nemo_export', 'nemo_deploy']),
     python_requires='>=3.10',
     install_requires=install_requires,
     # List additional groups of dependencies here (e.g. development

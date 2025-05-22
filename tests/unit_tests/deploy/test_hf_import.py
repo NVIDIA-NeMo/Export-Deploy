@@ -19,9 +19,8 @@ import pytest
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
-
-from nemo_export_deploy.deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
-from nemo_export_deploy.deploy.utils import broadcast_list
+from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from nemo_deploy.utils import broadcast_list
 
 
 @pytest.mark.pleasefixme  # disabled since it required data
