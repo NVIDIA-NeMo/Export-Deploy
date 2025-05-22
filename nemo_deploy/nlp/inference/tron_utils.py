@@ -153,18 +153,12 @@ def initialize_distributed(
         if device_count > 0:
             torch.cuda.set_device(get_local_rank_preinit())
 
-        init_method = 'tcp://'
-        master_ip = os.getenv('MASTER_ADDR', 'localhost')
-        master_port = os.getenv('MASTER_PORT', '6000')
-        init_method += master_ip + ':' + master_port
-
         # Call the init process
         init_process_group_kwargs = {
             "backend": dist_config.distributed_backend,
             "world_size": get_world_size_safe(),
             "rank": get_rank_safe(),
             "timeout": datetime.timedelta(minutes=dist_config.distributed_timeout_minutes),
-            "init_method": init_method,
         }
 
         torch.distributed.init_process_group(**init_process_group_kwargs)
@@ -282,7 +276,7 @@ def _initialize_tp_communicators(model_config: Union[GPTConfig, T5Config], micro
     except TypeError:
         # Fallback for older TE versions
         if bootstrap_backend != "mpi":
-            print(f"Warning: Transformer Engine may only support MPI bootstrap backend")
+            print("Warning: Transformer Engine may only support MPI bootstrap backend")
 
         # Create a MPI process group for TP communication bootstrap
         torch.distributed.new_group(backend="mpi")
