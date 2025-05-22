@@ -27,7 +27,6 @@ concurrency:
 permissions:
   id-token: write
   contents: read
-  issues: write
 
 jobs:
   pre-flight:
