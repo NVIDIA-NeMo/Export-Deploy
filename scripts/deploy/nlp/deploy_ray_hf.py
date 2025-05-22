@@ -30,6 +30,7 @@ def get_available_cpus():
 
 
 def parse_args():
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Deploy a HuggingFace model using Ray")
     parser.add_argument(
         "--model_path",
@@ -135,6 +136,7 @@ def parse_args():
 
 
 def signal_handler(signum, frame, deployer):
+    """Handle interrupt signals."""
     LOGGER.info("Received interrupt signal. Shutting down gracefully...")
     deployer.stop()
     sys.exit(0)

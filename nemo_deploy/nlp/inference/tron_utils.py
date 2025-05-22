@@ -276,7 +276,7 @@ def _initialize_tp_communicators(model_config: Union[GPTConfig, T5Config], micro
     except TypeError:
         # Fallback for older TE versions
         if bootstrap_backend != "mpi":
-            print(f"Warning: Transformer Engine may only support MPI bootstrap backend")
+            print("Warning: Transformer Engine may only support MPI bootstrap backend")
 
         # Create a MPI process group for TP communication bootstrap
         torch.distributed.new_group(backend="mpi")

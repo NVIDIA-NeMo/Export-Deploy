@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from nemo_deploy.deploy_ray import DeployRay, use_ray
+from nemo_deploy.deploy_ray import DeployRay
 
 
 class TestDeployRay(unittest.TestCase):
@@ -11,14 +11,14 @@ class TestDeployRay(unittest.TestCase):
     @patch('nemo_deploy.deploy_ray.ray')
     def test_init_with_existing_cluster(self, mock_ray):
         # Test initialization connecting to existing cluster
-        deploy = DeployRay(address="auto", num_cpus=2, num_gpus=1)
+        DeployRay(address="auto", num_cpus=2, num_gpus=1)
         mock_ray.init.assert_called_once_with(address="auto", ignore_reinit_error=True, runtime_env=None)
 
     @patch('nemo_deploy.deploy_ray.ray')
     def test_init_with_runtime_env(self, mock_ray):
         # Test initialization with custom runtime environment
         runtime_env = {"pip": ["numpy", "pandas"]}
-        deploy = DeployRay(runtime_env=runtime_env)
+        DeployRay(runtime_env=runtime_env)
         mock_ray.init.assert_called_once_with(address="auto", ignore_reinit_error=True, runtime_env=runtime_env)
 
     @patch('nemo_deploy.deploy_ray.ray')
@@ -26,7 +26,7 @@ class TestDeployRay(unittest.TestCase):
         # Test initialization creating a new cluster when connection fails
         mock_ray.init.side_effect = [ConnectionError, None]
 
-        deploy = DeployRay(num_cpus=4, num_gpus=2, include_dashboard=True)
+        DeployRay(num_cpus=4, num_gpus=2, include_dashboard=True)
 
         assert mock_ray.init.call_count == 2
         mock_ray.init.assert_called_with(
@@ -37,7 +37,7 @@ class TestDeployRay(unittest.TestCase):
     def test_init_without_ray(self):
         # Test initialization when Ray is not installed
         with pytest.raises(Exception) as excinfo:
-            deploy = DeployRay()
+            DeployRay()
         assert "Ray is not installed" in str(excinfo.value)
 
     @patch('nemo_deploy.deploy_ray.ray')

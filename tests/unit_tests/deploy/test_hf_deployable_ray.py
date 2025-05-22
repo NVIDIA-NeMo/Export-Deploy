@@ -14,15 +14,12 @@
 
 
 import time
-import unittest
 from unittest.mock import MagicMock, patch
 
 import pytest
-import torch
 from fastapi import FastAPI, HTTPException
 
 from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
-from nemo_deploy.nlp.hf_deployable_ray import app, use_ray
 
 
 # Create a mock of the HFRayDeployable class without decorators for testing
@@ -214,8 +211,12 @@ class TestHFRayDeployable:
                     )
 
             with patch.object(MockHFRayDeployable, "__init__", mock_init):
-                instance = mock_hfray_class(hf_model_id_path="test/model", device_map="balanced", max_memory="75GiB")
-
+                mock_hfray_class(
+                    hf_model_id_path="test/model",
+                    device_map="balanced",
+                    max_memory="75GiB"
+                )
+                
                 # Verify max_memory_dict was created
                 mock_hf_model.assert_called_once()
                 args, kwargs = mock_hf_model.call_args
