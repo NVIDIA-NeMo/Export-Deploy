@@ -48,10 +48,10 @@ RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
     --mount=type=bind,source=package_info.py,target=/workspace/package_info.py \
     --mount=type=bind,source=README.md,target=/workspace/README.md \
     --mount=type=bind,source=requirements,target=/workspace/requirements \
-    uv pip install --no-build-isolation --no-cache-dir '.[all]'
+    pip install --no-build-isolation --no-cache-dir '.[all]'
 
 # Install development versions
-RUN uv pip install --no-cache-dir --upgrade \
+RUN pip install --no-cache-dir --upgrade \
     git+https://github.com/NVIDIA/Megatron-LM.git \
     git+https://github.com/NVIDIA/NeMo-Run.git \
     git+https://github.com/NVIDIA/NeMo.git@ko3n1g/ci/init-file-checker
