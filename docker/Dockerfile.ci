@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
     vim \
     && rm -rf /var/lib/apt/lists/* && \
     python3 -m venv /opt/venv && \
-    /opt/venv/bin/pip install --no-cache-dir -U pip setuptools uv
+    /opt/venv/bin/pip install --no-cache-dir -U pip setuptools
 
 # Set venv as default
 ENV PATH="/opt/venv/bin:$PATH"
