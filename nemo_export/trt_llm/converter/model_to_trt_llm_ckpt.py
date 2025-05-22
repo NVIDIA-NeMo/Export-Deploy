@@ -25,6 +25,7 @@ from tqdm import tqdm
 from nemo_export.trt_llm.converter.utils import save_scaling_factor, save_val, split_and_save_weight, weights_dict
 from nemo_export.utils import torch_dtype_from_precision
 
+
 LOGGER = logging.getLogger("NeMo")
 
 layer_names = {

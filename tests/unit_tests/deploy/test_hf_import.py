@@ -23,6 +23,7 @@ from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
 from nemo_deploy.utils import broadcast_list
 
 
+@pytest.mark.pleasefixme  # disabled since it required data
 @pytest.mark.run_only_on('GPU')
 @pytest.mark.unit
 def test_hf_generate():
