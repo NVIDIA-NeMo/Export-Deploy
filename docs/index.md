@@ -3,8 +3,8 @@
 ```
 
 ```{toctree}
-:caption: 🚀 NeMo Export
+:caption: 🚀 NeMo Export and Deploy
 :hidden:
 
-export/index.md
+export_deploy_models.md
 ```
