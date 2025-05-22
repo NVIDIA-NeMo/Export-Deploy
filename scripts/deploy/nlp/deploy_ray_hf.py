@@ -18,8 +18,8 @@ import multiprocessing
 import signal
 import sys
 
-from nemo_export_deploy.deploy.deploy_ray import DeployRay
-from nemo_export_deploy.deploy.nlp.hf_deployable_ray import HFRayDeployable
+from nemo_deploy.deploy_ray import DeployRay
+from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
 
 LOGGER = logging.getLogger("NeMo")
 

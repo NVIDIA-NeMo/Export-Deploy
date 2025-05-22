@@ -14,7 +14,7 @@
 
 
 import logging
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 
 import numpy as np
 import torch
@@ -113,8 +113,11 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 self.model = PeftModel.from_pretrained(self.model, self.hf_peft_model_id_path)
         else:
             raise ValueError("Task {0} is not supported.".format(self.task))
-
-        self.model.cuda()
+        num_gpus = torch.cuda.device_count()
+        # If there is only one GPU, move the model to GPU. If you are using device_map as "auto" or "balanced",
+        # the model will be moved to GPU automatically.
+        if num_gpus == 1:
+            self.model.cuda()
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.tokenizer_id_path,
             trust_remote_code=hf_kwargs.pop("trust_remote_code", False),
