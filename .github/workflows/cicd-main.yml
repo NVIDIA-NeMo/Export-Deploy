@@ -162,7 +162,7 @@ jobs:
     environment: nemo-ci
     steps:
       - name: main
-        uses: NVIDIA/NeMo-Export-Deploy/.github/actions/test-template@main
+        uses: NVIDIA/NeMo-Export-Deploy/.github/actions/test-template@ko3n1g/o3n1g/ci/enable-e2e-tests
         with:
           runner: ${{ runner.name }}
           script: ${{ matrix.script }}
