@@ -11,16 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo tests/functional_tests/utils/test_hf_import.py \
+python tests/functional_tests/utils/test_hf_import.py \
   --hf_model /home/TestData/nlp/megatron_llama/llama-ci-hf \
   --output_path /tmp/nemo2_ckpt
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo torchrun --nproc_per_node=2 scripts/deploy/nlp/deploy_inframework_triton.py \
+torchrun --nproc_per_node=2 scripts/deploy/nlp/deploy_inframework_triton.py \
   --nemo_checkpoint /tmp/nemo2_ckpt \
   --triton_model_name llama \
   --tensor_parallelism_size 2 &
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo scripts/deploy/nlp/query_inframework.py \
+coverage run -a --data-file=/workspace/.coverage --source=/workspace scripts/deploy/nlp/query_inframework.py \
   --model_name llama \
   --prompt "What is the color of a banana?" \
   --max_output_len 20
