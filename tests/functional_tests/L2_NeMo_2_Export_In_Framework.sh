@@ -15,9 +15,6 @@ coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo tests/
   --hf_model /home/TestData/nlp/megatron_llama/llama-ci-hf \
   --output_path /tmp/nemo2_ckpt
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo tests/functional_tests/utils/create_sample_lambada.py \
-  --output_file /tmp/lambada.json
-
 coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo tests/functional_tests/utils/run_nemo_export.py \
   --model_name test \
   --model_type llama \
@@ -26,6 +23,6 @@ coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo tests/
   --in_framework True \
   --test_deployment True \
   --run_accuracy True \
-  --test_data_path /tmp/lambada.json \
+  --test_data_path /tests/functional_tests/data/lambada.json \
   --accuracy_threshold 0.0 \
   --debug
