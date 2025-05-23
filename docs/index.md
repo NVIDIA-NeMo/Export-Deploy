@@ -7,4 +7,6 @@
 :hidden:
 
 export_deploy_models.md
+llm/index.md
+mm/index.md
 ```

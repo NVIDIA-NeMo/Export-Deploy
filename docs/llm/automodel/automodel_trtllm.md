@@ -120,78 +120,78 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    
    | Hugging Face Model   |              model_type       |  
    | :------------------- | ------------------------------|
-   | :GPT2LMHeadModel     |              GPTForCausalLM    |
-   | :GPT2LMHeadCustomModel|             GPTForCausalLM|
-   | :GPTBigCodeForCausalLM |            GPTForCausalLM|
-   | :Starcoder2ForCausalLM |            GPTForCausalLM|
-   | :JAISLMHeadModel       |            GPTForCausalLM|
-   | :GPTForCausalLM       |             GPTForCausalLM|
-   | :NemotronForCausalLM   |            GPTForCausalLM|
-   | :OPTForCausalLM       |             OPTForCausalLM|
-   | :BloomForCausalLM     |             BloomForCausalLM|
-   | :RWForCausalLM        |             FalconForCausalLM|
-   | :FalconForCausalLM    |             FalconForCausalLM|
-   | :PhiForCausalLM       |             PhiForCausalLM|
-   | :Phi3ForCausalLM      |             Phi3ForCausalLM|
-   | :Phi3VForCausalLM     |             Phi3ForCausalLM|
-   | :Phi3SmallForCausalLM |             Phi3ForCausalLM|
-   | :PhiMoEForCausalLM   |              Phi3ForCausalLM|
-   | :MambaForCausalLM     |             MambaForCausalLM|
-   | :GPTNeoXForCausalLM  |              GPTNeoXForCausalLM|
-   | :GPTJForCausalLM     |              GPTJForCausalLM|
-   | :MptForCausalLM      |              MPTForCausalLM|
-   | :MPTForCausalLM      |              MPTForCausalLM|
-   | :GLMModel             |             ChatGLMForCausalLM|
-   | :ChatGLMModel         |             ChatGLMForCausalLM|
-   | :ChatGLMForCausalLM   |             ChatGLMForCausalLM|
-   | :ChatGLMForConditionalGeneration|   ChatGLMForCausalLM|
-   | :LlamaForCausalLM   |               LLaMAForCausalLM|
-   | :LlavaLlamaModel     |              LLaMAForCausalLM|
-   | :ExaoneForCausalLM    |             LLaMAForCausalLM|
-   | :MistralForCausalLM    |            LLaMAForCausalLM|
-   | :MixtralForCausalLM     |           LLaMAForCausalLM|
-   | :ArcticForCausalLM     |            LLaMAForCausalLM|
-   | :Grok1ModelForCausalLM |            GrokForCausalLM|
-   | :InternLMForCausalLM   |            LLaMAForCausalLM|
-   | :InternLM2ForCausalLM   |           LLaMAForCausalLM|
-   | :InternLMXComposer2ForCausalLM |    LLaMAForCausalLM|
-   | :GraniteForCausalLM   |             LLaMAForCausalLM|
-   | :GraniteMoeForCausalLM |            LLaMAForCausalLM|
-   | :MedusaForCausalLM    |             MedusaForCausalLm|
-   | :MedusaLlamaForCausalLM |           MedusaForCausalLm|
-   | :ReDrafterForCausalLM   |           ReDrafterForCausalLM|
-   | :BaichuanForCausalLM   |            BaichuanForCausalLM|
-   | :BaiChuanForCausalLM   |            BaichuanForCausalLM|
-   | :SkyworkForCausalLM    |            LLaMAForCausalLM|
-   | :GEMMA                 |            GemmaForCausalLM|
-   | :GEMMA2                |            GemmaForCausalLM|
-   | :QWenLMHeadModel        |           QWenForCausalLM|
-   | :QWenForCausalLM        |           QWenForCausalLM|
-   | :Qwen2ForCausalLM       |           QWenForCausalLM|
-   | :Qwen2MoeForCausalLM    |           QWenForCausalLM|
-   | :Qwen2ForSequenceClassification |   QWenForCausalLM|
-   | :Qwen2VLForConditionalGeneration|   QWenForCausalLM|
-   | :Qwen2VLModel        |              QWenForCausalLM|
-   | :WhisperEncoder      |              WhisperEncoder|
-   | :EncoderModel         |             EncoderModel|
-   | :DecoderModel         |             DecoderModel|
-   | :DbrxForCausalLM      |             DbrxForCausalLM|
-   | :RecurrentGemmaForCausalLM |        RecurrentGemmaForCausalLM|
-   | :CogVLMForCausalLM      |           CogVLMForCausalLM|
-   | :DiT                  |             DiT|
-   | :DeepseekForCausalLM   |            DeepseekForCausalLM|
-   | :DeciLMForCausalLM     |            DeciLMForCausalLM|
-   | :DeepseekV2ForCausalLM  |           DeepseekV2ForCausalLM|
-   | :EagleForCausalLM       |           EagleForCausalLM|
-   | :CohereForCausalLM       |          CohereForCausalLM|
-   | :MLLaMAModel             |          MLLaMAForCausalLM|
-   | :MllamaForConditionalGeneration |   MLLaMAForCausalLM|
-   | :BertForQuestionAnswering      |    BertForQuestionAnswering|
-   | :BertForSequenceClassification |    BertForSequenceClassification|
-   | :BertModel                    |     BertModel|
-   | :RobertaModel                 |     RobertaModel|
-   | :RobertaForQuestionAnswering  |     RobertaForQuestionAnswering|
-   | :RobertaForSequenceClassification | RobertaForSequenceClassification|
+   | GPT2LMHeadModel     |              GPTForCausalLM    |
+   | GPT2LMHeadCustomModel|             GPTForCausalLM|
+   | GPTBigCodeForCausalLM |            GPTForCausalLM|
+   | Starcoder2ForCausalLM |            GPTForCausalLM|
+   | JAISLMHeadModel       |            GPTForCausalLM|
+   | GPTForCausalLM       |             GPTForCausalLM|
+   | NemotronForCausalLM   |            GPTForCausalLM|
+   | OPTForCausalLM       |             OPTForCausalLM|
+   | BloomForCausalLM     |             BloomForCausalLM|
+   | RWForCausalLM        |             FalconForCausalLM|
+   | FalconForCausalLM    |             FalconForCausalLM|
+   | PhiForCausalLM       |             PhiForCausalLM|
+   | Phi3ForCausalLM      |             Phi3ForCausalLM|
+   | Phi3VForCausalLM     |             Phi3ForCausalLM|
+   | Phi3SmallForCausalLM |             Phi3ForCausalLM|
+   | PhiMoEForCausalLM   |              Phi3ForCausalLM|
+   | MambaForCausalLM     |             MambaForCausalLM|
+   | GPTNeoXForCausalLM  |              GPTNeoXForCausalLM|
+   | GPTJForCausalLM     |              GPTJForCausalLM|
+   | MptForCausalLM      |              MPTForCausalLM|
+   | MPTForCausalLM      |              MPTForCausalLM|
+   | GLMModel             |             ChatGLMForCausalLM|
+   | ChatGLMModel         |             ChatGLMForCausalLM|
+   | ChatGLMForCausalLM   |             ChatGLMForCausalLM|
+   | ChatGLMForConditionalGeneration|   ChatGLMForCausalLM|
+   | LlamaForCausalLM   |               LLaMAForCausalLM|
+   | LlavaLlamaModel     |              LLaMAForCausalLM|
+   | ExaoneForCausalLM    |             LLaMAForCausalLM|
+   | MistralForCausalLM    |            LLaMAForCausalLM|
+   | MixtralForCausalLM     |           LLaMAForCausalLM|
+   | ArcticForCausalLM     |            LLaMAForCausalLM|
+   | Grok1ModelForCausalLM |            GrokForCausalLM|
+   | InternLMForCausalLM   |            LLaMAForCausalLM|
+   | InternLM2ForCausalLM   |           LLaMAForCausalLM|
+   | InternLMXComposer2ForCausalLM |    LLaMAForCausalLM|
+   | GraniteForCausalLM   |             LLaMAForCausalLM|
+   | GraniteMoeForCausalLM |            LLaMAForCausalLM|
+   | MedusaForCausalLM    |             MedusaForCausalLm|
+   | MedusaLlamaForCausalLM |           MedusaForCausalLm|
+   | ReDrafterForCausalLM   |           ReDrafterForCausalLM|
+   | BaichuanForCausalLM   |            BaichuanForCausalLM|
+   | BaiChuanForCausalLM   |            BaichuanForCausalLM|
+   | SkyworkForCausalLM    |            LLaMAForCausalLM|
+   | GEMMA                 |            GemmaForCausalLM|
+   | GEMMA2                |            GemmaForCausalLM|
+   | QWenLMHeadModel        |           QWenForCausalLM|
+   | QWenForCausalLM        |           QWenForCausalLM|
+   | Qwen2ForCausalLM       |           QWenForCausalLM|
+   | Qwen2MoeForCausalLM    |           QWenForCausalLM|
+   | Qwen2ForSequenceClassification |   QWenForCausalLM|
+   | Qwen2VLForConditionalGeneration|   QWenForCausalLM|
+   | Qwen2VLModel        |              QWenForCausalLM|
+   | WhisperEncoder      |              WhisperEncoder|
+   | EncoderModel         |             EncoderModel|
+   | DecoderModel         |             DecoderModel|
+   | DbrxForCausalLM      |             DbrxForCausalLM|
+   | RecurrentGemmaForCausalLM |        RecurrentGemmaForCausalLM|
+   | CogVLMForCausalLM      |           CogVLMForCausalLM|
+   | DiT                  |             DiT|
+   | DeepseekForCausalLM   |            DeepseekForCausalLM|
+   | DeciLMForCausalLM     |            DeciLMForCausalLM|
+   | DeepseekV2ForCausalLM  |           DeepseekV2ForCausalLM|
+   | EagleForCausalLM       |           EagleForCausalLM|
+   | CohereForCausalLM       |          CohereForCausalLM|
+   | MLLaMAModel             |          MLLaMAForCausalLM|
+   | MllamaForConditionalGeneration |   MLLaMAForCausalLM|
+   | BertForQuestionAnswering      |    BertForQuestionAnswering|
+   | BertForSequenceClassification |    BertForSequenceClassification|
+   | BertModel                    |     BertModel|
+   | RobertaModel                 |     RobertaModel|
+   | RobertaForQuestionAnswering  |     RobertaForQuestionAnswering|
+   | RobertaForSequenceClassification | RobertaForSequenceClassification|
    
 4. Whenever the script is executed, it initiates the service by exporting the Hugging Face model to TensorRT-LLM. If you want to skip the exporting step in the optimized inference option, you can specify an empty directory to save the TensorRT-LLM engine produced. Stop the running container and then run the following command to specify an empty directory:
 
