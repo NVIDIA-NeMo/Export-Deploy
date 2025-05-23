@@ -13,7 +13,7 @@
 # limitations under the License.
 
 TRANSFORMERS_OFFLINE=1 HF_HOME=/home/TestData/vlm/vision/hf/ coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo \
-  tests/collections/vlm/vision/test_llava_next_InternVIT.py \
+  tests/functional_tests/utils/test_llava_next_InternVIT.py \
   --devices=1 \
   --max-steps=5
 

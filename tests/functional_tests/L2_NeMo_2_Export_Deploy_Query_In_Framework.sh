@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo tests/collections/llm/test_hf_import.py \
+coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo tests/functional_tests/utils/test_hf_import.py \
   --hf_model /home/TestData/nlp/megatron_llama/llama-ci-hf \
   --output_path /tmp/nemo2_ckpt
 
