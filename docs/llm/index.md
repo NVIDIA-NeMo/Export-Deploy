@@ -15,9 +15,9 @@ The NeMo Framework saves models as nemo files, which include data related to the
 
 NeMo 1.0 checkpoints are either of the *nemo* or *qnemo* type. Both file types are supported for deployment. NeMo 2.0 saves all the model related files into a folder.
 
-The NeMo 1.0 *.nemo* checkpoint and the NeMo 2.0 model folder include the model weights with default precision. It consists of a YAML config file, a folder for model weights, and the tokenizer (if it is not available online). Models are trained and stored in this format, with weight values in FP16 or BF16 precision. Additionally, for .nemo models trained in FP8 precision using `NVIDIA Transformer Engine <https://github.com/NVIDIA/TransformerEngine>`_, it is possible to directly export them to an inference framework that supports FP8. Such models already come with scaling factors for low-precision `GEMMs <https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html>`_ and do not require any extra calibration.
+The NeMo 1.0 *.nemo* checkpoint and the NeMo 2.0 model folder include the model weights with default precision. It consists of a YAML config file, a folder for model weights, and the tokenizer (if it is not available online). Models are trained and stored in this format, with weight values in FP16 or BF16 precision. Additionally, for .nemo models trained in FP8 precision using [NVIDIA Transformer Engine](https://github.com/NVIDIA/TransformerEngine), it is possible to directly export them to an inference framework that supports FP8. Such models already come with scaling factors for low-precision [GEMMs](https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html) and do not require any extra calibration.
 
-The *qnemo* checkpoint contains the quantized weights and scaling factors. It follows the `TensorRT-LLM checkpoint format <https://nvidia.github.io/TensorRT-LLM/architecture/checkpoint.html>`_ with the addition of a tokenizer. It is derived from a corresponding *nemo* model. For detailed information on how to produce a *qnemo* checkpoint, please refer to :ref:`Quantization <quantization>` manual.
+The *qnemo* checkpoint contains the quantized weights and scaling factors. It follows the [TensorRT-LLM checkpoint format](https://nvidia.github.io/TensorRT-LLM/architecture/checkpoint.html) with the addition of a tokenizer. It is derived from a corresponding *nemo* model. For detailed information on how to produce a *qnemo* checkpoint, please refer to [Quantization manual](https://docs.nvidia.com/nemo-framework/user-guide/latest/model-optimization/quantization/quantization.html).
 
 The NeMo 1.0 and NeMo 2.0 checkpoint formats are supported by the TensorRT-LLM and vLLM inference-optimized deployment options. However, in-framework (PyTorch-level models) deployment only supports NeMo 2.0 models.
 
@@ -29,7 +29,7 @@ TensorRT-LLM supports NVIDIA DGX H100 and NVIDIA H100 GPUs based on the NVIDIA H
 ## Generate a NeMo 2.0 Checkpoint
 Please follow the steps below to generate a NeMo 2.0 checkpoint and use it for testing the export and deployment paths for NeMo models.
 
-1. To access the Llama models, please visit the `Llama 3.1 Hugging Face page <https://huggingface.co/meta-llama/Llama-3.1-8B>`.
+1. To access the Llama models, please visit the [Llama 3.1 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.1-8B).
 
 2. Pull down and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
 
