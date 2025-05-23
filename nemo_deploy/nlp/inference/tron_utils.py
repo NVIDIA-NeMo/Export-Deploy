@@ -132,8 +132,10 @@ def initialize_distributed(
         model_config (Union[GPTConfig, T5Config]): Configuration for the model architecture
         dist_config (DistributedInitConfig): Configuration for distributed initialization
         num_distributed_optimizer_instances (int): Number of optimizer instances for distributed training
-        get_embedding_ranks (Optional[Callable[[List[int], Optional[int]], List[int]]]): Function to get the ranks for embedding parallel
-        get_position_embedding_ranks (Optional[Callable[[List[int], Optional[int]], List[int]]]): Function to get the ranks for position embedding parallel
+        get_embedding_ranks (Optional[Callable[[List[int], Optional[int]], List[int]]]): Function to get the ranks
+            for embedding parallel
+        get_position_embedding_ranks (Optional[Callable[[List[int], Optional[int]], List[int]]]): Function to get
+            the ranks for position embedding parallel
     """
 
     device_count = torch.cuda.device_count()
@@ -216,9 +218,12 @@ def _set_random_seed(
 
     Args:
         seed_ (int): Base random seed to use
-        data_parallel_random_init (bool, optional): Whether to use different seeds for different data parallel ranks. Defaults to False.
-        te_rng_tracker (bool, optional): Whether to use Transformer Engine random number generator. Defaults to False.
-        inference_rng_tracker (bool, optional): Whether to use a random number generator configured for inference. Defaults to False.
+        data_parallel_random_init (bool, optional): Whether to use different seeds for different
+            data parallel ranks. Defaults to False.
+        te_rng_tracker (bool, optional): Whether to use Transformer Engine random number generator.
+            Defaults to False.
+        inference_rng_tracker (bool, optional): Whether to use a random number generator configured
+            for inference. Defaults to False.
     """
     assert seed_ is not None and seed_ > 0, f"Seed ({seed_}) should be a positive integer."
 
@@ -321,9 +326,11 @@ def get_model_from_config(
     Args:
         model_config (Union[GPTConfig, T5Config]): The model configuration
         ddp_config (DistributedDataParallelConfig): The distributed data parallel configuration
-        overlap_param_gather_with_optimizer_step (bool, optional): Whether to overlap parameter gathering with optimizer step. Defaults to False.
+        overlap_param_gather_with_optimizer_step (bool, optional): Whether to overlap parameter gathering
+            with optimizer step. Defaults to False.
         wrap_with_ddp (bool, optional): Whether to wrap the model with DistributedDataParallel. Defaults to True.
-        data_parallel_random_init (bool, optional): Whether to initialize data parallel ranks with random seeds. Defaults to True.
+        data_parallel_random_init (bool, optional): Whether to initialize data parallel ranks with random seeds.
+            Defaults to True.
 
     Returns:
         List[MegatronModule]: List of model modules, potentially wrapped with DistributedDataParallel
