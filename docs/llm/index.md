@@ -47,7 +47,7 @@ Please follow the steps below to generate a NeMo 2.0 checkpoint and use it for t
    
 4. Run the following Python code to generate the NeMo 2.0 checkpoint:
 
-   ```{python}
+   ```python
    from nemo.collections.llm import import_ckpt
    from nemo.collections.llm.gpt.model.llama import Llama31Config8B, LlamaModel
    from pathlib import Path

@@ -213,7 +213,7 @@ You can use the APIs in the export module to export a NeMo checkpoint to TensorR
 
 1. Run the following command:
 
-   ```{python}
+   ```python
    from nemo.export.tensorrt_llm import TensorRTLLM
 
    trt_llm_exporter = TensorRTLLM(model_dir="/opt/checkpoints/tmp_trt_llm/")
@@ -254,7 +254,7 @@ You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Trit
 
 1. Run the following command:
 
-   ```{python}
+   ```python
    from nemo.export.tensorrt_llm import TensorRTLLM
    from nemo.deploy import DeployPyTriton
 
@@ -276,7 +276,7 @@ You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Trit
 
 If you have a FP8-trained checkpoint, produced during pre-training or fine-tuning with NVIDIA Transformer Engine, you can convert it to a FP8 TensorRT-LLM engine directly using ``nemo.export``. The entry point is the same as with regular *.nemo* and *.qnemo* checkpoints:
 
-```{python}
+```python
 from nemo.export.tensorrt_llm import TensorRTLLM
 
 trt_llm_exporter = TensorRTLLM(model_dir="/opt/checkpoints/tmp_trt_llm/")

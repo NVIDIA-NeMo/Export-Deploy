@@ -233,8 +233,7 @@ You can use the APIs in the export module to export a Hugging Face model to Tens
 
 1. Run the following command:
 
-   ```{python}
-
+   ```python
    from nemo.export.tensorrt_llm import TensorRTLLM
 
    trt_llm_exporter = TensorRTLLM(model_dir="/opt/checkpoints/tmp_trt_llm/")
@@ -269,7 +268,7 @@ You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Trit
 
 1. Run the following command:
 
-   ```{python}
+   ```python
    from nemo.export.tensorrt_llm import TensorRTLLM
    from nemo.deploy import DeployPyTriton
 

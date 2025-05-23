@@ -181,7 +181,7 @@ You can use the APIs in the export module to export a NeMo checkpoint to TensorR
 
 1. Run the following command:
 
-   ```{python}
+   ```python
    from nemo.export.tensorrt_mm_exporter import TensorRTMMExporter
 
    exporter = TensorRTMMExporter(model_dir="/opt/checkpoints/tmp_triton_model_repository/", modality="vision")
@@ -199,7 +199,7 @@ You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Trit
 
 1. Run the following command:
 
-   ```{python}
+   ```python
    from nemo.export.tensorrt_mm_exporter import TensorRTMMExporter
    from nemo.deploy import DeployPyTriton
 
@@ -217,7 +217,7 @@ The NeMo Framework provides NemoQueryMultimodal APIs to send a query to the Trit
 
 1. To run the request example using NeMo APIs, run the following command:
 
-   ```{python}
+   ```python
    from nemo.deploy.multimodal import NemoQueryMultimodal
 
    nq = NemoQueryMultimodal(url="localhost:8000", model_name="neva", model_type="neva")

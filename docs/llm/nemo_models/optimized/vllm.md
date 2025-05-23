@@ -148,7 +148,7 @@ Up until now, we have used scripts for exporting and deploying LLM models. Howev
 
 You can use the APIs in the export module to export a NeMo checkpoint to vLLM. The following code example assumes the ``hf_llama31_8B_nemo2.nemo`` checkpoint has already been downloaded and mounted to the ``/opt/checkpoints/`` path.
 
-```{python}
+```python
 import os
 from nemo.export.vllm_exporter import vLLMExporter
 
@@ -175,7 +175,7 @@ Be sure to check the vLLMExporter class docstrings for details.
 
 You can use the APIs in the deploy module to deploy a vLLM model to Triton. Use the Export example above to export the model to vLLM first, just drop the ``forward`` and ``print`` calls at the end. Then initialize the Triton server and serve the model:
 
-```{python}
+```python
 from nemo.deploy import DeployPyTriton
 
 nm = DeployPyTriton(model=exporter, triton_model_name="llama", http_port=8000)

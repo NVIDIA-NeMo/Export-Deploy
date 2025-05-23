@@ -43,7 +43,7 @@ The NeMo Framework provides NemoQueryLLM APIs to send a query to the Triton serv
 
 1. To run the request example using NeMo APIs, run the following command:
 
-   ```{python}
+   ```python
    from nemo.deploy.nlp import NemoQueryLLM
 
    nq = NemoQueryLLM(url="localhost:8000", model_name="nemotron")
@@ -55,6 +55,6 @@ The NeMo Framework provides NemoQueryLLM APIs to send a query to the Triton serv
 
 3. If there is a prompt embedding table, run the following command to send a query:
 
-   ```{python}
+   ```python
    output = nq.query_llm(prompts=["What is the capital of United States?"], max_output_len=10, top_k=1, top_p=0.0, temperature=1.0, task_id="0")
    ```

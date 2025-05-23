@@ -28,7 +28,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models within the fra
 
 4. Deploy the model to Triton:
 
-   ```{python}
+   ```python
    python scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama
@@ -67,7 +67,7 @@ Follow these steps to deploy your model on the Triton Inference Server:
 
 2. Deploy your model:
 
-   ```{python}
+   ```shell
    python scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama
