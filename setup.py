@@ -81,6 +81,7 @@ extras_require = {
 }
 
 extras_require['all'] = list(chain(*extras_require.values()))
+extras_require['vllm'] = req_file('requirements_vllm.txt') + req_file('requirements_deploy.txt')
 
 ###############################################################################
 #                            Code style checkers                              #
