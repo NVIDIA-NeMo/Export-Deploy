@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /workspace
 
 FROM base as vllm-builder
-RUN python3 -m venv /opt/venv && \
+RUN python3 -m venv /opt/vllm-venv && \
     /opt/vllm-venv/bin/pip install --no-cache-dir -U pip setuptools
 RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
     --mount=type=bind,source=nemo_export/__init__.py,target=/workspace/nemo_export/__init__.py \
