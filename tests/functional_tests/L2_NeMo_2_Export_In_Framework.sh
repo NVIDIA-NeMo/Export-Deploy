@@ -23,6 +23,6 @@ coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/funct
   --in_framework True \
   --test_deployment True \
   --run_accuracy True \
-  --test_data_path /tests/functional_tests/data/lambada.json \
+  --test_data_path tests/functional_tests/data/lambada.json \
   --accuracy_threshold 0.0 \
   --debug
