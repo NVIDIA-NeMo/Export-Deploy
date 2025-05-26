@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 python tests/functional_tests/utils/test_hf_import.py \
-  --hf_model /home/TestData/nlp/megatron_llama/llama-ci-hf \
+  --hf_model meta-llama/Llama-3.2-1B \
   --output_path /tmp/nemo2_ckpt
 
 torchrun --nproc_per_node=2 scripts/deploy/nlp/deploy_inframework_triton.py \
