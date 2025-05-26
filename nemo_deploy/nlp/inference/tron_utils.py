@@ -5,10 +5,12 @@ from typing import Callable, List, Literal, Optional, Union
 
 import torch
 from megatron.core import parallel_state, tensor_parallel
-from megatron.core.distributed import DistributedDataParallel, DistributedDataParallelConfig
+from megatron.core.distributed import (
+    DistributedDataParallel,
+    DistributedDataParallelConfig,
+)
 from megatron.core.enums import ModelType
 from megatron.core.transformer.module import Float16Module, MegatronModule
-
 from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.t5.model.t5 import T5Config
 
@@ -168,7 +170,7 @@ def initialize_distributed(
         }
 
         torch.distributed.init_process_group(**init_process_group_kwargs)
-        torch.distributed.barrier(device_ids=[get_local_rank_preinit()])
+        torch.distributed.barrier(device_ids=[get_local_rank_preinit() if device_count > 1 else 0])
 
     # Set the tensor model-parallel, pipeline model-parallel, and
     # data-parallel communicators.
