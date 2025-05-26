@@ -24,7 +24,7 @@ on:
         type: string
       runner:
         required: false
-        default: linux-amd64-gpu-rtxa6000-latest-2-nemo
+        default: linux-amd64-gpu-l4-latest-1
         type: string
         description: "The runner to use for the build"
     secrets:
