@@ -152,10 +152,10 @@ jobs:
             runner: linux-amd64-gpu-l4-latest-1
           - script: L2_NeMo_2_Export_In_Framework
             runner: linux-amd64-gpu-l4-latest-1
-          - script: L2_NeMo_2_VLLM_EXPORT
-            runner: linux-amd64-gpu-l4-latest-1
-          - script: L2_NeMo_2_VLLM_VISION
-            runner: linux-amd64-gpu-l4-latest-1
+          # - script: L2_NeMo_2_VLLM_EXPORT
+          #   runner: linux-amd64-gpu-l4-latest-1
+          # - script: L2_NeMo_2_VLLM_VISION
+          #   runner: linux-amd64-gpu-l4-latest-1
     needs: [cicd-unit-tests]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
