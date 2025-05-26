@@ -168,7 +168,7 @@ def initialize_distributed(
         }
 
         torch.distributed.init_process_group(**init_process_group_kwargs)
-        torch.distributed.barrier(device_ids=[get_local_rank_preinit() if device_count > 1 else 0])
+        torch.distributed.barrier(device_ids=[get_local_rank_preinit()])
 
     # Set the tensor model-parallel, pipeline model-parallel, and
     # data-parallel communicators.
