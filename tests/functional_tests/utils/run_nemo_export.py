@@ -38,10 +38,7 @@ try:
     from megatron.core.inference.common_inference_params import CommonInferenceParams
 
     from nemo_deploy.nlp import NemoQueryLLMPyTorch
-    from nemo_deploy.nlp.megatronllm_deployable import (
-        MegatronLLMDeploy,
-        MegatronLLMDeployableNemo2,
-    )
+    from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeploy, MegatronLLMDeployableNemo2
 except Exception as e:
     LOGGER.warning(
         "Cannot import MegatronLLMDeploy* classes, or NemoQueryLLMPyTorch, or CommonInferenceParams, "
