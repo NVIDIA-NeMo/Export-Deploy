@@ -6,14 +6,21 @@ from typing import List, Optional, Tuple, Union
 import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
-from megatron.core.dist_checkpointing.serialization import get_default_load_sharded_strategy
+from megatron.core.dist_checkpointing.serialization import (
+    get_default_load_sharded_strategy,
+)
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
-from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import GPTInferenceWrapper
-from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import InferenceWrapperConfig
-from megatron.core.inference.text_generation_controllers.text_generation_controller import TextGenerationController
+from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
+    GPTInferenceWrapper,
+)
+from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
+    InferenceWrapperConfig,
+)
+from megatron.core.inference.text_generation_controllers.text_generation_controller import (
+    TextGenerationController,
+)
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
-
 from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
 from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
@@ -296,8 +303,8 @@ class MCoreEngineWithCleanup:
 
 def create_mcore_engine(
     path: Path,
-    num_devices: int = None,
-    num_nodes: int = None,
+    num_devices: Optional[int] = None,
+    num_nodes: Optional[int] = None,
     params_dtype: torch.dtype = torch.bfloat16,
     inference_batch_times_seqlen_threshold: int = 32768,
     inference_max_seq_length: int = 4096,
