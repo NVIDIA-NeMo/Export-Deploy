@@ -1,0 +1,11 @@
+[paths]
+source = /workspace
+
+[run]
+data_file = /workspace/.coverage
+concurrency = thread,multiprocessing
+omit =
+	/tmp/*
+	/workspace/tests/*
+	/workspace/setup.py
+    /workspace/package_info.py
