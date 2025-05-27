@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 packages = ["nemo_export", "nemo_deploy"]
 
 [tool.setuptools.dynamic]
-version = { file = "_version.__version__" }                     # any module attribute compatible with ast.literal_eval
+version = { attr = "package_info.__version__" }                 # any module attribute compatible with ast.literal_eval
 readme = { file = "README.md", content-type = "text/markdown" }
 
 [project]
@@ -26,6 +26,7 @@ dependencies = [
     "uvicorn",
     "tensorstore<0.1.72",
     "zarr>=2.18.2,<3.0.0",
+    # Lightning deps
     "cloudpickle",
     "fiddle",
     "hydra-core>1.3,<=1.3.2",
