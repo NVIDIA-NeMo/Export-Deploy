@@ -80,11 +80,6 @@ class NemoQueryMultimodal:
             else:
                 media = Image.open(input_media).convert('RGB')
             return np.expand_dims(np.array(media), axis=0)
-        elif self.model_type == "salm":
-            waveform, sample_rate = sf.read(input_media, dtype=np.float32)
-            input_signal = np.array([waveform], dtype=np.float32)
-            input_signal_length = np.array([[len(waveform)]], dtype=np.int32)
-            return {"input_signal": input_signal, "input_signal_length": input_signal_length}
         else:
             raise RuntimeError(f"Invalid model type {self.model_type}")
 
