@@ -159,15 +159,7 @@ jobs:
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_In_Framework
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_VLLM_EXPORT
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_VLLM_VISION
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Qnemo_TRT_LLM
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_vLLM_Export_Mixtral
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_vLLM_Export_Llama
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
     needs: [cicd-unit-tests]
     runs-on: ${{ matrix.runner }}
@@ -195,6 +187,10 @@ jobs:
           - script: L2_NeMo_2_VLLM_EXPORT
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_VLLM_VISION
+            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
+          - script: L2_NeMo_2_vLLM_Export_Mixtral
+            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
+          - script: L2_NeMo_2_vLLM_Export_Llama
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
     needs: [cicd-unit-tests]
     runs-on: ${{ matrix.runner }}
