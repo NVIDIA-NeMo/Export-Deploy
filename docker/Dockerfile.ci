@@ -30,6 +30,7 @@ RUN curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh && \
 # Align C++ ABI for PyTorch and trt-llm
 ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV PATH="$UV_PROJECT_ENVIRONMENT/bin:$PATH"
 ENV UV_LINK_MODE=copy
 
 # Install all
