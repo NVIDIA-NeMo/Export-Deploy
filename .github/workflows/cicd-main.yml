@@ -100,7 +100,7 @@ jobs:
       dockerfile: docker/Dockerfile.ci
       inference-framework: ${{ matrix.inference-framework }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - inference-framework: trtllm
