@@ -118,7 +118,7 @@ def torch_dtype_from_mcore_config(config) -> torch.dtype:
         return torch.float
 
 
-def change_paths_to_absolute_paths(tokenizer_config: Dict[Any, Any], nemo_checkpoint: Path) -> Dict[Any, Any]:
+def change_paths_to_absolute_paths(tokenizer_config: dict, nemo_checkpoint: Path) -> dict:
     """
     Creates absolute path to the local tokenizers. Used for NeMo 2.0.
 
