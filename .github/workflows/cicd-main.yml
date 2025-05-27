@@ -96,7 +96,7 @@ jobs:
       )
       && !cancelled()
     with:
-      image-name: nemo_container_export_deploy.${{ matrix.inference-framework }}
+      image-name: nemo_container_export_deploy_${{ matrix.inference-framework }}
       dockerfile: docker/Dockerfile.ci
       inference-framework: ${{ matrix.inference-framework }}
     strategy:
@@ -137,7 +137,7 @@ jobs:
           script: ${{ matrix.script }}
           timeout: ${{ matrix.timeout || 10 }}
           is_unit_test: "true"
-          image: nemo_container_export_deploy.trtllm
+          image: nemo_container_export_deploy_trtllm
           cpu-only: ${{ matrix.cpu-only || false }}
           has-azure-credentials: "true"
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -169,7 +169,7 @@ jobs:
         with:
           runner: ${{ runner.name }}
           script: ${{ matrix.script }}
-          image: nemo_container_export_deploy.trtllm
+          image: nemo_container_export_deploy_trtllm
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -196,7 +196,7 @@ jobs:
         with:
           runner: ${{ runner.name }}
           script: ${{ matrix.script }}
-          image: nemo_container_export_deploy.vllm
+          image: nemo_container_export_deploy_vllm
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
