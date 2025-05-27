@@ -39,6 +39,9 @@ class HFGemmaExporter(io.ModelConnector["GemmaModel", "GemmaForCausalLM"]):
     """ """
 
     def init(self, torch_dtype: torch.dtype = torch.bfloat16) -> "GemmaForCausalLM":
+        """
+        Initializes the target HF model.
+        """
         from transformers import AutoModelForCausalLM
         from transformers.modeling_utils import no_init_weights
 
@@ -46,7 +49,9 @@ class HFGemmaExporter(io.ModelConnector["GemmaModel", "GemmaForCausalLM"]):
             return AutoModelForCausalLM.from_config(self.config, torch_dtype=torch_dtype)
 
     def apply(self, output_path: Path) -> Path:
-        """ """
+        """
+        Transforms the source model state into the target HF model state.
+        """
         source, source_config = ckpt_load(str(self))
         source = _ModelState(source, source_config)
 
@@ -60,7 +65,9 @@ class HFGemmaExporter(io.ModelConnector["GemmaModel", "GemmaForCausalLM"]):
         return output_path
 
     def convert_state(self, source, target):
-        """ """
+        """
+        State conversion definition.
+        """
         mapping = {
             "embedding.word_embeddings.weight": "model.embed_tokens.weight",
             "decoder.layers.*.self_attention.linear_proj.weight": "model.layers.*.self_attn.o_proj.weight",
@@ -91,12 +98,16 @@ class HFGemmaExporter(io.ModelConnector["GemmaModel", "GemmaForCausalLM"]):
 
     @property
     def tokenizer(self):
-        """ """
+        """
+        Tokenizer initialization.
+        """
         return get_tokenizer(str(self))
 
     @property
     def config(self) -> "GemmaConfig":
-        """ """
+        """
+        Target HF model config.
+        """
         source = load_config(str(self))
 
         from transformers import GemmaConfig as HFGemmaConfig
