@@ -7,11 +7,11 @@ build-backend = "setuptools.build_meta"
 packages = ["nemo_export", "nemo_deploy"]
 
 [tool.setuptools.dynamic]
-version = { file = "_version.py" }                              # any module attribute compatible with ast.literal_eval
+version = { file = "_version.__version__" }                     # any module attribute compatible with ast.literal_eval
 readme = { file = "README.md", content-type = "text/markdown" }
 
 [project]
-name = "nemo-rl"
+name = "nemo-export-deploy"
 dynamic = ["version", "readme"]
 description = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
 requires-python = ">=3.10"
@@ -19,13 +19,12 @@ license = { text = "Apache 2.0" }
 dependencies = [
     "accelerate",
     "fastapi",
-    "nvidia-pytriton ; platform_system != 'Darwin'",
+    "nvidia-pytriton",
     "pydantic-settings",
     "ray",
     "ray[serve]",
     "uvicorn",
-    "transformer_engine[pytorch]==2.2.0",
-    "tensorstore<0.1.72; platform_system != 'Darwin'",
+    "tensorstore<0.1.72",
     "zarr>=2.18.2,<3.0.0",
     "cloudpickle",
     "fiddle",
@@ -42,6 +41,7 @@ dependencies = [
 [project.optional-dependencies]
 vllm = ["vllm==0.8.5.post1"]
 trtllm = ["tensorrt-llm~=0.18.2"]
+te = ["transformer-engine[pytorch]==2.2.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
@@ -73,7 +73,7 @@ test = ["pytest", "pytest-mock", "coverage"]
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
-no-build-isolation-package = ["transformer-engine"]
+no-build-isolation-package = ["transformer-engine", "transformer-engine-torch"]
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
 # and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
 # avoid including these in the default dependency set, but for now it's required.
@@ -83,6 +83,7 @@ default-groups = ["dev", "build", "test"]
 #  --link-mode=copy (slower but more reliable; supresses warning)
 #  --link-mode=symlink (fastest option when uv cache and venv on different file-system; caveat: venv is brittle since it depends on the environment/container)
 link-mode = "copy"
+conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }]]
 
 [tool.black]
 line-length = 120

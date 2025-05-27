@@ -1,3 +1,1 @@
-from package_info import __version__
-
-all = [__version__]
+__version__ = "1.2.3"
