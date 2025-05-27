@@ -20,8 +20,8 @@ import yaml
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
 
-from nemo_export.huggingface.lightning import export_ckpt
 from nemo.utils import logging
+from nemo_export.huggingface.lightning import export_ckpt
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_distributed_model_weights
 
 LLM_AVAILABLE = True
@@ -73,12 +73,12 @@ def io_model_exporter(cls, format, register: bool = False):
     if LLM_AVAILABLE and register:
         try:
             from nemo.lightning.io import model_exporter as _model_exporter
+
             base_decorator = _model_exporter(cls, format)
         except ImportError:
             logging.warning(
                 "nemo.lightning.io is not available, model exporters will not be connected to llm.GPTModels"
             )
-
 
     def decorator(exporter_cls):
         decorated_cls = base_decorator(exporter_cls)

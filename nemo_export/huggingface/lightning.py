@@ -12,33 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import re
-import torch
-import shutil
 import inspect
 import logging
-import numpy as np
-
-from typing import (
-    Callable,
-    Optional,
-    Generic,
-    TypeVar,
-    Union,
-    Tuple,
-    Dict,
-    List,
-    Any,
-    overload,
-)
-
-from pathlib import Path, WindowsPath, PosixPath
-from filelock import FileLock, Timeout
-from nemo.utils import logging
+import os
+import re
+import shutil
 from dataclasses import dataclass
+from pathlib import Path, PosixPath, WindowsPath
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union, overload
+
+import numpy as np
+import torch
+from filelock import FileLock, Timeout
 from torch import nn
 
+from nemo.utils import logging
 
 if os.name == 'nt':
     BasePath = WindowsPath
