@@ -20,16 +20,16 @@ import yaml
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
 
-from nemo.lightning.io import export_ckpt
+from nemo_export.huggingface.lightning import export_ckpt
 from nemo.utils import logging
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_distributed_model_weights
 
-llm_available = True
+LLM_AVAILABLE = True
 try:
     from nemo.collections import llm  # noqa: F401
 except Exception:
     llm = None
-    llm_available = False
+    LLM_AVAILABLE = False
     logging.warning(
         "nemo.collections.llm module is not available, model exporters will not be connected to llm.GPTModels"
     )
@@ -42,7 +42,7 @@ def get_model(name: str):
     """
     Get the model class from the llm module. If the model is not available, return a dummy class with the same name.
     """
-    if llm_available:
+    if LLM_AVAILABLE:
         model_cls = getattr(llm, name)
         if isinstance(model_cls, type):
             return model_cls
@@ -70,10 +70,15 @@ def io_model_exporter(cls, format, register: bool = False):
 
     base_decorator = lambda exporter_cls: exporter_cls
 
-    if llm_available and register:
-        from nemo.lightning.io import model_exporter as _model_exporter
+    if LLM_AVAILABLE and register:
+        try:
+            from nemo.lightning.io import model_exporter as _model_exporter
+            base_decorator = _model_exporter(cls, format)
+        except ImportError:
+            logging.warning(
+                "nemo.lightning.io is not available, model exporters will not be connected to llm.GPTModels"
+            )
 
-        base_decorator = _model_exporter(cls, format)
 
     def decorator(exporter_cls):
         decorated_cls = base_decorator(exporter_cls)
@@ -86,7 +91,7 @@ def io_model_exporter(cls, format, register: bool = False):
     return decorator
 
 
-def get_exporter(cls, format):
+def get_exporter(cls: str | type, format: str):
     """
     Get the exporter for the given model and format. Uses local nemo_export registry.
     """
@@ -216,21 +221,6 @@ def get_tokenizer(path: str):
         tokenizer.tokenizer.eos_token_id = tokenizer.eos_id
 
     return tokenizer
-
-
-def load_connector(path, target):
-    """
-    Load the connector for the given model and target.
-    """
-    model_yaml = Path(str(path)) / "context" / "model.yaml"
-    with open(model_yaml, 'r') as stream:
-        config = yaml.safe_load(stream)
-
-    model_class = config['_target_'].split('.')[-1]
-    exporter = get_exporter(model_class, target)
-    if exporter is None:
-        raise ValueError(f"Unsupported model type: {model_class}")
-    return exporter(Path(path))
 
 
 def export_to_hf(model_path, model_dir):

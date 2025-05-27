@@ -17,8 +17,7 @@ from typing import TYPE_CHECKING
 
 import torch
 
-from nemo.lightning import io
-from nemo.lightning.io.state import TransformFns, _ModelState
+from nemo_export.huggingface.lightning import TransformFns, ModelConnector, _ModelState, state_transform, apply_transforms
 from nemo_export.huggingface.utils import (
     ckpt_load,
     get_model,
@@ -35,7 +34,7 @@ GemmaModel = get_model("GemmaModel")
 
 
 @io_model_exporter(GemmaModel, "hf", register=False)
-class HFGemmaExporter(io.ModelConnector["GemmaModel", "GemmaForCausalLM"]):
+class HFGemmaExporter(ModelConnector["GemmaModel", "GemmaForCausalLM"]):
     """ """
 
     def init(self, torch_dtype: torch.dtype = torch.bfloat16) -> "GemmaForCausalLM":
@@ -78,7 +77,7 @@ class HFGemmaExporter(io.ModelConnector["GemmaModel", "GemmaForCausalLM"]):
         }
 
         transforms = [
-            io.state_transform(
+            state_transform(
                 source_key="decoder.layers.*.self_attention.linear_qkv.weight",
                 target_key=(
                     "model.layers.*.self_attn.q_proj.weight",
@@ -87,14 +86,14 @@ class HFGemmaExporter(io.ModelConnector["GemmaModel", "GemmaForCausalLM"]):
                 ),
                 fn=TransformFns.split_qkv,
             ),
-            io.state_transform(
+            state_transform(
                 source_key="decoder.layers.*.mlp.linear_fc1.weight",
                 target_key=("model.layers.*.mlp.gate_proj.weight", "model.layers.*.mlp.up_proj.weight"),
                 fn=TransformFns.split_fc1,
             ),
         ]
 
-        return io.apply_transforms(source, target, mapping=mapping, transforms=transforms)
+        return apply_transforms(source, target, mapping=mapping, transforms=transforms)
 
     @property
     def tokenizer(self):
