@@ -36,11 +36,10 @@ ENV UV_LINK_MODE=copy
 WORKDIR /workspace
 ARG INFERENCE_FRAMEWORK
 RUN --mount=type=bind,source=pyproject.toml,target=/workspace/pyproject.toml \
+    --mount=type=bind,source=_version.py,target=/workspace/_version.py \
     --mount=type=bind,source=nemo_export/__init__.py,target=/workspace/nemo_export/__init__.py \
     --mount=type=bind,source=nemo_deploy/__init__.py,target=/workspace/nemo_deploy/__init__.py \
-    --mount=type=bind,source=package_info.py,target=/workspace/package_info.py \
-    --mount=type=bind,source=README.md,target=/workspace/README.md \
-    --mount=type=bind,source=requirements,target=/workspace/requirements <<"EOF" bash -exu
+    --mount=type=bind,source=package_info.py,target=/workspace/package_info.py <<"EOF" bash -exu
     uv venv ${UV_PROJECT_ENVIRONMENT}
     uv sync --link-mode symlink --locked --extra te --extra $INFERENCE_FRAMEWORK
     # Install nemo-run separately since it conflicts with nvidia-pytriton
