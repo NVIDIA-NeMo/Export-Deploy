@@ -5,3 +5,4 @@ pydantic-settings
 ray
 ray[serve]
 uvicorn
+transformer_engine[pytorch]==2.2.0

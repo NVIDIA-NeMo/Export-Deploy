@@ -12,4 +12,3 @@ sphinxcontrib-bibtex
 wandb
 wget
 wrapt
-coverage
