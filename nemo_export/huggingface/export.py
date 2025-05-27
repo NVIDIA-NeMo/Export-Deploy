@@ -35,13 +35,15 @@ def load_connector(path, target):
     return exporter(Path(path))
 
 
-def export_to_hf(model_path, model_dir):
+def export_to_hf(model_path: str | Path, model_dir: str | Path):
     """
     Export the model to the Hugging Face format.
     Args:
-        model_path (str): The path to the model.
-        model_dir (str): The directory to save the model.
+        model_path (str | Path): The path to the model.
+        model_dir (str | Path): The directory to save the model.
     """
+    model_path = Path(model_path)
+    model_dir = Path(model_dir)
     return export_ckpt(
-        path=model_path, target='hf', output_path=Path(model_dir), overwrite=True, load_connector=load_connector
+        path=model_path, target='hf', output_path=model_dir, overwrite=True, load_connector=load_connector
     )
