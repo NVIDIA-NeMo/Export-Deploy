@@ -37,7 +37,6 @@ ENV UV_LINK_MODE=copy
 WORKDIR /workspace
 ARG INFERENCE_FRAMEWORK
 RUN --mount=type=bind,source=pyproject.toml,target=/workspace/pyproject.toml \
-    --mount=type=bind,source=_version.py,target=/workspace/_version.py \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=nemo_export/__init__.py,target=/workspace/nemo_export/__init__.py \
     --mount=type=bind,source=nemo_deploy/__init__.py,target=/workspace/nemo_deploy/__init__.py \
