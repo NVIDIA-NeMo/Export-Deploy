@@ -221,16 +221,3 @@ def get_tokenizer(path: str):
         tokenizer.tokenizer.eos_token_id = tokenizer.eos_id
 
     return tokenizer
-
-
-def export_to_hf(model_path, model_dir):
-    """
-    Export the model to the Hugging Face format.
-
-    Args:
-        model_path (str): The path to the model.
-        model_dir (str): The directory to save the model.
-    """
-    return export_ckpt(
-        path=model_path, target='hf', output_path=Path(model_dir), overwrite=True, load_connector=load_connector
-    )
