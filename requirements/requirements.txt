@@ -1,1 +1,1 @@
-nemo_toolkit[automodel,common-only,nlp-only,eval,multimodal-only,asr-only]@git+https://github.com/NVIDIA/NeMo.git@main # this is to be replaced with a wheel starting from v2.4.0
+nemo_toolkit[automodel,common-only,nlp-only,eval,multimodal-only]@git+https://github.com/NVIDIA/NeMo.git@main # this is to be replaced with a wheel starting from v2.4.0
