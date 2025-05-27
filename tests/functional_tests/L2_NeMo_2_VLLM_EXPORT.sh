@@ -20,7 +20,7 @@ python tests/functional_tests/utils/test_hf_import.py \
   --hf_model /tmp/llama_head64 \
   --output_path /tmp/nemo2_ckpt
 
-/opt/vllm-venv/bin/coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_export.py \
+/opt/venv/bin/coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_export.py \
   --min_tps 1 \
   --max_tps 1 \
   --use_vllm True \
