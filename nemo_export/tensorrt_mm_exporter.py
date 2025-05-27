@@ -26,7 +26,6 @@ from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
 from nemo_deploy import ITritonDeployable
 from nemo_export.multimodal.build import (
     build_mllama_engine,
-    build_perception_engine,
     build_trtllm_engine,
     build_visual_engine,
     extract_lora_ckpt,

@@ -127,16 +127,3 @@ class TestNemoQueryMultimodal:
         result = nq.setup_media(mock_video)
         assert isinstance(result, np.ndarray)
         os.unlink(mock_video)
-
-    @patch('soundfile.read')
-    def test_setup_media_audio(self, mock_sf_read, mock_audio):
-        nq = NemoQueryMultimodal(url="localhost", model_name="test_model", model_type="salm")
-
-        # Mock soundfile.read
-        mock_sf_read.return_value = (np.zeros(1000), 16000)
-
-        result = nq.setup_media(mock_audio)
-        assert isinstance(result, dict)
-        assert "input_signal" in result
-        assert "input_signal_length" in result
-        os.unlink(mock_audio)
