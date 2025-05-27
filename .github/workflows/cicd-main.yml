@@ -210,18 +210,18 @@ jobs:
           has-azure-credentials: true
           is_unit_test: "false"
 
-  # Nemo_CICD_Test:
-  #   needs:
-  #     - pre-flight
-  #     - cicd-test-container-build
-  #     - cicd-main-unit-tests
-  #     - cicd-main-e2e-tests
-  #   if: always()
-  #   runs-on: ubuntu-latest
-  #   permissions: write-all
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
+  Nemo_CICD_Test:
+    needs:
+      - pre-flight
+      - cicd-unit-tests
+      - cicd-e2e-tests-trtllm
+      - cicd-e2e-tests-vllm
+    if: always()
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
   #     - name: Get workflow result
   #       id: result
