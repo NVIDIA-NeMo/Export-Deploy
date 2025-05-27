@@ -131,7 +131,7 @@ jobs:
         with:
           path: ${{ github.run_id }}
       - name: main
-        uses: NVIDIA/NeMo-Export-Deploy/.github/actions/test-template@main
+        uses: NVIDIA/NeMo-Export-Deploy/.github/actions/test-template@ko3n1g/ci/onboard-more-tests
         with:
           runner: ${{ runner.name }}
           script: ${{ matrix.script }}
@@ -167,7 +167,7 @@ jobs:
     environment: nemo-ci
     steps:
       - name: main
-        uses: NVIDIA/NeMo-Export-Deploy/.github/actions/test-template@main
+        uses: NVIDIA/NeMo-Export-Deploy/.github/actions/test-template@ko3n1g/ci/onboard-more-tests
         with:
           runner: ${{ runner.name }}
           script: ${{ matrix.script }}
