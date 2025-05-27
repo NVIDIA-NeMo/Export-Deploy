@@ -77,11 +77,11 @@ extras_require = {
     'export': req_file(["requirements_export.txt"]),
     'deploy': req_file('requirements_deploy.txt'),
     'lightning': req_file('requirements_lightning.txt'),
-    'te': req_file('requirements_te.txt'),
 }
 
 extras_require['all'] = list(chain(*extras_require.values()))
-extras_require['vllm'] = req_file('requirements_vllm.txt') + req_file('requirements_deploy.txt')
+extras_require['vllm'] = req_file('requirements_vllm.txt')
+extras_require['trtllm'] = req_file('requirements_trtllm.txt')
 
 ###############################################################################
 #                            Code style checkers                              #
