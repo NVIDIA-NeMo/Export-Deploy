@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 FROM nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
-
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-venv \
@@ -23,6 +21,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* && \
     python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir -U pip setuptools
+
+WORKDIR /workspace
 
 # Set venv as default
 ENV PATH="/opt/venv/bin:$PATH"
@@ -42,13 +42,14 @@ RUN pip install --no-cache-dir -U \
 
 # Install all
 WORKDIR /workspace
+ARG INFERENCE_FRAMEWORK
 RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
     --mount=type=bind,source=nemo_export/__init__.py,target=/workspace/nemo_export/__init__.py \
     --mount=type=bind,source=nemo_deploy/__init__.py,target=/workspace/nemo_deploy/__init__.py \
     --mount=type=bind,source=package_info.py,target=/workspace/package_info.py \
     --mount=type=bind,source=README.md,target=/workspace/README.md \
     --mount=type=bind,source=requirements,target=/workspace/requirements \
-    pip install --no-build-isolation --no-cache-dir '.[all]' && \
+    pip install --no-build-isolation --no-cache-dir ".[all,$INFERENCE_FRAMEWORK]" && \
     # Install nemo-run separately since it conflicts with nvidia-pytriton
     pip install nemo-run
 

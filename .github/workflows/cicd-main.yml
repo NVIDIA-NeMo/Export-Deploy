@@ -96,8 +96,15 @@ jobs:
       )
       && !cancelled()
     with:
-      image-name: nemo_container_export_deploy
+      image-name: nemo_container_export_deploy_${{ matrix.inference-framework }}
       dockerfile: docker/Dockerfile.ci
+      inference-framework: ${{ matrix.inference-framework }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - inference-framework: trtllm
+          - inference-framework: vllm
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -130,14 +137,14 @@ jobs:
           script: ${{ matrix.script }}
           timeout: ${{ matrix.timeout || 10 }}
           is_unit_test: "true"
-          image: nemo_container_export_deploy
+          image: nemo_container_export_deploy_trtllm
           cpu-only: ${{ matrix.cpu-only || false }}
           has-azure-credentials: "true"
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-  cicd-e2e-tests:
+  cicd-e2e-tests-trtllm:
     strategy:
       fail-fast: false
       matrix:
@@ -152,21 +159,44 @@ jobs:
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_In_Framework
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          # - script: L2_NeMo_2_VLLM_EXPORT
-          #   runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          # - script: L2_NeMo_2_VLLM_VISION
-          #   runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
     needs: [cicd-unit-tests]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     steps:
       - name: main
-        uses: NVIDIA/NeMo-Export-Deploy/.github/actions/test-template@ko3n1g/o3n1g/ci/enable-e2e-tests
+        uses: NVIDIA/NeMo-Export-Deploy/.github/actions/test-template@main
         with:
           runner: ${{ runner.name }}
           script: ${{ matrix.script }}
-          image: nemo_container_export_deploy
+          image: nemo_container_export_deploy_trtllm
+          is_optional: ${{ matrix.is_optional || false }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          has-azure-credentials: true
+          is_unit_test: "false"
+
+  cicd-e2e-tests-vllm:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L2_NeMo_2_VLLM_EXPORT
+            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
+          - script: L2_NeMo_2_VLLM_VISION
+            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
+    needs: [cicd-unit-tests]
+    runs-on: ${{ matrix.runner }}
+    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    environment: nemo-ci
+    steps:
+      - name: main
+        uses: NVIDIA/NeMo-Export-Deploy/.github/actions/test-template@main
+        with:
+          runner: ${{ runner.name }}
+          script: ${{ matrix.script }}
+          image: nemo_container_export_deploy_vllm
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
