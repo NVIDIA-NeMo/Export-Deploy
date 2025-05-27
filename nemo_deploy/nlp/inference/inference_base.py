@@ -296,8 +296,8 @@ class MCoreEngineWithCleanup:
 
 def create_mcore_engine(
     path: Path,
-    num_devices: int = None,
-    num_nodes: int = None,
+    num_devices: Optional[int] = None,
+    num_nodes: Optional[int] = None,
     params_dtype: torch.dtype = torch.bfloat16,
     inference_batch_times_seqlen_threshold: int = 32768,
     inference_max_seq_length: int = 4096,

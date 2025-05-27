@@ -161,6 +161,11 @@ def initialize_distributed(
         init_method += master_ip + ':' + master_port
 
         # Call the init process
+        init_method = 'tcp://'
+        master_ip = os.getenv('MASTER_ADDR', 'localhost')
+        master_port = os.getenv('MASTER_PORT', '6000')
+        init_method += master_ip + ':' + master_port
+
         init_process_group_kwargs = {
             "backend": dist_config.distributed_backend,
             "world_size": get_world_size_safe(),
