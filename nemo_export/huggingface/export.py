@@ -16,8 +16,8 @@ from pathlib import Path
 
 import yaml
 
-from nemo_export.huggingface.utils import get_exporter
 from nemo.lightning.io import export_ckpt
+from nemo_export.huggingface.utils import get_exporter
 
 
 def load_connector(path, target):
