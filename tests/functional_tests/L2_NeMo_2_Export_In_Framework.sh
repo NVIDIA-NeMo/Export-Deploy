@@ -13,7 +13,8 @@
 # limitations under the License.
 python tests/functional_tests/utils/test_hf_import.py \
   --hf_model meta-llama/Llama-3.2-1B \
-  --output_path /tmp/nemo2_ckpt
+  --output_path /tmp/nemo2_ckpt \
+  --config Llama32Config1B
 
 coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_export.py \
   --model_name test \

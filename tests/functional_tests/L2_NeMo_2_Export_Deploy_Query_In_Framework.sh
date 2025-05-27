@@ -13,7 +13,8 @@
 # limitations under the License.
 python tests/functional_tests/utils/test_hf_import.py \
   --hf_model meta-llama/Llama-3.2-1B \
-  --output_path /tmp/nemo2_ckpt
+  --output_path /tmp/nemo2_ckpt \
+  --config Llama32Config1B
 
 torchrun --nproc_per_node=2 scripts/deploy/nlp/deploy_inframework_triton.py \
   --nemo_checkpoint /tmp/nemo2_ckpt \
