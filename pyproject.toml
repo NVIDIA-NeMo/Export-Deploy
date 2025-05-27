@@ -1,152 +1,131 @@
-# Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 [build-system]
-requires = ["setuptools >= 61.0"]
+requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[project]
-name = "nemo-export-deploy"
-dynamic = ["dependencies", "optional-dependencies", "version"]
-description = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
-readme = "README.md"
-license = {file = "LICENSE"}
-requires-python = ">=3.10"
-authors = [{ name = "NVIDIA", email = "nemo-export-deploy@nvidia.com" }]
-maintainers = [{ name = "NVIDIA", email = "nemo-export-deploy@nvidia.com" }]
-keywords = [
-    "NLP",
-    "NeMo",
-    "deep",
-    "gpu",
-    "language",
-    "learning",
-    "learning",
-    "machine",
-    "nvidia",
-    "pytorch",
-    "speech",
-    "torch",
-    "tts",
-]
-classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Information Technology",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Scientific/Engineering :: Image Recognition",
-    "Topic :: Scientific/Engineering :: Mathematics",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Software Development :: Libraries",
-    "Topic :: Utilities",
-]
 
 [tool.setuptools]
-py-modules = ["nemo"]
+packages = ["nemo_export", "nemo_deploy"]
 
-[project.entry-points."nemo_run.cli"]
-llm = "nemo.collections.llm"
+[tool.setuptools.dynamic]
+version = { file = "_version.py" }                              # any module attribute compatible with ast.literal_eval
+readme = { file = "README.md", content-type = "text/markdown" }
 
-[project.urls]
-Download = "https://github.com/NVIDIA/NeMo/releases"
-Homepage = "https://github.com/nvidia/nemo"
+[project]
+name = "nemo-rl"
+dynamic = ["version", "readme"]
+description = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
+requires-python = ">=3.10"
+license = { text = "Apache 2.0" }
+dependencies = [
+    "accelerate",
+    "fastapi",
+    "nvidia-pytriton ; platform_system != 'Darwin'",
+    "pydantic-settings",
+    "ray",
+    "ray[serve]",
+    "uvicorn",
+    "transformer_engine[pytorch]==2.2.0",
+    "tensorstore<0.1.72; platform_system != 'Darwin'",
+    "zarr>=2.18.2,<3.0.0",
+    "cloudpickle",
+    "fiddle",
+    "hydra-core>1.3,<=1.3.2",
+    "lightning>2.2.1,<=2.4.0",
+    "omegaconf<=2.3",
+    "peft",
+    "torchmetrics>=0.11.0",
+    "transformers",
+    "wandb",
+    "webdataset>=0.2.86",
+]
 
-[tool.isort]
-profile = "black"  # black-compatible
-line_length = 119  # should match black parameters
-ignore_whitespace = true  # ignore whitespace for compatibility with the initial style
-py_version = 310  # python 3.10 as a target version
-known_first_party = ["nemo"]  # FIRSTPARTY section
-known_third_party = ["nemo_text_processing", "examples", "scripts"]  # THIRDPARTY section
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
-default_section = "THIRDPARTY"
-extend_skip = ["setup.py", "docs/source/conf.py"]
+[project.optional-dependencies]
+vllm = ["vllm==0.8.5.post1"]
+trtllm = ["tensorrt-llm~=0.18.2"]
 
+[dependency-groups]
+# This is a default group so that we install these even with bare `uv sync`
+build = [
+    # Build requirement for TE
+    "torch==2.6.0",
+    # Build requirement for TE
+    "setuptools",
+    "packaging",
+    # Build requirement for nemo_run
+    "hatchling",
+    # Build requirement for mcore
+    "pybind11",
+]
+docs = [
+    "sphinx",
+    "sphinx-autobuild",    # For live doc serving while editing docs
+    "sphinx-autodoc2",     # For documenting Python API
+    "sphinx-copybutton",   # Adds a copy button for code blocks
+    "myst_parser",         # For our markdown docs
+    "nvidia-sphinx-theme", # Our NVIDIA theme
+]
+dev = ["black~=24.3", "isort>5.1.0,<6.0.0"]
+test = ["pytest", "pytest-mock", "coverage"]
+
+[tool.uv.sources]
+
+[tool.uv.workspace]
+
+[tool.uv]
+# Currently, TE must be built with no build-isolation b/c it requires torch
+no-build-isolation-package = ["transformer-engine"]
+# Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
+# and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
+# avoid including these in the default dependency set, but for now it's required.
+default-groups = ["dev", "build", "test"]
+# Users may use different link-modes depending on their scenario:
+#  --link-mode=hardlink (default on linux; may get warnings about switching to --link-mode copy if uv cache and venv on different file-systems)
+#  --link-mode=copy (slower but more reliable; supresses warning)
+#  --link-mode=symlink (fastest option when uv cache and venv on different file-system; caveat: venv is brittle since it depends on the environment/container)
+link-mode = "copy"
 
 [tool.black]
-line_length = 119
-skip_string_normalization = true
-# major year version is stable, see details in
-# https://black.readthedocs.io/en/stable/the_black_code_style/index.html
-# `required_version` is necessary for consistency (other `black` versions will fail to reformat files)
-required_version = "24"
-target-version = ['py310', 'py311', 'py312']
-extend-exclude = '''
-# A regex preceded with ^/ will apply only to files and directories
-# in the root of the project.
-# include here only current collections, new collections should not be ignored
-# exclude the collection once it is reformatted (due to changes in PRs)
-(
-  ^\/docs\/
-  | ^\/external\/
-  | ^\/examples\/
-  | ^\/nemo\/collections\/asr\/
-  | ^\/nemo\/collections\/common\/
-  | ^\/nemo\/collections\/multimodal\/
-  | ^\/nemo\/collections\/nlp\/
-  | ^\/nemo\/collections\/tts\/
-  | ^\/nemo\/collections\/vision\/
-  | ^\/nemo\/core\/
-  | ^\/nemo\/utils\/
-  | ^\/scripts\/
-  | ^\/tests\/
-  | ^\/tools\/
-  | ^\/tutorials\/
-  | ^\/setup.py
-)
+line-length = 120
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+)/
 '''
 
 [tool.pytest.ini_options]
-# durations=0 will display all tests execution time, sorted in ascending order starting from from the slowest one.
-# -vv will also display tests with durration = 0.00s
-addopts = "--verbose --pyargs --durations=0 --strict-markers"  # always add these arguments to pytest
+addopts = "--durations=15 -s -rA -x"
 testpaths = ["tests"]
-# directories to ignore when discovering tests
-norecursedirs = [
-    "nemo",
-    "nemo_text_processing",
-    "external",
-    "examples",
-    "docs",
-    "scripts",
-    "tools",
-    "tutorials",
-    "*.egg",
-    ".*",
-    "_darcs",
-    "build",
-    "CVS",
-    "dist",
-    "venv",
-    "{arch}"
-]
-# markers to select tests, use `pytest --markers` to see all available markers, `pytest -m "<marker>"` to select tests
-markers = [
-    "unit: marks unit test, i.e. testing a single, well isolated functionality (deselect with '-m \"not unit\"')",
-    "integration: marks test checking the elements when integrated into subsystems (deselect with '-m \"not integration\"')",
-    "system: marks test working at the highest integration level (deselect with '-m \"not system\"')",
-    "acceptance: marks test checking whether the developed product/model passes the user defined acceptance criteria (deselect with '-m \"not acceptance\"')",
-    "docs: mark tests related to documentation (deselect with '-m \"not docs\"')",
-    "skipduringci: marks tests that are skipped ci as they are addressed by Jenkins jobs but should be run to test user setups",
-    "pleasefixme: marks tests that are broken and need fixing",
-    "run_only_on: marks tests that should only run on specific hardware (e.g., GPU)",
-]
+python_files = "test_*.py"
+
+[tool.coverage.run]
+concurrency = ["thread", "multiprocessing"]
+omit = ["/tmp/*", "/workspace/tests/*"]
+
+[tool.coverage.paths]
+source = ["/workspace/nemo_export/", "/workspace/nemo_deploy/"]
+
+[tool.ruff.lint]
+# Enable all `pydocstyle` rules, limiting to those that adhere to the
+# Google convention via `convention = "google"`, below.
+select = ["D", "F"]
+
+# - On top of the Google convention, disable `D417`, which requires
+#   documentation for every function parameter.
+# - F841: local variable assigned but never used (exluced to favor readability)
+# TODO: Remove D10 once we are about to release to get all the docstrings written
+ignore = ["D417", "D10", "F841"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# Section to exclude errors for different file types
+[tool.ruff.per-file-ignores]
+# Ignore all directories named `tests`.
+"tests/**" = ["D"]
+# Ignore all files that end in `_test.py`.
+"*_test.py" = ["D"]
+# Ignore F401 (import but unused) in __init__.py
+"__init__.py" = ["F401"]

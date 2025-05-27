@@ -17,6 +17,7 @@ from abc import ABC
 from typing import List, Optional
 
 import numpy as np
+
 from nemo_deploy.utils import str_list2numpy
 
 use_pytriton = True

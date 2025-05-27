@@ -30,7 +30,8 @@ from mpi4py.futures import MPIPoolExecutor
 from tensorrt_llm.builder import Engine
 from tensorrt_llm.lora_manager import LoraManager
 from tensorrt_llm.quantization import QuantMode
-from tensorrt_llm.runtime import ModelConfig, ModelRunner, ModelRunnerCpp, SamplingConfig
+from tensorrt_llm.runtime import (ModelConfig, ModelRunner, ModelRunnerCpp,
+                                  SamplingConfig)
 from transformers import PreTrainedTokenizer
 
 LOGGER = logging.getLogger("NeMo")
@@ -101,7 +102,7 @@ def _read_config(config_path: Path):
     if quantization := config["builder_config"].get("quantization"):
         # Field "quantization" (dict) is introduced for quantized Nemo checkpoints support.
         # For regular Nemo checkpoints "quant_mode" field should be used (default: 0).
-        quant_mode = QuantMode.from_quant_algo(quantization['quant_algo'], quantization['kv_cache_quant_algo'])
+        quant_mode = QuantMode.from_quant_algo(quantization["quant_algo"], quantization["kv_cache_quant_algo"])
     else:
         quant_mode = QuantMode(config["builder_config"]["quant_mode"])
 
@@ -259,7 +260,7 @@ def _forward(
             if prompt_table is not None:
                 prompt_table = prompt_table.reshape(1, *prompt_table.shape)
                 tmp_dir = tempfile.TemporaryDirectory()
-                prompt_table_path = os.path.join(tmp_dir.name, 'prompt_table.npy')
+                prompt_table_path = os.path.join(tmp_dir.name, "prompt_table.npy")
                 np.save(prompt_table_path, prompt_table.cpu().float().numpy())
                 prompt_table = prompt_table_path
 
@@ -584,9 +585,7 @@ def refit(weights_dict: dict):
             continue
         trt_weight = trt.Weights(model_dtype, weight.data_ptr(), torch.numel(weight))
         trt_wt_location = trt.TensorLocation.DEVICE if weight.is_cuda else trt.TensorLocation.HOST
-        assert (
-            model_dtype == refitter.get_weights_prototype(trt_name).dtype == maybe_cast_to_trt_dtype(weight.dtype)
-        ), (
+        assert model_dtype == refitter.get_weights_prototype(trt_name).dtype == maybe_cast_to_trt_dtype(weight.dtype), (
             f"Expected all three of these dtypes to be the same:\n"
             f"  {model_dtype=}\n"
             f"  {refitter.get_weights_prototype(trt_name).dtype=}\n"
@@ -750,8 +749,8 @@ def generate(
     if tensorrt_llm.mpi_rank() != 0:
         return None
 
-    output_ids = outputs['output_ids']
-    sequence_lengths = outputs['sequence_lengths']
+    output_ids = outputs["output_ids"]
+    sequence_lengths = outputs["sequence_lengths"]
     input_lengths = [t.shape[0] for t in input_tensors]
 
     output_lines_list = [
@@ -760,9 +759,9 @@ def generate(
     ]
 
     if output_generation_logits:
-        return output_lines_list, outputs['generation_logits']
+        return output_lines_list, outputs["generation_logits"]
     elif output_context_logits:
-        return output_lines_list, outputs['context_logits']
+        return output_lines_list, outputs["context_logits"]
     return output_lines_list
 
 
@@ -834,7 +833,7 @@ def generate_streaming(
 
     # 'outputs' is a generator that yields one generator, not sure why... Unwrap that.
     for output in outputs:
-        output_ids = output['output_ids']
+        output_ids = output["output_ids"]
         # Now iterate over the partial outputs, decode and yield each intermediate result.
         generated_tokens = 0
         for partial_outputs in output_ids:
@@ -878,7 +877,7 @@ def to_word_list_format(
     tokenizer=None,
     ref_str="<extra_id_1>",
 ):
-    '''
+    """
     format of word_dict
         len(word_dict) should be same to batch_size
         word_dict[i] means the words for batch i
@@ -886,7 +885,7 @@ def to_word_list_format(
         This string can contains several sentences and split by ",".
         For example, if word_dict[2] = " I am happy, I am sad", then this function will return
         the ids for two short sentences " I am happy" and " I am sad".
-    '''
+    """
     assert tokenizer is not None, "need to set tokenizer"
 
     flat_ids = []
