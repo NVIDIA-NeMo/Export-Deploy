@@ -17,6 +17,8 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.10"
 license = { text = "Apache 2.0" }
 dependencies = [
+    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only,asr-only]",
+    "megatron-core>=0.12.0",
     "accelerate",
     "fastapi",
     "nvidia-pytriton",
@@ -69,6 +71,7 @@ dev = ["black~=24.3", "isort>5.1.0,<6.0.0"]
 test = ["pytest", "pytest-mock", "coverage"]
 
 [tool.uv.sources]
+nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "19a2288d9b72e834406f0506b868b0bf7675a2aa" }
 
 [tool.uv.workspace]
 
