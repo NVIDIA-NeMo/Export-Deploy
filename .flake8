@@ -1,6 +1,6 @@
 [flake8]
-max-line-length = 119
-select = 
+max-line-length = 120
+select =
     F541, # f-string without any placeholders
     F841, # local variable 'x' is assigned to but never used
     F401, # 'x' imported but unused
