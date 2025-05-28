@@ -3889,7 +3889,8 @@ dependencies = [
     { name = "einops" },
     { name = "flask-restful" },
     { name = "nltk" },
-    { name = "nvidia-modelopt", extra = ["torch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-modelopt", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, extra = ["torch"], marker = "(sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-modelopt", version = "0.29.0", source = { registry = "https://pypi.org/simple" }, extra = ["torch"], marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "packaging" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -4401,6 +4402,7 @@ trtllm = [
     { name = "tensorrt-llm" },
 ]
 vllm = [
+    { name = "nvidia-modelopt", version = "0.29.0", source = { registry = "https://pypi.org/simple" }, extra = ["torch"], marker = "extra == 'extra-18-nemo-export-deploy-vllm'" },
     { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" } },
     { name = "vllm" },
 ]
@@ -4443,6 +4445,7 @@ requires-dist = [
     { name = "lightning", specifier = ">2.2.1,<=2.4.0" },
     { name = "megatron-core", specifier = ">=0.12.0" },
     { name = "nemo-toolkit", extras = ["asr-only", "automodel", "common-only", "eval", "multimodal-only", "nlp-only"], git = "https://github.com/NVIDIA/NeMo.git?rev=259d684e73c45091f0b6144342133e6ceb7e824c" },
+    { name = "nvidia-modelopt", extras = ["torch"], marker = "extra == 'vllm'", specifier = ">=0.29.0" },
     { name = "nvidia-pytriton" },
     { name = "omegaconf", specifier = "<=2.3" },
     { name = "peft" },
@@ -4586,7 +4589,8 @@ nlp-only = [
     { name = "megatron-core" },
     { name = "nltk" },
     { name = "numpy" },
-    { name = "nvidia-modelopt", extra = ["torch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-modelopt", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, extra = ["torch"], marker = "(sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-modelopt", version = "0.29.0", source = { registry = "https://pypi.org/simple" }, extra = ["torch"], marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "opencc" },
     { name = "pangu" },
@@ -5030,21 +5034,87 @@ wheels = [
 name = "nvidia-modelopt"
 version = "0.25.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and sys_platform == 'linux'",
+    "python_full_version == '3.12.*' and sys_platform == 'linux'",
+    "python_full_version >= '3.13' and sys_platform != 'linux'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux'",
+    "python_full_version < '3.11' and sys_platform == 'linux'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux'",
+    "python_full_version < '3.11' and sys_platform != 'linux'",
+]
 dependencies = [
-    { name = "cloudpickle" },
-    { name = "ninja" },
-    { name = "numpy" },
-    { name = "nvidia-modelopt-core" },
-    { name = "packaging" },
-    { name = "pydantic" },
-    { name = "rich" },
-    { name = "scipy" },
-    { name = "setuptools", marker = "python_full_version >= '3.12'" },
-    { name = "tqdm" },
+    { name = "cloudpickle", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "ninja", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "numpy", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "nvidia-modelopt-core", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "packaging", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "pydantic", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "rich", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "scipy", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "tqdm", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/80/28/354d99112e3957940438692bede93fd05338b7b4712bf3652a62582e5054/nvidia_modelopt-0.25.0-py3-none-manylinux2014_x86_64.whl", hash = "sha256:bc7f9e492fa9c146a46d6b6ffd3ea2a1eedae67d710f093e6f3ea260168056c9", size = 616519, upload-time = "2025-03-03T17:35:53.233Z" },
     { url = "https://files.pythonhosted.org/packages/6e/c7/9eadbbbee68306c32c1320f00c6ad79840a729670d8e1817fa8691e55c52/nvidia_modelopt-0.25.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:b92384201ad58e61a80570534c417dee4841993e53722659e1b896cf73d403a8", size = 616520, upload-time = "2025-03-03T17:35:29.412Z" },
+]
+
+[package.optional-dependencies]
+torch = [
+    { name = "pulp", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "pynvml", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "regex", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "safetensors", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "torch", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "torchprofile", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "torchvision", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+]
+
+[[package]]
+name = "nvidia-modelopt"
+version = "0.29.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.13' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+]
+dependencies = [
+    { name = "ninja" },
+    { name = "numpy" },
+    { name = "nvidia-modelopt-core", version = "0.29.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "packaging" },
+    { name = "pydantic" },
+    { name = "rich" },
+    { name = "scipy" },
+    { name = "tqdm" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/61/f9/641536a791e508ffc4b44a90c2e0590ac0dea68d2cb711a2127c4f484d86/nvidia_modelopt-0.29.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:e660c20f8554f9633ebcda59f2cabe8f4b7cc2851f5c50ea5007f8a79b82ad71", size = 690136, upload-time = "2025-05-09T05:19:30.912Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/6a/d33cf714668b5bbbb9b39eb339889201ede08315961189d41aabed1eb6fe/nvidia_modelopt-0.29.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:f30cc8f496e252d82af59bd92ff64b1454d93dd1f2f1409f0a2bbfe4452180cd", size = 690134, upload-time = "2025-05-09T05:20:00.594Z" },
 ]
 
 [package.optional-dependencies]
@@ -5062,6 +5132,16 @@ torch = [
 name = "nvidia-modelopt-core"
 version = "0.25.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and sys_platform == 'linux'",
+    "python_full_version == '3.12.*' and sys_platform == 'linux'",
+    "python_full_version >= '3.13' and sys_platform != 'linux'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux'",
+    "python_full_version < '3.11' and sys_platform == 'linux'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux'",
+    "python_full_version < '3.11' and sys_platform != 'linux'",
+]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9a/96/0016c8bc36caab7c26e22cb78daa7553dcff9fee97fbc80c418a498a3cfb/nvidia_modelopt_core-0.25.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:987910e46b3817030e4a0c4b0d61c25bd3c728c070e5f688592a7c6bd05a8ccc", size = 2300112, upload-time = "2025-03-03T17:39:44.396Z" },
     { url = "https://files.pythonhosted.org/packages/9b/38/548ac11ec1d57cbe11ec1e2a59f50fff69861544c163eb9d263181c6ff7b/nvidia_modelopt_core-0.25.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:324fb8e9b61bb8fc131fb58197d5fdf7797ae8d78e5884f271c9f9736bfec0ec", size = 2409545, upload-time = "2025-03-03T17:41:13.063Z" },
@@ -5069,6 +5149,45 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/91/4f/ee1a7c2d08e9d40756bd73b241496e2dcaff7b4023764ebd3f661f11073b/nvidia_modelopt_core-0.25.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:f15d02ca5681e89c0980ec50488bd279ee881866033055470ab88fb5f8f2e900", size = 2672935, upload-time = "2025-03-03T17:42:10.919Z" },
     { url = "https://files.pythonhosted.org/packages/ff/74/598845a99db3c2572ac2de2e34d1a4cc10ae83ca2586b86fcf80ad1422c4/nvidia_modelopt_core-0.25.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:83e105ee75dad61f951571fd182868b4dc032b547c8c0f171578d50c62e6ede3", size = 2551141, upload-time = "2025-03-03T17:40:21.54Z" },
     { url = "https://files.pythonhosted.org/packages/68/3b/ff28b3141d37cf7122bb2b094466e05e01b16165656b0529153ecaa7f445/nvidia_modelopt_core-0.25.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:2d3118716ba8c4cd658d3b730196e282e199792d81b1e63974139896f5d7c44b", size = 2664120, upload-time = "2025-03-03T17:41:42.604Z" },
+]
+
+[[package]]
+name = "nvidia-modelopt-core"
+version = "0.29.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.13' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/3f/60c8cb431e7d25337ab5c49642fe961dde96356e0a602e00c1368fd465f5/nvidia_modelopt_core-0.29.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:08576558dd4beca4ca4e1f903735a61e551c24b19555a311657f173cddc2478b", size = 1246135, upload-time = "2025-05-09T05:20:06.466Z" },
+    { url = "https://files.pythonhosted.org/packages/89/11/b9ccd033648e6cd11a363afe7f095a062aed1875ec2493027b56fe46b25f/nvidia_modelopt_core-0.29.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:373b50ff3090b4f3d2a5d51e4167cd4f045298f11f541e33fde11b2e5283f7a5", size = 1264909, upload-time = "2025-05-09T05:21:32.903Z" },
+    { url = "https://files.pythonhosted.org/packages/70/5a/f98c2402d97c3ebec089b6933ca1c03285355ac007e3b2e9eac6162ce876/nvidia_modelopt_core-0.29.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:d353cf0d1ce7fa7acdc98838ba00b39ec002058b5770973071f031b3be400e97", size = 1311919, upload-time = "2025-05-09T05:21:07.727Z" },
+    { url = "https://files.pythonhosted.org/packages/4a/1a/18ea93c43b1cb1386dfcb5ac13ffa5043cc721650be0d4551444959357dd/nvidia_modelopt_core-0.29.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:df4b5d2022cdd8887058baf2a85c01c4009c2a8d2876f999770774b457e06c53", size = 1327457, upload-time = "2025-05-09T05:22:29.585Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/c2/561cdb1e517ddb69d3048e07c323cbaa060474f1c7850f435ee32238c1b7/nvidia_modelopt_core-0.29.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:f6a5a9341dab21fe2a5364adbfbf94cba310769796b7b2bceb3c0fdf2a3755ff", size = 1284482, upload-time = "2025-05-09T05:19:31.763Z" },
+    { url = "https://files.pythonhosted.org/packages/10/15/812002c54b3cc378a9d57c7317acb4df9c113a1a03176a5402d64f32f4d6/nvidia_modelopt_core-0.29.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:db626ae54c350999c11365b7687bcf7386d2e70ac6391ba2ed7c4ec80ee4eb12", size = 1305106, upload-time = "2025-05-09T05:21:51.892Z" },
 ]
 
 [[package]]
@@ -8328,7 +8447,7 @@ dependencies = [
     { name = "mpmath" },
     { name = "numpy" },
     { name = "nvidia-cuda-nvrtc-cu12" },
-    { name = "nvidia-modelopt", extra = ["torch"], marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "nvidia-modelopt", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, extra = ["torch"], marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
     { name = "nvidia-nccl-cu12" },
     { name = "onnx" },
     { name = "onnx-graphsurgeon" },

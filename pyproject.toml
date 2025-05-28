@@ -42,7 +42,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-vllm = ["vllm==0.8.5.post1", "transformers==4.51.3"]
+vllm = [
+    "vllm==0.8.5.post1",
+    "transformers==4.51.3",
+    "nvidia-modelopt[torch]>=0.29.0",
+]
 trtllm = ["tensorrt-llm~=0.18.2"]
 te = ["transformer-engine[pytorch]==2.2.0"]
 
