@@ -21,16 +21,23 @@ import numpy
 import vllm.envs as envs
 import wrapt
 from vllm import RequestOutput, SamplingParams
-from vllm.config import (CacheConfig, DeviceConfig, LoadConfig, LoadFormat,
-                         LoRAConfig, ObservabilityConfig, ParallelConfig,
-                         SchedulerConfig, VllmConfig)
+from vllm.config import (
+    CacheConfig,
+    DeviceConfig,
+    LoadConfig,
+    LoadFormat,
+    LoRAConfig,
+    ObservabilityConfig,
+    ParallelConfig,
+    SchedulerConfig,
+    VllmConfig,
+)
 from vllm.executor.ray_utils import initialize_ray_cluster
 from vllm.lora.request import LoRARequest
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output
-from nemo_export.utils import (convert_lora_nemo_to_canonical,
-                               prepare_directory_for_export)
+from nemo_export.utils import convert_lora_nemo_to_canonical, prepare_directory_for_export
 from nemo_export.vllm.engine import NemoLLMEngine
 from nemo_export.vllm.model_config import NemoModelConfig
 from nemo_export.vllm.model_loader import NemoModelLoader
@@ -94,15 +101,15 @@ class vLLMExporter(ITritonDeployable):
         nemo_checkpoint: str,
         model_dir: str,
         model_type: str,
-        device: str = "auto",
+        device: str = 'auto',
         tensor_parallel_size: int = 1,
         pipeline_parallel_size: int = 1,
         max_model_len: Optional[int] = None,
         lora_checkpoints: Optional[List[str]] = None,
-        dtype: str = "auto",
+        dtype: str = 'auto',
         seed: int = 0,
         log_stats: bool = True,
-        weight_storage: str = "auto",
+        weight_storage: str = 'auto',
         gpu_memory_utilization: float = 0.9,
         quantization: Optional[str] = None,
         delete_existing_files: bool = True,
@@ -146,13 +153,13 @@ class vLLMExporter(ITritonDeployable):
         # Pouplate the basic configuration structures
         device_config = DeviceConfig(device)
 
-        assert quantization in {None, "fp8"}
+        assert quantization in {None, 'fp8'}
 
         model_config = NemoModelConfig(
             nemo_checkpoint,
             model_dir,
             model_type,
-            tokenizer_mode="auto",
+            tokenizer_mode='auto',
             dtype=dtype,
             seed=seed,
             revision=None,
@@ -175,23 +182,23 @@ class vLLMExporter(ITritonDeployable):
         )
 
         # vllm/huggingface doesn't like the absense of config file. Place config in load dir.
-        if model_config.model and not os.path.exists(os.path.join(model_config.model, "config.json")):
-            with open(os.path.join(model_config.model, "config.json"), "w") as f:
+        if model_config.model and not os.path.exists(os.path.join(model_config.model, 'config.json')):
+            with open(os.path.join(model_config.model, 'config.json'), "w") as f:
                 json.dump(model_config.hf_text_config.to_dict(), f, indent=2)
 
         # Dynamic online FP8 quantization currently does not support in-memory conversion [TODO]
-        if quantization is not None and weight_storage in {"auto", "memory"}:
+        if quantization is not None and weight_storage in {'auto', 'memory'}:
             LOGGER.warning('Setting weight_storage = "file" for FP8 quantization')
-            weight_storage = "file"
+            weight_storage = 'file'
 
         # See if we have an up-to-date safetensors file
-        safetensors_file = os.path.join(model_config.model, "model.safetensors")
+        safetensors_file = os.path.join(model_config.model, 'model.safetensors')
         safetensors_file_valid = os.path.exists(safetensors_file) and os.path.getmtime(
             safetensors_file
         ) > os.path.getmtime(nemo_checkpoint)
 
         # Decide how we're going to convert the weights
-        if weight_storage == "auto":
+        if weight_storage == 'auto':
             if parallel_config.distributed_executor_backend is not None:
                 save_weights = not safetensors_file_valid
                 inmemory_weight_conversion = False
@@ -199,15 +206,15 @@ class vLLMExporter(ITritonDeployable):
                 save_weights = False
                 inmemory_weight_conversion = True
 
-        elif weight_storage == "cache":
+        elif weight_storage == 'cache':
             save_weights = not safetensors_file_valid
             inmemory_weight_conversion = False
 
-        elif weight_storage == "file":
+        elif weight_storage == 'file':
             save_weights = True
             inmemory_weight_conversion = False
 
-        elif weight_storage == "memory":
+        elif weight_storage == 'memory':
             save_weights = False
             inmemory_weight_conversion = True
 
@@ -218,14 +225,14 @@ class vLLMExporter(ITritonDeployable):
         if save_weights:
             NemoModelLoader.convert_and_store_nemo_weights(model_config, safetensors_file)
         elif not inmemory_weight_conversion:
-            LOGGER.info(f"Using cached weights in {safetensors_file}")
+            LOGGER.info(f'Using cached weights in {safetensors_file}')
 
         # TODO: these values are the defaults from vllm.EngineArgs.
         cache_config = CacheConfig(
             block_size=16,
             gpu_memory_utilization=gpu_memory_utilization,
             swap_space=4,
-            cache_dtype="auto",
+            cache_dtype='auto',
             sliding_window=model_config.get_sliding_window(),
         )
 
@@ -254,14 +261,12 @@ class vLLMExporter(ITritonDeployable):
         # Initialize the cluster and specify the executor class.
         if parallel_config.distributed_executor_backend == "ray":
             initialize_ray_cluster(parallel_config)
-            from vllm.executor.ray_distributed_executor import \
-                RayDistributedExecutor
+            from vllm.executor.ray_distributed_executor import RayDistributedExecutor
 
             executor_class = RayDistributedExecutor
 
         elif parallel_config.distributed_executor_backend == "mp":
-            from vllm.executor.mp_distributed_executor import \
-                MultiprocessingDistributedExecutor
+            from vllm.executor.mp_distributed_executor import MultiprocessingDistributedExecutor
 
             executor_class = MultiprocessingDistributedExecutor
 
@@ -302,14 +307,14 @@ class vLLMExporter(ITritonDeployable):
             if not os.path.isfile(nemo_file):
                 raise FileNotFoundError(f"LoRA checkpoint file '{nemo_file} does not exist'")
 
-            hf_lora_dir = os.path.join(model_dir, f"lora_{index}")
+            hf_lora_dir = os.path.join(model_dir, f'lora_{index}')
 
             LOGGER.info(f"Converting LoRA checkpoint '{nemo_file}' into '{hf_lora_dir}'...")
 
             _, lora_config = convert_lora_nemo_to_canonical(nemo_file, hf_lora_dir, hf_format=True)
             self.lora_checkpoints.append(hf_lora_dir)
 
-            rank = lora_config["peft"]["lora_tuning"]["adapter_dim"]
+            rank = lora_config['peft']['lora_tuning']['adapter_dim']
             max_lora_rank = max(max_lora_rank, rank)
 
             index += 1
@@ -334,7 +339,7 @@ class vLLMExporter(ITritonDeployable):
 
         if lora_uid is not None and lora_uid >= 0 and lora_uid < len(self.lora_checkpoints):
             lora_request = LoRARequest(
-                lora_name=f"LoRA_{lora_uid}", lora_int_id=lora_uid + 1, lora_local_path=self.lora_checkpoints[lora_uid]
+                lora_name=f'LoRA_{lora_uid}', lora_int_id=lora_uid + 1, lora_local_path=self.lora_checkpoints[lora_uid]
             )
         else:
             lora_request = None
@@ -388,17 +393,17 @@ class vLLMExporter(ITritonDeployable):
             yield [[response] for response in responses]
 
     def _add_triton_request_to_engine(self, inputs: numpy.ndarray, index: int) -> str:
-        if "lora_uids" in inputs:
-            lora_uid = int(numpy.char.decode(inputs["lora_uids"][index][0], encoding="utf-8"))
+        if 'lora_uids' in inputs:
+            lora_uid = int(numpy.char.decode(inputs['lora_uids'][index][0], encoding="utf-8"))
         else:
             lora_uid = None
 
         return self._add_request_to_engine(
-            prompt=inputs["prompts"][index][0].decode("UTF-8"),
-            max_output_len=inputs["max_output_len"][index][0],
-            temperature=inputs["temperature"][index][0],
-            top_k=inputs["top_k"][index][0],
-            top_p=inputs["top_p"][index][0],
+            prompt=inputs['prompts'][index][0].decode('UTF-8'),
+            max_output_len=inputs['max_output_len'][index][0],
+            temperature=inputs['temperature'][index][0],
+            top_k=inputs['top_k'][index][0],
+            top_p=inputs['top_p'][index][0],
             lora_uid=lora_uid,
         )
 
@@ -436,7 +441,7 @@ class vLLMExporter(ITritonDeployable):
         responses = [r[0] for r in responses]
 
         output_tensor = cast_output(responses, numpy.bytes_)
-        return {"outputs": output_tensor}
+        return {'outputs': output_tensor}
 
     @batch
     def triton_infer_fn_streaming(self, **inputs: numpy.ndarray):
@@ -452,7 +457,7 @@ class vLLMExporter(ITritonDeployable):
         for responses in self._forward_streaming(request_ids):
             responses = [r[0] for r in responses]
             output_tensor = cast_output(responses, numpy.bytes_)
-            yield {"outputs": output_tensor}
+            yield {'outputs': output_tensor}
 
     # Mimic the TensorRTLLM exporter's forward function, even though we don't support many of its features.
     def forward(

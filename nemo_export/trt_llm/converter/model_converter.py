@@ -24,7 +24,9 @@ from tensorrt_llm.layers import MoeConfig
 from tensorrt_llm.models.modeling_utils import PretrainedConfig
 
 from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import (
-    convert_model_to_trt_llm_ckpt, dist_model_to_trt_llm_ckpt)
+    convert_model_to_trt_llm_ckpt,
+    dist_model_to_trt_llm_ckpt,
+)
 from nemo_export.trt_llm.converter.utils import DECODER_MODEL_TYPE, split
 
 LOGGER = logging.getLogger("NeMo")
@@ -94,7 +96,7 @@ def determine_quantization_settings(
             - Model kv-cache quantization flag
     """
 
-    is_nemo_quantized: bool = nemo_model_config.get("fp8", False)
+    is_nemo_quantized: bool = nemo_model_config.get('fp8', False)
     if fp8_quantized is None:
         fp8_quantized = is_nemo_quantized
     if fp8_kvcache is None:
@@ -165,52 +167,54 @@ def model_to_trtllm_ckpt(
             lm_head_weight = np.pad(lm_head_weight, ((0, pad_width), (0, 0)), "constant", constant_values=0)
 
     world_size = tensor_parallel_size * pipeline_parallel_size
-    hidden_act = nemo_model_config.get("activation")
+    hidden_act = nemo_model_config.get('activation')
     hidden_act = (
-        hidden_act.split("-")[-1] if nemo_model_config.get("num_moe_experts", 0) else non_gated_version(hidden_act)
+        hidden_act.split("-")[-1] if nemo_model_config.get('num_moe_experts', 0) else non_gated_version(hidden_act)
     )
 
     config = {
-        "architecture": DECODER_MODEL_TYPE[decoder_type],
-        "dtype": dtype,
-        "num_hidden_layers": nemo_model_config.get("num_layers"),
-        "num_attention_heads": nemo_model_config.get("num_attention_heads"),
-        "num_key_value_heads": nemo_model_config.get("num_query_groups", nemo_model_config["num_attention_heads"]),
-        "head_size": nemo_model_config.get("kv_channels"),
-        "hidden_size": nemo_model_config.get("hidden_size"),
-        "intermediate_size": nemo_model_config.get("ffn_hidden_size"),
-        "norm_epsilon": nemo_model_config.get("layernorm_epsilon"),
-        "vocab_size": vocab_size_padded,
-        "position_embedding_type": (
-            "rope_gpt_neox" if nemo_model_config.get("position_embedding_type") == "rope" else "learned_absolute"
+        'architecture': DECODER_MODEL_TYPE[decoder_type],
+        'dtype': dtype,
+        'num_hidden_layers': nemo_model_config.get('num_layers'),
+        'num_attention_heads': nemo_model_config.get('num_attention_heads'),
+        'num_key_value_heads': nemo_model_config.get('num_query_groups', nemo_model_config['num_attention_heads']),
+        'head_size': nemo_model_config.get('kv_channels'),
+        'hidden_size': nemo_model_config.get('hidden_size'),
+        'intermediate_size': nemo_model_config.get('ffn_hidden_size'),
+        'norm_epsilon': nemo_model_config.get('layernorm_epsilon'),
+        'vocab_size': vocab_size_padded,
+        'position_embedding_type': (
+            "rope_gpt_neox" if nemo_model_config.get('position_embedding_type') == "rope" else "learned_absolute"
         ),
-        "max_position_embeddings": nemo_model_config.get("max_position_embeddings"),
-        "hidden_act": hidden_act,
-        "use_parallel_embedding": use_parallel_embedding,
-        "embedding_sharding_dim": 0,
-        "share_embedding_table": use_embedding_sharing,
-        "quantization": {
-            "quant_algo": "FP8" if fp8_quantized else None,
-            "kv_cache_quant_algo": "FP8" if fp8_kvcache else None,
+        'max_position_embeddings': nemo_model_config.get('max_position_embeddings'),
+        'hidden_act': hidden_act,
+        'use_parallel_embedding': use_parallel_embedding,
+        'embedding_sharding_dim': 0,
+        'share_embedding_table': use_embedding_sharing,
+        'quantization': {
+            'quant_algo': "FP8" if fp8_quantized else None,
+            'kv_cache_quant_algo': "FP8" if fp8_kvcache else None,
         },
-        "bias": nemo_model_config.get("bias"),
-        "apply_query_key_layer_scaling": False,
-        "rotary_pct": nemo_model_config.get("rotary_percentage", 1.0),
-        "rotary_base": nemo_model_config.get("rotary_base", 10000),
-        "moe_num_experts": nemo_model_config.get("num_moe_experts", 0),
-        "moe_top_k": nemo_model_config.get("moe_router_topk", 0),
-        "moe_normalization_mode": nemo_model_config.get(
-            "moe_renorm_mode", MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE
+        'bias': nemo_model_config.get('bias'),
+        'apply_query_key_layer_scaling': False,
+        'rotary_pct': nemo_model_config.get('rotary_percentage', 1.0),
+        'rotary_base': nemo_model_config.get('rotary_base', 10000),
+        'moe_num_experts': nemo_model_config.get('num_moe_experts', 0),
+        'moe_top_k': nemo_model_config.get('moe_router_topk', 0),
+        'moe_normalization_mode': nemo_model_config.get(
+            'moe_renorm_mode', MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE
         ),
-        "moe_tp_mode": nemo_model_config.get("moe_tp_mode", 2),  # change MoeConfig.ParallelismMode.TENSOR_PARALLEL to 2
-        "logits_dtype": "float32",
-        "world_size": world_size,
-        "tp_size": tensor_parallel_size,
-        "pp_size": pipeline_parallel_size,
+        'moe_tp_mode': nemo_model_config.get(
+            'moe_tp_mode', 2
+        ),  # change MoeConfig.ParallelismMode.TENSOR_PARALLEL to 2
+        'logits_dtype': 'float32',
+        'world_size': world_size,
+        'tp_size': tensor_parallel_size,
+        'pp_size': pipeline_parallel_size,
     }
     model_configs = []
     weights_dicts = []
-    num_layers = nemo_model_config.get("num_layers")
+    num_layers = nemo_model_config.get('num_layers')
     rotary_scaling = nemo_model_config.get("seq_len_interpolation_factor")
 
     if decoder_type == "falcon":

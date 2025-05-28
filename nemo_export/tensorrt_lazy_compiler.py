@@ -22,16 +22,20 @@ from types import MethodType
 from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import torch
+
 from nemo.utils.export_utils import add_casts_around_norms, replace_for_export
 from nemo.utils.import_utils import safe_import
 
 polygraphy, polygraphy_imported = safe_import("polygraphy")
 if polygraphy_imported:
     from polygraphy.backend.common import bytes_from_path
-    from polygraphy.backend.trt import (CreateConfig, Profile,
-                                        engine_bytes_from_network,
-                                        engine_from_bytes,
-                                        network_from_onnx_path)
+    from polygraphy.backend.trt import (
+        CreateConfig,
+        Profile,
+        engine_bytes_from_network,
+        engine_from_bytes,
+        network_from_onnx_path,
+    )
 
 trt, trt_imported = safe_import("tensorrt")
 torch_tensorrt, _ = safe_import("torch_tensorrt")
@@ -225,7 +229,9 @@ class TRTEngine:
                     raise ValueError("ERROR: inference failed.")
                 # capture cuda graph
                 cuassert(
-                    cudart.cudaStreamBeginCapture(stream, cudart.cudaStreamCaptureMode.cudaStreamCaptureModeThreadLocal)
+                    cudart.cudaStreamBeginCapture(
+                        stream, cudart.cudaStreamCaptureMode.cudaStreamCaptureModeThreadLocal
+                    )
                 )
                 self.context.execute_async_v3(stream)
                 graph = cuassert(cudart.cudaStreamEndCapture(stream))
@@ -615,9 +621,7 @@ class TrtCompiler:
                     **export_args,
                 )
                 if polygraphy_imported:
-                    from polygraphy.backend.onnx.loader import (fold_constants,
-                                                                onnx_from_path,
-                                                                save_onnx)
+                    from polygraphy.backend.onnx.loader import fold_constants, onnx_from_path, save_onnx
 
                     onnx_model = fold_constants(onnx_from_path(onnx_path), size_threshold=16 * 1000 * 1000)
                     save_onnx(onnx_model, onnx_path)

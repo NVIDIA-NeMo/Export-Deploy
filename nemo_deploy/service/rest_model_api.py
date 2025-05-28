@@ -13,10 +13,10 @@ from pathlib import Path
 
 import requests
 from fastapi import FastAPI, HTTPException
-from nemo.utils import logging
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
+from nemo.utils import logging
 from nemo_deploy.nlp import NemoQueryLLM
 
 
@@ -28,11 +28,11 @@ class TritonSettings(BaseSettings):
     def __init__(self):
         super(TritonSettings, self).__init__()
         try:
-            self._triton_service_port = int(os.environ.get("TRITON_PORT", 8080))
-            self._triton_service_ip = os.environ.get("TRITON_HTTP_ADDRESS", "0.0.0.0")
-            self._triton_request_timeout = int(os.environ.get("TRITON_REQUEST_TIMEOUT", 60))
-            self._openai_format_response = os.environ.get("OPENAI_FORMAT_RESPONSE", "False").lower() == "true"
-            self._output_generation_logits = os.environ.get("OUTPUT_GENERATION_LOGITS", "False").lower() == "true"
+            self._triton_service_port = int(os.environ.get('TRITON_PORT', 8080))
+            self._triton_service_ip = os.environ.get('TRITON_HTTP_ADDRESS', '0.0.0.0')
+            self._triton_request_timeout = int(os.environ.get('TRITON_REQUEST_TIMEOUT', 60))
+            self._openai_format_response = os.environ.get('OPENAI_FORMAT_RESPONSE', 'False').lower() == 'true'
+            self._output_generation_logits = os.environ.get('OUTPUT_GENERATION_LOGITS', 'False').lower() == 'true'
         except Exception as error:
             logging.error("An exception occurred trying to retrieve set args in TritonSettings class. Error:", error)
             return

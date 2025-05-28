@@ -21,12 +21,11 @@ import numpy as np
 import tensorrt as trt
 import torch
 import wrapt
-from nemo.utils import logging
 from transformers import AutoModel, AutoTokenizer
 
+from nemo.utils import logging
 from nemo_deploy import ITritonDeployable
-from nemo_export.utils import (get_example_inputs, get_model_device_type,
-                               is_nemo2_checkpoint, validate_fp8_network)
+from nemo_export.utils import get_example_inputs, get_model_device_type, is_nemo2_checkpoint, validate_fp8_network
 
 
 @wrapt.decorator

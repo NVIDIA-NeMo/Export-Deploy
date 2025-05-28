@@ -14,11 +14,11 @@
 
 
 import torch
+from transformers import AutoProcessor, MllamaConfig
+from transformers.models.mllama.configuration_mllama import MllamaTextConfig, MllamaVisionConfig
+
 from nemo import lightning as nl
 from nemo.collections import vlm
-from transformers import AutoProcessor, MllamaConfig
-from transformers.models.mllama.configuration_mllama import (
-    MllamaTextConfig, MllamaVisionConfig)
 
 
 def split_qkv_weight(qkv_weight, model_config):
@@ -44,7 +44,7 @@ def split_qkv_weight(qkv_weight, model_config):
         v_weight[i, :, :] = qkv_weight[qkv_index, :, :]
         qkv_index += 1
 
-    return [("q_proj", q_weight), ("k_proj", k_weight), ("v_proj", v_weight)]
+    return [('q_proj', q_weight), ('k_proj', k_weight), ('v_proj', v_weight)]
 
 
 def split_kv_weight(kv_weight, model_config):
@@ -64,14 +64,14 @@ def split_kv_weight(kv_weight, model_config):
         v_weight[i, :, :] = kv_weight[kv_index, :, :]
         kv_index += 1
 
-    return [("k_proj", k_weight), ("v_proj", v_weight)]
+    return [('k_proj', k_weight), ('v_proj', v_weight)]
 
 
 def split_gate_weight(gate_weight):
     """Split linear fc to gate"""
     gate_weight = torch.chunk(gate_weight, 2, axis=0)
 
-    return [("gate_proj", gate_weight[0]), ("up_proj", gate_weight[1])]
+    return [('gate_proj', gate_weight[0]), ('up_proj', gate_weight[1])]
 
 
 def convert_mllama_config(source_vision, source_text):
@@ -342,7 +342,7 @@ def convert_mllama_nemo_to_hf(checkpoint_path, processor_name):
             ]
 
             for name, weight in split_qkv_weight(qkv_weights, vision_model_config):
-                new_key = f"vision_model.transformer.layers.{i}.self_attn.{name}.weight"
+                new_key = f'vision_model.transformer.layers.{i}.self_attn.{name}.weight'
                 new_state_dict[new_key] = weight.reshape(-1, hidden_size)
 
         for i in range(vision_model_config.num_global_layers):
@@ -351,7 +351,7 @@ def convert_mllama_nemo_to_hf(checkpoint_path, processor_name):
             ]
 
             for name, weight in split_qkv_weight(qkv_weights, vision_model_config):
-                new_key = f"vision_model.global_transformer.layers.{i}.self_attn.{name}.weight"
+                new_key = f'vision_model.global_transformer.layers.{i}.self_attn.{name}.weight'
                 new_state_dict[new_key] = weight.reshape(-1, hidden_size)
 
         return new_state_dict

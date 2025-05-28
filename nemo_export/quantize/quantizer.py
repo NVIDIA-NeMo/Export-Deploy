@@ -21,13 +21,13 @@ import torch
 import torch.distributed as dist
 from megatron.core import parallel_state
 from megatron.core.transformer.module import Float16Module
-from nemo.collections.nlp.models.language_modeling.megatron_gpt_model import \
-    MegatronGPTModel
+from omegaconf.omegaconf import DictConfig, open_dict
+
+from nemo.collections.nlp.models.language_modeling.megatron_gpt_model import MegatronGPTModel
 from nemo.collections.nlp.parts.utils_funcs import torch_dtype_from_precision
 from nemo.utils import logging
 from nemo.utils.distributed import temporary_directory
 from nemo.utils.model_utils import save_artifacts, unwrap_model
-from omegaconf.omegaconf import DictConfig, open_dict
 
 try:
     import modelopt.torch.quantization as mtq
@@ -206,7 +206,9 @@ class Quantizer:
                 maxbound = 448
             elif self.quantization_config.algorithm == "int8_sq":
                 maxbound = 127
-            model = mtq.postprocess_amax(model, "*input_quantizer", lambda amax: torch.clamp(amax, min=0.01 * maxbound))
+            model = mtq.postprocess_amax(
+                model, "*input_quantizer", lambda amax: torch.clamp(amax, min=0.01 * maxbound)
+            )
 
         if dist.get_rank() == 0:
             mtq.print_quant_summary(model)

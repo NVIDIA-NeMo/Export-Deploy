@@ -20,7 +20,6 @@ try:
 except Exception:
     use_ray = False
 import logging
-
 from .ray_utils import find_available_port
 
 LOGGER = logging.getLogger("NeMo")
