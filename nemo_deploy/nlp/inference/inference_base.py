@@ -14,6 +14,7 @@ from megatron.core.inference.text_generation_controllers.text_generation_control
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
 
+from export_deploy_utils.nemo_config import NeMoConfig
 from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
 from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
@@ -191,7 +192,8 @@ def setup_model_and_tokenizer_for_inference(
     # Load model context for config and tokenizer
     model_context = io.load_context(path=ckpt_to_context_subdir(checkpoint_path), subpath="model")
 
-    model_config = model_context.config
+    nc = NeMoConfig(checkpoint_path / "context/model.yaml")
+    model_config = nc.model_config(False)
 
     # Apply ModelOpt specs if they exist in the checkpoint
     set_modelopt_spec_if_exists_in_ckpt(model_context, checkpoint_path)
@@ -223,6 +225,7 @@ def setup_model_and_tokenizer_for_inference(
     # Needed for model creation
     if not model_config.vocab_size:
         model_config.vocab_size = model_context.tokenizer.vocab_size
+        model_context.config.vocab_size = model_context.tokenizer.vocab_size
 
     # Enable flash attention
     if enable_flash_decode:
@@ -237,7 +240,7 @@ def setup_model_and_tokenizer_for_inference(
 
     # Create the model using tron APIs
     model = get_model_from_config(
-        model_config,
+        model_context.config,
         ddp_config=dist_config,
         wrap_with_ddp=False,  # No need for DDP for inference
     )

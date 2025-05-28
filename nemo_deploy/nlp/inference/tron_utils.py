@@ -196,8 +196,9 @@ def initialize_distributed(
                 distributed_timeout_minutes=dist_config.distributed_timeout_minutes,
                 nccl_communicator_config_path=dist_config.nccl_communicator_config_path,
                 order="tp-cp-ep-dp-pp" if not dist_config.use_tp_pp_dp_mapping else "tp-pp-dp",
-                encoder_tensor_model_parallel_size=getattr(model_config, "encoder_tensor_model_parallel_size", 0),
-                encoder_pipeline_model_parallel_size=getattr(model_config, "encoder_pipeline_model_parallel_size", 0),
+                encoder_tensor_model_parallel_size=getattr(model_config, "encoder_tensor_model_parallel_size", 0) or 0,
+                encoder_pipeline_model_parallel_size=getattr(model_config, "encoder_pipeline_model_parallel_size", 0)
+                or 0,
                 get_embedding_ranks=get_embedding_ranks,
                 get_position_embedding_ranks=get_position_embedding_ranks,
                 create_gloo_process_groups=dist_config.use_gloo_process_groups,

@@ -28,17 +28,11 @@ import torch
 import yaml
 from transformers import AutoTokenizer, GPT2Tokenizer, PreTrainedTokenizer
 
+from export_deploy_utils.nemo_config import NeMoConfig
 from nemo_export.sentencepiece_tokenizer import SentencePieceTokenizer
 from nemo_export.tarutils import TarPath
 from nemo_export.tiktoken_tokenizer import TiktokenTokenizer
 from nemo_export.utils import load_model_weights, nemo_to_path, torch_dtype_from_precision
-
-try:
-    from nemo.lightning import io
-
-    HAVE_NEMO2 = True
-except (ImportError, ModuleNotFoundError):
-    HAVE_NEMO2 = False
 
 LOGGER = logging.getLogger("NeMo")
 EXTRA_STATE = "extra_state"
@@ -236,34 +230,23 @@ def get_tokenizer_from_nemo2_context(model_context_dir: Path):
         The instantiated tokenizer (various classes possible).
     """
 
-    if HAVE_NEMO2:
-        # Use NeMo tokenizer loaded from the NeMo 2.0 model context
-        tokenizer_spec = io.load_context(model_context_dir, subpath="model.tokenizer")
-        return build_tokenizer(tokenizer_spec)
+    nc = NeMoConfig(model_context_dir / "model.yaml")
+    tokenizer_config = nc.tokenizer()
+    target_class = tokenizer_config["_target_"]
+    tokenizer_module = "nemo.collections.common.tokenizers."
+    assert target_class.startswith(tokenizer_module)
+    target_class = target_class.removeprefix(tokenizer_module)
+
+    if target_class == "sentencepiece_tokenizer.SentencePieceTokenizer":
+        tokenizer = SentencePieceTokenizer(
+            model_path=str(model_context_dir / tokenizer_config["model_path"]),
+            special_tokens=tokenizer_config.get("special_tokens", None),
+            legacy=tokenizer_config.get("legacy", False),
+        )
+    elif target_class == "huggingface.auto_tokenizer.AutoTokenizer":
+        tokenizer = AutoTokenizer.from_pretrained(str(model_context_dir / tokenizer_config["pretrained_model_name"]))
     else:
-        # Use local nemo_export SentencePieceTokenizer implementation
-        # or directly a HuggingFace tokenizer based on the model config
-        with (model_context_dir / "model.yaml").open("r") as stream:
-            model_config = yaml.safe_load(stream)
-
-        tokenizer_config = model_config["tokenizer"]
-        target_class = tokenizer_config["_target_"]
-        tokenizer_module = "nemo.collections.common.tokenizers."
-        assert target_class.startswith(tokenizer_module)
-        target_class = target_class.removeprefix(tokenizer_module)
-
-        if target_class == "sentencepiece_tokenizer.SentencePieceTokenizer":
-            tokenizer = SentencePieceTokenizer(
-                model_path=str(model_context_dir / tokenizer_config["model_path"]),
-                special_tokens=tokenizer_config.get("special_tokens", None),
-                legacy=tokenizer_config.get("legacy", False),
-            )
-        elif target_class == "huggingface.auto_tokenizer.AutoTokenizer":
-            tokenizer = AutoTokenizer.from_pretrained(
-                str(model_context_dir / tokenizer_config["pretrained_model_name"])
-            )
-        else:
-            raise ValueError(f"Unsupported tokenizer type: {tokenizer_module}{target_class}.")
+        raise ValueError(f"Unsupported tokenizer type: {tokenizer_module}{target_class}.")
 
     return tokenizer
 
