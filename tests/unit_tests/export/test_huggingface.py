@@ -12,26 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
-import pytest
-from pathlib import Path
 import tempfile
+from pathlib import Path
+
+import pytest
+import torch
+
 from nemo_export import huggingface as hf_export
 from nemo_export.huggingface.utils import load_config, torch_dtype_from_mcore_config
 
-
 HF_FORMAT = "hf"
+
 
 @pytest.mark.unit
 def test_get_exporter():
-    """ Test that the Gemma exporter is registered via the decorator."""
+    """Test that the Gemma exporter is registered via the decorator."""
     assert hf_export.get_exporter("GemmaModel", HF_FORMAT) is hf_export.HFGemmaExporter
 
 
 @pytest.mark.unit
 def test_load_gemma_connector():
-    """ Test that the Gemma connector is loaded correctly from a checkpoint path."""
-    from nemo.collections.llm import GemmaModel, GemmaConfig2B
+    """Test that the Gemma connector is loaded correctly from a checkpoint path."""
+    from nemo.collections.llm import GemmaConfig2B, GemmaModel
+
     model = GemmaModel(GemmaConfig2B())
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -42,10 +45,11 @@ def test_load_gemma_connector():
 
 @pytest.mark.unit
 def test_load_gemma2b_config():
-    """ Test that the Gemma 2B config is loaded correctly.
+    """Test that the Gemma 2B config is loaded correctly.
     Asserts that parameters required by the exporter are present.
     """
-    from nemo.collections.llm import GemmaModel, GemmaConfig2B
+    from nemo.collections.llm import GemmaConfig2B, GemmaModel
+
     with tempfile.TemporaryDirectory() as temp_dir:
         model = GemmaModel(GemmaConfig2B(fp16=True))
         create_gemma_context(temp_dir, model)
@@ -60,7 +64,7 @@ def test_load_gemma2b_config():
 
 
 def create_gemma_context(output_path: Path | str, model):
-    """ Creates a context for a Gemma model. """
+    """Creates a context for a Gemma model."""
     from nemo.lightning import MegatronStrategy, Trainer
     from nemo.lightning.io.pl import TrainerContext
     from nemo.utils.get_rank import is_global_rank_zero
@@ -68,9 +72,7 @@ def create_gemma_context(output_path: Path | str, model):
     output_path = Path(output_path)
 
     _trainer = Trainer(
-        devices=1,
-        accelerator="cpu",
-        strategy=MegatronStrategy(ckpt_save_optimizer=False, always_save_context=True)
+        devices=1, accelerator="cpu", strategy=MegatronStrategy(ckpt_save_optimizer=False, always_save_context=True)
     )
     _trainer.state.fn = "fit"
     _trainer.strategy.connect(model)
@@ -79,4 +81,3 @@ def create_gemma_context(output_path: Path | str, model):
     output_path.mkdir(parents=True, exist_ok=True)
     if is_global_rank_zero():
         TrainerContext.from_trainer(_trainer).io_dump(output_path / "context", yaml_attrs=["model"])
-
