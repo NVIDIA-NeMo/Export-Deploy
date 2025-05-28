@@ -14,12 +14,11 @@
 
 from nemo_export.huggingface.export import export_to_hf, load_connector
 from nemo_export.huggingface.gemma import HFGemmaExporter
-from nemo_export.huggingface.utils import change_paths_to_absolute_paths, torch_dtype_from_mcore_config
+from nemo_export.huggingface.utils import get_exporter
 
 __all__ = [
     "HFGemmaExporter",
-    "change_paths_to_absolute_paths",
-    "torch_dtype_from_mcore_config",
     "load_connector",
     "export_to_hf",
+    "get_exporter",
 ]
