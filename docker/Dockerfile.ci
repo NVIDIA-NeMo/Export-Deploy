@@ -54,7 +54,7 @@ RUN --mount=type=bind,source=setup.py,target=/workspace/setup.py \
     pip install nemo-run
 
 # Install development versions
-ARG NEMO_REF=7c51ca5c5b8fdfbaf7cdaf2a113a319fb137f768
+ARG NEMO_REF=19a2288d9b72e834406f0506b868b0bf7675a2aa
 ARG MCORE_REF=54afff44f29e1117b2057ced6fa5be583e35cb7b
 RUN pip install --no-cache-dir --upgrade --force-reinstall --no-deps \
     git+https://github.com/NVIDIA/Megatron-LM.git@${MCORE_REF} \
