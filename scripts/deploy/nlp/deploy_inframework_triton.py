@@ -17,15 +17,13 @@ import logging
 import sys
 
 import torch
-
 from nemo_deploy import DeployPyTriton
 
 LOGGER = logging.getLogger("NeMo")
 
 megatron_llm_supported = True
 try:
-    from nemo_deploy.nlp.megatronllm_deployable import \
-        MegatronLLMDeployableNemo2
+    from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 except Exception as e:
     LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False
@@ -58,20 +56,20 @@ def get_args(argv):
         help="Distributes MoE Experts across sub data parallel dimension.",
     )
     parser.add_argument("-mbs", "--max_batch_size", default=8, type=int, help="Max batch size of the model")
-    parser.add_argument("-dm", "--debug_mode", default=False, action="store_true", help="Enable debug mode")
+    parser.add_argument("-dm", "--debug_mode", default=False, action='store_true', help="Enable debug mode")
     parser.add_argument(
         "-fd",
-        "--enable_flash_decode",
+        '--enable_flash_decode',
         default=False,
-        action="store_true",
-        help="Enable flash decoding",
+        action='store_true',
+        help='Enable flash decoding',
     )
     parser.add_argument(
         "-cg",
-        "--enable_cuda_graphs",
+        '--enable_cuda_graphs',
         default=False,
-        action="store_true",
-        help="Enable CUDA graphs",
+        action='store_true',
+        help='Enable CUDA graphs',
     )
     parser.add_argument("-lc", "--legacy_ckpt", action="store_true", help="Load checkpoint saved with TE < 1.14")
     args = parser.parse_args(argv)
@@ -144,5 +142,5 @@ def nemo_deploy(argv):
         LOGGER.info("Torch distributed wasn't initialized.")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     nemo_deploy(sys.argv[1:])

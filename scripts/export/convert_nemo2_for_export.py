@@ -29,8 +29,9 @@ import os
 import shutil
 from argparse import ArgumentParser
 
-from nemo.lightning import io
 from omegaconf import OmegaConf
+
+from nemo.lightning import io
 
 
 def get_args():

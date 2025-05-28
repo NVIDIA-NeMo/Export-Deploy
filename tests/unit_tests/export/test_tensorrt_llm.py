@@ -19,7 +19,7 @@ import pytest
 import torch
 
 
-@pytest.mark.run_only_on("GPU")
+@pytest.mark.run_only_on('GPU')
 @pytest.mark.unit
 def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
     try:
@@ -30,8 +30,8 @@ def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
 
     dummy_state = object()
     model_state_dict = {
-        "model.embedding.word_embeddings.weight": dummy_state,
-        "model.decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
+        'model.embedding.word_embeddings.weight': dummy_state,
+        'model.decoder.layers.0.self_attention.linear_proj.weight': dummy_state,
     }
     nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
 
@@ -40,17 +40,16 @@ def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
     #   - The key starts with 'model.'
     #   - Immediately after 'model.', there must be at least one character that is NOT a '.'
     #     (preventing the 'model..' scenario)
-    pattern = re.compile(r"^model\.[^.].*")
+    pattern = re.compile(r'^model\.[^.].*')
     for key in nemo_model_conversion_dict.keys():
         assert pattern.match(key), f"Key '{key}' does not properly start with 'model.'"
 
 
-@pytest.mark.run_only_on("GPU")
+@pytest.mark.run_only_on('GPU')
 @pytest.mark.unit
 def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
     try:
-        from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import \
-            DEFAULT_CONVERSION_DICT
+        from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import DEFAULT_CONVERSION_DICT
 
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
@@ -59,8 +58,8 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
 
     dummy_state = object()
     model_state_dict = {
-        "embedding.word_embeddings.weight": dummy_state,
-        "decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
+        'embedding.word_embeddings.weight': dummy_state,
+        'decoder.layers.0.self_attention.linear_proj.weight': dummy_state,
     }
     nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
 
@@ -68,7 +67,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
     assert nemo_model_conversion_dict == DEFAULT_CONVERSION_DICT
 
 
-@pytest.mark.run_only_on("GPU")
+@pytest.mark.run_only_on('GPU')
 @pytest.mark.unit
 def test_tensorrt_llm_initialization():
     try:
@@ -104,7 +103,7 @@ def test_tensorrt_llm_initialization():
     assert trt_llm.max_tokens_in_paged_kv_cache is None
 
 
-@pytest.mark.run_only_on("GPU")
+@pytest.mark.run_only_on('GPU')
 @pytest.mark.unit
 def test_tensorrt_llm_supported_models():
     try:
@@ -128,7 +127,7 @@ def test_tensorrt_llm_supported_models():
     assert len(hf_mapping) > 0
 
 
-@pytest.mark.run_only_on("GPU")
+@pytest.mark.run_only_on('GPU')
 @pytest.mark.unit
 def test_tensorrt_llm_input_dtype():
     try:
@@ -154,7 +153,7 @@ def test_tensorrt_llm_input_dtype():
         assert input_dtype == expected_dtype, f"Expected {expected_dtype} for {storage_dtype}, got {input_dtype}"
 
 
-@pytest.mark.run_only_on("GPU")
+@pytest.mark.run_only_on('GPU')
 @pytest.mark.unit
 def test_tensorrt_llm_hidden_size():
     try:
@@ -175,7 +174,7 @@ def test_tensorrt_llm_hidden_size():
         assert hidden_size is None
 
 
-@pytest.mark.run_only_on("GPU")
+@pytest.mark.run_only_on('GPU')
 @pytest.mark.unit
 def test_tensorrt_llm_triton_io():
     try:
@@ -208,7 +207,7 @@ def test_tensorrt_llm_triton_io():
     assert triton_output[2].name == "context_logits"
 
 
-@pytest.mark.run_only_on("GPU")
+@pytest.mark.run_only_on('GPU')
 @pytest.mark.unit
 def test_tensorrt_llm_pad_logits():
     try:

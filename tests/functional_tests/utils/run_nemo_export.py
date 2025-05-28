@@ -35,12 +35,10 @@ except Exception as e:
 
 in_framework_supported = True
 try:
-    from megatron.core.inference.common_inference_params import \
-        CommonInferenceParams
+    from megatron.core.inference.common_inference_params import CommonInferenceParams
 
     from nemo_deploy.nlp import NemoQueryLLMPyTorch
-    from nemo_deploy.nlp.megatronllm_deployable import (
-        MegatronLLMDeploy, MegatronLLMDeployableNemo2)
+    from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeploy, MegatronLLMDeployableNemo2
 except Exception as e:
     LOGGER.warning(
         "Cannot import MegatronLLMDeploy* classes, or NemoQueryLLMPyTorch, or CommonInferenceParams, "
@@ -95,7 +93,7 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
     all_expected_outputs = []
     all_actual_outputs = []
 
-    with open(test_data_path, "r") as file:
+    with open(test_data_path, 'r') as file:
         records = json.load(file)
 
         eval_start = time.monotonic()
@@ -643,7 +641,7 @@ def get_args():
     parser.add_argument(
         "--debug",
         default=False,
-        action="store_true",
+        action='store_true',
     )
     parser.add_argument(
         "--test_data_path",
@@ -677,7 +675,7 @@ def get_args():
     )
     parser.add_argument(
         "-gmu",
-        "--gpu_memory_utilization",
+        '--gpu_memory_utilization',
         default=0.95,  # 0.95 is needed to run Mixtral-8x7B on 2x48GB GPUs
         type=float,
         help="GPU memory utilization percentage for vLLM.",
@@ -715,13 +713,13 @@ def get_args():
         s = s.lower()
         true_strings = ["true", "1"]
         false_strings = ["false", "0"]
-        if s == "":
+        if s == '':
             return False
         if s in true_strings:
             return True
         if s in false_strings:
             return False
-        if optional and s == "auto":
+        if optional and s == 'auto':
             return None
         raise UsageError(f"Invalid boolean value for argument --{name}: '{s}'")
 
@@ -892,7 +890,7 @@ def run_inference_tests(args):
         raise Exception(f"Model accuracy is below {args.accuracy_threshold}")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
         args = get_args()
         run_inference_tests(args)

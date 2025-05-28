@@ -14,7 +14,6 @@
 
 import argparse
 from pathlib import Path
-
 from nemo.collections import vlm
 from nemo.collections.llm import import_ckpt
 
@@ -32,7 +31,7 @@ HF_MODEL_ID_TO_NEMO_CLASS = {
 }
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Import NeMo checkpoint from Hugging Face format.")
     parser.add_argument(
         "--input_name_or_path",
