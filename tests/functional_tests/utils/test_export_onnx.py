@@ -121,7 +121,7 @@ def export_onnx_trt(args):
 
     output = onnx_exporter.forward(prompt)
     if output is None:
-        logging.warning(f"Output is None because ONNX runtime is not installed.")
+        logging.warning("Output is None because ONNX runtime is not installed.")
 
 
 if __name__ == '__main__':
