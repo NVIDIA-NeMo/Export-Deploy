@@ -21,7 +21,6 @@ from hydra.utils import instantiate
 from omegaconf import OmegaConf
 
 from nemo.utils import logging
-from nemo_export.huggingface.lightning import export_ckpt
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_distributed_model_weights
 
 LLM_AVAILABLE = True
