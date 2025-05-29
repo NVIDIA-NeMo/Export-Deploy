@@ -4,7 +4,6 @@
 
 NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and deploying NeMo and Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server.
 
-
 ## Key Features
 
 - Support for Large Language Models (LLMs) and Multimodal Models
@@ -22,7 +21,6 @@ NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and 
 - TensorRT-LLM and vLLM
 - Ray Serve
 - NVIDIA Triton Inference Server
-
 
 ## Quick Start
 
@@ -47,7 +45,6 @@ The following examples demonstrate how to export and deploy Large Language Model
 #### Export Hugging Face Models to TensorRT-LLM and Deploy using Triton Inference Server
 
 Please note that Llama models require special access permissions from Meta. To use Llama models, you must first accept Meta's license agreement and obtain access credentials. For instructions on obtaining access, please refer to the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) below.
-
 
 ```python
 from nemo.export.tensorrt_llm import TensorRTLLM
@@ -178,7 +175,6 @@ nm.deploy()
 nm.serve()
 ```
 
-
 ### Export and Deploy Multimodal Examples
 
 #### Export NeMo Models to TensorRT-LLM and Deploy using Triton Inference Server
@@ -244,13 +240,13 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
 
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}/:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:25.04
    ```
-   
+
 3. Run the following command in the terminal and enter your Hugging Face access token to log in to Hugging Face:
 
    ```shell
    huggingface-cli login
    ```
-   
+
 4. Run the following Python code to generate the NeMo 2.0 checkpoint:
 
    ```python
@@ -268,6 +264,7 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
 ## Documentation
 
 For detailed documentation, please refer to:
+
 - [NeMo-Export-Deploy User Guide](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)
 
 ## Contributing
