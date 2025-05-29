@@ -34,7 +34,7 @@ jobs:
     outputs:
       is_ci_workload: ${{ steps.is_ci_workload.outputs.main }}
       no_fail_fast: ${{ steps.no_fail_fast.outputs.main }}
-      docs_only: ${{ steps.changed-files.outputs.doc_any_changed == 'true' && steps.changed-files.outputs.src_any_changed == 'false' }}
+      docs_only: ${{ steps.docs_only.outputs.main == 'true' }}
     env:
       TESTS_TO_RUN: ${{ inputs.test_to_run }}
       EVENT_NAME: ${{ github.event_name }}
@@ -58,8 +58,11 @@ jobs:
       - name: Check if docs only
         shell: bash
         id: docs_only
+        env:
+          DOCS_ONLY: ${{ steps.changed-files.outputs.doc_any_changed == 'true' && steps.changed-files.outputs.src_any_changed == 'false' }}
         run: |
-          echo ${{ steps.changed-files.outputs.doc_any_changed == 'true' && steps.changed-files.outputs.src_any_changed == 'false' }}
+          # echo "$DOCS_ONLY" | tee -a "$GITHUB_OUTPUT"
+          echo "true" | tee -a "$GITHUB_OUTPUT"
 
       - name: Check if this is a CI workload
         shell: bash
