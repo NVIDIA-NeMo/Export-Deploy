@@ -248,12 +248,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.run_id }}
+          DOCS_ONLY: ${{ needs.pre-flight.outputs.docs_only }}
         run: |
           # Get workflow run details and check job conclusions
           NUM_FAILED=$(gh run view $RUN_ID --json jobs -q '[.jobs[] | select(.conclusion == "failure") | .name] | length')
           NUM_CANCELLED=$(gh run view $RUN_ID --json jobs -q '[.jobs[] | select(.conclusion == "cancelled") | .name] | length')
 
-          if [[ $NUM_FAILED -eq 0 && $NUM_CANCELLED -eq 0 ]]; then
+          if [[ ($NUM_FAILED -eq 0 && $NUM_CANCELLED -eq 0) || $DOCS_ONLY == 'true' ]]; then
             RESULT="success"
           elif [[ $NUM_CANCELLED -gt 0 ]]; then
             RESULT="cancelled"
