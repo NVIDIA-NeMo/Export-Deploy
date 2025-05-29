@@ -50,7 +50,7 @@ def get_args(argv):
     parser.add_argument("-tpp", "--top_p", default=0.0, type=float, help="top_p")
     parser.add_argument("-t", "--temperature", default=1.0, type=float, help="temperature")
     parser.add_argument("-it", "--init_timeout", default=60.0, type=float, help="init timeout for the triton server")
-    parser.add_argument("-clp", "--compute_logprob", default=None, action='store_true', help="Returns log_probs")
+    parser.add_argument("-clp", "--compute_logprob", default=None, action="store_true", help="Returns log_probs")
     parser.add_argument(
         "-w", "--warmup", default=3, type=int, help="Number of warmup queries to run before benchmarking"
     )
@@ -201,5 +201,5 @@ def benchmark(argv):
     print_benchmark_results(stats)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     benchmark(sys.argv[1:])

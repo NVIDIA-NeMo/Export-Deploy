@@ -225,9 +225,7 @@ class TRTEngine:
                     raise ValueError("ERROR: inference failed.")
                 # capture cuda graph
                 cuassert(
-                    cudart.cudaStreamBeginCapture(
-                        stream, cudart.cudaStreamCaptureMode.cudaStreamCaptureModeThreadLocal
-                    )
+                    cudart.cudaStreamBeginCapture(stream, cudart.cudaStreamCaptureMode.cudaStreamCaptureModeThreadLocal)
                 )
                 self.context.execute_async_v3(stream)
                 graph = cuassert(cudart.cudaStreamEndCapture(stream))

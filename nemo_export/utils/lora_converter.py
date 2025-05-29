@@ -32,7 +32,7 @@ def replace_number_add_offset(key, offset_value):
     if offset_value == 0:
         return key
 
-    pattern = r'layers.(\d+)'
+    pattern = r"layers.(\d+)"
 
     def add_offset(match):
         return "layers." + str(int(match.group(1)) + offset_value)
@@ -76,7 +76,7 @@ def reformat_module_names_to_hf(tensors: Dict[str, torch.Tensor]) -> Tuple[Dict[
 
         # keep track of the modules that we've added to store them in the config file
         for kmn in known_module_names:
-            if f'.{kmn}' in new_module_name:
+            if f".{kmn}" in new_module_name:
                 module_names.add(kmn)
 
     return (new_tensors, list(module_names))
@@ -100,7 +100,7 @@ def convert_lora_weights_to_canonical(
     heads_per_group = num_heads // num_query_groups
     qkv_total_dim = num_heads + 2 * num_query_groups
 
-    adapter_size = config['peft']['lora_tuning']['adapter_dim']
+    adapter_size = config["peft"]["lora_tuning"]["adapter_dim"]
 
     q_slice = torch.cat(
         [
@@ -162,8 +162,8 @@ def convert_lora_nemo_to_canonical(lora_nemo, save_path, hf_format=False, donor_
         with (archive / "model_config.yaml").open("r") as config_file:
             lora_config = yaml.load(config_file, Loader=yaml.SafeLoader)
 
-        tp_size = lora_config.get('tensor_model_parallel_size', 1)
-        pp_size = lora_config.get('pipeline_model_parallel_size', 1)
+        tp_size = lora_config.get("tensor_model_parallel_size", 1)
+        pp_size = lora_config.get("pipeline_model_parallel_size", 1)
 
         lora_state_dict = [{}] * tp_size
 
@@ -177,21 +177,21 @@ def convert_lora_nemo_to_canonical(lora_nemo, save_path, hf_format=False, donor_
                     ckpt_file = archive / f"tp_rank_{tp:02d}_pp_rank_{pp:03d}/model_weights.ckpt"
 
                 with ckpt_file.open("rb") as f:
-                    weights = torch.load(f, map_location=torch.device('cpu'))
+                    weights = torch.load(f, map_location=torch.device("cpu"))
 
                 if pp == 0:
                     lora_state_dict[tp] = weights
                 else:
                     # calculate layer offset
-                    layer_offset = lora_config['num_layers'] // pp_size * pp
+                    layer_offset = lora_config["num_layers"] // pp_size * pp
                     for key, value in weights.items():
                         new_key = replace_number_add_offset(key, layer_offset)
                         lora_state_dict[tp][new_key] = value
 
         # TODO: currently suport tp=1
         lora_state_dict = lora_state_dict[0]
-        if lora_config['peft']['lora_tuning'].get('variant', 'nemo') == "nemo":
-            lora_config['peft']['lora_tuning']['variant'] = "canonical"
+        if lora_config["peft"]["lora_tuning"].get("variant", "nemo") == "nemo":
+            lora_config["peft"]["lora_tuning"]["variant"] = "canonical"
             lora_state_dict = convert_lora_weights_to_canonical(lora_config, lora_state_dict)
 
         if hf_format:
@@ -203,10 +203,10 @@ def convert_lora_nemo_to_canonical(lora_nemo, save_path, hf_format=False, donor_
                     adapter_config = json.load(hf_config_file)
             else:
                 adapter_config = {}
-            adapter_config['peft_type'] = "LORA"
-            adapter_config['r'] = lora_config['peft']['lora_tuning']['adapter_dim']
-            adapter_config['lora_alpha'] = lora_config['peft']['lora_tuning']['alpha']
-            adapter_config['target_modules'] = target_modules
+            adapter_config["peft_type"] = "LORA"
+            adapter_config["r"] = lora_config["peft"]["lora_tuning"]["adapter_dim"]
+            adapter_config["lora_alpha"] = lora_config["peft"]["lora_tuning"]["alpha"]
+            adapter_config["target_modules"] = target_modules
             with open(f"{save_path}/adapter_config.json", "w") as f:
                 json.dump(adapter_config, f, indent=4)
         else:

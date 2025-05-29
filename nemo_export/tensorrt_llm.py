@@ -377,9 +377,7 @@ class TensorRTLLM(ITritonDeployable):
                         TRTLLMHelper
                     from tensorrt_llm.layers import MoeConfig
 
-                    share_embeddings_and_output_weights = model_config.get(
-                        "share_embeddings_and_output_weights", False
-                    )
+                    share_embeddings_and_output_weights = model_config.get("share_embeddings_and_output_weights", False)
                     fp8_quantized, fp8_kvcache = determine_quantization_settings(
                         model_config, fp8_quantized, fp8_kvcache
                     )
@@ -393,31 +391,31 @@ class TensorRTLLM(ITritonDeployable):
 
                     # All Mcore conversion dicts start with "decoder.layers.4.blah.blah" , while nemo models start with "model.decoder.layers.4.blahblah". so we append model. to the keys
                     nemo_model_conversion_dict = {
-                        f'model.{key}': value for key, value in mcore_model_conversion_dict.items()
+                        f"model.{key}": value for key, value in mcore_model_conversion_dict.items()
                     } | {  # Mapping for NeMo 2.0
-                        f'module.{key}': value for key, value in mcore_model_conversion_dict.items()
+                        f"module.{key}": value for key, value in mcore_model_conversion_dict.items()
                     }
 
                     # TODO: Workaround: Gemma uses gated activation, while mcore does not handle openai-gelu
                     # as a gated function. Remove once !11614 is merged.
-                    activation = model_config.get('activation', "gelu")
-                    if activation == "openai-gelu" and input_model_type.name == 'gemma':
+                    activation = model_config.get("activation", "gelu")
+                    if activation == "openai-gelu" and input_model_type.name == "gemma":
                         activation = "geglu"
 
                     trtllm_helper = TRTLLMHelper(
                         transformer_config=transformer_config,
                         model_type=input_model_type,
                         trtllm_conversion_dict=nemo_model_conversion_dict,
-                        position_embedding_type=model_config.get('position_embedding_type'),
-                        max_position_embeddings=model_config.get('max_position_embeddings'),
-                        rotary_percentage=model_config.get('rotary_percentage', 1.0),
-                        rotary_base=model_config.get('rotary_base', 10000),
-                        moe_tp_mode=model_config.get('moe_tp_mode', 2),
+                        position_embedding_type=model_config.get("position_embedding_type"),
+                        max_position_embeddings=model_config.get("max_position_embeddings"),
+                        rotary_percentage=model_config.get("rotary_percentage", 1.0),
+                        rotary_base=model_config.get("rotary_base", 10000),
+                        moe_tp_mode=model_config.get("moe_tp_mode", 2),
                         multi_query_mode=model_config.get("multi_query_mode", False),
                         activation=activation,
                         seq_len_interpolation_factor=model_config.get("seq_len_interpolation_factor"),
                         moe_renorm_mode=model_config.get(
-                            'moe_renorm_mode', MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE
+                            "moe_renorm_mode", MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE
                         ),
                         share_embeddings_and_output_weights=share_embeddings_and_output_weights,
                     )
@@ -647,17 +645,17 @@ class TensorRTLLM(ITritonDeployable):
             multiple_profiles=multiple_profiles,
         )
         build_dict = {
-            'max_input_len': max_input_len,
-            'max_output_len': max_output_len,
-            'max_batch_size': max_batch_size,
-            'max_beam_width': max_beam_width,
-            'max_seq_len': max_seq_len,
-            'max_num_tokens': max_num_tokens,
-            'opt_num_tokens': opt_num_tokens,
-            'strongly_typed': False,
-            'builder_opt': None,
-            'multiple_profiles': multiple_profiles,
-            'use_refit': use_refit,
+            "max_input_len": max_input_len,
+            "max_output_len": max_output_len,
+            "max_batch_size": max_batch_size,
+            "max_beam_width": max_beam_width,
+            "max_seq_len": max_seq_len,
+            "max_num_tokens": max_num_tokens,
+            "opt_num_tokens": opt_num_tokens,
+            "strongly_typed": False,
+            "builder_opt": None,
+            "multiple_profiles": multiple_profiles,
+            "use_refit": use_refit,
         }
         build_config = BuildConfig.from_dict(build_dict, plugin_config=plugin_config)
         for rank in range(tensor_parallelism_size):
@@ -691,27 +689,27 @@ class TensorRTLLM(ITritonDeployable):
         Returns:
             Optional[str]: The model's data type if found in config, None otherwise
         """
-        config_path = Path(model_dir) / 'config.json'
+        config_path = Path(model_dir) / "config.json"
 
         if not config_path.exists():
             raise FileNotFoundError(f"Config file not found at {config_path}")
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 config = json.load(f)
                 # Check for dtype in different possible locations in the config
-                if 'torch_dtype' in config:
-                    return config['torch_dtype']
-                elif 'dtype' in config:
-                    return config['dtype']
-                elif 'pretrained_config' in config and 'dtype' in config['pretrained_config']:
-                    return config['pretrained_config']['dtype']
+                if "torch_dtype" in config:
+                    return config["torch_dtype"]
+                elif "dtype" in config:
+                    return config["dtype"]
+                elif "pretrained_config" in config and "dtype" in config["pretrained_config"]:
+                    return config["pretrained_config"]["dtype"]
 
                 # If no explicit dtype found, check for other indicators
-                if 'fp16' in config and config['fp16']:
-                    return 'float16'
-                elif 'bf16' in config and config['bf16']:
-                    return 'bfloat16'
+                if "fp16" in config and config["fp16"]:
+                    return "float16"
+                elif "bf16" in config and config["bf16"]:
+                    return "bfloat16"
 
             return None
         except json.JSONDecodeError:
@@ -760,29 +758,29 @@ class TensorRTLLM(ITritonDeployable):
         from megatron.core.transformer.transformer_config import \
             TransformerConfig
 
-        normalization = nemo_model_config.get('normalization', 'layernorm')
-        transformer_config_normalization = 'LayerNorm'
-        layernorm_zero_centered_gamma = nemo_model_config.get('layernorm_zero_centered_gamma', False)
-        if normalization == 'layernorm1p':
+        normalization = nemo_model_config.get("normalization", "layernorm")
+        transformer_config_normalization = "LayerNorm"
+        layernorm_zero_centered_gamma = nemo_model_config.get("layernorm_zero_centered_gamma", False)
+        if normalization == "layernorm1p":
             layernorm_zero_centered_gamma = True
-        elif normalization == 'rmsnorm':
-            transformer_config_normalization = 'RMSNorm'
+        elif normalization == "rmsnorm":
+            transformer_config_normalization = "RMSNorm"
 
-        num_moe_experts = nemo_model_config.get('num_moe_experts', 0)
+        num_moe_experts = nemo_model_config.get("num_moe_experts", 0)
         conf = TransformerConfig(
-            num_layers=nemo_model_config.get('num_layers'),
-            moe_router_topk=nemo_model_config.get('moe_router_topk', 0),
-            num_attention_heads=nemo_model_config.get('num_attention_heads'),
-            num_query_groups=nemo_model_config.get('num_query_groups', nemo_model_config['num_attention_heads']),
+            num_layers=nemo_model_config.get("num_layers"),
+            moe_router_topk=nemo_model_config.get("moe_router_topk", 0),
+            num_attention_heads=nemo_model_config.get("num_attention_heads"),
+            num_query_groups=nemo_model_config.get("num_query_groups", nemo_model_config["num_attention_heads"]),
             kv_channels=nemo_model_config.get("kv_channels", None),
-            hidden_size=nemo_model_config.get('hidden_size'),
-            ffn_hidden_size=nemo_model_config.get('ffn_hidden_size'),
-            layernorm_epsilon=nemo_model_config.get('layernorm_epsilon'),
-            add_bias_linear=nemo_model_config.get('bias'),
+            hidden_size=nemo_model_config.get("hidden_size"),
+            ffn_hidden_size=nemo_model_config.get("ffn_hidden_size"),
+            layernorm_epsilon=nemo_model_config.get("layernorm_epsilon"),
+            add_bias_linear=nemo_model_config.get("bias"),
             num_moe_experts=num_moe_experts if num_moe_experts > 0 else None,
             normalization=transformer_config_normalization,
             layernorm_zero_centered_gamma=layernorm_zero_centered_gamma,
-            gated_linear_unit=nemo_model_config.get('gated_linear_unit', False),
+            gated_linear_unit=nemo_model_config.get("gated_linear_unit", False),
         )
         return conf
 
@@ -849,8 +847,8 @@ class TensorRTLLM(ITritonDeployable):
                     else:
                         weight_dict[k] = v
 
-                safetensors.torch.save_file(weight_dict, os.path.join(self.model_dir, f'rank{rank}.safetensors'))
-            model_configs[0].to_json_file(os.path.join(self.model_dir, 'config.json'))
+                safetensors.torch.save_file(weight_dict, os.path.join(self.model_dir, f"rank{rank}.safetensors"))
+            model_configs[0].to_json_file(os.path.join(self.model_dir, "config.json"))
 
             tokenizer_path = os.path.join(nemo_export_dir, "tokenizer.model")
             if os.path.exists(tokenizer_path):
@@ -925,8 +923,8 @@ class TensorRTLLM(ITritonDeployable):
             for idx, model_chunk in enumerate(model):
                 for key, val in model_chunk.state_dict().items():
                     # TODO: currently fp8 is not supported
-                    if torch.is_tensor(val) and '_extra_state' not in key:
-                        if 'layers' in key:
+                    if torch.is_tensor(val) and "_extra_state" not in key:
+                        if "layers" in key:
                             key2 = rename_layer_num(key, get_layer_num(key) + idx * pp_size * layers_per_chunk)
                             tl_params[key2] = val
                         else:
@@ -934,8 +932,8 @@ class TensorRTLLM(ITritonDeployable):
         else:
             for key, val in model.state_dict().items():
                 # TODO: currently fp8 is not supported
-                if torch.is_tensor(val) and '_extra_state' not in key:
-                    if 'decoder.layers' in key:
+                if torch.is_tensor(val) and "_extra_state" not in key:
+                    if "decoder.layers" in key:
                         tl_params[key] = val
                     else:
                         model_level_params[key] = val
@@ -980,22 +978,22 @@ class TensorRTLLM(ITritonDeployable):
             return tensor
 
         if reshard_model:
-            key = 'decoder.final_layernorm.weight'
+            key = "decoder.final_layernorm.weight"
             tensor = get_tensor_if_available(key, pp_last_rank, pp_group)
             if tensor is not None:
                 model_state_dict[key] = tensor
 
-            key = 'decoder.final_layernorm.bias'
+            key = "decoder.final_layernorm.bias"
             tensor = get_tensor_if_available(key, pp_last_rank, pp_group)
             if tensor is not None:
                 model_state_dict[key] = tensor
 
-            key = 'embedding.word_embeddings.weight'
+            key = "embedding.word_embeddings.weight"
             tensor = get_tensor_if_available(key, pp_first_rank, pp_group)
             if tensor is not None:
                 model_state_dict[key] = tensor
 
-            key = 'output_layer.weight'
+            key = "output_layer.weight"
             tensor = get_tensor_if_available(key, pp_last_rank, pp_group)
             if tensor is not None:
                 model_state_dict[key] = tensor
@@ -1028,7 +1026,7 @@ class TensorRTLLM(ITritonDeployable):
         nemo_model_conversion_dict = {}
         for key, value in DEFAULT_CONVERSION_DICT.items():
             if model_prefix:
-                nemo_model_conversion_dict[f'{model_prefix}{key}'] = value
+                nemo_model_conversion_dict[f"{model_prefix}{key}"] = value
             else:
                 nemo_model_conversion_dict[key] = value
         return nemo_model_conversion_dict
@@ -1076,17 +1074,15 @@ class TensorRTLLM(ITritonDeployable):
                 transformer_config=transformer_config,
                 model_type=input_model_type,
                 trtllm_conversion_dict=nemo_model_conversion_dict,
-                position_embedding_type=model_config.get('position_embedding_type'),
-                max_position_embeddings=model_config.get('max_position_embeddings'),
-                rotary_percentage=model_config.get('rotary_percentage', 1.0),
-                rotary_base=model_config.get('rotary_base', 10000),
-                moe_tp_mode=model_config.get('moe_tp_mode', 2),
+                position_embedding_type=model_config.get("position_embedding_type"),
+                max_position_embeddings=model_config.get("max_position_embeddings"),
+                rotary_percentage=model_config.get("rotary_percentage", 1.0),
+                rotary_base=model_config.get("rotary_base", 10000),
+                moe_tp_mode=model_config.get("moe_tp_mode", 2),
                 multi_query_mode=model_config.get("multi_query_mode", False),
-                activation=model_config.get('activation', "gelu"),
+                activation=model_config.get("activation", "gelu"),
                 seq_len_interpolation_factor=model_config.get("seq_len_interpolation_factor"),
-                moe_renorm_mode=model_config.get(
-                    'moe_renorm_mode', MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE
-                ),
+                moe_renorm_mode=model_config.get("moe_renorm_mode", MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE),
                 share_embeddings_and_output_weights=model_config.get("share_embeddings_and_output_weights", False),
             )
 
@@ -1106,7 +1102,7 @@ class TensorRTLLM(ITritonDeployable):
             trtllm_model_weights = trtllm_model_weights_list[0]
 
             if reshard_model:
-                assert self.pp_size == 1, 'Reshard is true, but pp size is not one'
+                assert self.pp_size == 1, "Reshard is true, but pp size is not one"
                 # MCORE Export will use parallel_state to determine pp .
                 # Since we reshard to pp = 1, we need to modify the config and mapping
                 world_size = self.tp_size * self.pp_size
@@ -1158,7 +1154,7 @@ class TensorRTLLM(ITritonDeployable):
 
         torch.distributed.barrier()
 
-        cfg_path = Path(os.path.join(self.model_dir, f'config_{torch.distributed.get_rank()}.json'))
+        cfg_path = Path(os.path.join(self.model_dir, f"config_{torch.distributed.get_rank()}.json"))
         with open(cfg_path, "w", encoding="utf-8") as f:
             json.dump(engine.config.to_dict(), f, indent=4)
 
@@ -1343,7 +1339,7 @@ class TensorRTLLM(ITritonDeployable):
         )
 
         self.ptuning_tables.append({"table": prompt_table, "task_name": task_name})
-        with open(os.path.join(self.model_dir, 'prompt_tables.pkl'), 'wb') as f:
+        with open(os.path.join(self.model_dir, "prompt_tables.pkl"), "wb") as f:
             pickle.dump(self.ptuning_tables, f)
 
         self._prep_ptuning_table()
@@ -1354,7 +1350,7 @@ class TensorRTLLM(ITritonDeployable):
             for i in range(len(self.ptuning_tables)):
                 if self.ptuning_tables[i]["task_name"] == task_name:
                     self.ptuning_tables.pop(i)
-                    with open(os.path.join(self.model_dir, 'prompt_tables.pkl'), 'wb') as f:
+                    with open(os.path.join(self.model_dir, "prompt_tables.pkl"), "wb") as f:
                         pickle.dump(self.ptuning_tables, f)
                     return
             self._prep_ptuning_table()
@@ -1369,7 +1365,7 @@ class TensorRTLLM(ITritonDeployable):
             if tensor_len < padding_len:
                 padding_diff = padding_len - tensor_len
                 # padding_diff num of rows of zeros are added at the bottom
-                logits_tensor[i] = F.pad(tensor, (0, 0, 0, padding_diff), mode='constant', value=0)
+                logits_tensor[i] = F.pad(tensor, (0, 0, 0, padding_diff), mode="constant", value=0)
         return logits_tensor
 
     @property
@@ -1382,78 +1378,78 @@ class TensorRTLLM(ITritonDeployable):
     def get_supported_hf_model_mapping(self):
         """Supported HF Model Mapping"""
         HF_MODEL_CLASS_MAP = {
-            'GPT2LMHeadModel': GPTForCausalLM,
-            'GPT2LMHeadCustomModel': GPTForCausalLM,
-            'GPTBigCodeForCausalLM': GPTForCausalLM,
-            'Starcoder2ForCausalLM': GPTForCausalLM,
-            'JAISLMHeadModel': GPTForCausalLM,
-            'GPTForCausalLM': GPTForCausalLM,
-            'NemotronForCausalLM': GPTForCausalLM,
-            'OPTForCausalLM': OPTForCausalLM,
-            'BloomForCausalLM': BloomForCausalLM,
-            'RWForCausalLM': FalconForCausalLM,
-            'FalconForCausalLM': FalconForCausalLM,
-            'PhiForCausalLM': PhiForCausalLM,
-            'Phi3ForCausalLM': Phi3ForCausalLM,
-            'Phi3VForCausalLM': Phi3ForCausalLM,
-            'Phi3SmallForCausalLM': Phi3ForCausalLM,
-            'PhiMoEForCausalLM': Phi3ForCausalLM,
-            'MambaForCausalLM': MambaForCausalLM,
-            'GPTNeoXForCausalLM': GPTNeoXForCausalLM,
-            'GPTJForCausalLM': GPTJForCausalLM,
-            'MptForCausalLM': MPTForCausalLM,
-            'MPTForCausalLM': MPTForCausalLM,
-            'GLMModel': ChatGLMForCausalLM,
-            'ChatGLMModel': ChatGLMForCausalLM,
-            'ChatGLMForCausalLM': ChatGLMForCausalLM,
-            'ChatGLMForConditionalGeneration': ChatGLMForCausalLM,
-            'LlamaForCausalLM': LLaMAForCausalLM,
-            'LlavaLlamaModel': LLaMAForCausalLM,
-            'ExaoneForCausalLM': LLaMAForCausalLM,
-            'MistralForCausalLM': LLaMAForCausalLM,
-            'MixtralForCausalLM': LLaMAForCausalLM,
-            'ArcticForCausalLM': LLaMAForCausalLM,
-            'Grok1ModelForCausalLM': GrokForCausalLM,
-            'InternLMForCausalLM': LLaMAForCausalLM,
-            'InternLM2ForCausalLM': LLaMAForCausalLM,
-            'InternLMXComposer2ForCausalLM': LLaMAForCausalLM,
-            'GraniteForCausalLM': LLaMAForCausalLM,
-            'GraniteMoeForCausalLM': LLaMAForCausalLM,
-            'MedusaForCausalLM': MedusaForCausalLm,
-            'MedusaLlamaForCausalLM': MedusaForCausalLm,
-            'ReDrafterForCausalLM': ReDrafterForCausalLM,
-            'BaichuanForCausalLM': BaichuanForCausalLM,
-            'BaiChuanForCausalLM': BaichuanForCausalLM,
-            'SkyworkForCausalLM': LLaMAForCausalLM,
-            'GEMMA': GemmaForCausalLM,
-            'GEMMA2': GemmaForCausalLM,
-            'QWenLMHeadModel': QWenForCausalLM,
-            'QWenForCausalLM': QWenForCausalLM,
-            'Qwen2ForCausalLM': QWenForCausalLM,
-            'Qwen2MoeForCausalLM': QWenForCausalLM,
-            'Qwen2ForSequenceClassification': QWenForCausalLM,
-            'Qwen2VLForConditionalGeneration': QWenForCausalLM,
-            'Qwen2VLModel': QWenForCausalLM,
-            'WhisperEncoder': WhisperEncoder,
-            'EncoderModel': EncoderModel,
-            'DecoderModel': DecoderModel,
-            'DbrxForCausalLM': DbrxForCausalLM,
-            'RecurrentGemmaForCausalLM': RecurrentGemmaForCausalLM,
-            'CogVLMForCausalLM': CogVLMForCausalLM,
-            'DiT': DiT,
-            'DeepseekForCausalLM': DeepseekForCausalLM,
-            'DeciLMForCausalLM': DeciLMForCausalLM,
-            'DeepseekV2ForCausalLM': DeepseekV2ForCausalLM,
-            'EagleForCausalLM': EagleForCausalLM,
-            'CohereForCausalLM': CohereForCausalLM,
-            'MLLaMAModel': MLLaMAForCausalLM,
-            'MllamaForConditionalGeneration': MLLaMAForCausalLM,
-            'BertForQuestionAnswering': BertForQuestionAnswering,
-            'BertForSequenceClassification': BertForSequenceClassification,
-            'BertModel': BertModel,
-            'RobertaModel': RobertaModel,
-            'RobertaForQuestionAnswering': RobertaForQuestionAnswering,
-            'RobertaForSequenceClassification': RobertaForSequenceClassification,
+            "GPT2LMHeadModel": GPTForCausalLM,
+            "GPT2LMHeadCustomModel": GPTForCausalLM,
+            "GPTBigCodeForCausalLM": GPTForCausalLM,
+            "Starcoder2ForCausalLM": GPTForCausalLM,
+            "JAISLMHeadModel": GPTForCausalLM,
+            "GPTForCausalLM": GPTForCausalLM,
+            "NemotronForCausalLM": GPTForCausalLM,
+            "OPTForCausalLM": OPTForCausalLM,
+            "BloomForCausalLM": BloomForCausalLM,
+            "RWForCausalLM": FalconForCausalLM,
+            "FalconForCausalLM": FalconForCausalLM,
+            "PhiForCausalLM": PhiForCausalLM,
+            "Phi3ForCausalLM": Phi3ForCausalLM,
+            "Phi3VForCausalLM": Phi3ForCausalLM,
+            "Phi3SmallForCausalLM": Phi3ForCausalLM,
+            "PhiMoEForCausalLM": Phi3ForCausalLM,
+            "MambaForCausalLM": MambaForCausalLM,
+            "GPTNeoXForCausalLM": GPTNeoXForCausalLM,
+            "GPTJForCausalLM": GPTJForCausalLM,
+            "MptForCausalLM": MPTForCausalLM,
+            "MPTForCausalLM": MPTForCausalLM,
+            "GLMModel": ChatGLMForCausalLM,
+            "ChatGLMModel": ChatGLMForCausalLM,
+            "ChatGLMForCausalLM": ChatGLMForCausalLM,
+            "ChatGLMForConditionalGeneration": ChatGLMForCausalLM,
+            "LlamaForCausalLM": LLaMAForCausalLM,
+            "LlavaLlamaModel": LLaMAForCausalLM,
+            "ExaoneForCausalLM": LLaMAForCausalLM,
+            "MistralForCausalLM": LLaMAForCausalLM,
+            "MixtralForCausalLM": LLaMAForCausalLM,
+            "ArcticForCausalLM": LLaMAForCausalLM,
+            "Grok1ModelForCausalLM": GrokForCausalLM,
+            "InternLMForCausalLM": LLaMAForCausalLM,
+            "InternLM2ForCausalLM": LLaMAForCausalLM,
+            "InternLMXComposer2ForCausalLM": LLaMAForCausalLM,
+            "GraniteForCausalLM": LLaMAForCausalLM,
+            "GraniteMoeForCausalLM": LLaMAForCausalLM,
+            "MedusaForCausalLM": MedusaForCausalLm,
+            "MedusaLlamaForCausalLM": MedusaForCausalLm,
+            "ReDrafterForCausalLM": ReDrafterForCausalLM,
+            "BaichuanForCausalLM": BaichuanForCausalLM,
+            "BaiChuanForCausalLM": BaichuanForCausalLM,
+            "SkyworkForCausalLM": LLaMAForCausalLM,
+            "GEMMA": GemmaForCausalLM,
+            "GEMMA2": GemmaForCausalLM,
+            "QWenLMHeadModel": QWenForCausalLM,
+            "QWenForCausalLM": QWenForCausalLM,
+            "Qwen2ForCausalLM": QWenForCausalLM,
+            "Qwen2MoeForCausalLM": QWenForCausalLM,
+            "Qwen2ForSequenceClassification": QWenForCausalLM,
+            "Qwen2VLForConditionalGeneration": QWenForCausalLM,
+            "Qwen2VLModel": QWenForCausalLM,
+            "WhisperEncoder": WhisperEncoder,
+            "EncoderModel": EncoderModel,
+            "DecoderModel": DecoderModel,
+            "DbrxForCausalLM": DbrxForCausalLM,
+            "RecurrentGemmaForCausalLM": RecurrentGemmaForCausalLM,
+            "CogVLMForCausalLM": CogVLMForCausalLM,
+            "DiT": DiT,
+            "DeepseekForCausalLM": DeepseekForCausalLM,
+            "DeciLMForCausalLM": DeciLMForCausalLM,
+            "DeepseekV2ForCausalLM": DeepseekV2ForCausalLM,
+            "EagleForCausalLM": EagleForCausalLM,
+            "CohereForCausalLM": CohereForCausalLM,
+            "MLLaMAModel": MLLaMAForCausalLM,
+            "MllamaForConditionalGeneration": MLLaMAForCausalLM,
+            "BertForQuestionAnswering": BertForQuestionAnswering,
+            "BertForSequenceClassification": BertForSequenceClassification,
+            "BertModel": BertModel,
+            "RobertaModel": RobertaModel,
+            "RobertaForQuestionAnswering": RobertaForQuestionAnswering,
+            "RobertaForSequenceClassification": RobertaForSequenceClassification,
         }
         return HF_MODEL_CLASS_MAP
 
@@ -1637,7 +1633,7 @@ class TensorRTLLM(ITritonDeployable):
         if len(vtokens_embeddings) > 0:
             self.p_table = torch.stack(vtokens_embeddings, dim=0).view(-1, self.get_hidden_size)
 
-            max_prompt_embedding_table_size = self.config['build_config']['max_prompt_embedding_table_size']
+            max_prompt_embedding_table_size = self.config["build_config"]["max_prompt_embedding_table_size"]
             actual_prompt_table_size = self.p_table.shape[0]
 
             if actual_prompt_table_size > max_prompt_embedding_table_size:
@@ -1649,9 +1645,9 @@ class TensorRTLLM(ITritonDeployable):
 
     def _load_prompt_tables(self):
         if self.model_dir is not None:
-            pt_path = Path(os.path.join(self.model_dir, 'prompt_tables.pkl'))
+            pt_path = Path(os.path.join(self.model_dir, "prompt_tables.pkl"))
             if pt_path.exists():
-                with open(pt_path, 'rb') as f:
+                with open(pt_path, "rb") as f:
                     self.ptuning_tables = pickle.load(f)
                 self._prep_ptuning_table()
             else:
@@ -1669,7 +1665,7 @@ class TensorRTLLM(ITritonDeployable):
                         "embedding table.".format(mw_path)
                     )
 
-            with mw_path.open('rb') as mw_file:
+            with mw_path.open("rb") as mw_file:
                 weights = torch.load(mw_file)
 
             weights_found = True
@@ -1682,9 +1678,9 @@ class TensorRTLLM(ITritonDeployable):
                 weights = weights[
                     "model.language_model.adapter_layer.ptuning_adapter.inference_table.prompt_table.taskname.prompt_embeddings.weight"
                 ]
-            elif 'prompt_table' in weights:
-                if "prompt_table.taskname.prompt_embeddings.weight" in weights['prompt_table']:
-                    weights = weights['prompt_table']["prompt_table.taskname.prompt_embeddings.weight"]
+            elif "prompt_table" in weights:
+                if "prompt_table.taskname.prompt_embeddings.weight" in weights["prompt_table"]:
+                    weights = weights["prompt_table"]["prompt_table.taskname.prompt_embeddings.weight"]
                 else:
                     weights_found = False
             else:
@@ -1731,10 +1727,8 @@ class TensorRTLLM(ITritonDeployable):
                 raise TypeError(prompt_embeddings_checkpoint_path + " is not a nemo file.")
             prompt_embeddings_table = self._get_prompt_embedding_table_ckpt(prompt_embeddings_checkpoint_path)
 
-        dtype = self.config['pretrained_config']['dtype']
-        prompt_embeddings_table = prompt_embeddings_table.to(
-            dtype=tensorrt_llm._utils.str_dtype_to_torch(dtype)
-        ).cuda()
+        dtype = self.config["pretrained_config"]["dtype"]
+        prompt_embeddings_table = prompt_embeddings_table.to(dtype=tensorrt_llm._utils.str_dtype_to_torch(dtype)).cuda()
 
         if prompt_embeddings_table.size(dim=1) != self.config["pretrained_config"]["hidden_size"]:
             raise Exception(
@@ -1746,9 +1740,9 @@ class TensorRTLLM(ITritonDeployable):
         return prompt_embeddings_table
 
     def _load_config_file(self):
-        config_path = Path(self.engine_dir) / 'config.json'
+        config_path = Path(self.engine_dir) / "config.json"
         if config_path.exists():
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 self.config = json.load(f)
         else:
             raise FileNotFoundError(f"File: {config_path} could not be found.")

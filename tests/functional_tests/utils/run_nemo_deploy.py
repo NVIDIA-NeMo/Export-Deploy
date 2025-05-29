@@ -48,7 +48,7 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=Non
     all_expected_outputs = []
     all_trtllm_outputs = []
 
-    with open(test_data_path, 'r') as file:
+    with open(test_data_path, "r") as file:
         records = json.load(file)
 
         eval_start = time.perf_counter()
@@ -412,7 +412,7 @@ def get_args():
     parser.add_argument(
         "--ptuning",
         default=False,
-        action='store_true',
+        action="store_true",
     )
     parser.add_argument(
         "--lora_checkpoint",
@@ -421,7 +421,7 @@ def get_args():
     parser.add_argument(
         "--lora",
         default=False,
-        action='store_true',
+        action="store_true",
     )
     parser.add_argument(
         "--tp_size",
@@ -462,12 +462,12 @@ def get_args():
     parser.add_argument(
         "--debug",
         default=False,
-        action='store_true',
+        action="store_true",
     )
     parser.add_argument(
         "--ci_upload_test_results_to_cloud",
         default=False,
-        action='store_true',
+        action="store_true",
     )
     parser.add_argument(
         "--test_data_path",
@@ -476,11 +476,11 @@ def get_args():
     )
     parser.add_argument(
         "-b",
-        '--backend',
-        nargs='?',
+        "--backend",
+        nargs="?",
         const=None,
-        default='TensorRT-LLM',
-        choices=['TensorRT-LLM', 'vLLM', 'In-Framework'],
+        default="TensorRT-LLM",
+        choices=["TensorRT-LLM", "vLLM", "In-Framework"],
         help="Different options to deploy nemo model.",
     )
     parser.add_argument(
@@ -586,6 +586,6 @@ def run_inference_tests(args):
         raise Exception("Model accuracy is below 0.5")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = get_args()
     run_inference_tests(args)

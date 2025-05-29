@@ -27,7 +27,7 @@ class DummyModel(torch.nn.Module):
         self.linear = torch.nn.Linear(10, 5)
 
     def forward(self, inputs):
-        return self.linear(inputs['input_ids'])
+        return self.linear(inputs["input_ids"])
 
 
 class TestOnnxLLMExporter:

@@ -17,7 +17,7 @@ import pytest
 import torch
 
 
-@pytest.mark.run_only_on('GPU')
+@pytest.mark.run_only_on("GPU")
 def test_replace_number_add_offset():
     from nemo_export.utils.lora_converter import replace_number_add_offset
 
@@ -36,7 +36,7 @@ def test_replace_number_add_offset():
     assert replace_number_add_offset(key, 1) == key
 
 
-@pytest.mark.run_only_on('GPU')
+@pytest.mark.run_only_on("GPU")
 def test_rename_qkv_keys():
     from nemo_export.utils.lora_converter import rename_qkv_keys
 
@@ -49,7 +49,7 @@ def test_rename_qkv_keys():
     assert new_keys[2] == "layers.0.self_attention.lora_unfused_kqv_adapter.v_adapter.linear_in.weight"
 
 
-@pytest.mark.run_only_on('GPU')
+@pytest.mark.run_only_on("GPU")
 def test_reformat_module_names_to_hf():
     from nemo_export.utils.lora_converter import reformat_module_names_to_hf
 
@@ -79,7 +79,7 @@ def test_reformat_module_names_to_hf():
     assert "base_model.v_proj.lora_A.weight" in new_tensors
 
 
-@pytest.mark.run_only_on('GPU')
+@pytest.mark.run_only_on("GPU")
 def test_convert_lora_weights_to_canonical():
     from nemo_export.utils.lora_converter import \
         convert_lora_weights_to_canonical

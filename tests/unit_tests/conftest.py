@@ -41,21 +41,21 @@ def pytest_addoption(parser):
         --use_local_test_data: use local test data/skip downloading from URL/GitHub (DEFAULT: False)
     """
     parser.addoption(
-        '--cpu', action='store_true', help="pass that argument to use CPU during testing (DEFAULT: False = GPU)"
+        "--cpu", action="store_true", help="pass that argument to use CPU during testing (DEFAULT: False = GPU)"
     )
     parser.addoption(
-        '--use_local_test_data',
-        action='store_true',
+        "--use_local_test_data",
+        action="store_true",
         help="pass that argument to use local test data/skip downloading from URL/GitHub (DEFAULT: False)",
     )
     parser.addoption(
-        '--with_downloads',
-        action='store_true',
+        "--with_downloads",
+        action="store_true",
         help="pass this argument to active tests which download models from the cloud.",
     )
     parser.addoption(
-        '--relax_numba_compat',
-        action='store_false',
+        "--relax_numba_compat",
+        action="store_false",
         help="numba compatibility checks will be relaxed to just availability of cuda, "
         "without cuda compatibility matrix check",
     )
@@ -77,23 +77,23 @@ def device(request):
 
 @pytest.fixture(autouse=True)
 def run_only_on_device_fixture(request, device):
-    if request.node.get_closest_marker('run_only_on'):
-        if request.node.get_closest_marker('run_only_on').args[0] != device:
-            pytest.skip('skipped on this device: {}'.format(device))
+    if request.node.get_closest_marker("run_only_on"):
+        if request.node.get_closest_marker("run_only_on").args[0] != device:
+            pytest.skip("skipped on this device: {}".format(device))
 
 
 @pytest.fixture(autouse=True)
 def downloads_weights(request, device):
-    if request.node.get_closest_marker('with_downloads'):
+    if request.node.get_closest_marker("with_downloads"):
         if not request.config.getoption("--with_downloads"):
             pytest.skip(
-                'To run this test, pass --with_downloads option. It will download (and cache) models from cloud.'
+                "To run this test, pass --with_downloads option. It will download (and cache) models from cloud."
             )
 
 
 @pytest.fixture(autouse=True)
 def run_nightly_test_for_qa(request, device):
-    if request.node.get_closest_marker('nightly'):
+    if request.node.get_closest_marker("nightly"):
         if not request.config.getoption("--nightly"):
             pytest.skip(
                 'To run this test, pass --nightly option. It will run any tests marked with "nightly". Currently, These tests are mostly used for QA.'
@@ -110,11 +110,11 @@ def cleanup_local_folder():
     yield
 
     if Path("./lightning_logs").exists():
-        rmtree('./lightning_logs', ignore_errors=True)
+        rmtree("./lightning_logs", ignore_errors=True)
     if Path("./NeMo_experiments").exists():
-        rmtree('./NeMo_experiments', ignore_errors=True)
+        rmtree("./NeMo_experiments", ignore_errors=True)
     if Path("./nemo_experiments").exists():
-        rmtree('./nemo_experiments', ignore_errors=True)
+        rmtree("./nemo_experiments", ignore_errors=True)
 
 
 @pytest.fixture(autouse=True)

@@ -206,9 +206,7 @@ class Quantizer:
                 maxbound = 448
             elif self.quantization_config.algorithm == "int8_sq":
                 maxbound = 127
-            model = mtq.postprocess_amax(
-                model, "*input_quantizer", lambda amax: torch.clamp(amax, min=0.01 * maxbound)
-            )
+            model = mtq.postprocess_amax(model, "*input_quantizer", lambda amax: torch.clamp(amax, min=0.01 * maxbound))
 
         if dist.get_rank() == 0:
             mtq.print_quant_summary(model)

@@ -26,11 +26,11 @@ weights_dict = {}
 
 
 DECODER_MODEL_TYPE = {
-    "gptj": 'GPTForCausalLM',
-    "gptnext": 'GPTForCausalLM',
-    "llama": 'LlamaForCausalLM',
-    "gemma": 'GemmaForCausalLM',
-    "falcon": 'FalconForCausalLM',
+    "gptj": "GPTForCausalLM",
+    "gptnext": "GPTForCausalLM",
+    "llama": "LlamaForCausalLM",
+    "gemma": "GemmaForCausalLM",
+    "falcon": "FalconForCausalLM",
 }
 
 post_layernorm_keys = [
@@ -59,8 +59,8 @@ attention_not_mapped_keys = [
     "attention.key_value.bias",
 ]
 
-weight_scaling_suffix = '.weights_scaling_factor'
-activation_scaling_suffix = '.activation_scaling_factor'
+weight_scaling_suffix = ".weights_scaling_factor"
+activation_scaling_suffix = ".activation_scaling_factor"
 
 
 def save_val(val, dir, key, tp_num=None):
@@ -206,12 +206,12 @@ def write_int8(vals, dir, base_key, split_dim, tp_rank, split_factor, kv_cache_o
 
 
 def get_suffix(key: str) -> str:
-    return '.' + key.split('.')[-1]
+    return "." + key.split(".")[-1]
 
 
 def get_trt_llm_prefix(key: str) -> str:
     layer_num = key.split(".")[1]
-    return f'transformer.layers.{layer_num}'
+    return f"transformer.layers.{layer_num}"
 
 
 def any_word_in_key(key: str, words: List[str]) -> bool:
@@ -228,18 +228,18 @@ def sequential_key_map(key: str, mapping: List[Tuple[List[str], str]]) -> Option
 
 def get_trt_llm_infix(key: str) -> Optional[str]:
     mapping = [
-        (post_layernorm_keys, '.post_layernorm'),
-        (mlp_proj_bias_keys, '.mlp.proj'),
-        (attention_dense_bias_keys, '.attention.dense'),
-        (input_layernorm_keys, '.input_layernorm'),
-        (pre_layernorm_keys, '.post_layernorm'),
-        (attention_dense_weight_keys, '.attention.dense'),
-        (mlp_proj_weight_keys, '.mlp.proj'),
-        (mlp_fc_keys, '.mlp.fc'),
-        (attention_qkv_bias_keys + attention_qkv_weight_keys, '.attention.qkv'),
-        (mlp_router_keys, '.mlp.router'),
-        (mlp_fc_expert_keys, '.mlp.fc'),
-        (mlp_proj_experts_keys, '.mlp.proj'),
+        (post_layernorm_keys, ".post_layernorm"),
+        (mlp_proj_bias_keys, ".mlp.proj"),
+        (attention_dense_bias_keys, ".attention.dense"),
+        (input_layernorm_keys, ".input_layernorm"),
+        (pre_layernorm_keys, ".post_layernorm"),
+        (attention_dense_weight_keys, ".attention.dense"),
+        (mlp_proj_weight_keys, ".mlp.proj"),
+        (mlp_fc_keys, ".mlp.fc"),
+        (attention_qkv_bias_keys + attention_qkv_weight_keys, ".attention.qkv"),
+        (mlp_router_keys, ".mlp.router"),
+        (mlp_fc_expert_keys, ".mlp.fc"),
+        (mlp_proj_experts_keys, ".mlp.proj"),
     ]
     return sequential_key_map(key, mapping)
 
@@ -260,16 +260,16 @@ def is_scaling_factor(key: str) -> bool:
 
 def get_scaling_factor_keys(key: str) -> Tuple[Tuple[str, str], Tuple[str, str]]:
     # Reuses existing mapping of NeMo -> TRT LLM weights key via swapping suffixes
-    corresponding_weight_key = '.'.join(key.split('.')[:-2]) + '.weight'
+    corresponding_weight_key = ".".join(key.split(".")[:-2]) + ".weight"
     corresponding_trt_llm_weight_key = get_trt_llm_keyname(corresponding_weight_key)
-    base_key = '.'.join(corresponding_trt_llm_weight_key.split('.')[:-1])
+    base_key = ".".join(corresponding_trt_llm_weight_key.split(".")[:-1])
 
     weight_scale = base_key + weight_scaling_suffix
     activation_scale = base_key + activation_scaling_suffix
     keys = (weight_scale, activation_scale)
 
     layer_prefix = get_trt_llm_prefix(key)
-    mapped_key = layer_prefix + '.mlp.gate'
+    mapped_key = layer_prefix + ".mlp.gate"
     gate_activation = mapped_key + activation_scaling_suffix
     gate_weight = mapped_key + weight_scaling_suffix
     gate_keys = (gate_activation, gate_weight)
@@ -404,7 +404,7 @@ def split_and_save_weight(
         if split_gated_activation:
             assert not save_int8
             layer_prefix = get_trt_llm_prefix(key)
-            gate_key = layer_prefix + '.mlp.gate' + get_suffix(trt_llm_key)
+            gate_key = layer_prefix + ".mlp.gate" + get_suffix(trt_llm_key)
             if convert_on_device:
                 save_val(gates[0], saved_dir, gate_key)
             else:
@@ -523,9 +523,9 @@ def split_and_save_weight(
             )
 
         if use_fp8_kv_cache:
-            base_key = trt_llm_key.replace('.qkv.weight', '')
+            base_key = trt_llm_key.replace(".qkv.weight", "")
             scaling_factor = torch.FloatTensor([1.0])
-            save_val(scaling_factor, dir, base_key + '.kv_cache_scaling_factor')
+            save_val(scaling_factor, dir, base_key + ".kv_cache_scaling_factor")
 
     elif any_word_in_key(key, attention_not_mapped_keys):
         pass

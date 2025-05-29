@@ -39,7 +39,7 @@ class TestSentencePieceTokenizer(unittest.TestCase):
         sentencepiece.SentencePieceTrainer.Train(
             f'--input={os.path.join(cls.test_dir, "test.txt")} '
             f'--model_prefix={os.path.join(cls.test_dir, "test_model")} '
-            '--vocab_size=55 --model_type=bpe'
+            "--vocab_size=55 --model_type=bpe"
         )
 
         cls.model_path = os.path.join(cls.test_dir, "test_model.model")
@@ -188,5 +188,5 @@ class TestSentencePieceTokenizer(unittest.TestCase):
         self.assertIsNone(self.tokenizer.get_added_vocab())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

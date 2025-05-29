@@ -79,23 +79,23 @@ def preprocess_scaling_factors_for_local_export(state_dict: Dict[str, Any]) -> D
     Returns:
         dict: The same dictionary, with explicitly loaded extra states from bytes.
     """
-    scales_dict = {k: v for k, v in state_dict.items() if EXTRA_STATE in k and 'core_attention' not in k}
+    scales_dict = {k: v for k, v in state_dict.items() if EXTRA_STATE in k and "core_attention" not in k}
     state_dict = {k: v for k, v in state_dict.items() if EXTRA_STATE not in k}
     scales = {}
 
     for key, value in scales_dict.items():
         extra_state = load_extra_state_from_bytes(value)
 
-        if extra_state is not None and 'scale_fwd' in extra_state:
-            scales[key + '.scale_fwd'] = extra_state['scale_fwd'].cpu()
+        if extra_state is not None and "scale_fwd" in extra_state:
+            scales[key + ".scale_fwd"] = extra_state["scale_fwd"].cpu()
 
     combined_scales = {}
     for key in scales:
-        if '.decoder.layers.0' not in key:
+        if ".decoder.layers.0" not in key:
             continue
 
         # Key has a structure "model.decoder.layers.<layer_number>.<rest>"
-        decomposed = key.split('.')
+        decomposed = key.split(".")
         layer_num_idx = 3
 
         # Merges scales from "model.decoder.layers.<layer_num>.<rest>" to
@@ -103,13 +103,13 @@ def preprocess_scaling_factors_for_local_export(state_dict: Dict[str, Any]) -> D
         combined = []
         layer_num = 0
         decomposed[layer_num_idx] = str(layer_num)
-        while (scale := scales.get('.'.join(decomposed))) is not None:
+        while (scale := scales.get(".".join(decomposed))) is not None:
             combined.append(scale)
             layer_num += 1
             decomposed[layer_num_idx] = str(layer_num)
 
         del decomposed[layer_num_idx]
-        combined_scales['.'.join(decomposed)] = torch.stack(combined)
+        combined_scales[".".join(decomposed)] = torch.stack(combined)
 
     return state_dict | combined_scales
 
@@ -131,11 +131,11 @@ def rename_extra_states(state_dict: Dict[str, Any]) -> Dict[str, Any]:
 
         # Keys with the extra states have the following format:
         # <prefix>.layers.<layer>._extra_state/shard_<layer_number>_<number_of_layers>
-        key_base, shard_key = key.split('/')
-        if '_' not in shard_key:
+        key_base, shard_key = key.split("/")
+        if "_" not in shard_key:
             continue
 
-        shard_layer = shard_key.split('_')[1]
+        shard_layer = shard_key.split("_")[1]
         if not shard_layer.isnumeric():
             continue
 
@@ -219,8 +219,8 @@ def copy_tokenizer_files(config, out_dir):
         LOGGER.debug(f"Copy tokenizer {key}: {path}->{dst_path}")
 
         # Copy 'path' to 'dst_path' without shutil.copy(...) because 'path' may be a TarPath
-        with path.open('rb') as infile:
-            with open(dst_path, 'wb') as outfile:
+        with path.open("rb") as infile:
+            with open(dst_path, "wb") as outfile:
                 outfile.write(infile.read())
 
     return config
@@ -494,7 +494,7 @@ def load_nemo_model(nemo_ckpt: Union[str, Path], nemo_export_dir: Union[str, Pat
             io_folder = nemo_dir / "context"
 
             if (io_folder / "model.yaml").exists():
-                with open(io_folder / "model.yaml", 'r') as stream:
+                with open(io_folder / "model.yaml", "r") as stream:
                     config = yaml.safe_load(stream)
 
                 nemo_model_config = {}
@@ -502,7 +502,7 @@ def load_nemo_model(nemo_ckpt: Union[str, Path], nemo_export_dir: Union[str, Pat
                     if isinstance(v, (float, int, str, bool)):
                         nemo_model_config[k] = v
                     elif k == "activation_func":
-                        nemo_model_config["activation"] = v["_target_"].rsplit('.', 1)[-1]
+                        nemo_model_config["activation"] = v["_target_"].rsplit(".", 1)[-1]
             else:
                 assert HAVE_NEMO2, "nemo_toolkit>=2.0.0 is required to load the model context."
 

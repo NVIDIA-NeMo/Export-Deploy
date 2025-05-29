@@ -32,8 +32,8 @@ class TritonSettings(BaseSettings):
     def __init__(self):
         super(TritonSettings, self).__init__()
         try:
-            self._triton_service_port = int(os.environ.get('TRITON_PORT', 8000))
-            self._triton_service_ip = os.environ.get('TRITON_HTTP_ADDRESS', '0.0.0.0')
+            self._triton_service_port = int(os.environ.get("TRITON_PORT", 8000))
+            self._triton_service_ip = os.environ.get("TRITON_HTTP_ADDRESS", "0.0.0.0")
         except Exception as error:
             logging.error("An exception occurred trying to retrieve set args in TritonSettings class. Error:", error)
             return
@@ -73,7 +73,7 @@ class CompletionRequest(BaseModel):
     """
 
     model: str
-    prompt: str = 'hello'
+    prompt: str = "hello"
     messages: list[dict] = [{}]
     max_tokens: int = 512
     temperature: float = 1.0
@@ -81,7 +81,7 @@ class CompletionRequest(BaseModel):
     top_k: int = 0
     logprobs: int = None
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def set_greedy_params(self):
         """Validate parameters for greedy decoding."""
         if self.temperature == 0 and self.top_p == 0:
@@ -209,9 +209,9 @@ async def completions_v1(request: CompletionRequest):
     output_serializable = convert_numpy(output)
     output_serializable["choices"][0]["text"] = output_serializable["choices"][0]["text"][0][0]
     if request.logprobs == 1:
-        output_serializable["choices"][0]["logprobs"]["token_logprobs"] = output_serializable["choices"][0][
-            "logprobs"
-        ]["token_logprobs"][0]
+        output_serializable["choices"][0]["logprobs"]["token_logprobs"] = output_serializable["choices"][0]["logprobs"][
+            "token_logprobs"
+        ][0]
         output_serializable["choices"][0]["logprobs"]["top_logprobs"] = output_serializable["choices"][0]["logprobs"][
             "top_logprobs"
         ][0]

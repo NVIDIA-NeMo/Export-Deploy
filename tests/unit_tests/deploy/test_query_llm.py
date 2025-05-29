@@ -40,7 +40,7 @@ class TestNemoQueryLLMPyTorch:
         assert query.url == "localhost:8000"
         assert query.model_name == "test-model"
 
-    @patch('nemo_deploy.nlp.query_llm.ModelClient')
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
     def test_query_llm_basic(self, mock_client, query):
         # Setup mock
         mock_instance = MagicMock()
@@ -55,7 +55,7 @@ class TestNemoQueryLLMPyTorch:
         assert "choices" in response
         assert response["choices"][0]["text"] == "test response"
 
-    @patch('nemo_deploy.nlp.query_llm.ModelClient')
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
     def test_query_llm_with_logprobs(self, mock_client, query):
         # Setup mock
         mock_instance = MagicMock()
@@ -83,7 +83,7 @@ class TestNemoQueryLLMHF:
         assert query.url == "localhost:8000"
         assert query.model_name == "test-model"
 
-    @patch('nemo_deploy.nlp.query_llm.ModelClient')
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
     def test_query_llm_basic(self, mock_client, query):
         # Setup mock
         mock_instance = MagicMock()
@@ -98,7 +98,7 @@ class TestNemoQueryLLMHF:
         assert "choices" in response
         assert response["choices"][0]["text"] == "test response"
 
-    @patch('nemo_deploy.nlp.query_llm.ModelClient')
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
     def test_query_llm_with_logits(self, mock_client, query):
         # Setup mock
         mock_instance = MagicMock()
@@ -125,7 +125,7 @@ class TestNemoQueryLLM:
         assert query.url == "localhost:8000"
         assert query.model_name == "test-model"
 
-    @patch('nemo_deploy.nlp.query_llm.ModelClient')
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
     def test_query_llm_basic(self, mock_client, query):
         # Setup mock
         mock_instance = MagicMock()
@@ -139,7 +139,7 @@ class TestNemoQueryLLM:
         assert isinstance(response[0], str)
         assert response[0] == "test response"
 
-    @patch('nemo_deploy.nlp.query_llm.ModelClient')
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
     def test_query_llm_openai_format(self, mock_client, query):
         # Setup mock
         mock_instance = MagicMock()
@@ -154,7 +154,7 @@ class TestNemoQueryLLM:
         assert "choices" in response
         assert response["choices"][0]["text"] == "test response"
 
-    @patch('nemo_deploy.nlp.query_llm.DecoupledModelClient')
+    @patch("nemo_deploy.nlp.query_llm.DecoupledModelClient")
     def test_query_llm_streaming(self, mock_client, query):
         # Setup mock
         mock_instance = MagicMock()
@@ -172,7 +172,7 @@ class TestNemoQueryLLM:
         assert responses[0] == "test"
         assert responses[1] == " response"
 
-    @patch('nemo_deploy.nlp.query_llm.ModelClient')
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
     def test_query_llm_with_stop_words(self, mock_client, query):
         # Setup mock
         mock_instance = MagicMock()
@@ -186,7 +186,7 @@ class TestNemoQueryLLM:
         assert isinstance(response[0], str)
         assert response[0] == "test response"
 
-    @patch('nemo_deploy.nlp.query_llm.ModelClient')
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
     def test_query_llm_with_bad_words(self, mock_client, query):
         # Setup mock
         mock_instance = MagicMock()
