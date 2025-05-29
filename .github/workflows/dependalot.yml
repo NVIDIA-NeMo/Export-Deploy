@@ -35,3 +35,24 @@ jobs:
           -w /workspace \
           nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
           bash -c 'uv lock --upgrade'
+
+      - name: Create Bump PR
+        uses: peter-evans/create-pull-request@v6
+        id: create-pull-request
+        env:
+          title: "chore(🤖): Bump dependencies (${{ steps.ref.outputs.date }})"
+        with:
+          branch: dependabot-${{ steps.ref.outputs.date }}-main
+          base: main
+          title: ${{ env.title }}
+          token: ${{ secrets.PAT }}
+          body: |
+            🚀 PR to bump dependencies.  
+
+            📝 Please remember the following to-do's before merge: 
+            - [ ] Verify the presubmit CI  
+
+            🙏 Please merge this PR only if the CI workflow completed successfully.
+          commit-message: ${{ env.title }}
+          signoff: true
+          sign-commits: true
