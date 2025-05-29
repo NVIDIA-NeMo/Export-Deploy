@@ -259,8 +259,7 @@ class vLLMExporter(ITritonDeployable):
             executor_class = RayDistributedExecutor
 
         elif parallel_config.distributed_executor_backend == "mp":
-            from vllm.v1.executor.multiproc_executor import \
-                MultiprocExecutor
+            from vllm.v1.executor.multiproc_executor import MultiprocExecutor
 
             executor_class = MultiprocExecutor
 
