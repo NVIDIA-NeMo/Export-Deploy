@@ -29,8 +29,9 @@ jobs:
 
       - name: Upgrade lock file
         run: |
-          docker run \ 
-            --rm \
-            -v $(pwd):/workspace \
-            nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
-            bash -c 'uv lock --upgrade'
+          docker run \
+          --rm \
+          -v $(pwd):/workspace \
+          -w /workspace \
+          nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
+          bash -c 'uv lock --upgrade'
