@@ -12,22 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import multiprocessing as _mp
 import tempfile
 from pathlib import Path
-
 from typing import List, Optional
 
 import numpy as np
-import multiprocessing as _mp
 from pytriton.decorators import batch, first_value
 from pytriton.model_config import Tensor
-
-from nemo_deploy import ITritonDeployable
-from nemo_deploy.utils import cast_output, str_ndarray2list
-from nemo.utils import logging
-
 from vllm import LLM, SamplingParams
 from vllm.lora.request import LoRARequest
+
+from nemo.utils import logging
+from nemo_deploy import ITritonDeployable
+from nemo_deploy.utils import cast_output, str_ndarray2list
+
 
 class vLLMHFExporter(ITritonDeployable):
     """
@@ -56,25 +55,27 @@ class vLLMHFExporter(ITritonDeployable):
         self.lora_models = None
         self._first_forward_pass = True
 
-    def export(self,
-                model: Optional[str] = None,
-                model_dir: Optional[str | Path] = None,
-                enable_lora: bool = False,
-                nemo_checkpoint: Optional[str] = None,
-                model_type: Optional[str] = None,
-                device: Optional[str] = None,
-                tensor_parallel_size: int = 1,
-                pipeline_parallel_size: int = 1,
-                max_model_len: Optional[int] = None,
-                lora_checkpoints: Optional[List[str]] = None,
-                dtype: str = 'auto',
-                seed: int = 0,
-                log_stats: bool = True,
-                weight_storage: str = 'auto',
-                gpu_memory_utilization: float = 0.9,
-                quantization: Optional[str] = None,
-                delete_existing_files: bool = True, # TODO: change to False
-                **kwargs):
+    def export(
+        self,
+        model: Optional[str] = None,
+        model_dir: Optional[str | Path] = None,
+        enable_lora: bool = False,
+        nemo_checkpoint: Optional[str] = None,
+        model_type: Optional[str] = None,
+        device: Optional[str] = None,
+        tensor_parallel_size: int = 1,
+        pipeline_parallel_size: int = 1,
+        max_model_len: Optional[int] = None,
+        lora_checkpoints: Optional[List[str]] = None,
+        dtype: str = 'auto',
+        seed: int = 0,
+        log_stats: bool = True,
+        weight_storage: str = 'auto',
+        gpu_memory_utilization: float = 0.9,
+        quantization: Optional[str] = None,
+        delete_existing_files: bool = True,  # TODO: change to False
+        **kwargs,
+    ):
         """
         Exports the HF checkpoint to vLLM and initializes the engine.
         Args:
@@ -95,7 +96,6 @@ class vLLMHFExporter(ITritonDeployable):
         if device is not None:
             logging.warning("device parameter is deprecated and will be removed in a future release")
 
-
         if model is None:
             assert nemo_checkpoint is not None
             model = Path(nemo_checkpoint)
@@ -108,6 +108,7 @@ class vLLMHFExporter(ITritonDeployable):
                 # Loading nemo model (torch.distributed.load) changes torch environment, causing vLLM to fail.
                 def _run_export(src: str, dst: str):
                     from nemo_export.huggingface import export_to_hf
+
                     export_to_hf(src, dst)
                     logging.info(f"Model has been exported to {dst}")
 
@@ -120,16 +121,18 @@ class vLLMHFExporter(ITritonDeployable):
 
                 model = model_dir
 
-            self.model = LLM(model=model,
-                            quantization=quantization,
-                            enable_lora=enable_lora,
-                            gpu_memory_utilization=gpu_memory_utilization,
-                            dtype=dtype,
-                            seed=seed,
-                            tensor_parallel_size=tensor_parallel_size,
-                            pipeline_parallel_size=pipeline_parallel_size,
-                            max_model_len=max_model_len,
-                            **kwargs)
+            self.model = LLM(
+                model=model,
+                quantization=quantization,
+                enable_lora=enable_lora,
+                gpu_memory_utilization=gpu_memory_utilization,
+                dtype=dtype,
+                seed=seed,
+                tensor_parallel_size=tensor_parallel_size,
+                pipeline_parallel_size=pipeline_parallel_size,
+                max_model_len=max_model_len,
+                **kwargs,
+            )
 
     def add_lora_models(self, lora_model_name, lora_model):
         if self.lora_models is None:
@@ -230,7 +233,7 @@ class vLLMHFExporter(ITritonDeployable):
         if streaming is not None and self._first_forward_pass:
             logging.warning("streaming is not supported")
 
-        if top_p == 0.:
+        if top_p == 0.0:
             if self._first_forward_pass:
                 logging.warning("top_p must be greater than 0, defaulting to 0.1")
             top_p = 0.1
