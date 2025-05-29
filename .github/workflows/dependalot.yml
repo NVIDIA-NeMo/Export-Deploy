@@ -11,8 +11,8 @@ permissions:
 
 jobs:
   dependalot-update:
-    runs-on: linux-amd64-cpu16
     environment: nemo-ci
+    runs-on: linux-amd64-cpu16
     steps:
       - name: Install Azure CLI
         run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
@@ -40,7 +40,7 @@ jobs:
           bash -c 'uv lock --upgrade'
 
       - name: Create Bump PR
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         id: create-pull-request
         env:
           title: "chore(🤖): Bump dependencies (${{ steps.ref.outputs.date }})"
@@ -48,7 +48,6 @@ jobs:
           branch: dependabot-${{ steps.ref.outputs.date }}-main
           base: main
           title: ${{ env.title }}
-          token: ${{ secrets.PAT }}
           body: |
             🚀 PR to bump dependencies.  
 
