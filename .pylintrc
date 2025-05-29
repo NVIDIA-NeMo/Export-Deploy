@@ -24,3 +24,4 @@ enable=C0115,C0116,W0611,C0301
 # C0116: missing-function-docstring
 # W0611: unused-import
 # C0301: line-too-long
+

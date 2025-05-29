@@ -28,6 +28,10 @@ on:
         default: linux-amd64-gpu-rtxa6000-latest-2-nemo
         type: string
         description: "The runner to use for the build"
+      inference-framework:
+        required: true
+        type: string
+        description: "The inference framework to use for the build"
     secrets:
       AZURE_CLIENT_ID:
         required: true
@@ -78,6 +82,8 @@ jobs:
       use-inline-cache: false
       runner: ${{ inputs.runner }}
       has-azure-credentials: true
+      build-args: |
+        INFERENCE_FRAMEWORK=${{ inputs.inference-framework }}
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
