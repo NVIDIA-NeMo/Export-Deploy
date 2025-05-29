@@ -10,7 +10,7 @@ NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and 
 - Support for Large Language Models (LLMs) and Multimodal Models
 - Export NeMo models to optimized inference formats including TensorRT-LLM and vLLM
 - Deploy NeMo and Hugging Face models using Ray Serve or NVIDIA Triton Inference Server
-- Quantization support for efficient deployment (FP8, etc.)
+- Export quantized NeMo models (FP8, etc).
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
@@ -22,41 +22,6 @@ NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and 
 - TensorRT-LLM and vLLM
 - Ray Serve
 - NVIDIA Triton Inference Server
-
-
-## Generate a NeMo 2.0 Checkpoint
-
-In order to run examples below, a NeMo 2.0 checkpoint is required. Please follow the steps below to generate a NeMo 2.0 checkpoint.
-
-1. To access the Llama models, please visit the [Llama 3.1 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.1-8B).
-
-2. Pull down and run the NeMo Framework Docker container image using the command shown below:
-
-   ```shell
-   docker pull nvcr.io/nvidia/nemo:25.04
-
-   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}/:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:25.04
-   ```
-   
-3. Run the following command in the terminal and enter your Hugging Face access token to log in to Hugging Face:
-
-   ```shell
-   huggingface-cli login
-   ```
-   
-4. Run the following Python code to generate the NeMo 2.0 checkpoint:
-
-   ```python
-   from nemo.collections.llm import import_ckpt
-   from nemo.collections.llm.gpt.model.llama import Llama32Config1B, LlamaModel
-   from pathlib import Path
-
-   if __name__ == "__main__":
-       import_ckpt(
-           model=LlamaModel(Llama32Config1B()),
-           source='hf://meta-llama/Llama-3.2-1B',
-           output_path=Path('/opt/checkpoints/hf_llama32_1B_nemo2')
-       )
 
 
 ## Quick Start
@@ -77,37 +42,12 @@ docker run --rm -it --entrypoint bash --shm-size=4g --gpus all ${PWD}/:/opt/chec
 
 ### Export and Deploy LLM Examples
 
-#### Export NeMo Models to TensorRT-LLM and Deploy using Triton Inference Server
-
-```python
-from nemo.export.tensorrt_llm import TensorRTLLM
-from nemo.deploy import DeployPyTriton
-
-# Export model to TensorRT-LLM
-trt_llm_exporter = TensorRTLLM(model_dir="/tmp/hf_llama32_1B_nemo2")
-trt_llm_exporter.export(
-    nemo_checkpoint_path="/opt/checkpoints/hf_llama32_1B_nemo2",    
-    model_type="llama",
-    tensor_parallelism_size=1,
-)
-
-# Generate output
-output = exporter.forward(
-    input_text=["What is the color of a banana? "], 
-    top_k: int = 1,
-    top_p: float = 0.0,
-    temperature: float = 1.0,
-    max_output_len=20,
-)
-print("output: ", output)
-
-# Deploy to Triton
-nm = DeployPyTriton(model=trt_llm_exporter, triton_model_name="llama", http_port=8000)
-nm.deploy()
-nm.serve()
-```
+The following examples demonstrate how to export and deploy Large Language Models (LLMs) using NeMo Export and Deploy. These examples cover both Hugging Face and NeMo model formats, showing how to export them to TensorRT-LLM and deploy using NVIDIA Triton Inference Server for high-performance inference.
 
 #### Export Hugging Face Models to TensorRT-LLM and Deploy using Triton Inference Server
+
+Please note that Llama models require special access permissions from Meta. To use Llama models, you must first accept Meta's license agreement and obtain access credentials. For instructions on generating a NeMo checkpoint after obtaining access, please refer to the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) below.
+
 
 ```python
 from nemo.export.tensorrt_llm import TensorRTLLM
@@ -124,9 +64,42 @@ trt_llm_exporter.export_hf_model(
 # Generate output
 output = exporter.forward(
     input_text=["What is the color of a banana? "], 
-    top_k: int = 1,
-    top_p: float = 0.0,
-    temperature: float = 1.0,
+    top_k=1,
+    top_p=0.0,
+    temperature=1.0,
+    max_output_len=20,
+)
+print("output: ", output)
+
+# Deploy to Triton
+nm = DeployPyTriton(model=trt_llm_exporter, triton_model_name="llama", http_port=8000)
+nm.deploy()
+nm.serve()
+```
+
+
+#### Export NeMo Models to TensorRT-LLM and Deploy using Triton Inference Server
+
+Before running the example below, ensure you have a NeMo checkpoint file. If you don't have a checkpoint yet, see the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) for step-by-step instructions on creating one.
+
+```python
+from nemo.export.tensorrt_llm import TensorRTLLM
+from nemo.deploy import DeployPyTriton
+
+# Export model to TensorRT-LLM
+trt_llm_exporter = TensorRTLLM(model_dir="/tmp/hf_llama32_1B_nemo2")
+trt_llm_exporter.export(
+    nemo_checkpoint_path="/opt/checkpoints/hf_llama32_1B_nemo2",    
+    model_type="llama",
+    tensor_parallelism_size=1,
+)
+
+# Generate output
+output = exporter.forward(
+    input_text=["What is the color of a banana? "], 
+    top_k=1,
+    top_p=0.0,
+    temperature=1.0,
     max_output_len=20,
 )
 print("output: ", output)
@@ -146,7 +119,7 @@ from nemo.deploy import DeployPyTriton
 # Export model to vLLM
 exporter = vLLMExporter()
 exporter.export(
-    nemo_checkpoint="/opt/checkpoints/hf_llama31_8B_nemo2",
+    nemo_checkpoint="/opt/checkpoints/hf_llama32_1B_nemo2",
     model_type="llama",
     tensor_parallel_size=1,
 )
@@ -154,9 +127,9 @@ exporter.export(
 # Generate output
 output = exporter.forward(
     input_text=["What is the color of a banana? "], 
-    top_k: int = 1,
-    top_p: float = 0.0,
-    temperature: float = 1.0,
+    top_k=1,
+    top_p=0.0,
+    temperature=1.0,
     max_output_len=20,
 )
 print("output: ", output)
@@ -167,7 +140,7 @@ nm.deploy()
 nm.serve()
 ```
 
-### Export and Deploy NeMo Multimodal Examples
+### Export and Deploy Multimodal Examples
 
 #### Deploy Multimodal Model
 
@@ -218,6 +191,40 @@ output = nq.query(
 )
 print(output)
 ```
+
+## Generate a NeMo Checkpoint
+
+In order to run examples with NeMo models, a NeMo checkpoint is required. Please follow the steps below to generate a NeMo checkpoint.
+
+1. To access the Llama models, please visit the [Llama 3.1 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.1-8B).
+
+2. Pull down and run the NeMo Framework Docker container image using the command shown below:
+
+   ```shell
+   docker pull nvcr.io/nvidia/nemo:25.04
+
+   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}/:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:25.04
+   ```
+   
+3. Run the following command in the terminal and enter your Hugging Face access token to log in to Hugging Face:
+
+   ```shell
+   huggingface-cli login
+   ```
+   
+4. Run the following Python code to generate the NeMo 2.0 checkpoint:
+
+   ```python
+   from nemo.collections.llm import import_ckpt
+   from nemo.collections.llm.gpt.model.llama import Llama32Config1B, LlamaModel
+   from pathlib import Path
+
+   if __name__ == "__main__":
+       import_ckpt(
+           model=LlamaModel(Llama32Config1B()),
+           source='hf://meta-llama/Llama-3.2-1B',
+           output_path=Path('/opt/checkpoints/hf_llama32_1B_nemo2')
+       )
 
 ## Documentation
 
