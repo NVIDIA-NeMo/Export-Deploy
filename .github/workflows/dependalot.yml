@@ -14,12 +14,9 @@ jobs:
     runs-on: linux-amd64-cpu16
     steps:
       - name: Install Azure CLI
-        if: ${{ inputs.has-azure-credentials }}
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
       - name: Azure Login
-        if: ${{ inputs.has-azure-credentials }}
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -27,16 +24,12 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Azure ACR Login
-        if: ${{ inputs.has-azure-credentials }}
-        run: |
-          az acr login --name nemoci
+        run: az acr login --name nemoci
 
-      - name: Pull image
-        env:
-          IMAGE_NAME: nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main
+      - name: Upgrade lock file
         run: |
           docker run \ 
             --rm \
             -v $(pwd):/workspace \
-            $IMAGE_NAME \
+            nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
             bash -c 'uv lock --upgrade'
