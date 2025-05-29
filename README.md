@@ -2,15 +2,15 @@
 
 ## Introduction
 
-NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and deploying NeMo models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, vLLM, and in-framework deployment through NVIDIA Triton Inference Server.
+NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and deploying NeMo and Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server.
 
 
 ## Key Features
 
 - Support for Large Language Models (LLMs) and Multimodal Models
-- Export NeMo models to optimized inference formats including TensorRT-LLM and vLLM
+- Export NeMo and Hugging Face models to optimized inference formats including TensorRT-LLM and vLLM
 - Deploy NeMo and Hugging Face models using Ray Serve or NVIDIA Triton Inference Server
-- Export quantized NeMo models (FP8, etc).
+- Export quantized NeMo models (FP8, etc)
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
@@ -46,7 +46,7 @@ The following examples demonstrate how to export and deploy Large Language Model
 
 #### Export Hugging Face Models to TensorRT-LLM and Deploy using Triton Inference Server
 
-Please note that Llama models require special access permissions from Meta. To use Llama models, you must first accept Meta's license agreement and obtain access credentials. For instructions on generating a NeMo checkpoint after obtaining access, please refer to the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) below.
+Please note that Llama models require special access permissions from Meta. To use Llama models, you must first accept Meta's license agreement and obtain access credentials. For instructions on obtaining access, please refer to the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) below.
 
 
 ```python
@@ -77,6 +77,7 @@ nm.deploy()
 nm.serve()
 ```
 
+After running the code above, Triton Inference Server will start and begin serving the model. For instructions on how to query the deployed model and make inference requests, please refer to [Querying Deployed Models](#querying-deployed-models).
 
 #### Export NeMo Models to TensorRT-LLM and Deploy using Triton Inference Server
 
@@ -140,9 +141,47 @@ nm.deploy()
 nm.serve()
 ```
 
+#### Deploy NeMo Models using Triton Inference Server
+
+You can also deploy NeMo and Hugging Face models directly using Triton Inference Server without exporting to inference optimized libraries like TensorRT-LLM or vLLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
+
+```python
+from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
+
+model = MegatronLLMDeployableNemo2(
+    num_devices=1,
+    num_nodes=1,
+    nemo_checkpoint_filepath="/opt/checkpoints/hf_llama32_1B_nemo2",    
+)
+
+# Deploy to Triton
+nm = DeployPyTriton(model=model, triton_model_name="llama", http_port=8000)
+nm.deploy()
+nm.serve()
+```
+
+#### Deploy Hugging Face Models using Triton Inference Server
+
+You can also deploy NeMo and Hugging Face models directly using Triton Inference Server without exporting to inference optimized libraries like TensorRT-LLM or vLLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
+
+```python
+from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
+
+model = HuggingFaceLLMDeploy(
+    hf_model_id_path="hf://meta-llama/Llama-3.2-1B",    
+    device_map="auto,
+)
+
+# Deploy to Triton
+nm = DeployPyTriton(model=model, triton_model_name="llama", http_port=8000)
+nm.deploy()
+nm.serve()
+```
+
+
 ### Export and Deploy Multimodal Examples
 
-#### Deploy Multimodal Model
+#### Export NeMo Models to TensorRT-LLM and Deploy using Triton Inference Server
 
 ```python
 from nemo.export.tensorrt_mm_exporter import TensorRTMMExporter
@@ -196,7 +235,7 @@ print(output)
 
 In order to run examples with NeMo models, a NeMo checkpoint is required. Please follow the steps below to generate a NeMo checkpoint.
 
-1. To access the Llama models, please visit the [Llama 3.1 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.1-8B).
+1. To access the Llama models, please visit the [Llama 3.2 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.2-1B).
 
 2. Pull down and run the NeMo Framework Docker container image using the command shown below:
 
