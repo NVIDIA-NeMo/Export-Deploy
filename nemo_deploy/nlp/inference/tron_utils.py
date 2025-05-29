@@ -149,7 +149,7 @@ def initialize_distributed(
         if get_rank_safe() == 0:
             print("> initializing torch distributed ...", flush=True)
         else:
-            print(f"!!! Current rank: {get_rank_safe()}")
+            print(f"Current rank: {get_rank_safe()}")
 
         # Manually set the device ids.
         if device_count > 0:
