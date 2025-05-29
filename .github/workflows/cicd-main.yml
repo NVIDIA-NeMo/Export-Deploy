@@ -55,6 +55,12 @@ jobs:
               - '!**.md'
               - '!docs/**'
 
+      - name: Check if docs only
+        shell: bash
+        id: docs_only
+        run: |
+          echo ${{ steps.changed-files.outputs.doc_any_changed == 'true' && steps.changed-files.outputs.src_any_changed == 'false' }}
+
       - name: Check if this is a CI workload
         shell: bash
         id: is_ci_workload
