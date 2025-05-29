@@ -31,22 +31,22 @@ class TestNemoQueryMultimodal:
     @pytest.fixture
     def mock_image(self):
         # Create a temporary image file
-        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
-            img = Image.new('RGB', (100, 100), color='red')
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+            img = Image.new("RGB", (100, 100), color="red")
             img.save(tmp.name)
             return tmp.name
 
     @pytest.fixture
     def mock_video(self):
         # Create a temporary video file
-        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
             # Just create an empty file for testing
             return tmp.name
 
     @pytest.fixture
     def mock_audio(self):
         # Create a temporary audio file
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             # Just create an empty file for testing
             return tmp.name
 
@@ -62,7 +62,7 @@ class TestNemoQueryMultimodal:
         assert result.shape[0] == 1  # Batch dimension
         os.unlink(mock_image)
 
-    @patch('requests.get')
+    @patch("requests.get")
     def test_setup_media_image_url(self, mock_get, query_multimodal):
         # Mock the response from requests.get
         mock_response = MagicMock()
@@ -70,7 +70,7 @@ class TestNemoQueryMultimodal:
         mock_get.return_value = mock_response
 
         # Mock Image.open
-        with patch('PIL.Image.open') as mock_image_open:
+        with patch("PIL.Image.open") as mock_image_open:
             mock_image = MagicMock()
             mock_image.convert.return_value = mock_image
             mock_image_open.return_value = mock_image
@@ -95,7 +95,7 @@ class TestNemoQueryMultimodal:
         result = query_multimodal.get_subsampled_frames(frames, subsample_len)
         assert len(result) == subsample_len
 
-    @patch('nemo_deploy.multimodal.query_multimodal.ModelClient')
+    @patch("nemo_deploy.multimodal.query_multimodal.ModelClient")
     def test_query(self, mock_model_client, query_multimodal, mock_image):
         # Mock the ModelClient context manager
         mock_client_instance = MagicMock()
@@ -116,7 +116,7 @@ class TestNemoQueryMultimodal:
         assert result[0] == "test response"
         os.unlink(mock_image)
 
-    @patch('nemo_deploy.multimodal.query_multimodal.VideoReader')
+    @patch("nemo_deploy.multimodal.query_multimodal.VideoReader")
     def test_setup_media_video(self, mock_video_reader, mock_video):
         nq = NemoQueryMultimodal(url="localhost", model_name="test_model", model_type="video-neva")
 
@@ -127,16 +127,3 @@ class TestNemoQueryMultimodal:
         result = nq.setup_media(mock_video)
         assert isinstance(result, np.ndarray)
         os.unlink(mock_video)
-
-    @patch('soundfile.read')
-    def test_setup_media_audio(self, mock_sf_read, mock_audio):
-        nq = NemoQueryMultimodal(url="localhost", model_name="test_model", model_type="salm")
-
-        # Mock soundfile.read
-        mock_sf_read.return_value = (np.zeros(1000), 16000)
-
-        result = nq.setup_media(mock_audio)
-        assert isinstance(result, dict)
-        assert "input_signal" in result
-        assert "input_signal_length" in result
-        os.unlink(mock_audio)

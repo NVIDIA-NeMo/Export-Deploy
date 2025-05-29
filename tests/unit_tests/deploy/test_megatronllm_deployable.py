@@ -15,7 +15,9 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from megatron.core.inference.common_inference_params import CommonInferenceParams
+from megatron.core.inference.common_inference_params import \
+    CommonInferenceParams
+
 from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 
 
@@ -39,7 +41,7 @@ def deployable(mock_engine_and_tokenizer):
     mock_engine, mock_model, mock_tokenizer = mock_engine_and_tokenizer
 
     # Patch the __init__ method to avoid file loading
-    with patch.object(MegatronLLMDeployableNemo2, '__init__', return_value=None):
+    with patch.object(MegatronLLMDeployableNemo2, "__init__", return_value=None):
         deployable = MegatronLLMDeployableNemo2()
 
         # Set required attributes manually
@@ -77,7 +79,7 @@ def test_generate_without_cuda_graphs(deployable):
     )
 
     # Mock the generate method
-    with patch.object(deployable.mcore_engine, 'generate') as mock_generate:
+    with patch.object(deployable.mcore_engine, "generate") as mock_generate:
         mock_result = MagicMock()
         mock_result.generated_text = "Generated text"
         mock_generate.return_value = [mock_result, mock_result]
@@ -104,7 +106,7 @@ def test_generate_with_cuda_graphs(deployable):
     )
 
     # Mock the generate method
-    with patch.object(deployable.mcore_engine, 'generate') as mock_generate:
+    with patch.object(deployable.mcore_engine, "generate") as mock_generate:
         mock_result1 = MagicMock()
         mock_result1.generated_text = "Generated text 1"
         mock_result2 = MagicMock()
@@ -120,10 +122,10 @@ def test_generate_with_cuda_graphs(deployable):
 
         # Check that the padding was applied in the call
         called_args = mock_generate.call_args[1]
-        assert len(called_args['prompts']) == 4  # Should pad to max_batch_size
-        assert called_args['prompts'][:2] == prompts  # Original prompts should be first
-        assert called_args['add_BOS'] is False
-        assert called_args['common_inference_params'] == inference_params
+        assert len(called_args["prompts"]) == 4  # Should pad to max_batch_size
+        assert called_args["prompts"][:2] == prompts  # Original prompts should be first
+        assert called_args["add_BOS"] is False
+        assert called_args["common_inference_params"] == inference_params
 
 
 @pytest.mark.run_only_on("GPU")
@@ -137,7 +139,7 @@ def test_apply_chat_template(deployable):
     template_mock = MagicMock()
     template_mock.render.return_value = "Rendered template with Hello"
 
-    with patch('nemo_deploy.nlp.megatronllm_deployable.Template', return_value=template_mock):
+    with patch("nemo_deploy.nlp.megatronllm_deployable.Template", return_value=template_mock):
         template = deployable.apply_chat_template(messages)
         assert template == "Rendered template with Hello"
         template_mock.render.assert_called_once()
@@ -164,7 +166,7 @@ def test_str_to_dict(deployable):
 def test_triton_input_output(deployable):
     """Test Triton input and output tensor definitions."""
     # Mock the Tensor class from pytriton.model_config
-    with patch('nemo_deploy.nlp.megatronllm_deployable.Tensor') as mock_tensor:
+    with patch("nemo_deploy.nlp.megatronllm_deployable.Tensor") as mock_tensor:
         # Set up mock to return itself for testing
         mock_tensor.side_effect = lambda name, shape, dtype, optional=False: MagicMock(
             name=name, shape=shape, dtype=dtype, optional=optional
@@ -179,7 +181,7 @@ def test_triton_input_output(deployable):
 
         # Check inputs (simplified to just check count and first param names)
         assert len(input_calls) == 9
-        input_names = [call[1]['name'] for call in input_calls]
+        input_names = [call[1]["name"] for call in input_calls]
         assert "prompts" in input_names
         assert "max_length" in input_names
         assert "max_batch_size" in input_names
@@ -192,6 +194,6 @@ def test_triton_input_output(deployable):
 
         # Check outputs
         assert len(output_calls) == 2
-        output_names = [call[1]['name'] for call in output_calls]
+        output_names = [call[1]["name"] for call in output_calls]
         assert "sentences" in output_names
         assert "log_probs" in output_names

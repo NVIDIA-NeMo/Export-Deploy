@@ -20,6 +20,7 @@ import sys
 
 import torch
 import torch.distributed as dist
+
 from nemo_deploy import DeployPyTriton
 from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
 
@@ -70,8 +71,8 @@ def get_args(argv):
     parser.add_argument(
         "-t",
         "--task",
-        nargs='?',
-        choices=['text-generation'],
+        nargs="?",
+        choices=["text-generation"],
         default="text-generation",
         type=str,
         help="Task type for the HuggingFace model (currently only text-generation is supported)",
@@ -79,8 +80,8 @@ def get_args(argv):
     parser.add_argument(
         "-dvm",
         "--device_map",
-        nargs='?',
-        choices=['auto', 'balanced', 'balanced_low_0', 'sequential'],
+        nargs="?",
+        choices=["auto", "balanced", "balanced_low_0", "sequential"],
         default=None,
         type=str,
         help="Device mapping " "strategy for model placement " "(e.g. 'auto', 'sequential', etc)",
@@ -88,8 +89,8 @@ def get_args(argv):
     parser.add_argument(
         "-tpp",
         "--tp_plan",
-        nargs='?',
-        choices=['auto'],
+        nargs="?",
+        choices=["auto"],
         default=None,
         type=str,
         help="Tensor parallelism plan for distributed inference",
@@ -98,7 +99,7 @@ def get_args(argv):
         "-trc",
         "--trust_remote_code",
         default=False,
-        action='store_true',
+        action="store_true",
         help="Allow loading " "remote code from HuggingFace " "Hub",
     )
     parser.add_argument(
@@ -121,7 +122,7 @@ def get_args(argv):
         "-mbs", "--max_batch_size", default=8, type=int, help="Maximum " "batch size for model inference"
     )
     parser.add_argument(
-        "-dm", "--debug_mode", default=False, action='store_true', help="Enable " "verbose debug logging"
+        "-dm", "--debug_mode", default=False, action="store_true", help="Enable " "verbose debug logging"
     )
     args = parser.parse_args(argv)
     return args
@@ -227,5 +228,5 @@ def hf_deploy(argv):
         dist.destroy_process_group()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     hf_deploy(sys.argv[1:])

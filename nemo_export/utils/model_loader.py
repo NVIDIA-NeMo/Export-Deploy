@@ -20,12 +20,12 @@ from pathlib import Path
 from typing import Any, Dict, Union
 
 import numpy
-
 # tenosrstore is needed to register 'bfloat16' dtype with numpy for zarr compatibility
 import tensorstore  # noqa: F401 pylint: disable=unused-import
 import torch
 from torch.distributed.checkpoint import FileSystemReader, load
-from torch.distributed.checkpoint.metadata import BytesStorageMetadata, TensorStorageMetadata
+from torch.distributed.checkpoint.metadata import (BytesStorageMetadata,
+                                                   TensorStorageMetadata)
 
 from nemo_export.tarutils import TarPath, ZarrPathStore
 from nemo_export.utils._mock_import import _mock_import
@@ -103,12 +103,12 @@ def load_sharded_pickle_extra_state_scale(dir: Union[Path, TarPath]) -> Dict[str
     Returns:
         dict: State dictionary corresponding to the loaded extra states.
     """
-    pt_files = list(dir.glob('shard_*_*.pt'))
+    pt_files = list(dir.glob("shard_*_*.pt"))
     extra_states = {}
     for file in pt_files:
-        shard_name = file.name.split('.')[0]
-        with file.open('rb') as opened_file:
-            extra_states[dir.name + '/' + shard_name] = torch.load(opened_file, weights_only=True)
+        shard_name = file.name.split(".")[0]
+        with file.open("rb") as opened_file:
+            extra_states[dir.name + "/" + shard_name] = torch.load(opened_file, weights_only=True)
 
     return extra_states
 
@@ -122,12 +122,10 @@ def contains_extra_states(subdir: Union[Path, TarPath]) -> bool:
     Returns:
         bool: Is a directory with extra states
     """
-    return list(subdir.glob('shard_0_*.pt')) != []
+    return list(subdir.glob("shard_0_*.pt")) != []
 
 
-def load_sharded_metadata_zarr(
-    checkpoint_dir: Union[Path, TarPath], load_extra_states: bool = False
-) -> Dict[str, Any]:
+def load_sharded_metadata_zarr(checkpoint_dir: Union[Path, TarPath], load_extra_states: bool = False) -> Dict[str, Any]:
     """
     Loads model dictionary from the zarr format.
 
@@ -148,13 +146,13 @@ def load_sharded_metadata_zarr(
         if load_extra_states and contains_extra_states(subdir):
             sharded_state_dict.update(load_sharded_pickle_extra_state_scale(subdir))
 
-        elif (subdir / '.zarray').exists():
+        elif (subdir / ".zarray").exists():
             key = subdir.name
             zstore = ZarrPathStore(subdir)
 
             import zarr
 
-            arr = zarr.open(zstore, 'r')
+            arr = zarr.open(zstore, "r")
 
             if arr.dtype.name == "bfloat16":
                 sharded_state_dict[key] = torch.from_numpy(arr[:].view(numpy.int16)).view(torch.bfloat16)
@@ -196,12 +194,12 @@ def load_model_weights(checkpoint_path: Union[str, Path], load_extra_states: boo
     nemo_path = nemo_to_path(checkpoint_path)
     nemo_weights = nemo_weights_directory(nemo_path)
 
-    with (nemo_weights / 'metadata.json').open(mode='r') as f:
+    with (nemo_weights / "metadata.json").open(mode="r") as f:
         config_dict = json.load(f)
 
-    if config_dict['sharded_backend'] == 'zarr':
+    if config_dict["sharded_backend"] == "zarr":
         return load_sharded_metadata_zarr(nemo_weights, load_extra_states=load_extra_states)
-    elif config_dict['sharded_backend'] == 'torch_dist':
+    elif config_dict["sharded_backend"] == "torch_dist":
         # TODO: Remove mocking imports once MCore is available in NIM containers
         with _mock_import("megatron.core.dist_checkpointing.strategies.torch"):
             return load_sharded_metadata_torch_dist(nemo_weights, load_extra_states=load_extra_states)
