@@ -12,6 +12,7 @@ permissions:
 jobs:
   dependalot-update:
     runs-on: linux-amd64-cpu16
+    environment: nemo-ci
     steps:
       - name: Install Azure CLI
         run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
