@@ -24,6 +24,7 @@ from typing import List
 import tensorrt as trt
 import torch
 import yaml
+from nemo.core.classes.common import typecheck
 from omegaconf import OmegaConf
 from PIL import Image
 from tensorrt_llm._common import check_max_num_tokens
@@ -32,10 +33,9 @@ from tensorrt_llm.commands.build import build as build_trtllm
 from tensorrt_llm.mapping import Mapping
 from tensorrt_llm.models import MLLaMAForCausalLM
 from tensorrt_llm.plugin import PluginConfig
-from transformers import AutoModel, AutoProcessor, MllamaForConditionalGeneration
+from transformers import (AutoModel, AutoProcessor,
+                          MllamaForConditionalGeneration)
 
-from nemo.collections.multimodal.speech_llm.modules.perception_modules import AudioPerceptionModule
-from nemo.core.classes.common import typecheck
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 
@@ -124,16 +124,16 @@ def build_mllama_trtllm_engine(
     )
 
     build_dict = {
-        'max_input_len': max_input_len,
-        'max_output_len': max_output_len,
-        'max_encoder_input_len': max_multimodal_len,
-        'max_batch_size': max_batch_size,
-        'max_beam_width': 1,
-        'max_seq_len': max_seq_len,
-        'max_num_tokens': max_num_tokens,
-        'opt_num_tokens': opt_num_tokens,
-        'strongly_typed': True,
-        'builder_opt': None,
+        "max_input_len": max_input_len,
+        "max_output_len": max_output_len,
+        "max_encoder_input_len": max_multimodal_len,
+        "max_batch_size": max_batch_size,
+        "max_beam_width": 1,
+        "max_seq_len": max_seq_len,
+        "max_num_tokens": max_num_tokens,
+        "opt_num_tokens": opt_num_tokens,
+        "strongly_typed": True,
+        "builder_opt": None,
     }
     build_config = BuildConfig.from_dict(build_dict, plugin_config=plugin_config)
 
@@ -150,18 +150,18 @@ def build_mllama_trtllm_engine(
 
 
 def export_visual_wrapper_onnx(
-    visual_wrapper, input, output_dir, input_names=['input'], dynamic_axes={'input': {0: 'batch'}}
+    visual_wrapper, input, output_dir, input_names=["input"], dynamic_axes={"input": {0: "batch"}}
 ):
     """Export visual wrapper to ONNX"""
     logger.log(trt.Logger.INFO, "Exporting onnx")
-    os.makedirs(f'{output_dir}/onnx', exist_ok=True)
+    os.makedirs(f"{output_dir}/onnx", exist_ok=True)
     torch.onnx.export(
         visual_wrapper,
         input,
-        f'{output_dir}/onnx/visual_encoder.onnx',
+        f"{output_dir}/onnx/visual_encoder.onnx",
         opset_version=17,
         input_names=input_names,
-        output_names=['output'],
+        output_names=["output"],
         dynamic_axes=dynamic_axes,
     )
 
@@ -170,22 +170,22 @@ def export_perception_wrapper_onnx(
     perception_wrapper,
     input,
     output_dir,
-    input_names=['processed_signal', 'processed_signal_length'],
-    output_names=['encoded', 'encoded_length'],
+    input_names=["processed_signal", "processed_signal_length"],
+    output_names=["encoded", "encoded_length"],
     dynamic_axes={
-        'processed_signal': {0: 'batch', 2: 'time'},
-        'processed_signal_length': {0: 'batch'},
-        'encoded': {0: 'batch', 1: 'time'},
-        'encoded_length': {0: 'batch'},
+        "processed_signal": {0: "batch", 2: "time"},
+        "processed_signal_length": {0: "batch"},
+        "encoded": {0: "batch", 1: "time"},
+        "encoded_length": {0: "batch"},
     },
 ):
     """Export perception wrapper to ONNX"""
     logger.log(trt.Logger.INFO, "Exporting onnx")
-    os.makedirs(f'{output_dir}/onnx', exist_ok=True)
+    os.makedirs(f"{output_dir}/onnx", exist_ok=True)
     torch.onnx.export(
         perception_wrapper,
         input,
-        f'{output_dir}/onnx/perception_encoder.onnx',
+        f"{output_dir}/onnx/perception_encoder.onnx",
         opset_version=17,
         input_names=input_names,
         output_names=output_names,
@@ -202,15 +202,15 @@ def build_trt_engine(
     image_size=None,
     num_frames=None,
     nemo_config=None,
-    part_name='visual_encoder',
+    part_name="visual_encoder",
 ):
     """Build TRT engine from onnx"""
-    onnx_file = '%s/onnx/%s.onnx' % (output_dir, part_name)
-    engine_file = '%s/%s.engine' % (output_dir, part_name)
-    config_file = '%s/%s' % (output_dir, "config.json")
-    nemo_config_file = '%s/%s' % (output_dir, "nemo_config.yaml")
+    onnx_file = "%s/onnx/%s.onnx" % (output_dir, part_name)
+    engine_file = "%s/%s.engine" % (output_dir, part_name)
+    config_file = "%s/%s" % (output_dir, "config.json")
+    nemo_config_file = "%s/%s" % (output_dir, "nemo_config.yaml")
 
-    with open(nemo_config_file, 'w') as f:
+    with open(nemo_config_file, "w") as f:
         yaml.dump(nemo_config, f)
 
     logger.log(trt.Logger.INFO, "Building TRT engine for %s" % part_name)
@@ -219,7 +219,7 @@ def build_trt_engine(
     network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
     profile = builder.create_optimization_profile()
 
-    config_args = {"precision": str(dtype).split('.')[-1], "model_type": model_type}
+    config_args = {"precision": str(dtype).split(".")[-1], "model_type": model_type}
     if image_size is not None:
         config_args["image_size"] = image_size
     if num_frames is not None:
@@ -230,7 +230,7 @@ def build_trt_engine(
 
     parser = trt.OnnxParser(network, logger)
 
-    with open(onnx_file, 'rb') as model:
+    with open(onnx_file, "rb") as model:
         if not parser.parse(model.read(), os.path.abspath(onnx_file)):
             logger.log(trt.Logger.ERROR, "Failed parsing %s" % onnx_file)
             for error in range(parser.num_errors):
@@ -238,7 +238,7 @@ def build_trt_engine(
         logger.log(trt.Logger.INFO, "Succeeded parsing %s" % onnx_file)
 
     # Delete onnx files since we don't need them now
-    shutil.rmtree(f'{output_dir}/onnx')
+    shutil.rmtree(f"{output_dir}/onnx")
 
     nBS = -1
     nMinBS = 1
@@ -287,7 +287,7 @@ def build_trt_engine(
         raise RuntimeError("Failed building %s" % (engine_file))
     else:
         logger.log(trt.Logger.INFO, "Succeeded building %s in %d s" % (engine_file, t1 - t0))
-        with open(engine_file, 'wb') as f:
+        with open(engine_file, "wb") as f:
             f.write(engine_string)
 
     Builder.save_config(config_wrapper, config_file)
@@ -304,14 +304,14 @@ def build_neva_engine(
 
     if os.path.isdir(visual_checkpoint_path):
         # load untar checkpoint
-        config_path = os.path.join(visual_checkpoint_path, 'model_config.yaml')
-        with open(config_path, 'r') as f:
+        config_path = os.path.join(visual_checkpoint_path, "model_config.yaml")
+        with open(config_path, "r") as f:
             nemo_config = yaml.safe_load(f)
         try:
-            weights_path = os.path.join(visual_checkpoint_path, 'model_weights.ckpt')
+            weights_path = os.path.join(visual_checkpoint_path, "model_weights.ckpt")
             mp0_weights = torch.load(weights_path, map_location=device)
         except FileNotFoundError:
-            weights_path = os.path.join(visual_checkpoint_path, 'mp_rank_00/model_weights.ckpt')
+            weights_path = os.path.join(visual_checkpoint_path, "mp_rank_00/model_weights.ckpt")
             mp0_weights = torch.load(weights_path, map_location=device)
     else:
         # extract NeMo checkpoint
@@ -361,7 +361,7 @@ def build_neva_engine(
         vision_config["from_pretrained"],
         torch_dtype=torch.bfloat16,
         trust_remote_code=True,
-        attn_implementation='eager',
+        attn_implementation="eager",
     )
     vision_encoder = encoder.vision_model
     hf_config = encoder.config
@@ -379,8 +379,8 @@ def build_neva_engine(
         for layer in range(0, 3, 2):
             vision_connector[layer].load_state_dict(
                 {
-                    'weight': mp0_weights[f"{key_prefix}.{layer}.weight"].to(dtype),
-                    'bias': mp0_weights[f"{key_prefix}.{layer}.bias"].to(dtype),
+                    "weight": mp0_weights[f"{key_prefix}.{layer}.weight"].to(dtype),
+                    "bias": mp0_weights[f"{key_prefix}.{layer}.bias"].to(dtype),
                 }
             )
     elif nemo_config["mm_cfg"]["mm_mlp_adapter_type"] == "linear":
@@ -388,8 +388,8 @@ def build_neva_engine(
         key_prefix = "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector"
         vision_connector.load_state_dict(
             {
-                'weight': mp0_weights[f"{key_prefix}.weight"].to(dtype),
-                'bias': mp0_weights[f"{key_prefix}.bias"].to(dtype),
+                "weight": mp0_weights[f"{key_prefix}.weight"].to(dtype),
+                "bias": mp0_weights[f"{key_prefix}.bias"].to(dtype),
             }
         )
     elif nemo_config["mm_cfg"]["mm_mlp_adapter_type"] == "mlp_downsample":
@@ -404,8 +404,8 @@ def build_neva_engine(
         for layer in [1, 2, 4]:
             vision_connector[layer].load_state_dict(
                 {
-                    'weight': mp0_weights[f"{key_prefix}.{layer}.weight"].to(dtype),
-                    'bias': mp0_weights[f"{key_prefix}.{layer}.bias"].to(dtype),
+                    "weight": mp0_weights[f"{key_prefix}.{layer}.weight"].to(dtype),
+                    "bias": mp0_weights[f"{key_prefix}.{layer}.bias"].to(dtype),
                 }
             )
 
@@ -418,11 +418,11 @@ def build_neva_engine(
     if model_type == "lita" or model_type == "vila":
         image_size = hf_config.image_size
         if model_type == "lita":
-            lita_num_frames = nemo_config['mm_cfg']['lita']['sample_frames']
+            lita_num_frames = nemo_config["mm_cfg"]["lita"]["sample_frames"]
     else:
         image_size = hf_config.vision_config.image_size
         if model_type == "vita":
-            lita_num_frames = nemo_config['mm_cfg']['lita']['sample_frames']
+            lita_num_frames = nemo_config["mm_cfg"]["lita"]["sample_frames"]
     dummy_image = torch.empty(
         1, 3, image_size, image_size, dtype=dtype, device=device
     )  # dummy image shape [B, C, H, W]
@@ -435,7 +435,7 @@ def build_neva_engine(
         vision_max_batch_size,
         dtype,
         image_size=image_size,
-        num_frames=lita_num_frames if model_type == "lita" or model_type == 'vita' else None,
+        num_frames=lita_num_frames if model_type == "lita" or model_type == "vita" else None,
         nemo_config=nemo_config,
     )
 
@@ -483,7 +483,7 @@ def build_video_neva_engine(
         vision_config["from_pretrained"],
         torch_dtype=torch.bfloat16,
         trust_remote_code=True,
-        attn_implementation='eager',
+        attn_implementation="eager",
     )
     vision_encoder = encoder.vision_model
     hf_config = encoder.config
@@ -496,15 +496,15 @@ def build_video_neva_engine(
     key_prefix = "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector"
     vision_connector.load_state_dict(
         {
-            'weight': mp0_weights[f"{key_prefix}.weight"].to(dtype),
-            'bias': mp0_weights[f"{key_prefix}.bias"].to(dtype),
+            "weight": mp0_weights[f"{key_prefix}.weight"].to(dtype),
+            "bias": mp0_weights[f"{key_prefix}.bias"].to(dtype),
         }
     )
 
     # export the whole wrapper
     wrapper = VisionEncoderWrapper(vision_encoder, vision_connector).to(device, dtype)
     image_size = hf_config.vision_config.image_size
-    num_frames = nemo_config['data']['num_frames']
+    num_frames = nemo_config["data"]["num_frames"]
     dummy_video = torch.empty(1, num_frames, 3, image_size, image_size, dtype=dtype, device=device)  # dummy image
     export_visual_wrapper_onnx(wrapper, dummy_video, model_dir)
     build_trt_engine(
@@ -515,78 +515,6 @@ def build_video_neva_engine(
         dtype,
         image_size=image_size,
         num_frames=num_frames,
-    )
-
-
-def build_perception_engine(
-    model_dir: str,
-    perception_checkpoint_path: str,
-    model_type: str = "salm",
-    max_batch_size: int = 1,
-):
-    """Build perception engine"""
-    assert model_type == "salm", f"Invalid model type {model_type}"
-
-    def load_perception_model(perception_checkpoint_path):
-        weights = "model_weights.ckpt"
-        perception_state_dict = torch.load(os.path.join(perception_checkpoint_path, weights))
-        config = "model_config.yaml"
-        config = OmegaConf.load(os.path.join(perception_checkpoint_path, config))
-        perception = AudioPerceptionModule(cfg=config)
-        perception.load_state_dict(perception_state_dict)
-        perception.eval()
-        return perception
-
-    if not os.path.exists(model_dir):
-        os.makedirs(model_dir)
-    # load perception model
-    perception_model = load_perception_model(perception_checkpoint_path)
-    feature_extractor = perception_model.preprocessor
-    input_signal = torch.randn(1, 1000, dtype=torch.float32)
-    input_signal_length = torch.tensor([1000], dtype=torch.int32)
-
-    processed_signal, processed_signal_length = feature_extractor(
-        input_signal=input_signal, length=input_signal_length
-    )
-    processed_signal_length = processed_signal_length.to(torch.int32)
-    dump_path = model_dir + "/feature_extractor.ts"  # dump the feature extractor as torchscript
-    feature_extractor.export(dump_path, (input_signal, input_signal_length))
-
-    class PerceptionWrapper(torch.nn.Module):
-        # pylint: disable=C0115,C0116
-        def __init__(self, encoder, modality_adapter, proj):
-            super().__init__()
-            self.encoder = encoder
-            self.modality_adapter = modality_adapter
-            self.proj = proj
-
-        @typecheck.disable_checks()
-        def forward(self, processed_signal, processed_signal_length):
-            encoded, encoded_len = self.encoder(audio_signal=processed_signal, length=processed_signal_length)
-            encoded, encoded_len = self.modality_adapter(audio_signal=encoded, length=encoded_len)
-            # b, c, t -> b, t, c
-            encoded = self.proj(encoded.transpose(1, 2))
-            encoded_len = encoded_len.to(torch.int32)
-            return encoded, encoded_len
-
-    perception = PerceptionWrapper(perception_model.encoder, perception_model.modality_adapter, perception_model.proj)
-    export_perception_wrapper_onnx(perception, (processed_signal, processed_signal_length), model_dir)
-    # export the onnx perception model to tensorrt engine
-    # 512 -> 5.12 sec, 3072 -> 30.72 sec
-    opt_batch_size = max(1, max_batch_size // 2)
-    shapes = [
-        {"processed_signal": [1, 80, 64], "processed_signal_length": [1]},
-        {"processed_signal": [opt_batch_size, 80, 512], "processed_signal_length": [opt_batch_size]},
-        {"processed_signal": [max_batch_size, 80, 3072], "processed_signal_length": [max_batch_size]},
-    ]
-    build_trt_engine(
-        model_type,
-        shapes,
-        model_dir,
-        max_batch_size,
-        dtype=torch.float16,
-        nemo_config=None,
-        part_name='perception_encoder',
     )
 
 
@@ -615,7 +543,7 @@ def build_mllama_visual_engine(
     wrapper = MLLaMAVisionWrapper(hf_model.vision_model, hf_model.multi_modal_projector)
 
     processor = AutoProcessor.from_pretrained(processor_name)
-    image = Image.new('RGB', [2048, 2688])
+    image = Image.new("RGB", [2048, 2688])
     inputs = processor(images=image, return_tensors="pt").to(model_dtype)
 
     export_visual_wrapper_onnx(
@@ -639,7 +567,7 @@ def build_visual_engine(
     vision_max_batch_size: int = 1,
 ):
     """Build visual engine"""
-    model_list = ['neva', 'lita', 'vila', 'vita']
+    model_list = ["neva", "lita", "vila", "vita"]
     if model_type in model_list:
         build_neva_engine(model_type, model_dir, visual_checkpoint_path, vision_max_batch_size)
     elif model_type == "video-neva":
