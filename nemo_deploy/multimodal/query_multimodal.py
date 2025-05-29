@@ -78,7 +78,7 @@ class NemoQueryMultimodal:
                 response = requests.get(input_media, timeout=5)
                 media = Image.open(BytesIO(response.content)).convert("RGB")
             else:
-                media = Image.open(input_media).convert('RGB')
+                media = Image.open(input_media).convert("RGB")
             return np.expand_dims(np.array(media), axis=0)
         else:
             raise RuntimeError(f"Invalid model type {self.model_type}")

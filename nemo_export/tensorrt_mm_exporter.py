@@ -24,13 +24,12 @@ import wrapt
 from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
 
 from nemo_deploy import ITritonDeployable
-from nemo_export.multimodal.build import (
-    build_mllama_engine,
-    build_trtllm_engine,
-    build_visual_engine,
-    extract_lora_ckpt,
-)
-from nemo_export.multimodal.run import MultimodalModelRunner, SpeechllmModelRunner
+from nemo_export.multimodal.build import (build_mllama_engine,
+                                          build_trtllm_engine,
+                                          build_visual_engine,
+                                          extract_lora_ckpt)
+from nemo_export.multimodal.run import (MultimodalModelRunner,
+                                        SpeechllmModelRunner)
 from nemo_export.tarutils import unpack_tarball
 
 use_deploy = True
@@ -350,7 +349,7 @@ class TensorRTMMExporter(ITritonDeployable):
                     visual_engine_dir=visual_dir,
                     visual_engine_name="visual_encoder.engine",
                     llm_engine_dir=llm_dir,
-                    hf_model_dir='meta-llama/Llama-3.2-11B-Vision-Instruct',
+                    hf_model_dir="meta-llama/Llama-3.2-11B-Vision-Instruct",
                     use_py_session=True,
                     cross_kv_cache_fraction=0.5,
                     enable_context_fmha_fp32_acc=None,

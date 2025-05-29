@@ -14,11 +14,11 @@
 
 
 import torch
-from transformers import AutoProcessor, MllamaConfig
-from transformers.models.mllama.configuration_mllama import MllamaTextConfig, MllamaVisionConfig
-
 from nemo import lightning as nl
 from nemo.collections import vlm
+from transformers import AutoProcessor, MllamaConfig
+from transformers.models.mllama.configuration_mllama import (
+    MllamaTextConfig, MllamaVisionConfig)
 
 
 def split_qkv_weight(qkv_weight, model_config):

@@ -18,6 +18,7 @@ import time
 from typing import Any, Dict
 
 import numpy as np
+
 from nemo_deploy.nlp import NemoQueryLLMPyTorch
 
 # Test prompts for benchmarking

@@ -15,6 +15,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from nemo_deploy.deploy_base import DeployBase
 
 

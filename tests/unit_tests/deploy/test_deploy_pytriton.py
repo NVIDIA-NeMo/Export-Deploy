@@ -16,6 +16,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.deploy_pytriton import DeployPyTriton
 

@@ -25,7 +25,6 @@ from shutil import rmtree
 from typing import Tuple
 
 import pytest
-
 from nemo.utils.metaclasses import Singleton
 
 # Those variables probably should go to main NeMo configuration file (config.yaml).
@@ -194,7 +193,6 @@ def k2_cuda_is_enabled(k2_is_appropriate) -> Tuple[bool, str]:
         return k2_is_appropriate
 
     import torch  # noqa: E402
-
     from nemo.core.utils.k2_guard import k2  # noqa: E402
 
     if torch.cuda.is_available() and k2.with_cuda:

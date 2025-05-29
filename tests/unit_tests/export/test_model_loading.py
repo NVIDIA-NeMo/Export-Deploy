@@ -53,7 +53,8 @@ def test_model_loading() -> None:
             'tensorrt_llm._utils': dummy_module,
         },
     ):
-        from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
+        from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import \
+            load_nemo_model
 
         load_nemo_model(nemo_path, export_path_local, False)
         load_nemo_model(nemo_path, export_path_mcore, True)

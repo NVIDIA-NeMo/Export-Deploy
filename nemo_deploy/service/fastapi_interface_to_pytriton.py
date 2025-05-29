@@ -14,10 +14,10 @@ import os
 import numpy as np
 import requests
 from fastapi import FastAPI, HTTPException
+from nemo.utils import logging
 from pydantic import BaseModel, model_validator
 from pydantic_settings import BaseSettings
 
-from nemo.utils import logging
 from nemo_deploy.nlp import NemoQueryLLMPyTorch
 
 
