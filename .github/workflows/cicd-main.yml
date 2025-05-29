@@ -61,8 +61,7 @@ jobs:
         env:
           DOCS_ONLY: ${{ steps.changed-files.outputs.doc_any_changed == 'true' && steps.changed-files.outputs.src_any_changed == 'false' }}
         run: |
-          # echo "main=$DOCS_ONLY" | tee -a "$GITHUB_OUTPUT"
-          echo "main=true" | tee -a "$GITHUB_OUTPUT"
+          echo "main=$DOCS_ONLY" | tee -a "$GITHUB_OUTPUT"
 
       - name: Check if this is a CI workload
         shell: bash
