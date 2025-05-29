@@ -22,7 +22,6 @@ import torch
 import torch.distributed
 import wrapt
 from jinja2 import Template
-from megatron.core.dist_checkpointing.validation import StrictHandling
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 from megatron.core.inference.inference_request import InferenceRequest
 from nemo_deploy import ITritonDeployable
@@ -470,8 +469,6 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 - log_probs (List[float], optional): List of log probabilities if compute_logprob is True
         """
         prompts = inputs.get("prompts", [])
-        max_batch_size = inputs.get("max_batch_size", 32)
-        random_seed = inputs.get("random_seed", None)
         temperature = inputs.get("temperature", 1.0)
         top_k = inputs.get("top_k", 1)
         top_p = inputs.get("top_p", 0.0)
