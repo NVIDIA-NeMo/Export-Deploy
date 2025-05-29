@@ -27,6 +27,9 @@ jobs:
       - name: Azure ACR Login
         run: az acr login --name nemoci
 
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Upgrade lock file
         run: |
           docker run \
