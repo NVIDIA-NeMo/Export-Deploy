@@ -16,7 +16,6 @@ from io import BytesIO
 
 import numpy as np
 import requests
-import soundfile as sf
 from PIL import Image
 
 from nemo_deploy.utils import str_list2numpy
