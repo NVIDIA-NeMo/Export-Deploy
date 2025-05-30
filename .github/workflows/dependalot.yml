@@ -82,8 +82,8 @@ jobs:
           echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
 
           # Trust the key
-          KEY_ID=$(gpg --list-keys --with-colons | grep '^pub' | cut -d: -f5)
-          echo "$KEY_ID:6:1:" > ownertrust.txt
+          KEY_FPR=$(gpg --fingerprint --with-colons | grep '^fpr' | head -n1 | cut -d: -f10)
+          echo "$KEY_FPR:6:1:" > ownertrust.txt
           gpg --import-ownertrust ownertrust.txt
 
           # Create GPG wrapper
