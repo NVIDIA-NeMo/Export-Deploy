@@ -1,7 +1,7 @@
-.github/ @ko3n1g @chtruong814
-docker/ @ko3n1g @chtruong814
-pyproject.toml @ko3n1g @chtruong814
-uv.lock @ko3n1g @chtruong814
+.github/ @nvidia-nemo/automation
+docker/ @nvidia-nemo/automation
+pyproject.toml @nvidia-nemo/automation
+uv.lock @nvidia-nemo/automation
 
 nemo_export_deploy @janekl @Laplasjan107 @oyilmaz-nvidia
 scripts @janekl @Laplasjan107 @oyilmaz-nvidia
