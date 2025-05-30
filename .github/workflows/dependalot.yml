@@ -71,17 +71,23 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
           GPG_TTY: /dev/tty
         run: |
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+
+          echo "use-agent" >> ~/.gnupg/gpg.conf
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          echo RELOADAGENT | gpg-connect-agent
+
           echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
+
+          # Trust the key
           KEY_ID=$(gpg --list-keys --with-colons | grep '^pub' | cut -d: -f5)
           echo -e "trust\n5\ny" | gpg --command-fd 0 --edit-key "$KEY_ID"
-          gpg --list-secret-keys --with-keygrip --with-colons
 
-
-          rm -rf /tmp/gpg.sh
-          cat <<EOF > /tmp/gpg.sh
-          #!/bin/bash
-          gpg --batch --pinentry-mode=loopback --passphrase '${GPG_PASSPHRASE}' "\$@"
-          EOF
+          # Create GPG wrapper
+          echo '#!/bin/bash' > /tmp/gpg.sh
+          echo "gpg --batch --yes --pinentry-mode loopback --passphrase '${GPG_PASSPHRASE}' \"\$@\"" >> /tmp/gpg.sh
           chmod +x /tmp/gpg.sh
 
       - name: Configure Git
