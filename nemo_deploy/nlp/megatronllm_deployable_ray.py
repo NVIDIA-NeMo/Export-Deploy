@@ -90,9 +90,9 @@ class ModelWorker:
 @serve.deployment(
     num_replicas=1,
     ray_actor_options={
-        "num_cpus": 8  # Increased CPU allocation for better throughput
+        "num_cpus": 8  
     },
-    max_ongoing_requests=32,  # Increased for better concurrency
+    max_ongoing_requests=32,  
 )
 @serve.ingress(app)
 class MegatronRayDeployable:
