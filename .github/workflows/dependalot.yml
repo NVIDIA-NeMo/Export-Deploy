@@ -80,9 +80,9 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config commit.gpgsign true
-          git config user.signingkey 2A0D811D627CDD85
-          git config gpg.program /tmp/gpg.sh
+          git config --global commit.gpgsign true
+          git config --global user.signingkey 2A0D811D627CDD85
+          git config --global gpg.program /tmp/gpg.sh
 
       - name: Download lock file
         uses: actions/download-artifact@v4
