@@ -4,15 +4,35 @@ Thanks for your interest in contributing to Nemo-Export-Deploy!
 
 ## Setting Up
 
-### Development Environment
+### Development Container
 
 1. **Build and run the Docker container**:
+
 ```bash
 docker build -f docker/Dockerfile.ci -t nemo-export-deploy .
 ```
 
 ```bash
 docker run --rm -it --entrypoint bash --runtime nvidia --gpus all nemo-export-deploy
+```
+
+### Development Dependencies
+
+We use [uv](https://docs.astral.sh/uv/) for managing dependencies.
+
+New required dependencies can be added by `uv add $DEPENDENCY`.
+
+New optional dependencies can be added by `uv add --optional --extra $EXTRA $DEPENDENCY`.
+
+`EXTRA` refers to the subgroup of extra-dependencies to which you're adding the new dependency.
+Example: For adding a TRT-LLM specific dependency, run `uv add --optional --extra trtllm $DEPENDENCY`.
+
+Adding a new dependency will update UV's lock-file. Please check this into your branch:
+
+```bash
+git add uv.lock pyproject.toml
+git commit -m "build: Adding dependencies"
+git push
 ```
 
 ## Making Changes
@@ -24,17 +44,20 @@ Pre-commit checks will help ensure your code follows our formatting and style gu
 We follow a direct clone and branch workflow for now:
 
 1. Clone the repository directly:
+
    ```bash
    git clone https://github.com/NVIDIA/NeMo-Export-Deploy
    cd NeMo-Export-Deploy
    ```
 
 2. Create a new branch for your changes:
+
    ```bash
    git checkout -b your-feature-name
    ```
 
 3. Make your changes and commit them:
+
    ```bash
    git add .
    git commit --signoff -m "Your descriptive commit message"
@@ -43,6 +66,7 @@ We follow a direct clone and branch workflow for now:
 We require signing commits with `--signoff` (or `-s` for short). See [Signing Your Work](#signing-your-work) for details.
 
 4. Push your branch to the repository:
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -73,23 +97,25 @@ Quality documentation is essential for both the usability of Nemo-Export-Deploy 
 - Ensure all tests pass before submitting a PR
 - Do not add arbitrary defaults for configs, be as explicit as possible.
 
-
 ## Signing Your Work
 
-* We require that all contributors "sign-off" on their commits. This certifies that the contribution is your original work, or you have rights to submit it under the same license, or a compatible license.
+- We require that all contributors "sign-off" on their commits. This certifies that the contribution is your original work, or you have rights to submit it under the same license, or a compatible license.
 
-  * Any contribution which contains commits that are not Signed-Off will not be accepted.
+  - Any contribution which contains commits that are not Signed-Off will not be accepted.
 
-* To sign off on a commit you simply use the `--signoff` (or `-s`) option when committing your changes:
+- To sign off on a commit you simply use the `--signoff` (or `-s`) option when committing your changes:
+
   ```bash
-  $ git commit -s -m "Add cool feature."
+  git commit -s -m "Add cool feature."
   ```
+
   This will append the following to your commit message:
+
   ```
   Signed-off-by: Your Name <your@email.com>
   ```
 
-* Full text of the DCO:
+- Full text of the DCO:
 
   ```
   Developer Certificate of Origin
