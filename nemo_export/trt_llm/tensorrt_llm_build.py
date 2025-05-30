@@ -21,8 +21,7 @@ from tensorrt_llm.builder import BuildConfig
 from tensorrt_llm.commands.build import build as build_trtllm
 from tensorrt_llm.logger import logger
 from tensorrt_llm.lora_manager import LoraConfig
-from tensorrt_llm.models.modeling_utils import (optimize_model,
-                                                preprocess_weights)
+from tensorrt_llm.models.modeling_utils import optimize_model, preprocess_weights
 from tensorrt_llm.plugin import PluginConfig
 
 MODEL_NAME = "NeMo"
@@ -59,7 +58,11 @@ def build_and_save_engine(
     gather_context_logits: bool = False,
     gather_generation_logits: bool = False,
 ):
-    architecture = "LLaMAForCausalLM" if model_config.architecture == "LlamaForCausalLM" else model_config.architecture
+    architecture = (
+        "LLaMAForCausalLM"
+        if model_config.architecture == "LlamaForCausalLM"
+        else model_config.architecture
+    )
     try:
         model_cls = getattr(tensorrt_llm.models, architecture)
     except Exception:

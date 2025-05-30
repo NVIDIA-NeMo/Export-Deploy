@@ -16,8 +16,7 @@ import socket
 
 
 def is_port_in_use(port: int, host: str = "0.0.0.0") -> bool:
-    """
-    Check if a given port is already in use.
+    """Check if a given port is already in use.
 
     Args:
         port (int): The port number to check.
@@ -34,8 +33,7 @@ def is_port_in_use(port: int, host: str = "0.0.0.0") -> bool:
 
 
 def find_available_port(start_port: int, host: str = "0.0.0.0") -> int:
-    """
-    Find the next available port starting from a given port number.
+    """Find the next available port starting from a given port number.
 
     Args:
         start_port (int): The port number to start checking from.

@@ -31,13 +31,11 @@ def reload_mergeable_ranks(
     path: str,
     max_vocab: Optional[int] = None,
 ) -> Dict[bytes, int]:
-    """
-    Reload the tokenizer JSON file and convert it to Tiktoken format.
-    """
+    """Reload the tokenizer JSON file and convert it to Tiktoken format."""
     assert path.endswith(".json")
 
     # reload vocab
-    with open(path, "r", encoding='utf-8') as f:
+    with open(path, "r", encoding="utf-8") as f:
         vocab = json.load(f)
     assert isinstance(vocab, list)
     print(f"Vocab size: {len(vocab)}")
@@ -63,7 +61,6 @@ def reload_mergeable_ranks(
 
 class TiktokenTokenizer:
     def __init__(self, vocab_file: str):
-
         self.num_special_tokens = 1000
         vocab_size = DEFAULT_TIKTOKEN_MAX_VOCAB
         pattern = PATTERN_TIKTOKEN

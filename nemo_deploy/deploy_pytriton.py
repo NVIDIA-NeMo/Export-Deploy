@@ -24,8 +24,7 @@ from nemo_deploy.deploy_base import DeployBase
 
 
 class DeployPyTriton(DeployBase):
-    """
-    Deploys any models to Triton Inference Server that implements ITritonDeployable interface in nemo_deploy.
+    """Deploys any models to Triton Inference Server that implements ITritonDeployable interface in nemo_deploy.
 
     Example:
         from nemo_deploy import DeployPyTriton, NemoQueryLLM
@@ -74,8 +73,7 @@ class DeployPyTriton(DeployBase):
         streaming=False,
         pytriton_log_verbose=0,
     ):
-        """
-        A nemo checkpoint or model is expected for serving on Triton Inference Server.
+        """A nemo checkpoint or model is expected for serving on Triton Inference Server.
 
         Args:
             triton_model_name (str): Name for the service
@@ -86,7 +84,6 @@ class DeployPyTriton(DeployBase):
             port (int) : port for the Triton server
             address (str): http address for Triton server to bind.
         """
-
         super().__init__(
             triton_model_name=triton_model_name,
             triton_model_version=triton_model_version,
@@ -103,10 +100,7 @@ class DeployPyTriton(DeployBase):
         )
 
     def deploy(self):
-        """
-        Deploys any models to Triton Inference Server.
-        """
-
+        """Deploys any models to Triton Inference Server."""
         self._init_nemo_model()
 
         try:
@@ -150,10 +144,7 @@ class DeployPyTriton(DeployBase):
             print(e)
 
     def serve(self):
-        """
-        Starts serving the model and waits for the requests
-        """
-
+        """Starts serving the model and waits for the requests."""
         if self.triton is None:
             raise Exception("deploy should be called first.")
 
@@ -164,20 +155,14 @@ class DeployPyTriton(DeployBase):
             print(e)
 
     def run(self):
-        """
-        Starts serving the model asynchronously.
-        """
-
+        """Starts serving the model asynchronously."""
         if self.triton is None:
             raise Exception("deploy should be called first.")
 
         self.triton.run()
 
     def stop(self):
-        """
-        Stops serving the model.
-        """
-
+        """Stops serving the model."""
         if self.triton is None:
             raise Exception("deploy should be called first.")
 

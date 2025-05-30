@@ -34,11 +34,35 @@ jobs:
     outputs:
       is_ci_workload: ${{ steps.is_ci_workload.outputs.main }}
       no_fail_fast: ${{ steps.no_fail_fast.outputs.main }}
+      docs_only: ${{ steps.docs_only.outputs.main == 'true' }}
     env:
       TESTS_TO_RUN: ${{ inputs.test_to_run }}
       EVENT_NAME: ${{ github.event_name }}
       HAS_LABEL: ${{ github.event.label.name == 'Run CICD' }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed-files
+        uses: step-security/changed-files@v45.0.1
+        with:
+          files_yaml: |
+            doc:
+              - '**.md'
+              - docs/**
+            src:
+              - '!**.md'
+              - '!docs/**'
+
+      - name: Check if docs only
+        shell: bash
+        id: docs_only
+        env:
+          DOCS_ONLY: ${{ steps.changed-files.outputs.doc_any_changed == 'true' && steps.changed-files.outputs.src_any_changed == 'false' }}
+        run: |
+          echo "main=$DOCS_ONLY" | tee -a "$GITHUB_OUTPUT"
+
       - name: Check if this is a CI workload
         shell: bash
         id: is_ci_workload
@@ -68,6 +92,23 @@ jobs:
 
           echo "main=$no_fail_fast" | tee -a "$GITHUB_OUTPUT"
 
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install ruff
+        run: |
+          pip install ruff
+
+      - name: Run ruff
+        run: |
+          ruff check .
+
   cicd-wait-in-queue:
     needs: [pre-flight]
     runs-on: ubuntu-latest
@@ -76,6 +117,7 @@ jobs:
       needs.pre-flight.outputs.test_to_run != '[]' 
       && needs.pre-flight.outputs.components_to_run != '[]'
       && needs.pre-flight.outputs.is_ci_workload == 'false'
+      && needs.pre-flight.outputs.docs_only == 'false'
     steps:
       - name: Running CI tests
         run: |
@@ -222,12 +264,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.run_id }}
+          DOCS_ONLY: ${{ needs.pre-flight.outputs.docs_only }}
         run: |
           # Get workflow run details and check job conclusions
           NUM_FAILED=$(gh run view $RUN_ID --json jobs -q '[.jobs[] | select(.conclusion == "failure") | .name] | length')
           NUM_CANCELLED=$(gh run view $RUN_ID --json jobs -q '[.jobs[] | select(.conclusion == "cancelled") | .name] | length')
 
-          if [[ $NUM_FAILED -eq 0 && $NUM_CANCELLED -eq 0 ]]; then
+          if [[ ($NUM_FAILED -eq 0 && $NUM_CANCELLED -eq 0) || $DOCS_ONLY == 'true' ]]; then
             RESULT="success"
           elif [[ $NUM_CANCELLED -gt 0 ]]; then
             RESULT="cancelled"
