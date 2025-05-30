@@ -31,7 +31,7 @@ python tests/functional_tests/utils/create_ptq_ckpt.py \
   --export_path /tmp/nemo2_ptq \
   --generate_sample
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace/nemo tests/functional_tests/utils/run_nemo_export.py \
+coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_export.py \
   --model_name test \
   --model_dir /tmp/trt_llm_model_dir/ \
   --checkpoint_dir /tmp/nemo2_ptq \
