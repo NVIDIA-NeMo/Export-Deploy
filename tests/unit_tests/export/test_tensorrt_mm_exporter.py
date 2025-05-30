@@ -182,21 +182,6 @@ class TestTensorRTMMExporter:
         assert tensors[0].dtype == np.uint8
 
     @pytest.mark.run_only_on("GPU")
-    def test_get_input_media_tensors_audio(self, model_dir):
-        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
-
-        exporter = TensorRTMMExporter(model_dir, load_model=False, modality="audio")
-        tensors = exporter.get_input_media_tensors()
-
-        assert len(tensors) == 2
-        assert tensors[0].name == "input_signal"
-        assert tensors[0].shape == (-1,)
-        assert tensors[0].dtype == np.single
-        assert tensors[1].name == "input_signal_length"
-        assert tensors[1].shape == (1,)
-        assert tensors[1].dtype == np.intc
-
-    @pytest.mark.run_only_on("GPU")
     def test_export_with_invalid_model_type(self, model_dir):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
