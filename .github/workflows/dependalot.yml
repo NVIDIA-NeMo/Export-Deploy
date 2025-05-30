@@ -64,18 +64,18 @@ jobs:
         run: sudo apt-get install -y gnupg2
 
       - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
+          GPG_TTY: /dev/tty
         run: |
           echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
           KEYGRIP=$(gpg --with-keygrip --list-secret-keys | awk '/Keygrip/ {print $3; exit}')
           echo "$GPG_PASSPHRASE" | /usr/lib/gnupg2/gpg-preset-passphrase --preset "$KEYGRIP"
-        env:
-          GPG_TTY: /dev/tty
 
       - name: Configure Git
         run: |
           KEYID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/ {print $5; exit}')
-          git config --global user.name "$GIT_USER_NAME"
-          git config --global user.email "$GIT_USER_EMAIL"
           git config --global user.signingkey "$KEYID"
           git config --global commit.gpgsign true
 
