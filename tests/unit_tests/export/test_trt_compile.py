@@ -28,7 +28,9 @@ class ListAdd(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, x: List[torch.Tensor], y: torch.Tensor, z: torch.Tensor, bs: float = 0.1):
+    def forward(
+        self, x: List[torch.Tensor], y: torch.Tensor, z: torch.Tensor, bs: float = 0.1
+    ):
         y1 = y.clone()
         x1 = x.copy()
         z1 = z + y
@@ -39,7 +41,6 @@ class ListAdd(torch.nn.Module):
 
 @unittest.skip
 class TestTRTCompile(unittest.TestCase):
-
     def setUp(self):
         self.gpu_device = torch.cuda.current_device()
 
@@ -49,7 +50,6 @@ class TestTRTCompile(unittest.TestCase):
             torch.cuda.set_device(self.gpu_device)
 
     def test_torch_trt(self):
-
         model = torch.nn.Sequential(*[torch.nn.PReLU(), torch.nn.PReLU()])
         data1 = model.state_dict()
         data1["0.weight"] = torch.tensor([0.1])

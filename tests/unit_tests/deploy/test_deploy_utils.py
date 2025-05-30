@@ -23,10 +23,17 @@ import torch
 from PIL import Image
 from pytriton.model_config import Tensor
 
-from nemo_deploy.utils import (NEMO1, NEMO2, broadcast_list, cast_output,
-                               ndarray2img, nemo_checkpoint_version,
-                               str_list2numpy, str_ndarray2list,
-                               typedict2tensor)
+from nemo_deploy.utils import (
+    NEMO1,
+    NEMO2,
+    broadcast_list,
+    cast_output,
+    ndarray2img,
+    nemo_checkpoint_version,
+    str_list2numpy,
+    str_ndarray2list,
+    typedict2tensor,
+)
 
 
 class TestTypedict2Tensor:
@@ -67,7 +74,9 @@ class TestTypedict2Tensor:
 
     def test_typedict2tensor_with_overwrite(self):
         overwrite_kwargs = {"optional": True}
-        tensors = typedict2tensor(self.SampleTypedict, overwrite_kwargs=overwrite_kwargs)
+        tensors = typedict2tensor(
+            self.SampleTypedict, overwrite_kwargs=overwrite_kwargs
+        )
         assert all(t.optional for t in tensors)
 
     def test_typedict2tensor_list_types(self):
@@ -195,7 +204,9 @@ class TestCastOutput:
 
 class TestBroadcastList:
     def test_broadcast_list_no_distributed(self):
-        with pytest.raises(RuntimeError, match="Distributed environment is not initialized"):
+        with pytest.raises(
+            RuntimeError, match="Distributed environment is not initialized"
+        ):
             broadcast_list(["test"])
 
     def test_broadcast_list_distributed(self, monkeypatch):
@@ -208,7 +219,9 @@ class TestBroadcastList:
             if src == 0:
                 object_list[0] = ["test"]
 
-        monkeypatch.setattr(torch.distributed, "broadcast_object_list", mock_broadcast_object_list)
+        monkeypatch.setattr(
+            torch.distributed, "broadcast_object_list", mock_broadcast_object_list
+        )
 
         result = broadcast_list(["test"])
         assert result == ["test"]

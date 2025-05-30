@@ -31,8 +31,7 @@ currently includes NIM containers.
 
 @contextmanager
 def _mock_import(module: str):
-    """
-    Context manager to mock the import of a specified module if it is not available.
+    """Context manager to mock the import of a specified module if it is not available.
 
     Args:
         module (str): The name of the module to mock.
@@ -55,7 +54,9 @@ def _mock_import(module: str):
     try:
         importlib.import_module(module)
     except ModuleNotFoundError:
-        LOGGER.warning(f"Module '{module}' is not available, mocking with a dummy module.")
+        LOGGER.warning(
+            f"Module '{module}' is not available, mocking with a dummy module."
+        )
         sys_modules_backup = sys.modules.copy()
 
         dummy_module = DummyModule("dummy")

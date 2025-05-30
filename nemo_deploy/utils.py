@@ -89,7 +89,6 @@ def nemo_checkpoint_version(path: str) -> str:
     Returns:
         str: Version string - either NEMO2 or NEMO1 constant indicating the checkpoint version
     """
-
     if os.path.isdir(path):
         path = Path(path)
     else:
@@ -150,7 +149,6 @@ def ndarray2img(img_ndarray: np.ndarray) -> typing.List[Image.Image]:
     Returns:
         List[Image.Image]: List of PIL Image objects created from the input array
     """
-
     img_list = [Image.fromarray(i) for i in img_ndarray]
     return img_list
 
@@ -172,7 +170,6 @@ def cast_output(data, required_dtype):
         np.ndarray: A numpy array containing the input data cast to the required dtype,
             with at least 2 dimensions.
     """
-
     if isinstance(data, torch.Tensor):
         data = data.cpu().numpy()
     elif not isinstance(data, np.ndarray):
@@ -195,7 +192,6 @@ def broadcast_list(data, src=0, group=None):
         src (int, optional): Source rank. Defaults to 0.
         group (ProcessGroup, optional): The process group to work on. If None, the default process group will be used.
     """
-
     if not torch.distributed.is_initialized():
         raise RuntimeError("Distributed environment is not initialized.")
 

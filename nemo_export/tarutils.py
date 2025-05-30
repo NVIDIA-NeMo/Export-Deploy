@@ -25,14 +25,15 @@ try:
 
     HAVE_ZARR = True
 except Exception as e:
-    LOGGER.warning(f"Cannot import zarr, support for zarr-based checkpoints is not available. {type(e).__name__}: {e}")
+    LOGGER.warning(
+        f"Cannot import zarr, support for zarr-based checkpoints is not available. {type(e).__name__}: {e}"
+    )
     BaseStore = object
     HAVE_ZARR = False
 
 
 class TarPath:
-    """
-    A class that represents a path inside a TAR archive and behaves like pathlib.Path.
+    """A class that represents a path inside a TAR archive and behaves like pathlib.Path.
 
     Expected use is to create a TarPath for the root of the archive first, and then derive
     paths to other files or directories inside the archive like so:
@@ -62,7 +63,9 @@ class TarPath:
             if parts:
                 self._relpath = os.path.join(*parts)
         else:
-            raise ValueError(f"Unexpected argument type for TarPath: {type(tar).__name__}")
+            raise ValueError(
+                f"Unexpected argument type for TarPath: {type(tar).__name__}"
+            )
 
     def __del__(self):
         if self._needs_to_close:
@@ -76,30 +79,22 @@ class TarPath:
 
     @property
     def tarobject(self):
-        """
-        Returns the wrapped tar object.
-        """
+        """Returns the wrapped tar object."""
         return self._tar
 
     @property
     def relpath(self):
-        """
-        Returns the relative path of the path.
-        """
+        """Returns the relative path of the path."""
         return self._relpath
 
     @property
     def name(self):
-        """
-        Returns the name of the path.
-        """
+        """Returns the name of the path."""
         return os.path.split(self._relpath)[1]
 
     @property
     def suffix(self):
-        """
-        Returns the suffix of the path.
-        """
+        """Returns the suffix of the path."""
         name = self.name
         i = name.rfind(".")
         if 0 < i < len(name) - 1:
@@ -115,9 +110,7 @@ class TarPath:
         return self._tar.__exit__(*args)
 
     def exists(self):
-        """
-        Checks if the path exists.
-        """
+        """Checks if the path exists."""
         try:
             self._tar.getmember(self._relpath)
             return True
@@ -129,9 +122,7 @@ class TarPath:
                 return False
 
     def is_file(self):
-        """
-        Checks if the path is a file.
-        """
+        """Checks if the path is a file."""
         try:
             self._tar.getmember(self._relpath).isreg()
             return True
@@ -143,9 +134,7 @@ class TarPath:
                 return False
 
     def is_dir(self):
-        """
-        Checks if the path is a directory.
-        """
+        """Checks if the path is a directory."""
         try:
             self._tar.getmember(self._relpath).isdir()
             return True
@@ -157,9 +146,7 @@ class TarPath:
                 return False
 
     def open(self, mode: str) -> IO[bytes]:
-        """
-        Opens a file in the archive.
-        """
+        """Opens a file in the archive."""
         if mode != "r" and mode != "rb":
             raise NotImplementedError()
 
@@ -180,9 +167,7 @@ class TarPath:
         return file
 
     def glob(self, pattern):
-        """
-        Returns an iterator over the files in the directory, matching the pattern.
-        """
+        """Returns an iterator over the files in the directory, matching the pattern."""
         for member in self._tar.getmembers():
             # Remove the "./" prefix, if any
             name = member.name[2:] if member.name.startswith("./") else member.name
@@ -198,9 +183,7 @@ class TarPath:
                 yield TarPath(self._tar, os.path.join(self._relpath, name))
 
     def rglob(self, pattern):
-        """
-        Returns an iterator over the files in the directory, including subdirectories.
-        """
+        """Returns an iterator over the files in the directory, including subdirectories."""
         for member in self._tar.getmembers():
             # Remove the "./" prefix, if any
             name = member.name[2:] if member.name.startswith("./") else member.name
@@ -220,15 +203,12 @@ class TarPath:
                     break
 
     def iterdir(self):
-        """
-        Returns an iterator over the files in the directory.
-        """
+        """Returns an iterator over the files in the directory."""
         return self.glob("*")
 
 
 class ZarrPathStore(BaseStore):
-    """
-    An implementation of read-only Store for zarr library
+    """An implementation of read-only Store for zarr library
     that works with pathlib.Path or TarPath objects.
     """
 
@@ -258,15 +238,12 @@ class ZarrPathStore(BaseStore):
         raise NotImplementedError()
 
     def keys(self):
-        """
-        Returns an iterator over the keys in the store.
-        """
+        """Returns an iterator over the keys in the store."""
         return self._path.iterdir()
 
 
 def unpack_tarball(archive: str, dest_dir: str):
-    """
-    Unpacks a tarball into a destination directory.
+    """Unpacks a tarball into a destination directory.
 
     Args:
         archive (str): The path to the tarball.
