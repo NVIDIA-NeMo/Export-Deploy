@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  dependalot-update:
+  update-lockfile:
     environment: nemo-ci
     runs-on: linux-amd64-cpu16
     steps:
@@ -30,17 +30,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # - name: Upgrade lock file
-      #   run: |
-      #     docker run \
-      #     --rm \
-      #     -v $(pwd):/workspace \
-      #     -w /workspace \
-      #     nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
-      #     bash -c 'uv lock --upgrade'
-
-      - name: test
-        run: echo hello > uv.lock
+      - name: Upgrade lock file
+        run: |
+          docker run \
+          --rm \
+          -v $(pwd):/workspace \
+          -w /workspace \
+          nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
+          bash -c 'uv lock --upgrade'
 
       - name: Upload lock file
         uses: actions/upload-artifact@v4
@@ -49,7 +46,7 @@ jobs:
           path: uv.lock
 
   create-pr:
-    needs: [dependalot-update]
+    needs: [update-lockfile]
     runs-on: ubuntu-latest
     environment: main
     steps:
@@ -61,11 +58,15 @@ jobs:
         with:
           name: lock-file
 
+      - name: Get todays date
+        id: date
+        run: echo "main=$(date +%F)" | tee -a "$GITHUB_OUTPUT"
+
       - name: Create Bump PR
         uses: peter-evans/create-pull-request@v7
         id: create-pull-request
         env:
-          title: "chore(🤖): Bump dependencies (${{ steps.ref.outputs.date }})"
+          title: "chore(🤖): Bump dependencies (${{ steps.date.outputs.main }})"
         with:
           branch: dependabot-${{ steps.ref.outputs.date }}-main
           base: main
