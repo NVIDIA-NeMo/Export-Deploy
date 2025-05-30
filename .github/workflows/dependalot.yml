@@ -5,6 +5,10 @@ on:
   workflow_dispatch: # Allow manual triggering
   push:
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   dependalot-update:
     environment: nemo-ci
