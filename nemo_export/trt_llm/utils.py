@@ -18,8 +18,7 @@ import tensorrt_llm
 
 
 def is_rank(rank: Optional[int]) -> bool:
-    """
-    Check if the current MPI rank matches the specified rank.
+    """Check if the current MPI rank matches the specified rank.
 
     Args:
         rank (Optional[int]): The rank to check against.

@@ -71,7 +71,8 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             raise ValueError("hf_model_id_path or model parameters has to be passed.")
         elif hf_model_id_path is not None and model is not None:
             LOGGER.warning(
-                "hf_model_id_path will be ignored and the HuggingFace model " "set with model parameter will be used."
+                "hf_model_id_path will be ignored and the HuggingFace model "
+                "set with model parameter will be used."
             )
 
         assert task in SUPPORTED_TASKS, "Task {0} is not a support task.".format(task)
@@ -94,8 +95,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             self._load(**hf_kwargs)
 
     def _load(self, **hf_kwargs) -> None:
-        """
-        Load the HuggingFace pipeline with the specified model and task.
+        """Load the HuggingFace pipeline with the specified model and task.
 
         This method initializes the HuggingFace AutoModel classes using the provided model
         configuration and task type. It handles the model and tokenizer loading
@@ -107,10 +107,14 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         assert self.task is not None, "A task has to be given for the generation task."
 
         if self.task == "text-generation":
-            self.model = AutoModelForCausalLM.from_pretrained(self.hf_model_id_path, **hf_kwargs)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.hf_model_id_path, **hf_kwargs
+            )
 
             if self.hf_peft_model_id_path is not None:
-                self.model = PeftModel.from_pretrained(self.model, self.hf_peft_model_id_path)
+                self.model = PeftModel.from_pretrained(
+                    self.model, self.hf_peft_model_id_path
+                )
         else:
             raise ValueError("Task {0} is not supported.".format(self.task))
         num_gpus = torch.cuda.device_count()
@@ -161,7 +165,6 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         Raises:
             RuntimeError: If the pipeline is not initialized.
         """
-
         if not self.model:
             raise RuntimeError("Model is not initialized")
 
@@ -181,28 +184,36 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             generated_ids = self.model.generate(**kwargs)
         return_dict_in_generate = kwargs.get("return_dict_in_generate", False)
         if return_dict_in_generate:
-            output = {"sentences": self.tokenizer.batch_decode(generated_ids["sequences"], skip_special_tokens=True)}
+            output = {
+                "sentences": self.tokenizer.batch_decode(
+                    generated_ids["sequences"], skip_special_tokens=True
+                )
+            }
             if kwargs.get("output_logits", False):
                 output["logits"] = generated_ids["logits"]
             if kwargs.get("output_scores", False):
                 output["scores"] = generated_ids["scores"]
         else:
-            output = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+            output = self.tokenizer.batch_decode(
+                generated_ids, skip_special_tokens=True
+            )
         return output
 
     def generate_other_ranks(self):
-        """
-        Generate function for ranks other than the rank 0.
-        """
-
+        """Generate function for ranks other than the rank 0."""
         while True:
             message = torch.empty(1, dtype=torch.long, device="cuda")
             torch.distributed.broadcast(message, src=0)
             if message == 0:
                 prompts = broadcast_list(data=[None], src=0)
-                temperature, top_k, top_p, num_tokens_to_generate, output_logits, output_scores = broadcast_list(
-                    data=[None], src=0
-                )
+                (
+                    temperature,
+                    top_k,
+                    top_p,
+                    num_tokens_to_generate,
+                    output_logits,
+                    output_scores,
+                ) = broadcast_list(data=[None], src=0)
 
                 return_dict_in_generate = False
                 if output_logits or output_scores:
@@ -252,19 +263,33 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
         try:
             prompts = str_ndarray2list(inputs.pop("prompts"))
-            temperature = inputs.pop("temperature")[0][0] if "temperature" in inputs else 1.0
+            temperature = (
+                inputs.pop("temperature")[0][0] if "temperature" in inputs else 1.0
+            )
             top_k = int(inputs.pop("top_k")[0][0] if "top_k" in inputs else 1)
             top_p = inputs.pop("top_p")[0][0] if "top_k" in inputs else 0.0
-            num_tokens_to_generate = inputs.pop("max_length")[0][0] if "max_length" in inputs else 256
-            output_logits = inputs.pop("output_logits")[0][0] if "output_logits" in inputs else False
-            output_scores = inputs.pop("output_scores")[0][0] if "output_scores" in inputs else False
+            num_tokens_to_generate = (
+                inputs.pop("max_length")[0][0] if "max_length" in inputs else 256
+            )
+            output_logits = (
+                inputs.pop("output_logits")[0][0]
+                if "output_logits" in inputs
+                else False
+            )
+            output_scores = (
+                inputs.pop("output_scores")[0][0]
+                if "output_scores" in inputs
+                else False
+            )
             return_dict_in_generate = False
             if output_logits or output_scores:
                 return_dict_in_generate = True
 
             if torch.distributed.is_initialized():
                 if torch.distributed.get_world_size() > 1:
-                    torch.distributed.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
+                    torch.distributed.broadcast(
+                        torch.tensor([0], dtype=torch.long, device="cuda"), src=0
+                    )
                     broadcast_list(prompts, src=0)
                     broadcast_list(
                         data=[
@@ -291,7 +316,9 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             )
 
             if isinstance(output, dict):
-                output_infer = {"sentences": cast_output(output["sentences"], np.bytes_)}
+                output_infer = {
+                    "sentences": cast_output(output["sentences"], np.bytes_)
+                }
 
                 if "scores" in output.keys():
                     output_scores = []
@@ -392,7 +419,9 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
         if torch.distributed.is_initialized():
             if torch.distributed.get_world_size() > 1:
-                torch.distributed.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
+                torch.distributed.broadcast(
+                    torch.tensor([0], dtype=torch.long, device="cuda"), src=0
+                )
                 broadcast_list(prompts, src=0)
                 broadcast_list(
                     data=[
@@ -421,7 +450,9 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         if isinstance(output, dict):
             output_infer = {"sentences": output["sentences"]}
             if cast_output_func:
-                output_infer["sentences"] = cast_output_func(output["sentences"], np.bytes_)
+                output_infer["sentences"] = cast_output_func(
+                    output["sentences"], np.bytes_
+                )
 
             if "scores" in output.keys():
                 output_scores = []

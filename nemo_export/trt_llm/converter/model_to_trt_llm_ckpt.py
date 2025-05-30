@@ -22,9 +22,12 @@ import torch
 from tensorrt_llm._utils import pad_vocab_size, str_dtype_to_torch
 from tqdm import tqdm
 
-from nemo_export.trt_llm.converter.utils import (save_scaling_factor, save_val,
-                                                 split_and_save_weight,
-                                                 weights_dict)
+from nemo_export.trt_llm.converter.utils import (
+    save_scaling_factor,
+    save_val,
+    split_and_save_weight,
+    weights_dict,
+)
 from nemo_export.utils import torch_dtype_from_precision
 
 LOGGER = logging.getLogger("NeMo")
@@ -41,7 +44,11 @@ layer_names = {
 def extract_layers_with_prefix(model_, prefix):
     length_to_trim = len(prefix)
     model_state = model_.get("state_dict", model_)
-    return {key[length_to_trim:]: model_state[key] for key in model_state.keys() if key.startswith(prefix)}
+    return {
+        key[length_to_trim:]: model_state[key]
+        for key in model_state.keys()
+        if key.startswith(prefix)
+    }
 
 
 def get_layer_name(layer_type: str, prefix: str):
@@ -59,7 +66,9 @@ def get_layer_prefix(layer_names, is_mcore):
         if not layer_name.startswith("optimizer") and "self_attention" in layer_name:
             transformer_layer_prefix = layer_name.split("layers")[0]
             break
-    assert transformer_layer_prefix is not None, f"Cannot extract transformer layer prefix from {layer_name}"
+    assert transformer_layer_prefix is not None, (
+        f"Cannot extract transformer layer prefix from {layer_name}"
+    )
     if is_mcore:
         model_prefix = transformer_layer_prefix.split("decoder")[0]
     else:
@@ -73,13 +82,21 @@ def rename_key(new_key: str):
     if "self_attention" in new_key:
         new_key = new_key.replace("self_attention", "attention")
     if "attention.linear_qkv.layer_norm_weight" in new_key:
-        new_key = new_key.replace("attention.linear_qkv.layer_norm_weight", "input_layernorm.weight")
+        new_key = new_key.replace(
+            "attention.linear_qkv.layer_norm_weight", "input_layernorm.weight"
+        )
     if "attention.linear_qkv.layer_norm_bias" in new_key:
-        new_key = new_key.replace("attention.linear_qkv.layer_norm_bias", "input_layernorm.bias")
+        new_key = new_key.replace(
+            "attention.linear_qkv.layer_norm_bias", "input_layernorm.bias"
+        )
     if "mlp.linear_fc1.layer_norm_weight" in new_key:
-        new_key = new_key.replace("mlp.linear_fc1.layer_norm_weight", "post_attention_layernorm.weight")
+        new_key = new_key.replace(
+            "mlp.linear_fc1.layer_norm_weight", "post_attention_layernorm.weight"
+        )
     if "mlp.linear_fc1.layer_norm_bias" in new_key:
-        new_key = new_key.replace("mlp.linear_fc1.layer_norm_bias", "post_attention_layernorm.bias")
+        new_key = new_key.replace(
+            "mlp.linear_fc1.layer_norm_bias", "post_attention_layernorm.bias"
+        )
 
     return new_key
 
@@ -107,7 +124,9 @@ def load_scaling_factors(model: dict, num_layers: int, export_config: dict) -> d
         if is_scaling_factor(key):
             for layer in range(num_layers):
                 renamed_key = rename_key_dist_ckpt(key, layer)
-                scaling_factors = save_scaling_factor(scaling_factors, renamed_key, val[layer], export_config)
+                scaling_factors = save_scaling_factor(
+                    scaling_factors, renamed_key, val[layer], export_config
+                )
 
     return scaling_factors
 
@@ -125,7 +144,6 @@ def convert_model_to_trt_llm_ckpt(
     fp8_quantized=False,
     fp8_kvcache=False,
 ):
-
     # if checkpoints files could be found - start preparing output dir
     out_dir = create_export_dir(nemo_export_dir)
     storage_type = str_dtype_to_torch(storage_type)
@@ -134,9 +152,13 @@ def convert_model_to_trt_llm_ckpt(
     # load position_embedding from rank 0
     model_state_dict = model.get("state_dict", model)
 
-    prefix, transformer_layer_prefix = get_layer_prefix(model_state_dict.keys(), is_mcore)
+    prefix, transformer_layer_prefix = get_layer_prefix(
+        model_state_dict.keys(), is_mcore
+    )
 
-    has_position_embedding = get_layer_name("position_embedding", prefix) in model_state_dict
+    has_position_embedding = (
+        get_layer_name("position_embedding", prefix) in model_state_dict
+    )
     has_lm_head = get_layer_name("output_layer", prefix) in model_state_dict
 
     num_layers = nemo_model_config["num_layers"]
@@ -154,7 +176,8 @@ def convert_model_to_trt_llm_ckpt(
             num_kv_heads = num_attention_heads
 
     export_config = {
-        "apply_layernorm_1p": nemo_model_config.get("normalization", "") == "layernorm1p"
+        "apply_layernorm_1p": nemo_model_config.get("normalization", "")
+        == "layernorm1p"
         or nemo_model_config.get("layernorm_zero_centered_gamma", False),
         "tp_size": training_tp_size,
         "split_gated_activation": nemo_model_config.get("activation", "gelu")
@@ -181,7 +204,9 @@ def convert_model_to_trt_llm_ckpt(
                 val = val.to(storage_type).cpu()
                 model_level_weights["transformer.position_embedding.weight"].append(val)
         if pp_idx == 0:
-            val = model.get("state_dict", model)[get_layer_name("word_embedding", prefix)]
+            val = model.get("state_dict", model)[
+                get_layer_name("word_embedding", prefix)
+            ]
 
             vocab_size = val.shape[0]
             if use_parallel_embedding:
@@ -333,12 +358,15 @@ def dist_model_to_trt_llm_ckpt(
     assert is_mcore, "Only megatron-core inflight model conversion is supported"
 
     export_config = {
-        "apply_layernorm_1p": nemo_model_config.get("normalization", "") == "layernorm1p",
+        "apply_layernorm_1p": nemo_model_config.get("normalization", "")
+        == "layernorm1p",
         "tp_size": tp_size,
         "split_gated_activation": nemo_model_config.get("activation", "gelu")
         in ["swiglu", "geglu", "fast-swiglu", "fast-geglu", "openai-gelu"],
         "num_attention_heads": nemo_model_config["num_attention_heads"],
-        "num_kv_heads": nemo_model_config.get("num_query_groups", nemo_model_config["num_attention_heads"]),
+        "num_kv_heads": nemo_model_config.get(
+            "num_query_groups", nemo_model_config["num_attention_heads"]
+        ),
         "convert_on_device": True,
         "use_attention_nemo_shape": True,
         "transpose_weights": True,
@@ -366,7 +394,9 @@ def dist_model_to_trt_llm_ckpt(
             for key, val in model_chunk.state_dict().items():
                 if torch.is_tensor(val):
                     if "layers" in key:
-                        key2 = rename_layer_num(key, get_layer_num(key) + idx * pp_size * layers_per_chunk)
+                        key2 = rename_layer_num(
+                            key, get_layer_num(key) + idx * pp_size * layers_per_chunk
+                        )
                         tl_params[key2] = val
                     else:
                         model_level_params[key] = val
@@ -437,16 +467,22 @@ def dist_model_to_trt_llm_ckpt(
     # ----------------Convert Final Layernorm----------------
     if pp_is_last or reshard_model:
         ln_f = try_get_model_level_weight(
-            get_layer_name("final_layernorm.weight", transformer_layer_prefix), pp_last_rank
+            get_layer_name("final_layernorm.weight", transformer_layer_prefix),
+            pp_last_rank,
         )
         if ln_f is not None:
-            starmap_args.append(starmap_config | {"key": "final_layernorm.weight", "vals": ln_f})
+            starmap_args.append(
+                starmap_config | {"key": "final_layernorm.weight", "vals": ln_f}
+            )
 
         ln_f_bias = try_get_model_level_weight(
-            get_layer_name("final_layernorm.bias", transformer_layer_prefix), pp_last_rank
+            get_layer_name("final_layernorm.bias", transformer_layer_prefix),
+            pp_last_rank,
         )
         if ln_f_bias is not None:
-            starmap_args.append(starmap_config | {"key": "final_layernorm.bias", "vals": ln_f_bias})
+            starmap_args.append(
+                starmap_config | {"key": "final_layernorm.bias", "vals": ln_f_bias}
+            )
 
     # ----------------Convert Embeddings----------------
     def get_remove_vocab_padding(tensor_name):
@@ -456,27 +492,37 @@ def dist_model_to_trt_llm_ckpt(
 
         if tp_size > 1:  # Gather padded tensor chunks
             vocab_size_padded = tensor.shape[0] * tp_size
-            vocab_start_index, vocab_end_index = VocabUtility.vocab_range_from_global_vocab_size(
-                vocab_size_padded, tp_rank, tp_size
+            vocab_start_index, vocab_end_index = (
+                VocabUtility.vocab_range_from_global_vocab_size(
+                    vocab_size_padded, tp_rank, tp_size
+                )
             )
             dim_size = list(tensor.size())
             dim_size[0] = vocab_size_padded
-            gathered_tensor = torch.zeros(dim_size, dtype=tensor.dtype, device=torch.cuda.current_device())
+            gathered_tensor = torch.zeros(
+                dim_size, dtype=tensor.dtype, device=torch.cuda.current_device()
+            )
             gathered_tensor[vocab_start_index:vocab_end_index] = tensor
             torch.distributed.all_reduce(gathered_tensor, group=tp_group)
             tensor = gathered_tensor
         unpadded = tensor[:tokenizer_vocab_size]
         if tp_size > 1:  # Split gathered tensor for tensor parallel embedding
-            vocab_start_index, vocab_end_index = VocabUtility.vocab_range_from_global_vocab_size(
-                tokenizer_vocab_size, tp_rank, tp_size
+            vocab_start_index, vocab_end_index = (
+                VocabUtility.vocab_range_from_global_vocab_size(
+                    tokenizer_vocab_size, tp_rank, tp_size
+                )
             )
             unpadded = unpadded[vocab_start_index:vocab_end_index]
-        return unpadded.T  # TRTLLM expects (vocab_size, hidden_size) so need extra transpose
+        return (
+            unpadded.T
+        )  # TRTLLM expects (vocab_size, hidden_size) so need extra transpose
 
     if pp_is_first or reshard_model:
         vocab_embed = get_remove_vocab_padding(get_layer_name("word_embedding", prefix))
         vocab_embed = try_get_model_level_weight(vocab_embed, pp_first_rank)
-        save_val(vocab_embed, dir=None, key="transformer.vocab_embedding.weight", tp_num=None)
+        save_val(
+            vocab_embed, dir=None, key="transformer.vocab_embedding.weight", tp_num=None
+        )
 
     if pp_is_last or reshard_model:
         lm_head = get_remove_vocab_padding(get_layer_name("output_layer", prefix))

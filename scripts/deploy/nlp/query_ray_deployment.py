@@ -22,7 +22,9 @@ LOGGER = logging.getLogger("NeMo")
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Query a deployed HuggingFace model using Ray")
+    parser = argparse.ArgumentParser(
+        description="Query a deployed HuggingFace model using Ray"
+    )
     parser.add_argument(
         "--host",
         type=str,
@@ -110,7 +112,10 @@ def test_health_endpoint(base_url: str) -> None:
 
 def main():
     # Set up logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
 
     args = parse_args()
     base_url = f"http://{args.host}:{args.port}"

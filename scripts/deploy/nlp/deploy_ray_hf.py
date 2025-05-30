@@ -163,8 +163,13 @@ def main():
     )
 
     # Set up signal handlers
-    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
-    signal.signal(signal.SIGTERM, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
+    signal.signal(
+        signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer)
+    )
+    signal.signal(
+        signal.SIGTERM,
+        lambda signum, frame: signal_handler(signum, frame, ray_deployer),
+    )
 
     try:
         # Start Ray Serve

@@ -39,16 +39,28 @@ Finally, the output NeMo model is loaded using the Fabric API of pl.Trainer.
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='Test Llama2 7B model model conversion from HF')
-    parser.add_argument('--hf_model', type=str, help="Original HF model")
-    parser.add_argument("--model", default="LlamaModel", help="Model class from nemo.collections.llm module")
-    parser.add_argument("--config", default="Llama2Config7B", help="Config class from nemo.collections.llm module")
-    parser.add_argument('--output_path', type=str, help="NeMo 2.0 export path")
-    parser.add_argument('--overwrite', action="store_true", help="Overwrite the output model if exists")
+    parser = argparse.ArgumentParser(
+        description="Test Llama2 7B model model conversion from HF"
+    )
+    parser.add_argument("--hf_model", type=str, help="Original HF model")
+    parser.add_argument(
+        "--model",
+        default="LlamaModel",
+        help="Model class from nemo.collections.llm module",
+    )
+    parser.add_argument(
+        "--config",
+        default="Llama2Config7B",
+        help="Config class from nemo.collections.llm module",
+    )
+    parser.add_argument("--output_path", type=str, help="NeMo 2.0 export path")
+    parser.add_argument(
+        "--overwrite", action="store_true", help="Overwrite the output model if exists"
+    )
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = get_args()
 
     ModelClass = getattr(llm, args.model)
@@ -64,7 +76,7 @@ if __name__ == '__main__':
     trainer = nl.Trainer(
         devices=1,
         strategy=nl.MegatronStrategy(tensor_model_parallel_size=1),
-        plugins=nl.MegatronMixedPrecision(precision='fp16'),
+        plugins=nl.MegatronMixedPrecision(precision="fp16"),
     )
     fabric = trainer.to_fabric()
     trainer.strategy.setup_environment()

@@ -109,7 +109,9 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=Non
     trtllm_accuracy_relaxed = trtllm_correct_relaxed / len(all_expected_outputs)
 
     trtllm_deployed_accuracy = trtllm_deployed_correct / len(all_expected_outputs)
-    trtllm_deployed_accuracy_relaxed = trtllm_deployed_correct_relaxed / len(all_expected_outputs)
+    trtllm_deployed_accuracy_relaxed = trtllm_deployed_correct_relaxed / len(
+        all_expected_outputs
+    )
 
     evaluation_time = eval_end - eval_start
 
@@ -200,7 +202,11 @@ def run_trt_llm_inference(
             )
             print("")
 
-            print("Path: {0} and model: {1} with {2} gpus will be tested".format(checkpoint_path, model_name, n_gpu))
+            print(
+                "Path: {0} and model: {1} with {2} gpus will be tested".format(
+                    checkpoint_path, model_name, n_gpu
+                )
+            )
 
         prompt_embeddings_checkpoint_path = None
         task_ids = None
@@ -234,7 +240,9 @@ def run_trt_llm_inference(
                 print("---- LoRA could not be enabled and skipping the test.")
                 return None, None, None, None, None
 
-        trt_llm_exporter = TensorRTLLM(trt_llm_model_dir, lora_ckpt_list, load_model=False)
+        trt_llm_exporter = TensorRTLLM(
+            trt_llm_model_dir, lora_ckpt_list, load_model=False
+        )
 
         trt_llm_exporter.export(
             nemo_checkpoint_path=checkpoint_path,
@@ -312,7 +320,9 @@ def run_trt_llm_inference(
 
         if run_accuracy:
             print("Start model accuracy testing ...")
-            result = get_accuracy_with_lambada(trt_llm_exporter, nq, task_ids, lora_uids, test_data_path)
+            result = get_accuracy_with_lambada(
+                trt_llm_exporter, nq, task_ids, lora_uids, test_data_path
+            )
             if test_deployment:
                 nm.stop()
 
@@ -355,7 +365,7 @@ def test_cpp_runtime(
 def get_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description=f"Deploy nemo models to Triton and benchmark the models",
+        description="Deploy nemo models to Triton and benchmark the models",
     )
     parser.add_argument(
         "--model_name",

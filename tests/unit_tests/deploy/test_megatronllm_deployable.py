@@ -15,8 +15,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from megatron.core.inference.common_inference_params import \
-    CommonInferenceParams
+from megatron.core.inference.common_inference_params import CommonInferenceParams
 
 from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 
@@ -86,7 +85,9 @@ def test_generate_without_cuda_graphs(deployable):
 
         results = deployable.generate(prompts, inference_params)
         assert len(results) == 2
-        mock_generate.assert_called_once_with(prompts=prompts, add_BOS=False, common_inference_params=inference_params)
+        mock_generate.assert_called_once_with(
+            prompts=prompts, add_BOS=False, common_inference_params=inference_params
+        )
 
 
 @pytest.mark.run_only_on("GPU")
@@ -113,7 +114,12 @@ def test_generate_with_cuda_graphs(deployable):
         mock_result2.generated_text = "Generated text 2"
         mock_result_pad = MagicMock()
         mock_result_pad.generated_text = "Padding text"
-        mock_generate.return_value = [mock_result1, mock_result2, mock_result_pad, mock_result_pad]
+        mock_generate.return_value = [
+            mock_result1,
+            mock_result2,
+            mock_result_pad,
+            mock_result_pad,
+        ]
 
         results = deployable.generate(prompts, inference_params)
 
@@ -134,12 +140,13 @@ def test_apply_chat_template(deployable):
     messages = [{"role": "user", "content": "Hello"}]
 
     # Set up jinja2 mock
-    from jinja2 import Template
 
     template_mock = MagicMock()
     template_mock.render.return_value = "Rendered template with Hello"
 
-    with patch("nemo_deploy.nlp.megatronllm_deployable.Template", return_value=template_mock):
+    with patch(
+        "nemo_deploy.nlp.megatronllm_deployable.Template", return_value=template_mock
+    ):
         template = deployable.apply_chat_template(messages)
         assert template == "Rendered template with Hello"
         template_mock.render.assert_called_once()

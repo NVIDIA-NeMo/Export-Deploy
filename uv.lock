@@ -463,40 +463,6 @@ wheels = [
 ]
 
 [[package]]
-name = "black"
-version = "24.10.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "click" },
-    { name = "mypy-extensions" },
-    { name = "packaging" },
-    { name = "pathspec" },
-    { name = "platformdirs" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/d8/0d/cc2fb42b8c50d80143221515dd7e4766995bd07c56c9a3ed30baf080b6dc/black-24.10.0.tar.gz", hash = "sha256:846ea64c97afe3bc677b761787993be4991810ecc7a4a937816dd6bddedc4875", size = 645813, upload-time = "2024-10-07T19:20:50.361Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a3/f3/465c0eb5cddf7dbbfe1fecd9b875d1dcf51b88923cd2c1d7e9ab95c6336b/black-24.10.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e6668650ea4b685440857138e5fe40cde4d652633b1bdffc62933d0db4ed9812", size = 1623211, upload-time = "2024-10-07T19:26:12.43Z" },
-    { url = "https://files.pythonhosted.org/packages/df/57/b6d2da7d200773fdfcc224ffb87052cf283cec4d7102fab450b4a05996d8/black-24.10.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:1c536fcf674217e87b8cc3657b81809d3c085d7bf3ef262ead700da345bfa6ea", size = 1457139, upload-time = "2024-10-07T19:25:06.453Z" },
-    { url = "https://files.pythonhosted.org/packages/6e/c5/9023b7673904a5188f9be81f5e129fff69f51f5515655fbd1d5a4e80a47b/black-24.10.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:649fff99a20bd06c6f727d2a27f401331dc0cc861fb69cde910fe95b01b5928f", size = 1753774, upload-time = "2024-10-07T19:23:58.47Z" },
-    { url = "https://files.pythonhosted.org/packages/e1/32/df7f18bd0e724e0d9748829765455d6643ec847b3f87e77456fc99d0edab/black-24.10.0-cp310-cp310-win_amd64.whl", hash = "sha256:fe4d6476887de70546212c99ac9bd803d90b42fc4767f058a0baa895013fbb3e", size = 1414209, upload-time = "2024-10-07T19:24:42.54Z" },
-    { url = "https://files.pythonhosted.org/packages/c2/cc/7496bb63a9b06a954d3d0ac9fe7a73f3bf1cd92d7a58877c27f4ad1e9d41/black-24.10.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:5a2221696a8224e335c28816a9d331a6c2ae15a2ee34ec857dcf3e45dbfa99ad", size = 1607468, upload-time = "2024-10-07T19:26:14.966Z" },
-    { url = "https://files.pythonhosted.org/packages/2b/e3/69a738fb5ba18b5422f50b4f143544c664d7da40f09c13969b2fd52900e0/black-24.10.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:f9da3333530dbcecc1be13e69c250ed8dfa67f43c4005fb537bb426e19200d50", size = 1437270, upload-time = "2024-10-07T19:25:24.291Z" },
-    { url = "https://files.pythonhosted.org/packages/c9/9b/2db8045b45844665c720dcfe292fdaf2e49825810c0103e1191515fc101a/black-24.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:4007b1393d902b48b36958a216c20c4482f601569d19ed1df294a496eb366392", size = 1737061, upload-time = "2024-10-07T19:23:52.18Z" },
-    { url = "https://files.pythonhosted.org/packages/a3/95/17d4a09a5be5f8c65aa4a361444d95edc45def0de887810f508d3f65db7a/black-24.10.0-cp311-cp311-win_amd64.whl", hash = "sha256:394d4ddc64782e51153eadcaaca95144ac4c35e27ef9b0a42e121ae7e57a9175", size = 1423293, upload-time = "2024-10-07T19:24:41.7Z" },
-    { url = "https://files.pythonhosted.org/packages/90/04/bf74c71f592bcd761610bbf67e23e6a3cff824780761f536512437f1e655/black-24.10.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:b5e39e0fae001df40f95bd8cc36b9165c5e2ea88900167bddf258bacef9bbdc3", size = 1644256, upload-time = "2024-10-07T19:27:53.355Z" },
-    { url = "https://files.pythonhosted.org/packages/4c/ea/a77bab4cf1887f4b2e0bce5516ea0b3ff7d04ba96af21d65024629afedb6/black-24.10.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:d37d422772111794b26757c5b55a3eade028aa3fde43121ab7b673d050949d65", size = 1448534, upload-time = "2024-10-07T19:26:44.953Z" },
-    { url = "https://files.pythonhosted.org/packages/4e/3e/443ef8bc1fbda78e61f79157f303893f3fddf19ca3c8989b163eb3469a12/black-24.10.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:14b3502784f09ce2443830e3133dacf2c0110d45191ed470ecb04d0f5f6fcb0f", size = 1761892, upload-time = "2024-10-07T19:24:10.264Z" },
-    { url = "https://files.pythonhosted.org/packages/52/93/eac95ff229049a6901bc84fec6908a5124b8a0b7c26ea766b3b8a5debd22/black-24.10.0-cp312-cp312-win_amd64.whl", hash = "sha256:30d2c30dc5139211dda799758559d1b049f7f14c580c409d6ad925b74a4208a8", size = 1434796, upload-time = "2024-10-07T19:25:06.239Z" },
-    { url = "https://files.pythonhosted.org/packages/d0/a0/a993f58d4ecfba035e61fca4e9f64a2ecae838fc9f33ab798c62173ed75c/black-24.10.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:1cbacacb19e922a1d75ef2b6ccaefcd6e93a2c05ede32f06a21386a04cedb981", size = 1643986, upload-time = "2024-10-07T19:28:50.684Z" },
-    { url = "https://files.pythonhosted.org/packages/37/d5/602d0ef5dfcace3fb4f79c436762f130abd9ee8d950fa2abdbf8bbc555e0/black-24.10.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:1f93102e0c5bb3907451063e08b9876dbeac810e7da5a8bfb7aeb5a9ef89066b", size = 1448085, upload-time = "2024-10-07T19:28:12.093Z" },
-    { url = "https://files.pythonhosted.org/packages/47/6d/a3a239e938960df1a662b93d6230d4f3e9b4a22982d060fc38c42f45a56b/black-24.10.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ddacb691cdcdf77b96f549cf9591701d8db36b2f19519373d60d31746068dbf2", size = 1760928, upload-time = "2024-10-07T19:24:15.233Z" },
-    { url = "https://files.pythonhosted.org/packages/dd/cf/af018e13b0eddfb434df4d9cd1b2b7892bab119f7a20123e93f6910982e8/black-24.10.0-cp313-cp313-win_amd64.whl", hash = "sha256:680359d932801c76d2e9c9068d05c6b107f2584b2a5b88831c83962eb9984c1b", size = 1436875, upload-time = "2024-10-07T19:24:42.762Z" },
-    { url = "https://files.pythonhosted.org/packages/8d/a7/4b27c50537ebca8bec139b872861f9d2bf501c5ec51fcf897cb924d9e264/black-24.10.0-py3-none-any.whl", hash = "sha256:3bb2b7a1f7b685f85b11fed1ef10f8a9148bceb49853e47a294a3dd963c1dd7d", size = 206898, upload-time = "2024-10-07T19:20:48.317Z" },
-]
-
-[[package]]
 name = "blake3"
 version = "1.0.5"
 source = { registry = "https://pypi.org/simple" }
@@ -1926,9 +1892,9 @@ version = "25.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cffi", marker = "(platform_python_implementation == 'CPython' and sys_platform == 'win32') or (platform_python_implementation != 'CPython' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'win32' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "greenlet", marker = "platform_python_implementation == 'CPython' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "zope-event" },
-    { name = "zope-interface" },
+    { name = "greenlet", marker = "(platform_python_implementation == 'CPython' and sys_platform != 'darwin') or (platform_python_implementation == 'CPython' and extra == 'extra-18-nemo-export-deploy-trtllm') or (platform_python_implementation == 'CPython' and extra != 'extra-18-nemo-export-deploy-vllm') or (platform_python_implementation != 'CPython' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "zope-event", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "zope-interface", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f1/58/267e8160aea00ab00acd2de97197eecfe307064a376fb5c892870a8a6159/gevent-25.5.1.tar.gz", hash = "sha256:582c948fa9a23188b890d0bc130734a506d039a2e5ad87dae276a456cc683e61", size = 6388207, upload-time = "2025-05-12T12:57:59.833Z" }
 wheels = [
@@ -1973,10 +1939,10 @@ name = "geventhttpclient"
 version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "brotli" },
-    { name = "certifi" },
-    { name = "gevent" },
-    { name = "six" },
+    { name = "brotli", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "certifi", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "gevent", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "six", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/68/98/1ee9fbab4ae97d5f0f05035059a56a61a9c966331e6c837f974b402fdf63/geventhttpclient-2.0.2.tar.gz", hash = "sha256:8135a85200b170def7293d01dd1557931fcd1bec1ac78c52ad7cedd22368b9ba", size = 73821, upload-time = "2022-08-31T07:58:22.189Z" }
 wheels = [
@@ -2620,15 +2586,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ef/4c/5dd1d8af08107f88c7f741ead7a40854b8ac24ddf9ae850afbcf698aa552/ipython_pygments_lexers-1.1.1.tar.gz", hash = "sha256:09c0138009e56b6854f9535736f4171d855c8c08a563a0dcd8022f78355c7e81", size = 8393, upload-time = "2025-01-17T11:24:34.505Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d9/33/1f075bf72b0b747cb3288d011319aaf64083cf2efef8354174e3ed4540e2/ipython_pygments_lexers-1.1.1-py3-none-any.whl", hash = "sha256:a9462224a505ade19a605f71f8fa63c2048833ce50abc86768a0d81d876dc81c", size = 8074, upload-time = "2025-01-17T11:24:33.271Z" },
-]
-
-[[package]]
-name = "isort"
-version = "5.13.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/87/f9/c1eb8635a24e87ade2efce21e3ce8cd6b8630bb685ddc9cdaca1349b2eb5/isort-5.13.2.tar.gz", hash = "sha256:48fdfcb9face5d58a4f6dde2e72a1fb8dcaf8ab26f95ab49fab84c2ddefb0109", size = 175303, upload-time = "2023-12-13T20:37:26.124Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d1/b3/8def84f539e7d2289a02f0524b944b15d7c75dab7628bedf1c4f0992029c/isort-5.13.2-py3-none-any.whl", hash = "sha256:8ca5e72a8d85860d5a3fa69b8745237f2939afe12dbf656afbcb47fe72d947a6", size = 92310, upload-time = "2023-12-13T20:37:23.244Z" },
 ]
 
 [[package]]
@@ -3898,7 +3855,7 @@ dependencies = [
     { name = "lightning" },
     { name = "megatron-core" },
     { name = "nemo-toolkit", extra = ["automodel", "common-only", "eval", "multimodal-only", "nlp-only"] },
-    { name = "nvidia-pytriton" },
+    { name = "nvidia-pytriton", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "omegaconf" },
     { name = "peft" },
     { name = "pydantic-settings" },
@@ -3937,10 +3894,6 @@ build = [
     { name = "setuptools" },
     { name = "torch" },
 ]
-dev = [
-    { name = "black" },
-    { name = "isort" },
-]
 docs = [
     { name = "myst-parser" },
     { name = "nvidia-sphinx-theme" },
@@ -3949,6 +3902,9 @@ docs = [
     { name = "sphinx-autobuild" },
     { name = "sphinx-autodoc2" },
     { name = "sphinx-copybutton" },
+]
+linting = [
+    { name = "ruff" },
 ]
 test = [
     { name = "coverage" },
@@ -3967,7 +3923,7 @@ requires-dist = [
     { name = "megatron-core", specifier = ">=0.12.0" },
     { name = "nemo-toolkit", extras = ["automodel", "common-only", "eval", "multimodal-only", "nlp-only"], git = "https://github.com/NVIDIA/NeMo.git?rev=259d684e73c45091f0b6144342133e6ceb7e824c" },
     { name = "nvidia-modelopt", extras = ["torch"], marker = "extra == 'vllm'", specifier = ">=0.29.0" },
-    { name = "nvidia-pytriton" },
+    { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
     { name = "omegaconf", specifier = "<=2.3" },
     { name = "peft" },
     { name = "pydantic-settings" },
@@ -3996,10 +3952,6 @@ build = [
     { name = "setuptools" },
     { name = "torch", specifier = "==2.6.0" },
 ]
-dev = [
-    { name = "black", specifier = "~=24.3" },
-    { name = "isort", specifier = ">5.1.0,<6.0.0" },
-]
 docs = [
     { name = "myst-parser" },
     { name = "nvidia-sphinx-theme" },
@@ -4008,6 +3960,7 @@ docs = [
     { name = "sphinx-autodoc2" },
     { name = "sphinx-copybutton" },
 ]
+linting = [{ name = "ruff", specifier = "~=0.9.0" }]
 test = [
     { name = "coverage" },
     { name = "pytest" },
@@ -4719,16 +4672,16 @@ name = "nvidia-pytriton"
 version = "0.5.14"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "grpcio" },
-    { name = "importlib-metadata" },
-    { name = "numpy" },
-    { name = "protobuf" },
-    { name = "pyzmq" },
-    { name = "sh" },
-    { name = "tritonclient", extra = ["grpc", "http"] },
-    { name = "typer" },
-    { name = "typing-inspect" },
-    { name = "wrapt" },
+    { name = "grpcio", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "importlib-metadata", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "numpy", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "protobuf", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "pyzmq", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "sh", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "tritonclient", extra = ["grpc", "http"], marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "typer", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "typing-inspect", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "wrapt", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d9/10/c5ef4ce226b88de7ccb5e3693a45025b307b5f7f92f9982af1895223b891/nvidia_pytriton-0.5.14-py3-none-manylinux_2_35_aarch64.whl", hash = "sha256:dffd191e0b74611fc01d62c520a9b965afd82802633158119f1b66dc52c7dded", size = 53812353, upload-time = "2025-02-12T10:45:15.387Z" },
@@ -6831,6 +6784,31 @@ wheels = [
 ]
 
 [[package]]
+name = "ruff"
+version = "0.9.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/8e/fafaa6f15c332e73425d9c44ada85360501045d5ab0b81400076aff27cf6/ruff-0.9.10.tar.gz", hash = "sha256:9bacb735d7bada9cfb0f2c227d3658fc443d90a727b47f206fb33f52f3c0eac7", size = 3759776, upload-time = "2025-03-07T15:27:44.363Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/73/b2/af7c2cc9e438cbc19fafeec4f20bfcd72165460fe75b2b6e9a0958c8c62b/ruff-0.9.10-py3-none-linux_armv6l.whl", hash = "sha256:eb4d25532cfd9fe461acc83498361ec2e2252795b4f40b17e80692814329e42d", size = 10049494, upload-time = "2025-03-07T15:26:51.268Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/12/03f6dfa1b95ddd47e6969f0225d60d9d7437c91938a310835feb27927ca0/ruff-0.9.10-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:188a6638dab1aa9bb6228a7302387b2c9954e455fb25d6b4470cb0641d16759d", size = 10853584, upload-time = "2025-03-07T15:26:56.104Z" },
+    { url = "https://files.pythonhosted.org/packages/02/49/1c79e0906b6ff551fb0894168763f705bf980864739572b2815ecd3c9df0/ruff-0.9.10-py3-none-macosx_11_0_arm64.whl", hash = "sha256:5284dcac6b9dbc2fcb71fdfc26a217b2ca4ede6ccd57476f52a587451ebe450d", size = 10155692, upload-time = "2025-03-07T15:27:01.385Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/01/85e8082e41585e0e1ceb11e41c054e9e36fed45f4b210991052d8a75089f/ruff-0.9.10-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:47678f39fa2a3da62724851107f438c8229a3470f533894b5568a39b40029c0c", size = 10369760, upload-time = "2025-03-07T15:27:04.023Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/90/0bc60bd4e5db051f12445046d0c85cc2c617095c0904f1aa81067dc64aea/ruff-0.9.10-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:99713a6e2766b7a17147b309e8c915b32b07a25c9efd12ada79f217c9c778b3e", size = 9912196, upload-time = "2025-03-07T15:27:06.93Z" },
+    { url = "https://files.pythonhosted.org/packages/66/ea/0b7e8c42b1ec608033c4d5a02939c82097ddcb0b3e393e4238584b7054ab/ruff-0.9.10-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:524ee184d92f7c7304aa568e2db20f50c32d1d0caa235d8ddf10497566ea1a12", size = 11434985, upload-time = "2025-03-07T15:27:10.082Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/86/3171d1eff893db4f91755175a6e1163c5887be1f1e2f4f6c0c59527c2bfd/ruff-0.9.10-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:df92aeac30af821f9acf819fc01b4afc3dfb829d2782884f8739fb52a8119a16", size = 12155842, upload-time = "2025-03-07T15:27:12.727Z" },
+    { url = "https://files.pythonhosted.org/packages/89/9e/700ca289f172a38eb0bca752056d0a42637fa17b81649b9331786cb791d7/ruff-0.9.10-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:de42e4edc296f520bb84954eb992a07a0ec5a02fecb834498415908469854a52", size = 11613804, upload-time = "2025-03-07T15:27:15.944Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/92/648020b3b5db180f41a931a68b1c8575cca3e63cec86fd26807422a0dbad/ruff-0.9.10-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:d257f95b65806104b6b1ffca0ea53f4ef98454036df65b1eda3693534813ecd1", size = 13823776, upload-time = "2025-03-07T15:27:18.996Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/a6/cc472161cd04d30a09d5c90698696b70c169eeba2c41030344194242db45/ruff-0.9.10-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b60dec7201c0b10d6d11be00e8f2dbb6f40ef1828ee75ed739923799513db24c", size = 11302673, upload-time = "2025-03-07T15:27:21.655Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/db/d31c361c4025b1b9102b4d032c70a69adb9ee6fde093f6c3bf29f831c85c/ruff-0.9.10-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:d838b60007da7a39c046fcdd317293d10b845001f38bcb55ba766c3875b01e43", size = 10235358, upload-time = "2025-03-07T15:27:24.72Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/86/d6374e24a14d4d93ebe120f45edd82ad7dcf3ef999ffc92b197d81cdc2a5/ruff-0.9.10-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:ccaf903108b899beb8e09a63ffae5869057ab649c1e9231c05ae354ebc62066c", size = 9886177, upload-time = "2025-03-07T15:27:27.282Z" },
+    { url = "https://files.pythonhosted.org/packages/00/62/a61691f6eaaac1e945a1f3f59f1eea9a218513139d5b6c2b8f88b43b5b8f/ruff-0.9.10-py3-none-musllinux_1_2_i686.whl", hash = "sha256:f9567d135265d46e59d62dc60c0bfad10e9a6822e231f5b24032dba5a55be6b5", size = 10864747, upload-time = "2025-03-07T15:27:30.637Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/94/2c7065e1d92a8a8a46d46d9c3cf07b0aa7e0a1e0153d74baa5e6620b4102/ruff-0.9.10-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:5f202f0d93738c28a89f8ed9eaba01b7be339e5d8d642c994347eaa81c6d75b8", size = 11360441, upload-time = "2025-03-07T15:27:33.356Z" },
+    { url = "https://files.pythonhosted.org/packages/a7/8f/1f545ea6f9fcd7bf4368551fb91d2064d8f0577b3079bb3f0ae5779fb773/ruff-0.9.10-py3-none-win32.whl", hash = "sha256:bfb834e87c916521ce46b1788fbb8484966e5113c02df216680102e9eb960029", size = 10247401, upload-time = "2025-03-07T15:27:35.994Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/18/fb703603ab108e5c165f52f5b86ee2aa9be43bb781703ec87c66a5f5d604/ruff-0.9.10-py3-none-win_amd64.whl", hash = "sha256:f2160eeef3031bf4b17df74e307d4c5fb689a6f3a26a2de3f7ef4044e3c484f1", size = 11366360, upload-time = "2025-03-07T15:27:38.66Z" },
+    { url = "https://files.pythonhosted.org/packages/35/85/338e603dc68e7d9994d5d84f24adbf69bae760ba5efd3e20f5ff2cec18da/ruff-0.9.10-py3-none-win_arm64.whl", hash = "sha256:5fd804c0327a5e5ea26615550e706942f348b197d5475ff34c19733aee4b2e69", size = 10436892, upload-time = "2025-03-07T15:27:41.687Z" },
+]
+
+[[package]]
 name = "s3fs"
 version = "2024.12.0"
 source = { registry = "https://pypi.org/simple" }
@@ -8241,9 +8219,9 @@ name = "tritonclient"
 version = "2.51.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
-    { name = "python-rapidjson" },
-    { name = "urllib3" },
+    { name = "numpy", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "python-rapidjson", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "urllib3", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/23/a6/301bd2f431346adac05ff3c062bbcec0a93b567f1d3ef0d3ccf353a5bcd6/tritonclient-2.51.0-py3-none-any.whl", hash = "sha256:eef99681b0a18ee72808d887d2324a38a81fa1250924e595db46256b83f13668", size = 98012, upload-time = "2024-10-28T20:27:32.065Z" },
@@ -8253,17 +8231,17 @@ wheels = [
 
 [package.optional-dependencies]
 grpc = [
-    { name = "grpcio" },
-    { name = "numpy" },
-    { name = "packaging" },
-    { name = "protobuf" },
-    { name = "python-rapidjson" },
+    { name = "grpcio", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "numpy", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "packaging", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "protobuf", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "python-rapidjson", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 http = [
-    { name = "aiohttp" },
-    { name = "geventhttpclient" },
-    { name = "numpy" },
-    { name = "python-rapidjson" },
+    { name = "aiohttp", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "geventhttpclient", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "numpy", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "python-rapidjson", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 
 [[package]]
@@ -9141,7 +9119,7 @@ name = "zope-event"
 version = "5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "setuptools" },
+    { name = "setuptools", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/46/c2/427f1867bb96555d1d34342f1dd97f8c420966ab564d58d18469a1db8736/zope.event-5.0.tar.gz", hash = "sha256:bac440d8d9891b4068e2b5a2c5e2c9765a9df762944bda6955f96bb9b91e67cd", size = 17350, upload-time = "2023-06-23T06:28:35.709Z" }
 wheels = [
@@ -9153,7 +9131,7 @@ name = "zope-interface"
 version = "7.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "setuptools" },
+    { name = "setuptools", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/30/93/9210e7606be57a2dfc6277ac97dcc864fd8d39f142ca194fdc186d596fda/zope.interface-7.2.tar.gz", hash = "sha256:8b49f1a3d1ee4cdaf5b32d2e738362c7f5e40ac8b46dd7d1a65e82a4872728fe", size = 252960, upload-time = "2024-11-28T08:45:39.224Z" }
 wheels = [
