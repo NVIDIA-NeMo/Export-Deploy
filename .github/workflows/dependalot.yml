@@ -68,16 +68,20 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
           GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
           GPG_TTY: /dev/tty
+        run: echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
+
+      - name: Add the custom gpg siging program that passes the passphrase to the gpg CLI
         run: |
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
-          KEYGRIP=$(gpg --with-keygrip --list-secret-keys | awk '/Keygrip/ {print $3; exit}')
-          echo "$GPG_PASSPHRASE" | /usr/lib/gnupg2/gpg-preset-passphrase --preset "$KEYGRIP"
+          rm -rf /tmp/gpg.sh
+          echo '#!/bin/bash' >> /tmp/gpg.sh
+          echo 'gpg --batch --pinentry-mode=loopback --passphrase $GPG_KEY_PASSPHRASE $@' >> /tmp/gpg.sh
+          chmod +x /tmp/gpg.sh
 
       - name: Configure Git
         run: |
-          KEYID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/ {print $5; exit}')
-          git config --global user.signingkey "$KEYID"
-          git config --global commit.gpgsign true
+          git config commit.gpgsign true
+          git config user.signingkey 2A0D811D627CDD85
+          git config gpg.program /tmp/gpg.sh
 
       - name: Download lock file
         uses: actions/download-artifact@v4
