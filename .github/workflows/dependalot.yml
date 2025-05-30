@@ -66,38 +66,12 @@ jobs:
         run: sudo apt-get install -y gnupg2
 
       - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
         env:
-          GPG_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
-          GPG_TTY: /dev/tty
-        run: |
-          mkdir -p ~/.gnupg
-          chmod 700 ~/.gnupg
-
-          echo "use-agent" >> ~/.gnupg/gpg.conf
-          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          echo RELOADAGENT | gpg-connect-agent
-
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
-
-          # Trust the key
-          KEY_FPR=$(gpg --fingerprint --with-colons | grep '^fpr' | head -n1 | cut -d: -f10)
-          echo "$KEY_FPR:6:1:" > ownertrust.txt
-          gpg --import-ownertrust ownertrust.txt
-
-          # Create GPG wrapper
-          echo '#!/bin/bash' > /tmp/gpg.sh
-          echo "gpg --batch --yes --pinentry-mode loopback --passphrase '${GPG_PASSPHRASE}' \"\$@\"" >> /tmp/gpg.sh
-          chmod +x /tmp/gpg.sh
-
-      - name: Configure Git
-        run: |
-          git config --global commit.gpgsign true
-          git config --global user.signingkey 2A0D811D627CDD85
-          git config --global gpg.program /tmp/gpg.sh
-          git config --global user.name "Oliver König"
-          git config --global user.email "okoenig@nvidia.com"
+          gpg_private_key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PWD }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
 
       - name: Download lock file
         uses: actions/download-artifact@v4
@@ -111,8 +85,6 @@ jobs:
       - name: Create Bump PR
         uses: peter-evans/create-pull-request@v7
         id: create-pull-request
-        env:
-          GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
         with:
           branch: dependabot-${{ steps.ref.outputs.date }}-main
           base: main
@@ -129,8 +101,3 @@ jobs:
           committer: "Oliver König <okoenig@nvidia.com>"
           signoff: true
           sign-commits: true
-
-      - name: Verify commit signature
-        run: |
-          git log --show-signature -1
-          gpg --list-keys --keyid-format LONG
