@@ -21,7 +21,7 @@ dependencies = [
     "megatron-core>=0.12.0",
     "accelerate",
     "fastapi",
-    "nvidia-pytriton",
+    "nvidia-pytriton; platform_system != 'Darwin' ",
     "pydantic-settings",
     "ray",
     "ray[serve]",
@@ -72,7 +72,7 @@ docs = [
     "myst_parser",         # For our markdown docs
     "nvidia-sphinx-theme", # Our NVIDIA theme
 ]
-dev = ["black~=24.3", "isort>5.1.0,<6.0.0"]
+linting = ["ruff~=0.9.0"]
 test = ["pytest", "pytest-mock", "coverage"]
 
 [tool.uv.sources]
@@ -86,7 +86,7 @@ no-build-isolation-package = ["transformer-engine", "transformer-engine-torch"]
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
 # and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
 # avoid including these in the default dependency set, but for now it's required.
-default-groups = ["dev", "build", "test"]
+default-groups = ["linting", "build", "test"]
 # Users may use different link-modes depending on their scenario:
 #  --link-mode=hardlink (default on linux; may get warnings about switching to --link-mode copy if uv cache and venv on different file-systems)
 #  --link-mode=copy (slower but more reliable; supresses warning)
@@ -116,3 +116,26 @@ omit = ["/tmp/*", "/workspace/tests/*"]
 
 [tool.coverage.paths]
 source = ["/workspace/nemo_export/", "/workspace/nemo_deploy/"]
+
+[tool.ruff.lint]
+# Enable all `pydocstyle` rules, limiting to those that adhere to the
+# Google convention via `convention = "google"`, below.
+select = ["D", "F"]
+
+# - On top of the Google convention, disable `D417`, which requires
+#   documentation for every function parameter.
+# - F841: local variable assigned but never used (exluced to favor readability)
+# TODO: Remove D10 once we are about to release to get all the docstrings written
+ignore = ["D417", "D10", "F841"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# Section to exclude errors for different file types
+[tool.ruff.per-file-ignores]
+# Ignore all directories named `tests`.
+"tests/**" = ["D"]
+# Ignore all files that end in `_test.py`.
+"*_test.py" = ["D"]
+# Ignore F401 (import but unused) in __init__.py
+"__init__.py" = ["F401"]
