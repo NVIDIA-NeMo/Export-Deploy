@@ -19,7 +19,8 @@ from typing import Any, Dict
 import safetensors.torch
 import torch
 from vllm.config import ModelConfig
-from vllm.model_executor.model_loader.loader import BaseModelLoader, _initialize_model
+from vllm.model_executor.model_loader.loader import (BaseModelLoader,
+                                                     _initialize_model)
 from vllm.model_executor.model_loader.utils import set_default_torch_dtype
 
 from nemo_export.utils import load_model_weights
@@ -39,7 +40,7 @@ class NemoModelLoader(BaseModelLoader):
 
     @staticmethod
     def _load_nemo_checkpoint_state(nemo_file: str) -> Dict[str, Any]:
-        LOGGER.info(f'Loading weights from {nemo_file}...')
+        LOGGER.info(f"Loading weights from {nemo_file}...")
         return load_model_weights(nemo_file)
 
     def download_model(self, model_config: ModelConfig) -> None:  # pylint: disable=missing-function-docstring
@@ -64,8 +65,8 @@ class NemoModelLoader(BaseModelLoader):
                 model = _initialize_model(vllm_config)
 
             config = model_config.nemo_model_config
-            if 'config' in config:
-                config = config['config']
+            if "config" in config:
+                config = config["config"]
             state_dict = NemoModelLoader._standardize_nemo2_naming(state_dict)
 
             weights_iterator = model_config.model_converter.convert_weights(config, state_dict)
@@ -87,15 +88,15 @@ class NemoModelLoader(BaseModelLoader):
         config = model_config.nemo_model_config
 
         # NeMo2 checkpoint loads the whole TrainerContext where the config is stored under 'config' key
-        if 'config' in config:
-            config = config['config']
+        if "config" in config:
+            config = config["config"]
         state_dict = NemoModelLoader._standardize_nemo2_naming(state_dict)
 
         tensors = {name: tensor for name, tensor in model_config.model_converter.convert_weights(config, state_dict)}
 
-        LOGGER.info(f'Saving weights to {safetensors_file}...')
+        LOGGER.info(f"Saving weights to {safetensors_file}...")
         safetensors.torch.save_file(tensors, safetensors_file)
 
     @staticmethod
     def _standardize_nemo2_naming(state_dict: Dict[str, Any]) -> Dict[str, Any]:
-        return {k.replace('module', 'model'): v for k, v in state_dict.items()}
+        return {k.replace("module", "model"): v for k, v in state_dict.items()}
