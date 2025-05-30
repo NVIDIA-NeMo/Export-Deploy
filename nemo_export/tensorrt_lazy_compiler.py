@@ -44,7 +44,7 @@ lock_sm = threading.Lock()
 
 
 def trt_to_torch_dtype_dict():
-    """Map of TRT dtype -> Torch dtype"""
+    """Map of TRT dtype -> Torch dtype."""
     return {
         trt.int32: torch.int32,
         trt.float32: torch.float32,
@@ -112,16 +112,17 @@ def cuassert(cuda_ret):
 
 
 class ShapeError(Exception):
-    """Exception class to report errors from setting TRT plan input shapes"""
+    """Exception class to report errors from setting TRT plan input shapes."""
 
     pass
 
 
 class TRTEngine:
-    """An auxiliary class to implement running of TRT optimized engines"""
+    """An auxiliary class to implement running of TRT optimized engines."""
 
     def __init__(self, plan_path, logger=None):
-        """Loads serialized engine, creates execution context and activates it
+        """Loads serialized engine, creates execution context and activates it.
+
         Args:
           plan_path: path to serialized TRT engine.
           logger: optional logger object
@@ -152,7 +153,8 @@ class TRTEngine:
         )
 
     def allocate_buffers(self, device):
-        """Allocates outputs to run TRT engine
+        """Allocates outputs to run TRT engine.
+
         Args:
             device: GPU device to allocate memory on
         """
@@ -169,7 +171,8 @@ class TRTEngine:
                 ctx.set_tensor_address(binding, t.data_ptr())
 
     def set_inputs(self, feed_dict, stream):
-        """Sets input bindings for TRT engine according to feed_dict
+        """Sets input bindings for TRT engine according to feed_dict.
+
         Args:
            feed_dict: a dictionary [str->Tensor]
            stream: CUDA stream to use
@@ -242,12 +245,12 @@ class TRTEngine:
 
 
 def make_tensor(d):
-    """Creates a new tensor from d, returns d if d is already a tensor"""
+    """Creates a new tensor from d, returns d if d is already a tensor."""
     return d if isinstance(d, torch.Tensor) else torch.tensor(d).cuda()
 
 
 def unroll_input(input_names, input_example):
-    """Simulates list/tuple unrolling during ONNX export"""
+    """Simulates list/tuple unrolling during ONNX export."""
     unrolled_input = {}
     for name in input_names:
         val = input_example[name]
@@ -311,7 +314,9 @@ def parse_groups(
 
 
 class TrtCompiler:
-    """This class implements:
+    """TrtCompiler.
+
+    This class implements:
     - TRT lazy persistent export
     - Running TRT with optional fallback to Torch
       (for TRT engines with limited profiles)
@@ -336,9 +341,11 @@ class TrtCompiler:
         forward_override=None,
         logger=None,
     ):
-        """Initialization method:
-         Tries to load persistent serialized TRT engine
-         Saves its arguments for lazy TRT build on first forward() call
+        """Initialization method.
+
+        Tries to load persistent serialized TRT engine
+        Saves its arguments for lazy TRT build on first forward() call
+
         Args:
             model: Model to "wrap".
             plan_path : Path where to save persistent serialized TRT engine.
@@ -436,7 +443,8 @@ class TrtCompiler:
             self.logger.info(f"Exception while loading the engine:\n{e}")
 
     def forward(self, model, argv, kwargs):
-        """Main forward method:
+        """Main forward method.
+
          Builds TRT engine if not available yet.
          Tries to run TRT engine
          If exception thrown and self.callback==True: falls back to original Pytorch
@@ -509,7 +517,7 @@ class TrtCompiler:
         return self.old_forward(*argv, **kwargs)
 
     def _onnx_to_trt(self, onnx_path):
-        """Builds TRT engine from ONNX file at onnx_path and saves to self.plan_path"""
+        """Builds TRT engine from ONNX file at onnx_path and saves to self.plan_path."""
         profiles = []
         for profile in self.profiles:
             p = Profile()
@@ -533,8 +541,7 @@ class TrtCompiler:
         )
 
     def _build_and_save(self, model, input_example):
-        """If TRT engine is not ready, exports model to ONNX,
-        builds TRT engine and saves serialized TRT engine to the disk.
+        """If TRT engine is not ready, exports model to ONNX, builds TRT engine and saves serialized TRT engine to the disk.
 
         Args:
              input_example: passed to onnx.export()
@@ -646,6 +653,7 @@ class TrtCompiler:
 
 def trt_forward(self, *argv, **kwargs):
     """Patch function to replace original model's forward() with.
+
     Redirects to TrtCompiler.forward()
     """
     return self._trt_compiler.forward(self, argv, kwargs)
@@ -659,6 +667,7 @@ def trt_compile(
     logger: Any | None = None,
 ) -> torch.nn.Module:
     """Instruments model or submodule(s) with TrtCompiler and replaces its forward() with TRT hook.
+
     Note: TRT 10.3 is recommended for best performance. Some nets may even fail to work with TRT 8.x
     Args:
       model: module to patch with TrtCompiler object.

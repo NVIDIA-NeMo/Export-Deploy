@@ -39,6 +39,7 @@ def prepare_directory_for_export(
     subdir: Optional[str] = None,
 ) -> None:
     """Prepares model_dir path for the TensorRTT-LLM / vLLM export.
+
     Makes sure that the model_dir directory exists and is empty.
 
     Args:

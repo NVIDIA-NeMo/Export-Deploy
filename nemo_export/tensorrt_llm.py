@@ -129,7 +129,7 @@ LOGGER = logging.getLogger("NeMo")
 
 @wrapt.decorator
 def noop_decorator(func):
-    """No op decorator"""
+    """No op decorator."""
 
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -175,7 +175,9 @@ class TensorRTLLM(ITritonDeployable):
         max_tokens_in_paged_kv_cache: int = None,
         multi_block_mode: bool = False,
     ):
-        """Args:
+        """Constructor.
+
+        Args:
         model_dir (str): path for storing the TensorRT-LLM model files.
         lora_ckpt_list (List[str]): lora checkpoint paths.
         load_model (bool): load TensorRT-LLM model if the engine files exist in the model_dir.
@@ -791,6 +793,7 @@ class TensorRTLLM(ITritonDeployable):
 
     def _export_to_nim_format(self, model_config: Dict[str, Any], model_type: str):
         """Exports the model configuration to a specific format required by NIM.
+
         This method performs the following steps:
 
         1. Copies the generation_config.json (if present) from the nemo_context directory to the root model directory.
@@ -826,7 +829,7 @@ class TensorRTLLM(ITritonDeployable):
             f.write("\n")
 
     def get_transformer_config(self, nemo_model_config):
-        """Given nemo model config get transformer config"""
+        """Given nemo model config get transformer config."""
         from megatron.core.transformer.transformer_config import TransformerConfig
 
         normalization = nemo_model_config.get("normalization", "layernorm")
@@ -871,7 +874,7 @@ class TensorRTLLM(ITritonDeployable):
         use_embedding_sharing: bool = False,
         dtype: str = "bfloat16",
     ):
-        """Convert to safe tensor"""
+        """Convert to safe tensor."""
         gpus_per_node = (
             tensor_parallelism_size if gpus_per_node is None else gpus_per_node
         )
@@ -950,9 +953,7 @@ class TensorRTLLM(ITritonDeployable):
             tensorrt_llm.mpi_barrier()
 
     def gather_and_reshard_model(self, model_config, model, storage_dtype):
-        """Accumulate all vp model chunks together, and reshard model (i.e) gather all pp ranks
-        if required and return the final model state dict
-        """
+        """Accumulate all vp model chunks together, and reshard model (i.e) gather all pp ranks if required and return the final model state dict."""
 
         def _get_layer_index(split_key):
             for index, key in enumerate(split_key):
@@ -1088,7 +1089,7 @@ class TensorRTLLM(ITritonDeployable):
         return model_state_dict
 
     def get_input_dtype(self, storage_dtype):
-        """Return mcore export dtype given torch dtype"""
+        """Return mcore export dtype given torch dtype."""
         from megatron.core.export.data_type import DataType
 
         if storage_dtype == torch.bfloat16:
@@ -1100,7 +1101,8 @@ class TensorRTLLM(ITritonDeployable):
 
     @staticmethod
     def get_nemo_to_trtllm_conversion_dict(model_state_dict):
-        """MCore export supports some default conversion dictionaries
+        """MCore export supports some default conversion dictionaries.
+
         All Mcore conversion dicts start with "decoder.layers.4.blah.blah" , while nemo models sometimes start with "model.decoder.layers.4.blahblah". so we append model prefix. to the keys
         """
         from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
@@ -1265,6 +1267,7 @@ class TensorRTLLM(ITritonDeployable):
 
     def refit(self, model, model_config, use_mcore_path=True):
         """Refits an TensorRT engine using an instantiated nemo model.
+
         This function should only be used after calling build()
         """
         weights_dict = None
@@ -1442,7 +1445,7 @@ class TensorRTLLM(ITritonDeployable):
                 )
 
     def add_prompt_table(self, task_name: str, prompt_embeddings_checkpoint_path: str):
-        """Add prompt table"""
+        """Add prompt table."""
         if self.model is None:
             raise Exception(
                 "A nemo checkpoint should be exported to TensorRT-LLM and "
@@ -1468,7 +1471,7 @@ class TensorRTLLM(ITritonDeployable):
         self._prep_ptuning_table()
 
     def remove_prompt_table(self, task_name: str):
-        """Remove prompt table"""
+        """Remove prompt table."""
         if self.ptuning_tables is not None:
             for i in range(len(self.ptuning_tables)):
                 if self.ptuning_tables[i]["task_name"] == task_name:
@@ -1481,7 +1484,7 @@ class TensorRTLLM(ITritonDeployable):
             self._prep_ptuning_table()
 
     def _pad_logits(self, logits_tensor):
-        """Pads the logits tensor with 0's on the right"""
+        """Pads the logits tensor with 0's on the right."""
         padding_len = max([logit_tensor.shape[0] for logit_tensor in logits_tensor])
         for i, tensor in enumerate(logits_tensor):
             tensor_len = tensor.shape[0]
@@ -1495,13 +1498,13 @@ class TensorRTLLM(ITritonDeployable):
 
     @property
     def get_supported_models_list(self):
-        """Supported model list"""
+        """Supported model list."""
         # gpt and gptnext are the same. Keeping the gptnext due to backward compatibility.
         return ["gpt", "gptnext", "llama", "falcon", "starcoder", "mixtral", "gemma"]
 
     @property
     def get_supported_hf_model_mapping(self):
-        """Supported HF Model Mapping"""
+        """Supported HF Model Mapping."""
         HF_MODEL_CLASS_MAP = {
             "GPT2LMHeadModel": GPTForCausalLM,
             "GPT2LMHeadCustomModel": GPTForCausalLM,
@@ -1580,7 +1583,7 @@ class TensorRTLLM(ITritonDeployable):
 
     @property
     def get_hidden_size(self):
-        """Get hidden size"""
+        """Get hidden size."""
         if self.config is None:
             return None
         else:
@@ -1588,7 +1591,7 @@ class TensorRTLLM(ITritonDeployable):
 
     @property
     def get_triton_input(self):
-        """Get triton input"""
+        """Get triton input."""
         inputs = (
             Tensor(name="prompts", shape=(-1,), dtype=bytes),
             Tensor(name="max_output_len", shape=(-1,), dtype=np.int_, optional=True),
@@ -1639,7 +1642,7 @@ class TensorRTLLM(ITritonDeployable):
         "output_context_logits",
     )
     def triton_infer_fn(self, **inputs: np.ndarray):
-        """Triton infer function for streaming"""
+        """Triton infer function for streaming."""
         output_dict = {}
         context_logits_available = False
         generation_logits_available = False
@@ -1735,7 +1738,7 @@ class TensorRTLLM(ITritonDeployable):
         "no_repeat_ngram_size",
     )
     def triton_infer_fn_streaming(self, **inputs: np.ndarray):
-        """Triton infer function for streaming"""
+        """Triton infer function for streaming."""
         try:
             infer_input = {"input_texts": str_ndarray2list(inputs.pop("prompts"))}
             if "max_output_len" in inputs:
@@ -1979,5 +1982,5 @@ class TensorRTLLM(ITritonDeployable):
                     ) from error
 
     def unload_engine(self):
-        """Unload engine"""
+        """Unload engine."""
         unload_engine()

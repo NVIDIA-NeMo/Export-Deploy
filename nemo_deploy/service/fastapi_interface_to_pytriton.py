@@ -100,8 +100,8 @@ def health_check():
 
 @app.get("/v1/triton_health")
 async def check_triton_health():
-    """This method exposes endpoint "/triton_health" which can be used to verify if Triton server is accessible while
-    running the REST or FastAPI application.
+    """This method exposes endpoint "/triton_health" which can be used to verify if Triton server is accessible while running the REST or FastAPI application.
+
     Verify by running: curl http://service_http_address:service_port/v1/triton_health and the returned status should
     inform if the server is accessible.
     """
@@ -120,7 +120,7 @@ async def check_triton_health():
 
 
 def convert_numpy(obj):
-    """Convert NumPy arrays in output to lists"""
+    """Convert NumPy arrays in output to lists."""
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     elif isinstance(obj, dict):
@@ -142,7 +142,7 @@ def _helper_fun(
     max_length,
     apply_chat_template,
 ):
-    """run_in_executor doesn't allow to pass kwargs, so we have this helper function to pass args as a list"""
+    """run_in_executor doesn't allow to pass kwargs, so we have this helper function to pass args as a list."""
     nq = NemoQueryLLMPyTorch(url=url, model_name=model)
     output = nq.query_llm(
         prompts=prompts,
@@ -169,7 +169,9 @@ async def query_llm_async(
     max_length,
     apply_chat_template,
 ):
-    """Sends requests to `NemoQueryLLMPyTorch.query_llm` in a non-blocking way, allowing the server to process
+    """query_llm_async.
+
+    Sends requests to `NemoQueryLLMPyTorch.query_llm` in a non-blocking way, allowing the server to process
     concurrent requests. This way enables batching of requests in the underlying Triton server.
     """
     import asyncio
@@ -230,7 +232,7 @@ async def completions_v1(request: CompletionRequest):
 
 
 def dict_to_str(messages):
-    """Serializes dict to str"""
+    """Serializes dict to str."""
     return json.dumps(messages)
 
 

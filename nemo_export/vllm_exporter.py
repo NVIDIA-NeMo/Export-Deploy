@@ -51,7 +51,7 @@ LOGGER = logging.getLogger("NeMo")
 
 @wrapt.decorator
 def noop_decorator(func):
-    """Used as batch if pytriton is not supported"""
+    """Used as batch if pytriton is not supported."""
 
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -69,8 +69,7 @@ except Exception:
 
 
 class vLLMExporter(ITritonDeployable):
-    """The vLLMExporter class implements conversion from a Nemo checkpoint format to something compatible with vLLM,
-    loading the model in vLLM, and binding that model to a Triton server.
+    """The vLLMExporter class implements conversion from a Nemo checkpoint format to something compatible with vLLM,loading the model in vLLM, and binding that model to a Triton server.
 
     Example:
         from nemo_export.vllm_exporter import vLLMExporter
@@ -524,8 +523,9 @@ class vLLMExporter(ITritonDeployable):
         output_generation_logits: bool = False,
         output_context_logits: bool = False,
     ) -> Union[List[List[str]], Iterable[List[List[str]]]]:
-        """The forward function performs LLM evaluation on the provided array of prompts with other parameters shared,
-        and returns the generated texts. If 'streaming' is True, the output texts are returned incrementally
+        """The forward function performs LLM evaluation on the provided array of prompts with other parameters shared, and returns the generated texts.
+
+        If 'streaming' is True, the output texts are returned incrementally
         with a generator: one token appended to each output at a time. If 'streaming' is false, the final output texts
         are returned as a single list of responses.
         """

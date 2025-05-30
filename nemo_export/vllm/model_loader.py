@@ -29,8 +29,7 @@ LOGGER = logging.getLogger("NeMo")
 
 
 class NemoModelLoader(BaseModelLoader):
-    """Implements a custom ModelLoader for vLLM that reads the weights from a Nemo checkpoint
-    and converts them to a vLLM compatible format at load time.
+    """Implements a custom ModelLoader for vLLM that reads the weights from a Nemo checkpoint and converts them to a vLLM compatible format at load time.
 
     Also supports an ahead-of-time conversion that stores new weights in a Safetensors file,
     see convert_and_store_nemo_weights(...)

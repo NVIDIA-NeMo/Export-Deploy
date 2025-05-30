@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """This script exports multimodal model to TensorRT and do a local inference test.
+
 For multimodal model, it supports the following models:
 - NEVA
 - Video-NEVA

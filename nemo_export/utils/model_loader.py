@@ -198,7 +198,9 @@ def nemo_weights_directory(nemo_path: Union[Path, TarPath]) -> Union[Path, TarPa
 def load_model_weights(
     checkpoint_path: Union[str, Path], load_extra_states: bool = False
 ) -> Dict[str, Any]:
-    """Loads NeMo state dictionary. Weights are stored in torch.Tensor
+    """Loads NeMo state dictionary.
+
+    Weights are stored in torch.Tensor
 
     Args:
         checkpoint_path (str | Path): Path to the NeMo checkpoint.

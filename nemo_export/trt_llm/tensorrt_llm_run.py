@@ -496,9 +496,7 @@ def forward(
 
 
 def load_distributed(engine_dir, model_parallel_rank, gpus_per_node):
-    """Loads TRTLLM engines in a distributed gpu environment, in particular
-    this function creates a custom mapping of device_id to WorldConfig
-    """
+    """Loads TRTLLM engines in a distributed gpu environment, in particular this function creates a custom mapping of device_id to WorldConfig."""
     global tensorrt_llm_worker_context
     if isinstance(tensorrt_llm_worker_context.decoder, ModelRunner):
         return
@@ -663,7 +661,7 @@ def refit(weights_dict: dict):
 
 
 def unload_engine():
-    """Deletes the ModelRunner which should free up device memory"""
+    """Deletes the ModelRunner which should free up device memory."""
     global tensorrt_llm_worker_context
     decoder = tensorrt_llm_worker_context.decoder
     if not isinstance(decoder, ModelRunner):
@@ -949,7 +947,8 @@ def to_word_list_format(
     tokenizer=None,
     ref_str="<extra_id_1>",
 ):
-    """Format of word_dict
+    """Format of word_dict.
+
     len(word_dict) should be same to batch_size
     word_dict[i] means the words for batch i
     len(word_dict[i]) must be 1, which means it only contains 1 string

@@ -208,9 +208,7 @@ class TarPath:
 
 
 class ZarrPathStore(BaseStore):
-    """An implementation of read-only Store for zarr library
-    that works with pathlib.Path or TarPath objects.
-    """
+    """An implementation of read-only Store for zarr library that works with pathlib.Path or TarPath objects."""
 
     def __init__(self, tarpath: TarPath):
         assert HAVE_ZARR, "Package zarr>=2.18.2,<3.0.0 is required to use ZarrPathStore"

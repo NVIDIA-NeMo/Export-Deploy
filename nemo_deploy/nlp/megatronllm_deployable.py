@@ -70,6 +70,7 @@ LOGGER = logging.getLogger("NeMo")
 
 class MegatronLLMDeploy:
     """A factory class for creating deployable instances of Megatron LLM models.
+
     This class provides a method to get the appropriate deployable instance
     based on the version of the NeMo checkpoint model used.
     """
@@ -121,7 +122,7 @@ class MegatronLLMDeploy:
 
 
 class MegatronLLMDeployableNemo2(ITritonDeployable):
-    """Triton inference server compatible deploy class for a .nemo model file
+    """Triton inference server compatible deploy class for a .nemo model file.
 
     Args:
         nemo_checkpoint_filepath (str): path for the nemo checkpoint.
@@ -252,6 +253,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
     def apply_chat_template(self, messages, add_generation_prompt=True):
         """Load the chat template.
+
         Works when model's tokenizer has chat template (typically chat models).
         """
         try:
@@ -276,7 +278,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         return rendered_output
 
     def remove_eos_token(self, text):
-        """Removes eos token if it exists in the output, otherwise does nothing"""
+        """Removes eos token if it exists in the output, otherwise does nothing."""
         eos_token = self.mcore_tokenizer.tokenizer.tokenizer.eos_token
         output = []
         for t in text:

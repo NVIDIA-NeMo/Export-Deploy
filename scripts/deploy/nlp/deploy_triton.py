@@ -381,7 +381,8 @@ def get_args(argv):
 
 
 def store_args_to_json(args):
-    """Stores user defined arg values relevant for REST API in config.json
+    """Stores user defined arg values relevant for REST API in config.json.
+
     Gets called only when args.start_rest_service is True.
     """
     args_dict = {

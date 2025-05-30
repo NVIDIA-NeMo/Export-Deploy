@@ -77,6 +77,7 @@ def preprocess_scaling_factors_for_local_export(
     state_dict: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Scaling factors are kept in BufferIO objects.
+
     This function reads the exact scales, preparing them for export.
     Used only for local (non-mcore) path.
 
@@ -477,6 +478,7 @@ def load_distributed_model_weights(
     torch_tensor: bool = True,
 ) -> Dict[str, Any]:
     """Loads model weights in `torch_dist` format from the model path.
+
     Preprocesses the scaling factors for local export if mcore_scales_format is set to False.
 
     Args:
@@ -704,6 +706,7 @@ class UnpackedNemoCheckpointDir:
         self, tensor_model_parallel_size=1, pipeline_model_parallel_size=1
     ):
         """Injects tensor/pipeline model parallel ranks into the filepath.
+
         Does nothing if not using model parallelism.
         """
         checkpoint_path_without_rank = self.checkpoints_dir / self.checkpoint_name

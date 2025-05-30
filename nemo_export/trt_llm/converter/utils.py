@@ -116,7 +116,9 @@ def save_expert_split(split_vals, dir, key, i, split_factor):
 
 
 def generate_int8(weights, act_range, is_qkv=False, multi_query_mode=False):
-    """This function has two purposes:
+    """Generates int8.
+
+    This function has two purposes:
     - compute quantized weights, scaled either per-tensor or per-column
     - compute scaling factors.
 

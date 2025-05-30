@@ -19,9 +19,7 @@ import torch
 
 
 class ModelConverter(ABC):
-    """Abstract class that defines the interface for a converter that implements model-specific conversion functions
-    for deploying NeMo checkpoints on vLLM.
-    """
+    """Abstract class that defines the interface for a converter that implements model-specific conversion functions for deploying NeMo checkpoints on vLLM."""
 
     def __init__(self, model_type: str):
         self.model_type = model_type
@@ -32,9 +30,7 @@ class ModelConverter(ABC):
         pass
 
     def convert_config(self, nemo_model_config: dict, hf_config: dict) -> None:
-        """Implements any custom HF configuration adjustments in the 'hf_config' dict that are necessary
-        for this model after the common translation takes place in NemoModelConfig's constructor.
-        """
+        """Implements any custom HF configuration adjustments in the 'hf_config' dict that are necessary for this model after the common translation takes place in NemoModelConfig's constructor."""
         pass
 
     @abstractmethod
@@ -46,6 +42,7 @@ class ModelConverter(ABC):
 
     def requires_bos_token(self) -> bool:
         """Returns True if the model requires a 'bos' token to be used at the beginning of the input sequence.
+
         NeMo checkpoints do not store this information.
         """
         return False
@@ -537,9 +534,7 @@ _MODEL_CONVERTERS = {
 
 
 def register_model_converter(model_type, cls):
-    """Establishes a mapping from short model type to a class that converts the model from Nemo format
-    to a vLLM compatible format.
-    """
+    """Establishes a mapping from short model type to a class that converts the model from Nemo format to a vLLM compatible format."""
     _MODEL_CONVERTERS[model_type] = cls
 
 

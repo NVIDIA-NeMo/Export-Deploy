@@ -26,8 +26,7 @@ from nemo_deploy.utils import cast_output, str_ndarray2list
 
 
 class vLLMHFExporter(ITritonDeployable):
-    """The Exporter class uses vLLM APIs to convert a HF model to vLLM and makes the class,
-    deployable with Triton server.
+    """The Exporter class uses vLLM APIs to convert a HF model to vLLM and makes the class, deployable with Triton server.
 
     Example:
         from nemo_export import vLLMHFExporter

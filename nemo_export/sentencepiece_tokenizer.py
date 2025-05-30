@@ -21,7 +21,7 @@ import torch
 
 
 class SentencePieceTokenizer:
-    """SentencePieceTokenizer https://github.com/google/sentencepiece
+    """SentencePieceTokenizer (https://github.com/google/sentencepiece).
 
     Args:
         model_path: path to sentence piece tokenizer model.

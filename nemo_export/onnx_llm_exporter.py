@@ -35,7 +35,7 @@ from nemo_export.utils import (
 
 @wrapt.decorator
 def noop_decorator(func):
-    """No op decorator"""
+    """No op decorator."""
 
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -468,30 +468,30 @@ class OnnxLLMExporter(ITritonDeployable):
 
     @property
     def get_model(self):
-        """Returns the model"""
+        """Returns the model."""
         return self.model
 
     @property
     def get_tokenizer(self):
-        """Returns the tokenizer"""
+        """Returns the tokenizer."""
         return self.tokenizer
 
     @property
     def get_model_input_names(self):
-        """Returns the model input names"""
+        """Returns the model input names."""
         return self.model_input_names
 
     @property
     def get_triton_input(self):
-        """Get triton input"""
+        """Get triton input."""
         raise NotImplementedError("This function will be implemented later.")
 
     @property
     def get_triton_output(self):
-        """Get triton output"""
+        """Get triton output."""
         raise NotImplementedError("This function will be implemented later.")
 
     @batch
     def triton_infer_fn(self, **inputs: np.ndarray):
-        """PyTriton inference function"""
+        """PyTriton inference function."""
         raise NotImplementedError("This function will be implemented later.")

@@ -105,8 +105,9 @@ def reformat_module_names_to_hf(
 def convert_lora_weights_to_canonical(
     config: Dict[str, Any], lora_weights: Dict[str, torch.Tensor]
 ) -> Dict[str, torch.Tensor]:
-    """This function converts nemo style (fused) lora weights to canonical (unfused)
-    LoRA weights. Namely, it unfuses the QKV adapter layers and the H-to-4H adapter layers.
+    """This function converts nemo style (fused) lora weights to canonical (unfused) LoRA weights.
+
+    Namely, it unfuses the QKV adapter layers and the H-to-4H adapter layers.
 
     Returns:
         Dict[str, torch.Tensor]: The new LoRA weights with unfused layers.

@@ -144,7 +144,7 @@ class DeployPyTriton(DeployBase):
             print(e)
 
     def serve(self):
-        """Starts serving the model and waits for the requests"""
+        """Starts serving the model and waits for the requests."""
         if self.triton is None:
             raise Exception("deploy should be called first.")
 

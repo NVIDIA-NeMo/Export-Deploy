@@ -45,8 +45,7 @@ LOGGER = logging.getLogger("NeMo")
 def _load_dist_shards_into_model(
     model: List[MegatronModule], weights_dir: Path
 ) -> None:
-    """Load a NeMo-2 distributed checkpoint (torch_dist .distcp shards) into
-    an already-constructed Megatron model list.
+    """Load a NeMo-2 distributed checkpoint (torch_dist .distcp shards) into an already-constructed Megatron model list.
 
     Args:
         model (List[MegatronModule]): The list of Megatron model modules
@@ -81,6 +80,7 @@ def _load_dist_shards_into_model(
 
 def cleanup_distributed() -> None:
     """Clean up the distributed environment by destroying the process group.
+
     This prevents resource leaks and warnings about destroy_process_group() not being called.
     """
     if torch.distributed.is_initialized():

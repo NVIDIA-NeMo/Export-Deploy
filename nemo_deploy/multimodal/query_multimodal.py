@@ -35,7 +35,7 @@ except Exception:
 
 
 class NemoQueryMultimodal:
-    """Sends a query to Triton for Multimodal inference
+    """Sends a query to Triton for Multimodal inference.
 
     Example:
         from nemo_deploy.multimodal import NemoQueryMultimodal
@@ -60,7 +60,7 @@ class NemoQueryMultimodal:
         self.model_type = model_type
 
     def setup_media(self, input_media):
-        """Setup input media"""
+        """Setup input media."""
         if self.model_type == "video-neva":
             vr = VideoReader(input_media)
             frames = [f.asnumpy() for f in vr]
@@ -82,7 +82,7 @@ class NemoQueryMultimodal:
             raise RuntimeError(f"Invalid model type {self.model_type}")
 
     def frame_len(self, frames):
-        """Get frame len"""
+        """Get frame len."""
         max_frames = 256
         if len(frames) <= max_frames:
             return len(frames)
@@ -91,7 +91,7 @@ class NemoQueryMultimodal:
             return int(np.round(float(len(frames)) / subsample))
 
     def get_subsampled_frames(self, frames, subsample_len):
-        """Get subsampled frames"""
+        """Get subsampled frames."""
         idx = np.round(np.linspace(0, len(frames) - 1, subsample_len)).astype(int)
         sub_frames = [frames[i] for i in idx]
         return sub_frames
@@ -110,7 +110,7 @@ class NemoQueryMultimodal:
         init_timeout=60.0,
         lora_uids=None,
     ):
-        """Run query"""
+        """Run query."""
         prompts = str_list2numpy([input_text])
         inputs = {"input_text": prompts}
 

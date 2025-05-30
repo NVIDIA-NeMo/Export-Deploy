@@ -41,7 +41,7 @@ class NemoQueryLLMBase(ABC):
 
 
 class NemoQueryLLMPyTorch(NemoQueryLLMBase):
-    """Sends a query to Triton for LLM inference
+    """Sends a query to Triton for LLM inference.
 
     Example:
         from nemo_deploy import NemoTritonQueryLLMPyTorch
@@ -180,7 +180,7 @@ class NemoQueryLLMPyTorch(NemoQueryLLMBase):
 
 
 class NemoQueryLLMHF(NemoQueryLLMBase):
-    """Sends a query to Triton for LLM inference
+    """Sends a query to Triton for LLM inference.
 
     Example:
         from nemo_deploy import NemoQueryLLMHF
@@ -306,7 +306,7 @@ class NemoQueryLLMHF(NemoQueryLLMBase):
 
 
 class NemoQueryLLM(NemoQueryLLMBase):
-    """Sends a query to Triton for LLM inference
+    """Sends a query to Triton for LLM inference.
 
     Example:
         from nemo_deploy import NemoQueryLLM

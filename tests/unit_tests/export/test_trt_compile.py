@@ -39,6 +39,7 @@ class ListAdd(torch.nn.Module):
         return x1, [y1, z1], y1 + z1
 
 
+# ruff: noqa: F821
 @unittest.skip
 class TestTRTCompile(unittest.TestCase):
     def setUp(self):

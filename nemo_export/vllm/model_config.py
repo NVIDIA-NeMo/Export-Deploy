@@ -36,9 +36,7 @@ from nemo_export.vllm.model_converters import get_model_converter
 
 
 class NemoModelConfig(ModelConfig):
-    """This class pretents to be a vllm.config.ModelConfig (with extra fields) but skips
-    some of its initialization code, and initializes the configuration from a Nemo checkpoint instead.
-    """
+    """This class pretents to be a vllm.config.ModelConfig (with extra fields) but skips some of its initialization code, and initializes the configuration from a Nemo checkpoint instead."""
 
     def __init__(
         self,
@@ -259,7 +257,7 @@ class NemoModelConfig(ModelConfig):
         return hf_args
 
     def try_get_generation_config(self, *args, **kwargs):
-        """Prevent vLLM from trying to load a generation config"""
+        """Prevent vLLM from trying to load a generation config."""
         nemo_path = Path(self.nemo_checkpoint)
         generation_config_path = (
             nemo_path / "context" / "artifacts" / "generation_config.json"

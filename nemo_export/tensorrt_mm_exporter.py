@@ -42,7 +42,7 @@ except Exception:
 
 @wrapt.decorator
 def noop_decorator(func):
-    """No op decorator"""
+    """No op decorator."""
 
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -115,7 +115,7 @@ class TensorRTMMExporter(ITritonDeployable):
         lora_checkpoint_path: str = None,
         max_lora_rank: int = 64,
     ):
-        """Export multimodal models to TRTLLM"""
+        """Export multimodal models to TRTLLM."""
         if Path(self.model_dir).exists():
             if delete_existing_files and len(os.listdir(self.model_dir)) > 0:
                 for files in os.listdir(self.model_dir):
@@ -180,22 +180,13 @@ class TensorRTMMExporter(ITritonDeployable):
                 lora_ckpt_list=llm_lora_path,
             )
 
-            if model_type == "salm":
-                perception_dir = os.path.join(self.model_dir, "perception_engine")
-                build_perception_engine(
-                    perception_dir,
-                    visual_checkpoint_path,
-                    model_type,
-                    vision_max_batch_size,
-                )
-            else:
-                visual_dir = os.path.join(self.model_dir, "visual_engine")
-                build_visual_engine(
-                    visual_dir,
-                    visual_checkpoint_path if lora_dir is None else lora_dir,
-                    model_type,
-                    vision_max_batch_size,
-                )
+            visual_dir = os.path.join(self.model_dir, "visual_engine")
+            build_visual_engine(
+                visual_dir,
+                visual_checkpoint_path if lora_dir is None else lora_dir,
+                model_type,
+                vision_max_batch_size,
+            )
 
             if tmp_dir is not None:
                 tmp_dir.cleanup()
@@ -216,7 +207,7 @@ class TensorRTMMExporter(ITritonDeployable):
         num_beams: int = 1,
         lora_uids: List[str] = None,
     ):
-        """Run forward with loaded TRTLLM engine"""
+        """Run forward with loaded TRTLLM engine."""
         if self.runner is None:
             raise Exception(
                 "A nemo checkpoint should be exported and "
@@ -253,7 +244,7 @@ class TensorRTMMExporter(ITritonDeployable):
             )
 
     def get_input_media_tensors(self):
-        """Get input media tensors"""
+        """Get input media tensors."""
         if self.modality == "vision":
             return [Tensor(name="input_media", shape=(-1, -1, -1, 3), dtype=np.uint8)]
         elif self.modality == "audio":
