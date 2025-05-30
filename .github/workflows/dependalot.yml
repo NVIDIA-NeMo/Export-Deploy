@@ -59,6 +59,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
 
       - name: Install GPG
         run: sudo apt-get install -y gnupg2
@@ -95,12 +97,11 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         id: create-pull-request
         env:
-          title: "chore(🤖): Bump dependencies (${{ steps.date.outputs.main }})"
           GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
         with:
           branch: dependabot-${{ steps.ref.outputs.date }}-main
           base: main
-          title: ${{ env.title }}
+          title: "chore(🤖): Bump dependencies (${{ steps.date.outputs.main }})"
           token: ${{ secrets.PAT }}
           body: |
             🚀 PR to bump dependencies.  
@@ -109,6 +110,6 @@ jobs:
             - [ ] Verify the presubmit CI  
 
             🙏 Please merge this PR only if the CI workflow completed successfully.
-          commit-message: ${{ env.title }}
+          commit-message: "build: uv.lock"
           signoff: true
           sign-commits: true
