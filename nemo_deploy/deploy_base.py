@@ -85,10 +85,16 @@ class DeployBase(ABC):
 
     def _init_nemo_model(self):
         if self.checkpoint_path is not None:
-            model_config = ModelPT.restore_from(self.checkpoint_path, return_config=True)
-            module_path, class_name = DeployBase.get_module_and_class(model_config.target)
+            model_config = ModelPT.restore_from(
+                self.checkpoint_path, return_config=True
+            )
+            module_path, class_name = DeployBase.get_module_and_class(
+                model_config.target
+            )
             cls = getattr(importlib.import_module(module_path), class_name)
-            self.model = cls.restore_from(restore_path=self.checkpoint_path, trainer=Trainer())
+            self.model = cls.restore_from(
+                restore_path=self.checkpoint_path, trainer=Trainer()
+            )
             self.model.freeze()
 
             # has to turn off activations_checkpoint_method for inference
@@ -105,7 +111,8 @@ class DeployBase(ABC):
     def _is_model_deployable(self):
         if not issubclass(type(self.model), ITritonDeployable):
             raise Exception(
-                "This model is not deployable to Triton." "nemo_deploy.ITritonDeployable class should be inherited"
+                "This model is not deployable to Triton."
+                "nemo_deploy.ITritonDeployable class should be inherited"
             )
         else:
             return True

@@ -27,8 +27,13 @@ from megatron.core.inference.common_inference_params import CommonInferenceParam
 from megatron.core.inference.inference_request import InferenceRequest
 
 from nemo_deploy import ITritonDeployable
-from nemo_deploy.utils import (NEMO2, broadcast_list, cast_output,
-                               nemo_checkpoint_version, str_ndarray2list)
+from nemo_deploy.utils import (
+    NEMO2,
+    broadcast_list,
+    cast_output,
+    nemo_checkpoint_version,
+    str_ndarray2list,
+)
 
 from .inference.inference_base import create_mcore_engine
 
@@ -47,9 +52,7 @@ def noop_decorator(func):
     """
 
     def wrapper(*args, **kwargs):
-        """
-        Wrapper method returning the func.
-        """
+        """Wrapper method returning the func."""
         return func(*args, **kwargs)
 
     return wrapper
@@ -67,8 +70,8 @@ LOGGER = logging.getLogger("NeMo")
 
 
 class MegatronLLMDeploy:
-    """
-    A factory class for creating deployable instances of Megatron LLM models.
+    """A factory class for creating deployable instances of Megatron LLM models.
+
     This class provides a method to get the appropriate deployable instance
     based on the version of the NeMo checkpoint model used.
     """
@@ -87,8 +90,7 @@ class MegatronLLMDeploy:
         enable_flash_decode: bool = False,
         enable_cuda_graphs: bool = False,
     ):
-        """
-        Returns the appropriate deployable instance for the given NeMo checkpoint.
+        """Returns the appropriate deployable instance for the given NeMo checkpoint.
 
         Args:
             nemo_checkpoint_filepath (str): Path to the .nemo checkpoint file.
@@ -121,8 +123,7 @@ class MegatronLLMDeploy:
 
 
 class MegatronLLMDeployableNemo2(ITritonDeployable):
-    """
-    Triton inference server compatible deploy class for a .nemo model file
+    """Triton inference server compatible deploy class for a .nemo model file.
 
     Args:
         nemo_checkpoint_filepath (str): path for the nemo checkpoint.
@@ -159,34 +160,38 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         max_batch_size: int = 8,
         random_seed: Optional[int] = None,
     ):
-        self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = create_mcore_engine(
-            num_devices=num_devices,
-            num_nodes=num_nodes,
-            path=Path(nemo_checkpoint_filepath),
-            params_dtype=params_dtype,
-            inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
-            inference_max_seq_length=inference_max_seq_length,
-            max_batch_size=max_batch_size,
-            random_seed=random_seed,
-            tensor_model_parallel_size=tensor_model_parallel_size,
-            expert_model_parallel_size=expert_model_parallel_size,
-            pipeline_model_parallel_size=pipeline_model_parallel_size,
-            context_parallel_size=context_parallel_size,
-            enable_flash_decode=enable_flash_decode,
-            enable_cuda_graphs=enable_cuda_graphs,
+        self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = (
+            create_mcore_engine(
+                num_devices=num_devices,
+                num_nodes=num_nodes,
+                path=Path(nemo_checkpoint_filepath),
+                params_dtype=params_dtype,
+                inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
+                inference_max_seq_length=inference_max_seq_length,
+                max_batch_size=max_batch_size,
+                random_seed=random_seed,
+                tensor_model_parallel_size=tensor_model_parallel_size,
+                expert_model_parallel_size=expert_model_parallel_size,
+                pipeline_model_parallel_size=pipeline_model_parallel_size,
+                context_parallel_size=context_parallel_size,
+                enable_flash_decode=enable_flash_decode,
+                enable_cuda_graphs=enable_cuda_graphs,
+            )
         )
         self.enable_cuda_graphs = enable_cuda_graphs
         self.max_batch_size = max_batch_size
 
     def generate(
-        self, prompts: List[str], inference_params: Optional[CommonInferenceParams] = None
+        self,
+        prompts: List[str],
+        inference_params: Optional[CommonInferenceParams] = None,
     ) -> List[InferenceRequest]:
-        """
-        Generates text based on the provided input prompts.
+        """Generates text based on the provided input prompts.
 
         Args:
             prompts (List[str]): A list of input strings.
             inference_params (Optional[CommonInferenceParams]): Parameters for controlling the inference process.
+
         Returns:
             List[InferenceRequest]: A list containing the generated results.
         """
@@ -204,7 +209,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             # Add sample prompts to reach max_batch_size
             # We'll duplicate the first prompt for simplicity
             sample_prompt = prompts[0] if prompts else ""
-            padded_prompts.extend([sample_prompt] * (self.max_batch_size - orig_num_prompts))
+            padded_prompts.extend(
+                [sample_prompt] * (self.max_batch_size - orig_num_prompts)
+            )
 
             results = self.mcore_engine.generate(
                 prompts=padded_prompts,
@@ -223,16 +230,15 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             return list(results)
 
     def generate_other_ranks(self):
-        """
-        Generate function for ranks other than the rank 0.
-        """
-
+        """Generate function for ranks other than the rank 0."""
         while True:
             message = torch.empty(1, dtype=torch.long, device="cuda")
             torch.distributed.broadcast(message, src=0)
             if message == 0:
                 prompts = broadcast_list(data=[None], src=0)
-                temperature, top_k, top_p, num_tokens_to_generate, log_probs = broadcast_list(data=[None], src=0)
+                temperature, top_k, top_p, num_tokens_to_generate, log_probs = (
+                    broadcast_list(data=[None], src=0)
+                )
 
                 inference_params = CommonInferenceParams(
                     temperature=temperature,
@@ -247,12 +253,14 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 return
 
     def apply_chat_template(self, messages, add_generation_prompt=True):
-        """
-        Load the chat template.
+        """Load the chat template.
+
         Works when model's tokenizer has chat template (typically chat models).
         """
         try:
-            tokenizer_chat_template = self.mcore_tokenizer.tokenizer.tokenizer.chat_template
+            tokenizer_chat_template = (
+                self.mcore_tokenizer.tokenizer.tokenizer.chat_template
+            )
             bos_token = self.mcore_tokenizer.tokenizer.tokenizer.bos_token
             template = Template(tokenizer_chat_template)
         except AttributeError:
@@ -263,15 +271,15 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             )
         # Render the template with the provided messages
         rendered_output = template.render(
-            messages=messages, bos_token=bos_token, add_generation_prompt=add_generation_prompt
+            messages=messages,
+            bos_token=bos_token,
+            add_generation_prompt=add_generation_prompt,
         )
 
         return rendered_output
 
     def remove_eos_token(self, text):
-        """
-        Removes eos token if it exists in the output, otherwise does nothing
-        """
+        """Removes eos token if it exists in the output, otherwise does nothing."""
         eos_token = self.mcore_tokenizer.tokenizer.tokenizer.eos_token
         output = []
         for t in text:
@@ -282,9 +290,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         return output
 
     def str_to_dict(self, json_str):
-        """
-        Convert str to dict.
-        """
+        """Convert str to dict."""
         return json.loads(json_str)
 
     @property
@@ -298,7 +304,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             Tensor(name="temperature", shape=(-1,), dtype=np.single, optional=True),
             Tensor(name="random_seed", shape=(-1,), dtype=np.int_, optional=True),
             Tensor(name="compute_logprob", shape=(-1,), dtype=np.bool_, optional=True),
-            Tensor(name="apply_chat_template", shape=(-1,), dtype=np.bool_, optional=True),
+            Tensor(
+                name="apply_chat_template", shape=(-1,), dtype=np.bool_, optional=True
+            ),
         )
         return inputs
 
@@ -339,7 +347,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             # The provided qkv memory layout is not supported!
         if torch.distributed.is_initialized():
             if torch.distributed.get_world_size() > 1:
-                torch.distributed.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
+                torch.distributed.broadcast(
+                    torch.tensor([0], dtype=torch.long, device="cuda"), src=0
+                )
                 broadcast_list(prompts, src=0)
                 broadcast_list(
                     data=[

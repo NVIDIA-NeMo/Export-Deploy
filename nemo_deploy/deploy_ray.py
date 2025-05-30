@@ -27,8 +27,7 @@ LOGGER = logging.getLogger("NeMo")
 
 
 class DeployRay:
-    """
-    A class for managing Ray deployment and serving of models.
+    """A class for managing Ray deployment and serving of models.
 
     This class provides functionality to initialize Ray, start Ray Serve,
     deploy models, and manage the lifecycle of the Ray cluster.
@@ -51,8 +50,7 @@ class DeployRay:
         ignore_reinit_error: bool = True,
         runtime_env: dict = None,
     ):
-        """
-        Initialize the DeployRay instance and set up the Ray cluster.
+        """Initialize the DeployRay instance and set up the Ray cluster.
 
         Args:
             address (str, optional): Address of the Ray cluster. Defaults to "auto".
@@ -67,13 +65,21 @@ class DeployRay:
         """
         # Initialize Ray with proper configuration
         if not use_ray:
-            raise Exception("Ray is not installed. Please install Ray to use this feature.")
+            raise Exception(
+                "Ray is not installed. Please install Ray to use this feature."
+            )
         try:
             # Try to connect to existing Ray cluster
-            ray.init(address=address, ignore_reinit_error=ignore_reinit_error, runtime_env=runtime_env)
+            ray.init(
+                address=address,
+                ignore_reinit_error=ignore_reinit_error,
+                runtime_env=runtime_env,
+            )
         except ConnectionError:
             # If no cluster exists, start a local one
-            LOGGER.info("No existing Ray cluster found. Starting a local Ray cluster...")
+            LOGGER.info(
+                "No existing Ray cluster found. Starting a local Ray cluster..."
+            )
             ray.init(
                 num_cpus=num_cpus,
                 num_gpus=num_gpus,
@@ -83,8 +89,7 @@ class DeployRay:
             )
 
     def start(self, host: str = "0.0.0.0", port: int = None):
-        """
-        Start Ray Serve with the specified host and port.
+        """Start Ray Serve with the specified host and port.
 
         Args:
             host (str, optional): Host address to bind to. Defaults to "0.0.0.0".
@@ -100,8 +105,7 @@ class DeployRay:
         )
 
     def run(self, app: Application, model_name: str):
-        """
-        Deploy and start serving a model using Ray Serve.
+        """Deploy and start serving a model using Ray Serve.
 
         Args:
             app (Application): The Ray Serve application to deploy.
@@ -110,8 +114,7 @@ class DeployRay:
         serve.run(app, name=model_name)
 
     def stop(self):
-        """
-        Stop the Ray Serve deployment and shutdown the Ray cluster.
+        """Stop the Ray Serve deployment and shutdown the Ray cluster.
 
         This method attempts to gracefully shutdown both Ray Serve and the Ray cluster.
         If any errors occur during shutdown, they are logged as warnings.

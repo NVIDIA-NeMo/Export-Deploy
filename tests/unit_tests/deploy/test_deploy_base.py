@@ -82,7 +82,9 @@ def test_initialization_without_model_or_checkpoint():
 
 
 def test_get_module_and_class():
-    module, class_name = DeployBase.get_module_and_class("nemo.models.test_model.TestModel")
+    module, class_name = DeployBase.get_module_and_class(
+        "nemo.models.test_model.TestModel"
+    )
     assert module == "nemo.models.test_model"
     assert class_name == "TestModel"
 

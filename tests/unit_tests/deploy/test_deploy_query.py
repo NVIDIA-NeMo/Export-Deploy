@@ -23,14 +23,23 @@ from nemo_deploy.utils import cast_output, str_ndarray2list
 
 
 class MockModel(ITritonDeployable):
-
     @property
     def get_triton_input(self):
         inputs = (
             Tensor(name="prompts", shape=(-1,), dtype=bytes),
             Tensor(name="max_output_len", shape=(-1,), dtype=np.int_, optional=True),
-            Tensor(name="output_context_logits", shape=(-1,), dtype=np.bool_, optional=False),
-            Tensor(name="output_generation_logits", shape=(-1,), dtype=np.bool_, optional=False),
+            Tensor(
+                name="output_context_logits",
+                shape=(-1,),
+                dtype=np.bool_,
+                optional=False,
+            ),
+            Tensor(
+                name="output_generation_logits",
+                shape=(-1,),
+                dtype=np.bool_,
+                optional=False,
+            ),
         )
         return inputs
 

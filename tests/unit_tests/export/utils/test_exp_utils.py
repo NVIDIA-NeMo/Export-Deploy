@@ -31,7 +31,7 @@ class TestUtils:
         # Cleanup after test
         shutil.rmtree(temp_dir)
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_is_nemo2_checkpoint(self, temp_dir):
         from nemo_export.utils.utils import is_nemo2_checkpoint
 
@@ -46,7 +46,7 @@ class TestUtils:
         os.makedirs(os.path.join(temp_dir, "valid_ckpt", "context"))
         assert is_nemo2_checkpoint(os.path.join(temp_dir, "valid_ckpt"))
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_prepare_directory_for_export(self, temp_dir):
         from nemo_export.utils.utils import prepare_directory_for_export
 
@@ -73,10 +73,12 @@ class TestUtils:
         assert not os.path.exists(os.path.join(model_dir, "test.txt"))
 
         # Test with subdir
-        prepare_directory_for_export(model_dir, delete_existing_files=False, subdir="subdir")
+        prepare_directory_for_export(
+            model_dir, delete_existing_files=False, subdir="subdir"
+        )
         assert os.path.exists(os.path.join(model_dir, "subdir"))
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_is_nemo_tarfile(self, temp_dir):
         from nemo_export.utils.utils import is_nemo_tarfile
 
@@ -95,12 +97,14 @@ class TestUtils:
             f.write("test")
         assert is_nemo_tarfile(nemo_file)
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_torch_dtype_from_precision(self):
         from nemo_export.utils.utils import torch_dtype_from_precision
 
         # Test with megatron_amp_O2=False
-        assert torch_dtype_from_precision("bf16", megatron_amp_O2=False) == torch.float32
+        assert (
+            torch_dtype_from_precision("bf16", megatron_amp_O2=False) == torch.float32
+        )
 
         # Test with different precision values
         assert torch_dtype_from_precision("bf16") == torch.bfloat16
@@ -116,7 +120,7 @@ class TestUtils:
         with pytest.raises(ValueError):
             torch_dtype_from_precision("invalid")
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_get_example_inputs(self):
         from nemo_export.utils.utils import get_example_inputs
 

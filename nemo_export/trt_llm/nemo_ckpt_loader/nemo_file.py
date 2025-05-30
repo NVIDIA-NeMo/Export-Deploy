@@ -31,8 +31,11 @@ from transformers import AutoTokenizer, GPT2Tokenizer, PreTrainedTokenizer
 from nemo_export.sentencepiece_tokenizer import SentencePieceTokenizer
 from nemo_export.tarutils import TarPath
 from nemo_export.tiktoken_tokenizer import TiktokenTokenizer
-from nemo_export.utils import (load_model_weights, nemo_to_path,
-                               torch_dtype_from_precision)
+from nemo_export.utils import (
+    load_model_weights,
+    nemo_to_path,
+    torch_dtype_from_precision,
+)
 
 try:
     from nemo.lightning import io
@@ -45,7 +48,9 @@ LOGGER = logging.getLogger("NeMo")
 EXTRA_STATE = "extra_state"
 
 
-def load_extra_state_from_bytes(val: Optional[Union[torch.Tensor, BytesIO]]) -> Optional[dict]:
+def load_extra_state_from_bytes(
+    val: Optional[Union[torch.Tensor, BytesIO]],
+) -> Optional[dict]:
     """Loads single extra_state from bytes storage.
 
     Args:
@@ -68,9 +73,11 @@ def load_extra_state_from_bytes(val: Optional[Union[torch.Tensor, BytesIO]]) -> 
     return torch.load(val, weights_only=True)
 
 
-def preprocess_scaling_factors_for_local_export(state_dict: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Scaling factors are kept in BufferIO objects.
+def preprocess_scaling_factors_for_local_export(
+    state_dict: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Scaling factors are kept in BufferIO objects.
+
     This function reads the exact scales, preparing them for export.
     Used only for local (non-mcore) path.
 
@@ -79,7 +86,11 @@ def preprocess_scaling_factors_for_local_export(state_dict: Dict[str, Any]) -> D
     Returns:
         dict: The same dictionary, with explicitly loaded extra states from bytes.
     """
-    scales_dict = {k: v for k, v in state_dict.items() if EXTRA_STATE in k and "core_attention" not in k}
+    scales_dict = {
+        k: v
+        for k, v in state_dict.items()
+        if EXTRA_STATE in k and "core_attention" not in k
+    }
     state_dict = {k: v for k, v in state_dict.items() if EXTRA_STATE not in k}
     scales = {}
 
@@ -115,8 +126,7 @@ def preprocess_scaling_factors_for_local_export(state_dict: Dict[str, Any]) -> D
 
 
 def rename_extra_states(state_dict: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    This function preprocesses extra states for Megatron export.
+    """This function preprocesses extra states for Megatron export.
 
     Args:
         state_dict (dict): Model state dictionary
@@ -151,11 +161,11 @@ def rename_extra_states(state_dict: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def torch_to_numpy_state_dict(state_dict: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Transforms model state dictionary with torch tensors to numpy arrays.
+    """Transforms model state dictionary with torch tensors to numpy arrays.
 
     Args:
         state_dict (dict): Model state dictionary.
+
     Returns:
         dict: State dictionary using numpy arrays.
     """
@@ -178,12 +188,16 @@ def update_tokenizer_paths(tokenizer_config: Dict, unpacked_checkpoints_dir):
         if old_path is None:
             return
         old_path = Path(old_path)
-        new_path = unpacked_checkpoints_dir.get_tokenizer_file_path("tokenizer", key, file_pattern)
+        new_path = unpacked_checkpoints_dir.get_tokenizer_file_path(
+            "tokenizer", key, file_pattern
+        )
         if new_path:
             LOGGER.debug(f"Update tokenizer {key} {old_path} -> {new_path}")
             tokenizer_config[key] = new_path
         elif not old_path.exists():
-            LOGGER.warning(f"Tokenizer {key}'s path {old_path} does not exists: set it to None")
+            LOGGER.warning(
+                f"Tokenizer {key}'s path {old_path} does not exists: set it to None"
+            )
             tokenizer_config[key] = None
 
     _update_config_entry("model", "*.model")
@@ -227,8 +241,7 @@ def copy_tokenizer_files(config, out_dir):
 
 
 def get_tokenizer_from_nemo2_context(model_context_dir: Path):
-    """
-    Retrieve tokenizer configuration from NeMo 2.0 context and instantiate the tokenizer.
+    """Retrieve tokenizer configuration from NeMo 2.0 context and instantiate the tokenizer.
 
     Args:
         model_context_dir (Path): Path to the model context directory.
@@ -236,7 +249,6 @@ def get_tokenizer_from_nemo2_context(model_context_dir: Path):
     Returns:
         The instantiated tokenizer (various classes possible).
     """
-
     if HAVE_NEMO2:
         # Use NeMo tokenizer loaded from the NeMo 2.0 model context
         tokenizer_spec = io.load_context(model_context_dir, subpath="model.tokenizer")
@@ -264,7 +276,9 @@ def get_tokenizer_from_nemo2_context(model_context_dir: Path):
                 str(model_context_dir / tokenizer_config["pretrained_model_name"])
             )
         else:
-            raise ValueError(f"Unsupported tokenizer type: {tokenizer_module}{target_class}.")
+            raise ValueError(
+                f"Unsupported tokenizer type: {tokenizer_module}{target_class}."
+            )
 
     return tokenizer
 
@@ -277,12 +291,18 @@ def get_tokenizer(tokenizer_dir_or_path: Union[str, Path]) -> PreTrainedTokenize
     elif (tokenizer_dir_or_path / "tokenizer_config.json").exists():
         return AutoTokenizer.from_pretrained(tokenizer_dir_or_path)
     elif os.path.exists(os.path.join(tokenizer_dir_or_path, "vocab.json")):
-        vocab_path = tokenizer_dir_or_path / "vocab.json" if tokenizer_dir_or_path.is_dir() else tokenizer_dir_or_path
+        vocab_path = (
+            tokenizer_dir_or_path / "vocab.json"
+            if tokenizer_dir_or_path.is_dir()
+            else tokenizer_dir_or_path
+        )
         tokenizer_config = {"library": "tiktoken", "vocab_file": str(vocab_path)}
         return build_tokenizer(tokenizer_config)
     else:
         model_path = (
-            tokenizer_dir_or_path / "tokenizer.model" if tokenizer_dir_or_path.is_dir() else tokenizer_dir_or_path
+            tokenizer_dir_or_path / "tokenizer.model"
+            if tokenizer_dir_or_path.is_dir()
+            else tokenizer_dir_or_path
         )
         tokenizer_config = {"library": "sentencepiece", "model": str(model_path)}
         return build_tokenizer(tokenizer_config)
@@ -297,9 +317,13 @@ def build_tokenizer(tokenizer):
         elif tokenizer_config["library"] == "tiktoken":
             return TiktokenTokenizer(vocab_file=tokenizer_config["vocab_file"])
         elif "GPT2" in tokenizer_config["type"]:
-            tokenizer = GPT2Tokenizer(tokenizer_config["vocab_file"], tokenizer_config["merge_file"])
+            tokenizer = GPT2Tokenizer(
+                tokenizer_config["vocab_file"], tokenizer_config["merge_file"]
+            )
         else:
-            raise ValueError(f'Tokenizer type {tokenizer_config["library"]} not handled')
+            raise ValueError(
+                f"Tokenizer type {tokenizer_config['library']} not handled"
+            )
 
         if tokenizer.bos_token_id is None:
             tokenizer.add_special_tokens({"bos_token": "<s>"})
@@ -325,7 +349,9 @@ def build_tokenizer(tokenizer):
 
                 encode = tokenizer.tokenizer.encode_as_ids
             else:
-                raise NotImplementedError(f"Patching tokenizer methods for {type(tokenizer)} is not available")
+                raise NotImplementedError(
+                    f"Patching tokenizer methods for {type(tokenizer)} is not available"
+                )
 
             tokenizer.bos_token_id = tokenizer.bos_id
             tokenizer.eos_token_id = tokenizer.eos_id
@@ -336,8 +362,7 @@ def build_tokenizer(tokenizer):
 
 
 def load_nemo_config(nemo_ckpt: Union[str, Path]) -> Dict[Any, Any]:
-    """
-    Load the model configuration from a NeMo checkpoint.
+    """Load the model configuration from a NeMo checkpoint.
 
     This function handles both NeMo 1.0 and NeMo 2.0 checkpoint structures.
     For NeMo 2.0, it reads the configuration from the 'context/model.yaml' file.
@@ -345,6 +370,7 @@ def load_nemo_config(nemo_ckpt: Union[str, Path]) -> Dict[Any, Any]:
 
     Args:
         nemo_ckpt (Union[str, Path]): Path to the NeMo checkpoint file or directory.
+
     Returns:
         Dict[Any, Any]: The configuration dictionary.
     """
@@ -353,22 +379,26 @@ def load_nemo_config(nemo_ckpt: Union[str, Path]) -> Dict[Any, Any]:
     else:
         nemo_ckpt = TarPath(nemo_ckpt)
 
-    if (nemo_ckpt / "weights").exists() and (nemo_ckpt / "context").exists():  # Stucture of NeMo 2.0 checkpoints
+    if (nemo_ckpt / "weights").exists() and (
+        nemo_ckpt / "context"
+    ).exists():  # Stucture of NeMo 2.0 checkpoints
         with (nemo_ckpt / "context" / "model.yaml").open("r") as stream:
             config = yaml.safe_load(stream)
     else:  # Assume NeMo 1.0 case
-        unpacked_checkpoint_dir = UnpackedNemoCheckpointDir(nemo_ckpt, load_checkpoints_to_cpu=True)
+        unpacked_checkpoint_dir = UnpackedNemoCheckpointDir(
+            nemo_ckpt, load_checkpoints_to_cpu=True
+        )
         config = unpacked_checkpoint_dir.model_config
 
     return config
 
 
 def get_model_type(nemo_ckpt: Union[str, Path]) -> Optional[str]:
-    """
-    Determine the model type from a NeMo checkpoint for TensorRT-LLM engine build.
+    """Determine the model type from a NeMo checkpoint for TensorRT-LLM engine build.
 
     Args:
         nemo_ckpt (Union[str, Path]): Path to the NeMo checkpoint file.
+
     Returns:
         Optional[str]: The model type if it can be determined, otherwise None.
     """
@@ -393,7 +423,9 @@ def get_model_type(nemo_ckpt: Union[str, Path]) -> Optional[str]:
         }
         try:
             model_type = NEMO2_TO_MODEL_TYPE[model_class]
-            LOGGER.info(f"Determined model_type='{model_type}' for {nemo_ckpt} checkpoint.")
+            LOGGER.info(
+                f"Determined model_type='{model_type}' for {nemo_ckpt} checkpoint."
+            )
 
         except KeyError:
             LOGGER.error(
@@ -403,7 +435,9 @@ def get_model_type(nemo_ckpt: Union[str, Path]) -> Optional[str]:
             )
             raise
     else:
-        LOGGER.warning(f"Parameter model_type cannot be determined for {nemo_ckpt} checkpoint.")
+        LOGGER.warning(
+            f"Parameter model_type cannot be determined for {nemo_ckpt} checkpoint."
+        )
     return model_type
 
 
@@ -412,6 +446,7 @@ def get_weights_dtype(nemo_ckpt: Union[str, Path]) -> Optional[str]:
 
     Args:
         nemo_ckpt (Union[str, Path]): Path to the NeMo checkpoint file.
+
     Returns:
         Optional[str]: The dtype if it can be determined, otherwise None.
     """
@@ -438,16 +473,19 @@ def get_weights_dtype(nemo_ckpt: Union[str, Path]) -> Optional[str]:
 
 
 def load_distributed_model_weights(
-    nemo_checkpoint: Union[str, Path], mcore_scales_format: bool, torch_tensor: bool = True
+    nemo_checkpoint: Union[str, Path],
+    mcore_scales_format: bool,
+    torch_tensor: bool = True,
 ) -> Dict[str, Any]:
-    """
-    Loads model weights in `torch_dist` format from the model path.
+    """Loads model weights in `torch_dist` format from the model path.
+
     Preprocesses the scaling factors for local export if mcore_scales_format is set to False.
 
     Args:
         nemo_checkpoint (str | Path): Path to the nemo checkpoint.
         mcore_scales_format (bool): Flag for local vs megatron.core export.
         torch_tensor (bool): If set to False, converts returns weights in numpy format.
+
     Returns:
         dict: Model state dictionary.
     """
@@ -457,13 +495,23 @@ def load_distributed_model_weights(
 
     state_dict = rename_extra_states(state_dict)
     if not mcore_scales_format:
-        state_dict.update({k: v[0] for k, v in state_dict.items() if EXTRA_STATE in k and isinstance(v, list)})
+        state_dict.update(
+            {
+                k: v[0]
+                for k, v in state_dict.items()
+                if EXTRA_STATE in k and isinstance(v, list)
+            }
+        )
         state_dict = preprocess_scaling_factors_for_local_export(state_dict)
 
     return state_dict
 
 
-def load_nemo_model(nemo_ckpt: Union[str, Path], nemo_export_dir: Union[str, Path], mcore_scales_format: bool = True):
+def load_nemo_model(
+    nemo_ckpt: Union[str, Path],
+    nemo_export_dir: Union[str, Path],
+    mcore_scales_format: bool = True,
+):
     """Unified model loading for trt-llm export."""
     if not os.path.exists(nemo_ckpt):
         raise TypeError("%s does not exist", nemo_ckpt)
@@ -472,7 +520,9 @@ def load_nemo_model(nemo_ckpt: Union[str, Path], nemo_export_dir: Union[str, Pat
 
     tokenizer = None
     try:
-        unpacked_checkpoint_dir = UnpackedNemoCheckpointDir(nemo_dir, load_checkpoints_to_cpu=True)
+        unpacked_checkpoint_dir = UnpackedNemoCheckpointDir(
+            nemo_dir, load_checkpoints_to_cpu=True
+        )
 
         if (nemo_dir / "model_weights").exists():
             model = load_distributed_model_weights(nemo_ckpt, mcore_scales_format)
@@ -485,8 +535,12 @@ def load_nemo_model(nemo_ckpt: Union[str, Path], nemo_export_dir: Union[str, Pat
                     use_fast=nemo_model_config["tokenizer"].get("use_fast", False),
                 )
             else:
-                tokenizer_config = update_tokenizer_paths(nemo_model_config["tokenizer"], unpacked_checkpoint_dir)
-                tokenizer_config = copy_tokenizer_files(tokenizer_config, nemo_export_dir)
+                tokenizer_config = update_tokenizer_paths(
+                    nemo_model_config["tokenizer"], unpacked_checkpoint_dir
+                )
+                tokenizer_config = copy_tokenizer_files(
+                    tokenizer_config, nemo_export_dir
+                )
 
                 tokenizer = build_tokenizer(tokenizer_config)
         elif (nemo_dir / "weights").exists():
@@ -502,9 +556,13 @@ def load_nemo_model(nemo_ckpt: Union[str, Path], nemo_export_dir: Union[str, Pat
                     if isinstance(v, (float, int, str, bool)):
                         nemo_model_config[k] = v
                     elif k == "activation_func":
-                        nemo_model_config["activation"] = v["_target_"].rsplit(".", 1)[-1]
+                        nemo_model_config["activation"] = v["_target_"].rsplit(".", 1)[
+                            -1
+                        ]
             else:
-                assert HAVE_NEMO2, "nemo_toolkit>=2.0.0 is required to load the model context."
+                assert HAVE_NEMO2, (
+                    "nemo_toolkit>=2.0.0 is required to load the model context."
+                )
 
                 config = io.load_context(io_folder, subpath="model.config")
 
@@ -532,12 +590,18 @@ def load_nemo_model(nemo_ckpt: Union[str, Path], nemo_export_dir: Union[str, Pat
                 nemo_model_config["bias"] = True
 
             nemo_model_config["mcore_gpt"] = True
-            nemo_model_config["max_position_embeddings"] = nemo_model_config.get("seq_length", 4096)
-            nemo_model_config["rotary_percentage"] = nemo_model_config.get("rotary_percent", 1.0)
+            nemo_model_config["max_position_embeddings"] = nemo_model_config.get(
+                "seq_length", 4096
+            )
+            nemo_model_config["rotary_percentage"] = nemo_model_config.get(
+                "rotary_percent", 1.0
+            )
 
             shutil.copytree(io_folder, nemo_export_dir / "nemo_context")
         else:
-            raise Exception("Not a supported NeMo file format: only distributed MCore NeMo checkpoints are supported.")
+            raise Exception(
+                "Not a supported NeMo file format: only distributed MCore NeMo checkpoints are supported."
+            )
     finally:
         if isinstance(nemo_dir, TarPath):
             nemo_dir.tarobject.close()
@@ -563,9 +627,7 @@ def gpu_map_location(storage, loc):
 
 
 class UnpackedNemoCheckpointDir:
-    """
-    Caches model config and tokenizer file path when loading from a packed NeMo checkpoint directory.
-    """
+    """Caches model config and tokenizer file path when loading from a packed NeMo checkpoint directory."""
 
     def __init__(
         self,
@@ -586,7 +648,10 @@ class UnpackedNemoCheckpointDir:
         model_configs_paths = list(self._checkpoints_dir.rglob(model_config_filename))
         if model_configs_paths:
             if len(model_configs_paths) > 1:
-                LOGGER.debug(f"There are more than single {model_config_filename} in" f" {self._checkpoints_dir}")
+                LOGGER.debug(
+                    f"There are more than single {model_config_filename} in"
+                    f" {self._checkpoints_dir}"
+                )
             model_config_path = model_configs_paths[0]
             LOGGER.debug("Loading model config from %s", model_config_path)
             with model_config_path.open("r") as model_config_file:
@@ -600,19 +665,33 @@ class UnpackedNemoCheckpointDir:
                 # assume that parallel ranks 0 checkpoint should have model config embedded
                 checkpoint_path = checkpoints_paths[0]
 
-                map_location_fn = cpu_map_location if self._load_checkpoints_to_cpu else gpu_map_location
+                map_location_fn = (
+                    cpu_map_location
+                    if self._load_checkpoints_to_cpu
+                    else gpu_map_location
+                )
 
                 model_00 = torch.load(checkpoint_path, map_location=map_location_fn)
-                if "hyper_parameters" in model_00 and "cfg" in model_00["hyper_parameters"]:
+                if (
+                    "hyper_parameters" in model_00
+                    and "cfg" in model_00["hyper_parameters"]
+                ):
                     model_config = model_00["hyper_parameters"]["cfg"]
-                    LOGGER.debug("Loaded model config from checkpoint %s", checkpoint_path)
+                    LOGGER.debug(
+                        "Loaded model config from checkpoint %s", checkpoint_path
+                    )
                 else:
-                    LOGGER.debug("Could not find model config in checkpoint %s", checkpoint_path)
+                    LOGGER.debug(
+                        "Could not find model config in checkpoint %s", checkpoint_path
+                    )
 
                 del model_00
 
         if model_config is None:
-            LOGGER.warning("Could not find checkpoint with NeMo model config in %s", self._checkpoints_dir)
+            LOGGER.warning(
+                "Could not find checkpoint with NeMo model config in %s",
+                self._checkpoints_dir,
+            )
 
         LOGGER.debug("Loaded model config %s", model_config)
 
@@ -623,15 +702,21 @@ class UnpackedNemoCheckpointDir:
         """Returns path to checkpoints directory."""
         return self._checkpoints_dir
 
-    def get_checkpoints_paths(self, tensor_model_parallel_size=1, pipeline_model_parallel_size=1):
+    def get_checkpoints_paths(
+        self, tensor_model_parallel_size=1, pipeline_model_parallel_size=1
+    ):
         """Injects tensor/pipeline model parallel ranks into the filepath.
+
         Does nothing if not using model parallelism.
         """
         checkpoint_path_without_rank = self.checkpoints_dir / self.checkpoint_name
 
         def _inject_parallel_ranks(tp_rank, pp_rank):
             if tensor_model_parallel_size > 1 or pipeline_model_parallel_size > 1:
-                if pipeline_model_parallel_size is None or pipeline_model_parallel_size == 1:
+                if (
+                    pipeline_model_parallel_size is None
+                    or pipeline_model_parallel_size == 1
+                ):
                     checkpoint_path = (
                         checkpoint_path_without_rank.parent
                         / f"mp_rank_{tp_rank:02d}"
@@ -671,7 +756,9 @@ class UnpackedNemoCheckpointDir:
         raise ValueError(f"Could not find checkpoint files in {self._checkpoints_dir}")
 
     @functools.lru_cache
-    def get_tokenizer_file_path(self, tokenizer_key, file_key, default_filename_pattern):
+    def get_tokenizer_file_path(
+        self, tokenizer_key, file_key, default_filename_pattern
+    ):
         """Returns path to tokenizer file."""
         model_config = self.model_config
         file_property = None

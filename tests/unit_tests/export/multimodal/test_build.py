@@ -22,10 +22,9 @@ import pytest
 import torch
 
 
-@pytest.mark.run_only_on('GPU')
+@pytest.mark.run_only_on("GPU")
 class TestBuild(unittest.TestCase):
-
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
         self.mock_config = {
@@ -42,10 +41,12 @@ class TestBuild(unittest.TestCase):
             "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.weight": torch.randn(
                 4096, 768
             ),
-            "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.bias": torch.randn(4096),
+            "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.bias": torch.randn(
+                4096
+            ),
         }
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def tearDown(self):
         # Clean up temporary directory
         if os.path.exists(self.temp_dir):
@@ -56,8 +57,8 @@ class TestBuild(unittest.TestCase):
                     os.rmdir(os.path.join(root, name))
             os.rmdir(self.temp_dir)
 
-    @pytest.mark.run_only_on('GPU')
-    @patch('nemo_export.multimodal.build.TensorRTLLM')
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.multimodal.build.TensorRTLLM")
     def test_build_trtllm_engine(self, mock_trtllm):
         # Test basic functionality
         mock_exporter = MagicMock()
@@ -79,9 +80,9 @@ class TestBuild(unittest.TestCase):
 
         mock_exporter.export.assert_called_once()
 
-    @pytest.mark.run_only_on('GPU')
-    @patch('nemo_export.multimodal.build.MLLaMAForCausalLM')
-    @patch('nemo_export.multimodal.build.build_trtllm')
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.multimodal.build.MLLaMAForCausalLM")
+    @patch("nemo_export.multimodal.build.build_trtllm")
     def test_build_mllama_trtllm_engine(self, mock_build_trtllm, mock_mllama):
         # Test basic functionality
         mock_model = MagicMock()
@@ -105,5 +106,5 @@ class TestBuild(unittest.TestCase):
         mock_build_trtllm.assert_called_once()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
