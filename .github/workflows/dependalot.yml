@@ -39,6 +39,26 @@ jobs:
           nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
           bash -c 'uv lock --upgrade'
 
+      - name: Upload lock file
+        uses: actions/upload-artifact@v4
+        with:
+          name: lock-file
+          path: uv.lock
+
+  create-pr:
+    needs: [dependalot-update]
+    runs-on: ubuntu-latest
+    environment: main
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download lock file
+        uses: actions/download-artifact@v4
+        with:
+          name: lock-file
+          path: uv.lock
+
       - name: Create Bump PR
         uses: peter-evans/create-pull-request@v7
         id: create-pull-request
@@ -48,6 +68,7 @@ jobs:
           branch: dependabot-${{ steps.ref.outputs.date }}-main
           base: main
           title: ${{ env.title }}
+          token: ${{ secrets.PAT }}
           body: |
             🚀 PR to bump dependencies.  
 
