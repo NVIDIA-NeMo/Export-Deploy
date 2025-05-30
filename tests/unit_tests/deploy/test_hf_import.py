@@ -19,12 +19,13 @@ import pytest
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
+
 from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
 from nemo_deploy.utils import broadcast_list
 
 
 @pytest.mark.pleasefixme  # disabled since it required data
-@pytest.mark.run_only_on('GPU')
+@pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_hf_generate():
     """Tests HF deployable class's generate function."""
@@ -44,8 +45,12 @@ def test_hf_generate():
     )
 
     assert len(output) == 2, "Output should have to be a list."
-    assert len(output[0]) > 0, "First list in the output should have more than 0 elements."
-    assert len(output[1]) > 0, "Second list in the output should have more than 0 elements."
+    assert len(output[0]) > 0, (
+        "First list in the output should have more than 0 elements."
+    )
+    assert len(output[1]) > 0, (
+        "Second list in the output should have more than 0 elements."
+    )
 
     # Test output_logits and output_scores
     output = hf_deployable.generate(
@@ -62,7 +67,7 @@ def test_hf_generate():
     assert len(output["sentences"]) == 2, "Output should have 2 sentences."
 
 
-@pytest.mark.run_only_on('GPU')
+@pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 @pytest.mark.skip(reason="will be enabled later.")
 def test_hf_multigpu_generate():
@@ -74,17 +79,17 @@ def test_hf_multigpu_generate():
 def _run_generate(rank):
     """Code to run generate in each rank."""
 
-    os.environ['WORLD_SIZE'] = '2'
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355'
+    os.environ["WORLD_SIZE"] = "2"
+    os.environ["MASTER_ADDR"] = "localhost"
+    os.environ["MASTER_PORT"] = "12355"
 
     if rank == 0:
-        os.environ['RANK'] = str(rank)
+        os.environ["RANK"] = str(rank)
         dist.init_process_group("nccl", rank=rank, world_size=2)
         _hf_generate_ranks()
         dist.destroy_process_group()
     else:
-        os.environ['RANK'] = str(rank)
+        os.environ["RANK"] = str(rank)
         dist.init_process_group("nccl", rank=rank, world_size=2)
         _hf_generate_ranks()
         dist.destroy_process_group()
@@ -145,5 +150,9 @@ def _hf_generate_ranks():
 
     if dist.get_rank() == 0:
         assert len(output) == 2, "Output should have to be a lists."
-        assert len(output[0]) > 0, "First list in the output should have more than 0 elements."
-        assert len(output[1]) > 0, "Second list in the output should have more than 0 elements."
+        assert len(output[0]) > 0, (
+            "First list in the output should have more than 0 elements."
+        )
+        assert len(output[1]) > 0, (
+            "Second list in the output should have more than 0 elements."
+        )

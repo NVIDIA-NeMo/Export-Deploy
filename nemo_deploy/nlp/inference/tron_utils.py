@@ -5,10 +5,12 @@ from typing import Callable, List, Literal, Optional, Union
 
 import torch
 from megatron.core import parallel_state, tensor_parallel
-from megatron.core.distributed import DistributedDataParallel, DistributedDataParallelConfig
+from megatron.core.distributed import (
+    DistributedDataParallel,
+    DistributedDataParallelConfig,
+)
 from megatron.core.enums import ModelType
 from megatron.core.transformer.module import Float16Module, MegatronModule
-
 from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.t5.model.t5 import T5Config
 
@@ -124,7 +126,9 @@ def initialize_distributed(
     dist_config: DistributedInitConfig,
     num_distributed_optimizer_instances: int,
     get_embedding_ranks: Optional[Callable[[List[int], Optional[int]], List[int]]],
-    get_position_embedding_ranks: Optional[Callable[[List[int], Optional[int]], List[int]]],
+    get_position_embedding_ranks: Optional[
+        Callable[[List[int], Optional[int]], List[int]]
+    ],
 ) -> None:
     """Initialize torch.distributed and core model parallel.
 
@@ -137,7 +141,6 @@ def initialize_distributed(
         get_position_embedding_ranks (Optional[Callable[[List[int], Optional[int]], List[int]]]): Function to get
             the ranks for position embedding parallel
     """
-
     device_count = torch.cuda.device_count()
     if torch.distributed.is_initialized():
         if get_rank_safe() == 0:
@@ -155,22 +158,24 @@ def initialize_distributed(
         if device_count > 0:
             torch.cuda.set_device(get_local_rank_preinit())
 
-        init_method = 'tcp://'
-        master_ip = os.getenv('MASTER_ADDR', 'localhost')
-        master_port = os.getenv('MASTER_PORT', '6000')
-        init_method += master_ip + ':' + master_port
+        init_method = "tcp://"
+        master_ip = os.getenv("MASTER_ADDR", "localhost")
+        master_port = os.getenv("MASTER_PORT", "6000")
+        init_method += master_ip + ":" + master_port
 
         # Call the init process
-        init_method = 'tcp://'
-        master_ip = os.getenv('MASTER_ADDR', 'localhost')
-        master_port = os.getenv('MASTER_PORT', '6000')
-        init_method += master_ip + ':' + master_port
+        init_method = "tcp://"
+        master_ip = os.getenv("MASTER_ADDR", "localhost")
+        master_port = os.getenv("MASTER_PORT", "6000")
+        init_method += master_ip + ":" + master_port
 
         init_process_group_kwargs = {
             "backend": dist_config.distributed_backend,
             "world_size": get_world_size_safe(),
             "rank": get_rank_safe(),
-            "timeout": datetime.timedelta(minutes=dist_config.distributed_timeout_minutes),
+            "timeout": datetime.timedelta(
+                minutes=dist_config.distributed_timeout_minutes
+            ),
             "init_method": init_method,
         }
 
@@ -195,9 +200,15 @@ def initialize_distributed(
                 expert_tensor_parallel_size=model_config.expert_tensor_parallel_size,
                 distributed_timeout_minutes=dist_config.distributed_timeout_minutes,
                 nccl_communicator_config_path=dist_config.nccl_communicator_config_path,
-                order="tp-cp-ep-dp-pp" if not dist_config.use_tp_pp_dp_mapping else "tp-pp-dp",
-                encoder_tensor_model_parallel_size=getattr(model_config, "encoder_tensor_model_parallel_size", 0),
-                encoder_pipeline_model_parallel_size=getattr(model_config, "encoder_pipeline_model_parallel_size", 0),
+                order="tp-cp-ep-dp-pp"
+                if not dist_config.use_tp_pp_dp_mapping
+                else "tp-pp-dp",
+                encoder_tensor_model_parallel_size=getattr(
+                    model_config, "encoder_tensor_model_parallel_size", 0
+                ),
+                encoder_pipeline_model_parallel_size=getattr(
+                    model_config, "encoder_pipeline_model_parallel_size", 0
+                ),
                 get_embedding_ranks=get_embedding_ranks,
                 get_position_embedding_ranks=get_position_embedding_ranks,
                 create_gloo_process_groups=dist_config.use_gloo_process_groups,
@@ -230,7 +241,9 @@ def _set_random_seed(
         inference_rng_tracker (bool, optional): Whether to use a random number generator configured
             for inference. Defaults to False.
     """
-    assert seed_ is not None and seed_ > 0, f"Seed ({seed_}) should be a positive integer."
+    assert seed_ is not None and seed_ > 0, (
+        f"Seed ({seed_}) should be a positive integer."
+    )
 
     import random
 
@@ -245,10 +258,14 @@ def _set_random_seed(
     np.random.seed(seed)
     torch.manual_seed(seed)
     if torch.cuda.device_count() > 0:
-        tensor_parallel.model_parallel_cuda_manual_seed(seed, te_rng_tracker, inference_rng_tracker)
+        tensor_parallel.model_parallel_cuda_manual_seed(
+            seed, te_rng_tracker, inference_rng_tracker
+        )
 
 
-def _initialize_tp_communicators(model_config: Union[GPTConfig, T5Config], micro_batch_size: int) -> None:
+def _initialize_tp_communicators(
+    model_config: Union[GPTConfig, T5Config], micro_batch_size: int
+) -> None:
     """Initialize communicators with user buffers for high-performance tensor-model-parallel communication overlap.
 
     Args:
@@ -272,7 +289,8 @@ def _initialize_tp_communicators(model_config: Union[GPTConfig, T5Config], micro
         ub_cfgs = {}
 
     input_shape = [
-        (model_config.seq_length * micro_batch_size) // model_config.context_parallel_size,
+        (model_config.seq_length * micro_batch_size)
+        // model_config.context_parallel_size,
         model_config.hidden_size,
     ]
 
@@ -314,7 +332,11 @@ def _get_model_type(model_config: Union[GPTConfig, T5Config]) -> ModelType:
     Returns:
         ModelType: The model type enum value (encoder_and_decoder or encoder_or_decoder)
     """
-    return ModelType.encoder_and_decoder if isinstance(model_config, T5Config) else ModelType.encoder_or_decoder
+    return (
+        ModelType.encoder_and_decoder
+        if isinstance(model_config, T5Config)
+        else ModelType.encoder_or_decoder
+    )
 
 
 def get_model_from_config(
@@ -345,9 +367,9 @@ def get_model_from_config(
         parallel_state.get_pipeline_model_parallel_world_size() > 1
         and parallel_state.get_virtual_pipeline_model_parallel_world_size() is not None
     ):
-        assert (
-            model_type != ModelType.encoder_and_decoder
-        ), "Interleaved schedule not supported for model with both encoder and decoder"
+        assert model_type != ModelType.encoder_and_decoder, (
+            "Interleaved schedule not supported for model with both encoder and decoder"
+        )
         model = []
         for i in range(parallel_state.get_virtual_pipeline_model_parallel_world_size()):
             parallel_state.set_virtual_pipeline_model_parallel_rank(i)
@@ -368,10 +390,14 @@ def get_model_from_config(
             assert isinstance(model_config, T5Config)
             if parallel_state.get_pipeline_model_parallel_world_size() > 1:
                 rank = parallel_state.get_pipeline_model_parallel_rank()
-                first_decoder_rank = parallel_state.get_pipeline_model_parallel_decoder_start()
+                first_decoder_rank = (
+                    parallel_state.get_pipeline_model_parallel_decoder_start()
+                )
                 world_size = parallel_state.get_pipeline_model_parallel_world_size()
                 pre_process = rank == 0 or rank == first_decoder_rank
-                post_process = (rank == (first_decoder_rank - 1)) or (rank == (world_size - 1))
+                post_process = (rank == (first_decoder_rank - 1)) or (
+                    rank == (world_size - 1)
+                )
             model = model_config.configure_model(
                 tokenizer=None,
             )
@@ -392,7 +418,9 @@ def get_model_from_config(
     # are set for all params so the optimizer can use them.
     for model_module in model:
         for param in model_module.parameters():
-            tensor_parallel.set_defaults_if_not_set_tensor_model_parallel_attributes(param)
+            tensor_parallel.set_defaults_if_not_set_tensor_model_parallel_attributes(
+                param
+            )
 
     # Print number of parameters.
     if parallel_state.get_data_parallel_rank() == 0:
@@ -400,7 +428,12 @@ def get_model_from_config(
             " > number of parameters on (tensor, pipeline) model parallel rank ({}, {}): {}".format(
                 parallel_state.get_tensor_model_parallel_rank(),
                 parallel_state.get_pipeline_model_parallel_rank(),
-                sum([sum([p.nelement() for p in model_module.parameters()]) for model_module in model]),
+                sum(
+                    [
+                        sum([p.nelement() for p in model_module.parameters()])
+                        for model_module in model
+                    ]
+                ),
             ),
             flush=True,
         )
@@ -420,7 +453,9 @@ def get_model_from_config(
                 fp8_meta = param._fp8_meta["scaling_fwd"]
                 fp8_meta_index = param._fp8_meta_index
                 if hasattr(param, "get_high_precision_init_val"):
-                    fp8_meta.amax_history[0][fp8_meta_index].copy_(param.get_high_precision_init_val().abs().max())
+                    fp8_meta.amax_history[0][fp8_meta_index].copy_(
+                        param.get_high_precision_init_val().abs().max()
+                    )
                 else:
                     fp8_meta.amax_history[0][fp8_meta_index] = 0
 
@@ -432,7 +467,8 @@ def get_model_from_config(
                 module=model_chunk,
                 # Turn off bucketing for model_chunk 2 onwards, since communication for these
                 # model chunks is overlapped with compute anyway.
-                disable_bucketing=(model_chunk_idx > 0) or overlap_param_gather_with_optimizer_step,
+                disable_bucketing=(model_chunk_idx > 0)
+                or overlap_param_gather_with_optimizer_step,
             )
             for (model_chunk_idx, model_chunk) in enumerate(model)
         ]

@@ -15,6 +15,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from nemo_deploy.deploy_base import DeployBase
 
 
@@ -65,7 +66,7 @@ def test_initialization_with_model(deploy_base, mock_model):
 
 
 def test_initialization_with_checkpoint():
-    with patch('nemo_deploy.deploy_base.ModelPT') as mock_model_pt:
+    with patch("nemo_deploy.deploy_base.ModelPT") as mock_model_pt:
         mock_model_pt.restore_from.return_value = MagicMock()
         deploy_base = MockDeployable(
             triton_model_name="test_model",
@@ -81,20 +82,22 @@ def test_initialization_without_model_or_checkpoint():
 
 
 def test_get_module_and_class():
-    module, class_name = DeployBase.get_module_and_class("nemo.models.test_model.TestModel")
+    module, class_name = DeployBase.get_module_and_class(
+        "nemo.models.test_model.TestModel"
+    )
     assert module == "nemo.models.test_model"
     assert class_name == "TestModel"
 
 
 def test_is_model_deployable_valid(deploy_base):
     deploy_base.model = MockTritonDeployable()
-    with patch('nemo_deploy.deploy_base.ITritonDeployable', MockTritonDeployable):
+    with patch("nemo_deploy.deploy_base.ITritonDeployable", MockTritonDeployable):
         assert deploy_base._is_model_deployable() is True
 
 
 def test_is_model_deployable_invalid(deploy_base):
     deploy_base.model = MagicMock()
-    with patch('nemo_deploy.deploy_base.ITritonDeployable', MockTritonDeployable):
+    with patch("nemo_deploy.deploy_base.ITritonDeployable", MockTritonDeployable):
         with pytest.raises(Exception) as exc_info:
             deploy_base._is_model_deployable()
         assert "This model is not deployable to Triton" in str(exc_info.value)

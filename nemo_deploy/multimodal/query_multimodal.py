@@ -16,7 +16,6 @@ from io import BytesIO
 
 import numpy as np
 import requests
-import soundfile as sf
 from PIL import Image
 
 from nemo_deploy.utils import str_list2numpy
@@ -36,8 +35,7 @@ except Exception:
 
 
 class NemoQueryMultimodal:
-    """
-    Sends a query to Triton for Multimodal inference
+    """Sends a query to Triton for Multimodal inference.
 
     Example:
         from nemo_deploy.multimodal import NemoQueryMultimodal
@@ -62,7 +60,7 @@ class NemoQueryMultimodal:
         self.model_type = model_type
 
     def setup_media(self, input_media):
-        """Setup input media"""
+        """Setup input media."""
         if self.model_type == "video-neva":
             vr = VideoReader(input_media)
             frames = [f.asnumpy() for f in vr]
@@ -78,18 +76,13 @@ class NemoQueryMultimodal:
                 response = requests.get(input_media, timeout=5)
                 media = Image.open(BytesIO(response.content)).convert("RGB")
             else:
-                media = Image.open(input_media).convert('RGB')
+                media = Image.open(input_media).convert("RGB")
             return np.expand_dims(np.array(media), axis=0)
-        elif self.model_type == "salm":
-            waveform, sample_rate = sf.read(input_media, dtype=np.float32)
-            input_signal = np.array([waveform], dtype=np.float32)
-            input_signal_length = np.array([[len(waveform)]], dtype=np.int32)
-            return {"input_signal": input_signal, "input_signal_length": input_signal_length}
         else:
             raise RuntimeError(f"Invalid model type {self.model_type}")
 
     def frame_len(self, frames):
-        """Get frame len"""
+        """Get frame len."""
         max_frames = 256
         if len(frames) <= max_frames:
             return len(frames)
@@ -98,7 +91,7 @@ class NemoQueryMultimodal:
             return int(np.round(float(len(frames)) / subsample))
 
     def get_subsampled_frames(self, frames, subsample_len):
-        """Get subsampled frames"""
+        """Get subsampled frames."""
         idx = np.round(np.linspace(0, len(frames) - 1, subsample_len)).astype(int)
         sub_frames = [frames[i] for i in idx]
         return sub_frames
@@ -117,8 +110,7 @@ class NemoQueryMultimodal:
         init_timeout=60.0,
         lora_uids=None,
     ):
-        """Run query"""
-
+        """Run query."""
         prompts = str_list2numpy([input_text])
         inputs = {"input_text": prompts}
 
@@ -126,13 +118,17 @@ class NemoQueryMultimodal:
         if isinstance(media, dict):
             inputs.update(media)
         else:
-            inputs["input_media"] = np.repeat(media[np.newaxis, :, :, :, :], prompts.shape[0], axis=0)
+            inputs["input_media"] = np.repeat(
+                media[np.newaxis, :, :, :, :], prompts.shape[0], axis=0
+            )
 
         if batch_size is not None:
             inputs["batch_size"] = np.full(prompts.shape, batch_size, dtype=np.int_)
 
         if max_output_len is not None:
-            inputs["max_output_len"] = np.full(prompts.shape, max_output_len, dtype=np.int_)
+            inputs["max_output_len"] = np.full(
+                prompts.shape, max_output_len, dtype=np.int_
+            )
 
         if top_k is not None:
             inputs["top_k"] = np.full(prompts.shape, top_k, dtype=np.int_)
@@ -144,7 +140,9 @@ class NemoQueryMultimodal:
             inputs["temperature"] = np.full(prompts.shape, temperature, dtype=np.single)
 
         if repetition_penalty is not None:
-            inputs["repetition_penalty"] = np.full(prompts.shape, repetition_penalty, dtype=np.single)
+            inputs["repetition_penalty"] = np.full(
+                prompts.shape, repetition_penalty, dtype=np.single
+            )
 
         if num_beams is not None:
             inputs["num_beams"] = np.full(prompts.shape, num_beams, dtype=np.int_)
@@ -153,12 +151,16 @@ class NemoQueryMultimodal:
             lora_uids = np.char.encode(lora_uids, "utf-8")
             inputs["lora_uids"] = np.full((prompts.shape[0], len(lora_uids)), lora_uids)
 
-        with ModelClient(self.url, self.model_name, init_timeout_s=init_timeout) as client:
+        with ModelClient(
+            self.url, self.model_name, init_timeout_s=init_timeout
+        ) as client:
             result_dict = client.infer_batch(**inputs)
             output_type = client.model_config.outputs[0].dtype
 
             if output_type == np.bytes_:
-                sentences = np.char.decode(result_dict["outputs"].astype("bytes"), "utf-8")
+                sentences = np.char.decode(
+                    result_dict["outputs"].astype("bytes"), "utf-8"
+                )
                 return sentences
             else:
                 return result_dict["outputs"]

@@ -21,6 +21,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import sentencepiece
 import torch
+
 from nemo_export.sentencepiece_tokenizer import SentencePieceTokenizer
 
 
@@ -36,9 +37,9 @@ class TestSentencePieceTokenizer(unittest.TestCase):
 
         # Train a simple sentencepiece model
         sentencepiece.SentencePieceTrainer.Train(
-            f'--input={os.path.join(cls.test_dir, "test.txt")} '
-            f'--model_prefix={os.path.join(cls.test_dir, "test_model")} '
-            '--vocab_size=55 --model_type=bpe'
+            f"--input={os.path.join(cls.test_dir, 'test.txt')} "
+            f"--model_prefix={os.path.join(cls.test_dir, 'test_model')} "
+            "--vocab_size=55 --model_type=bpe"
         )
 
         cls.model_path = os.path.join(cls.test_dir, "test_model.model")
@@ -131,7 +132,9 @@ class TestSentencePieceTokenizer(unittest.TestCase):
 
     def test_legacy_mode(self):
         special_tokens = ["[PAD]", "[BOS]", "[EOS]"]
-        tokenizer = SentencePieceTokenizer(model_path=self.model_path, special_tokens=special_tokens, legacy=True)
+        tokenizer = SentencePieceTokenizer(
+            model_path=self.model_path, special_tokens=special_tokens, legacy=True
+        )
 
         # Test adding special tokens
         self.assertGreater(tokenizer.vocab_size, tokenizer.original_vocab_size)
@@ -187,5 +190,5 @@ class TestSentencePieceTokenizer(unittest.TestCase):
         self.assertIsNone(self.tokenizer.get_added_vocab())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

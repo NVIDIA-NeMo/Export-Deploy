@@ -15,7 +15,6 @@
 import argparse
 import json
 import os
-
 from typing import Any, Dict, Optional
 
 import transformers
@@ -44,18 +43,25 @@ python tests/setup/models/create_tiny_hf_model.py \
 def get_hf_model_class(hf_config):
     """Get HuggingFace model class from config."""
     if len(hf_config.architectures) > 1:
-        print(f"More than one model architecture available, choosing 1st: {hf_config.architectures}")
+        print(
+            f"More than one model architecture available, choosing 1st: {hf_config.architectures}"
+        )
     model_name = hf_config.architectures[0]
     model_class = getattr(transformers, model_name)
     return model_class
 
 
 def create_hf_model(
-    model_name_or_path: str, output_dir: str, config_updates: Optional[Dict[str, Any]] = None, overwrite: bool = False
+    model_name_or_path: str,
+    output_dir: str,
+    config_updates: Optional[Dict[str, Any]] = None,
+    overwrite: bool = False,
 ):
     """Create HuggingFace model with optional config updates."""
     if os.path.isdir(output_dir) and not overwrite:
-        print(f"Output directory {output_dir} exists and overwrite flag is not set so exiting.")
+        print(
+            f"Output directory {output_dir} exists and overwrite flag is not set so exiting."
+        )
         return
 
     hf_config = transformers.AutoConfig.from_pretrained(model_name_or_path)
@@ -77,7 +83,9 @@ def create_hf_model(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Create a HuggingFace model (random initialization) for testing purposes.")
+    parser = argparse.ArgumentParser(
+        "Create a HuggingFace model (random initialization) for testing purposes."
+    )
     parser.add_argument(
         "--model_name_or_path",
         required=True,
@@ -99,4 +107,6 @@ if __name__ == "__main__":
         help="Overwrite file if it exists",
     )
     args = parser.parse_args()
-    create_hf_model(args.model_name_or_path, args.output_dir, args.config_updates)
+    create_hf_model(
+        args.model_name_or_path, args.output_dir, args.config_updates, args.overwrite
+    )

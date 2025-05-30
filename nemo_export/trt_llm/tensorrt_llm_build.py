@@ -14,6 +14,7 @@
 
 
 import logging
+
 import tensorrt_llm
 from tensorrt_llm._common import check_max_num_tokens
 from tensorrt_llm.builder import BuildConfig
@@ -35,7 +36,7 @@ def build_and_save_engine(
     model_dir=None,
     model_weights=None,
     model_config=None,
-    model_type='gpt',
+    model_type="gpt",
     lora_ckpt_list=None,
     use_lora_plugin=None,
     max_lora_rank=64,
@@ -57,7 +58,11 @@ def build_and_save_engine(
     gather_context_logits: bool = False,
     gather_generation_logits: bool = False,
 ):
-    architecture = "LLaMAForCausalLM" if model_config.architecture == "LlamaForCausalLM" else model_config.architecture
+    architecture = (
+        "LLaMAForCausalLM"
+        if model_config.architecture == "LlamaForCausalLM"
+        else model_config.architecture
+    )
     try:
         model_cls = getattr(tensorrt_llm.models, architecture)
     except Exception:
@@ -90,20 +95,20 @@ def build_and_save_engine(
     )
 
     build_dict = {
-        'max_input_len': max_input_len,
-        'max_output_len': max_output_len,
-        'max_batch_size': max_batch_size,
-        'max_beam_width': max_beam_width,
-        'max_seq_len': max_seq_len,
-        'max_num_tokens': max_num_tokens,
-        'opt_num_tokens': opt_num_tokens,
-        'max_prompt_embedding_table_size': max_prompt_embedding_table_size,
-        'gather_context_logits': gather_context_logits,
-        'gather_generation_logits': gather_generation_logits,
-        'strongly_typed': False,
-        'builder_opt': None,
-        'use_refit': use_refit,
-        'multiple_profiles': multiple_profiles,
+        "max_input_len": max_input_len,
+        "max_output_len": max_output_len,
+        "max_batch_size": max_batch_size,
+        "max_beam_width": max_beam_width,
+        "max_seq_len": max_seq_len,
+        "max_num_tokens": max_num_tokens,
+        "opt_num_tokens": opt_num_tokens,
+        "max_prompt_embedding_table_size": max_prompt_embedding_table_size,
+        "gather_context_logits": gather_context_logits,
+        "gather_generation_logits": gather_generation_logits,
+        "strongly_typed": False,
+        "builder_opt": None,
+        "use_refit": use_refit,
+        "multiple_profiles": multiple_profiles,
     }
     build_config = BuildConfig.from_dict(build_dict, plugin_config=plugin_config)
 
@@ -112,7 +117,7 @@ def build_and_save_engine(
         build_config.plugin_config._lora_plugin = use_lora_plugin
         lora_config = LoraConfig(
             lora_dir=lora_ckpt_list,
-            lora_ckpt_source='nemo',
+            lora_ckpt_source="nemo",
             max_lora_rank=max_lora_rank,
         )
         if lora_target_modules is not None:

@@ -1,4 +1,4 @@
-# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,11 +34,15 @@ from vllm.config import (
 )
 from vllm.executor.ray_utils import initialize_ray_cluster
 from vllm.lora.request import LoRARequest
+from vllm.v1.core.sched.scheduler import Scheduler as V1Scheduler
+from vllm.v1.engine.llm_engine import LLMEngine
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output
-from nemo_export.utils import convert_lora_nemo_to_canonical, prepare_directory_for_export
-from nemo_export.vllm.engine import NemoLLMEngine
+from nemo_export.utils import (
+    convert_lora_nemo_to_canonical,
+    prepare_directory_for_export,
+)
 from nemo_export.vllm.model_config import NemoModelConfig
 from nemo_export.vllm.model_loader import NemoModelLoader
 
@@ -47,7 +51,7 @@ LOGGER = logging.getLogger("NeMo")
 
 @wrapt.decorator
 def noop_decorator(func):
-    """Used as batch if pytriton is not supported"""
+    """Used as batch if pytriton is not supported."""
 
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -65,9 +69,7 @@ except Exception:
 
 
 class vLLMExporter(ITritonDeployable):
-    """
-    The vLLMExporter class implements conversion from a Nemo checkpoint format to something compatible with vLLM,
-    loading the model in vLLM, and binding that model to a Triton server.
+    """The vLLMExporter class implements conversion from a Nemo checkpoint format to something compatible with vLLM,loading the model in vLLM, and binding that model to a Triton server.
 
     Example:
         from nemo_export.vllm_exporter import vLLMExporter
@@ -92,30 +94,27 @@ class vLLMExporter(ITritonDeployable):
 
     def __init__(self):
         self.request_id = 0
-        # TODO: Support v1 vllm engine
-        if envs.VLLM_USE_V1:
-            envs.set_vllm_use_v1(False)
+        assert envs.VLLM_USE_V1, "Only vLLM V1 is supported"
 
     def export(
         self,
         nemo_checkpoint: str,
         model_dir: str,
         model_type: str,
-        device: str = 'auto',
+        device: str = "auto",
         tensor_parallel_size: int = 1,
         pipeline_parallel_size: int = 1,
         max_model_len: Optional[int] = None,
         lora_checkpoints: Optional[List[str]] = None,
-        dtype: str = 'auto',
+        dtype: str = "auto",
         seed: int = 0,
         log_stats: bool = True,
-        weight_storage: str = 'auto',
+        weight_storage: str = "auto",
         gpu_memory_utilization: float = 0.9,
         quantization: Optional[str] = None,
         delete_existing_files: bool = True,
     ):
-        """
-        Exports the Nemo checkpoint to vLLM and initializes the engine.
+        """Exports the Nemo checkpoint to vLLM and initializes the engine.
 
         Args:
             nemo_checkpoint (str): path to the nemo checkpoint.
@@ -148,18 +147,20 @@ class vLLMExporter(ITritonDeployable):
                 Possible choices are None (weights not quantized, default) and "fp8".
             delete_existing_files (bool): if True, deletes all the files in model_dir.
         """
-        prepare_directory_for_export(model_dir, delete_existing_files=delete_existing_files)
+        prepare_directory_for_export(
+            model_dir, delete_existing_files=delete_existing_files
+        )
 
         # Pouplate the basic configuration structures
         device_config = DeviceConfig(device)
 
-        assert quantization in {None, 'fp8'}
+        assert quantization in {None, "fp8"}
 
         model_config = NemoModelConfig(
             nemo_checkpoint,
             model_dir,
             model_type,
-            tokenizer_mode='auto',
+            tokenizer_mode="auto",
             dtype=dtype,
             seed=seed,
             revision=None,
@@ -169,7 +170,6 @@ class vLLMExporter(ITritonDeployable):
             quantization=quantization,
             quantization_param_path=None,
             enforce_eager=False,
-            max_seq_len_to_capture=None,
         )
 
         if model_config.nemo_model_config.get("fp8", False):
@@ -178,27 +178,30 @@ class vLLMExporter(ITritonDeployable):
             )
 
         parallel_config = ParallelConfig(
-            pipeline_parallel_size=pipeline_parallel_size, tensor_parallel_size=tensor_parallel_size
+            pipeline_parallel_size=pipeline_parallel_size,
+            tensor_parallel_size=tensor_parallel_size,
         )
 
         # vllm/huggingface doesn't like the absense of config file. Place config in load dir.
-        if model_config.model and not os.path.exists(os.path.join(model_config.model, 'config.json')):
-            with open(os.path.join(model_config.model, 'config.json'), "w") as f:
+        if model_config.model and not os.path.exists(
+            os.path.join(model_config.model, "config.json")
+        ):
+            with open(os.path.join(model_config.model, "config.json"), "w") as f:
                 json.dump(model_config.hf_text_config.to_dict(), f, indent=2)
 
         # Dynamic online FP8 quantization currently does not support in-memory conversion [TODO]
-        if quantization is not None and weight_storage in {'auto', 'memory'}:
+        if quantization is not None and weight_storage in {"auto", "memory"}:
             LOGGER.warning('Setting weight_storage = "file" for FP8 quantization')
-            weight_storage = 'file'
+            weight_storage = "file"
 
         # See if we have an up-to-date safetensors file
-        safetensors_file = os.path.join(model_config.model, 'model.safetensors')
+        safetensors_file = os.path.join(model_config.model, "model.safetensors")
         safetensors_file_valid = os.path.exists(safetensors_file) and os.path.getmtime(
             safetensors_file
         ) > os.path.getmtime(nemo_checkpoint)
 
         # Decide how we're going to convert the weights
-        if weight_storage == 'auto':
+        if weight_storage == "auto":
             if parallel_config.distributed_executor_backend is not None:
                 save_weights = not safetensors_file_valid
                 inmemory_weight_conversion = False
@@ -206,33 +209,37 @@ class vLLMExporter(ITritonDeployable):
                 save_weights = False
                 inmemory_weight_conversion = True
 
-        elif weight_storage == 'cache':
+        elif weight_storage == "cache":
             save_weights = not safetensors_file_valid
             inmemory_weight_conversion = False
 
-        elif weight_storage == 'file':
+        elif weight_storage == "file":
             save_weights = True
             inmemory_weight_conversion = False
 
-        elif weight_storage == 'memory':
+        elif weight_storage == "memory":
             save_weights = False
             inmemory_weight_conversion = True
 
         else:
-            raise ValueError(f'Unsupported value for weight_storage: "{weight_storage}"')
+            raise ValueError(
+                f'Unsupported value for weight_storage: "{weight_storage}"'
+            )
 
         # Convert the weights ahead-of-time, if needed
         if save_weights:
-            NemoModelLoader.convert_and_store_nemo_weights(model_config, safetensors_file)
+            NemoModelLoader.convert_and_store_nemo_weights(
+                model_config, safetensors_file
+            )
         elif not inmemory_weight_conversion:
-            LOGGER.info(f'Using cached weights in {safetensors_file}')
+            LOGGER.info(f"Using cached weights in {safetensors_file}")
 
         # TODO: these values are the defaults from vllm.EngineArgs.
         cache_config = CacheConfig(
             block_size=16,
             gpu_memory_utilization=gpu_memory_utilization,
             swap_space=4,
-            cache_dtype='auto',
+            cache_dtype="auto",
             sliding_window=model_config.get_sliding_window(),
         )
 
@@ -245,40 +252,48 @@ class vLLMExporter(ITritonDeployable):
             num_lookahead_slots=0,
             delay_factor=0.0,
             enable_chunked_prefill=False,
+            scheduler_cls=V1Scheduler,
         )
 
         load_config = LoadConfig(
-            load_format=NemoModelLoader if inmemory_weight_conversion else LoadFormat.SAFETENSORS,
+            load_format=NemoModelLoader
+            if inmemory_weight_conversion
+            else LoadFormat.SAFETENSORS,
             download_dir=None,
             model_loader_extra_config=None,
         )
 
         # Convert the LoRA checkpoints to vLLM compatible format and derive the configuration structure
         lora_config = self._prepare_lora_checkpoints(
-            model_dir=model_dir, lora_checkpoints=lora_checkpoints, dtype=model_config.dtype
+            model_dir=model_dir,
+            lora_checkpoints=lora_checkpoints,
+            dtype=model_config.dtype,
         )
 
         # Initialize the cluster and specify the executor class.
         if parallel_config.distributed_executor_backend == "ray":
             initialize_ray_cluster(parallel_config)
-            from vllm.executor.ray_distributed_executor import RayDistributedExecutor
+            from vllm.v1.executor.ray_distributed_executor import RayDistributedExecutor
 
             executor_class = RayDistributedExecutor
 
         elif parallel_config.distributed_executor_backend == "mp":
-            from vllm.executor.mp_distributed_executor import MultiprocessingDistributedExecutor
+            from vllm.v1.executor.multiproc_executor import MultiprocExecutor
 
-            executor_class = MultiprocessingDistributedExecutor
+            executor_class = MultiprocExecutor
 
         else:
-            assert parallel_config.distributed_executor_backend == "uni" or parallel_config.world_size == 1
+            assert (
+                parallel_config.distributed_executor_backend == "uni"
+                or parallel_config.world_size == 1
+            )
 
-            from vllm.executor.uniproc_executor import UniProcExecutor
+            from vllm.v1.executor.abstract import UniProcExecutor
 
             executor_class = UniProcExecutor
 
         # Initialize the engine
-        self.engine = NemoLLMEngine(
+        self.engine = LLMEngine(
             vllm_config=VllmConfig(
                 model_config=model_config,
                 cache_config=cache_config,
@@ -305,21 +320,31 @@ class vLLMExporter(ITritonDeployable):
         max_lora_rank = 0
         for nemo_file in lora_checkpoints:
             if not os.path.isfile(nemo_file):
-                raise FileNotFoundError(f"LoRA checkpoint file '{nemo_file} does not exist'")
+                raise FileNotFoundError(
+                    f"LoRA checkpoint file '{nemo_file} does not exist'"
+                )
 
-            hf_lora_dir = os.path.join(model_dir, f'lora_{index}')
+            hf_lora_dir = os.path.join(model_dir, f"lora_{index}")
 
-            LOGGER.info(f"Converting LoRA checkpoint '{nemo_file}' into '{hf_lora_dir}'...")
+            LOGGER.info(
+                f"Converting LoRA checkpoint '{nemo_file}' into '{hf_lora_dir}'..."
+            )
 
-            _, lora_config = convert_lora_nemo_to_canonical(nemo_file, hf_lora_dir, hf_format=True)
+            _, lora_config = convert_lora_nemo_to_canonical(
+                nemo_file, hf_lora_dir, hf_format=True
+            )
             self.lora_checkpoints.append(hf_lora_dir)
 
-            rank = lora_config['peft']['lora_tuning']['adapter_dim']
+            rank = lora_config["peft"]["lora_tuning"]["adapter_dim"]
             max_lora_rank = max(max_lora_rank, rank)
 
             index += 1
 
-        return LoRAConfig(max_lora_rank=max_lora_rank, max_loras=len(self.lora_checkpoints), lora_dtype=dtype)
+        return LoRAConfig(
+            max_lora_rank=max_lora_rank,
+            max_loras=len(self.lora_checkpoints),
+            lora_dtype=dtype,
+        )
 
     def _add_request_to_engine(
         self,
@@ -334,12 +359,21 @@ class vLLMExporter(ITritonDeployable):
             top_p = 1.0
 
         sampling_params = SamplingParams(
-            max_tokens=max_output_len, temperature=temperature, top_k=int(top_k), top_p=top_p
+            max_tokens=max_output_len,
+            temperature=temperature,
+            top_k=int(top_k),
+            top_p=top_p,
         )
 
-        if lora_uid is not None and lora_uid >= 0 and lora_uid < len(self.lora_checkpoints):
+        if (
+            lora_uid is not None
+            and lora_uid >= 0
+            and lora_uid < len(self.lora_checkpoints)
+        ):
             lora_request = LoRARequest(
-                lora_name=f'LoRA_{lora_uid}', lora_int_id=lora_uid + 1, lora_local_path=self.lora_checkpoints[lora_uid]
+                lora_name=f"LoRA_{lora_uid}",
+                lora_int_id=lora_uid + 1,
+                lora_local_path=self.lora_checkpoints[lora_uid],
             )
         else:
             lora_request = None
@@ -347,7 +381,9 @@ class vLLMExporter(ITritonDeployable):
         request_id = str(self.request_id)
         self.request_id += 1
 
-        self.engine.add_request(request_id, prompt, sampling_params, lora_request=lora_request)
+        self.engine.add_request(
+            request_id, prompt, sampling_params, lora_request=lora_request
+        )
 
         return request_id
 
@@ -393,17 +429,19 @@ class vLLMExporter(ITritonDeployable):
             yield [[response] for response in responses]
 
     def _add_triton_request_to_engine(self, inputs: numpy.ndarray, index: int) -> str:
-        if 'lora_uids' in inputs:
-            lora_uid = int(numpy.char.decode(inputs['lora_uids'][index][0], encoding="utf-8"))
+        if "lora_uids" in inputs:
+            lora_uid = int(
+                numpy.char.decode(inputs["lora_uids"][index][0], encoding="utf-8")
+            )
         else:
             lora_uid = None
 
         return self._add_request_to_engine(
-            prompt=inputs['prompts'][index][0].decode('UTF-8'),
-            max_output_len=inputs['max_output_len'][index][0],
-            temperature=inputs['temperature'][index][0],
-            top_k=inputs['top_k'][index][0],
-            top_p=inputs['top_p'][index][0],
+            prompt=inputs["prompts"][index][0].decode("UTF-8"),
+            max_output_len=inputs["max_output_len"][index][0],
+            temperature=inputs["temperature"][index][0],
+            top_k=inputs["top_k"][index][0],
+            top_p=inputs["top_p"][index][0],
             lora_uid=lora_uid,
         )
 
@@ -416,8 +454,18 @@ class vLLMExporter(ITritonDeployable):
             Tensor(name="top_p", shape=(-1,), dtype=numpy.single, optional=True),
             Tensor(name="temperature", shape=(-1,), dtype=numpy.single, optional=True),
             Tensor(name="lora_uids", shape=(-1,), dtype=bytes, optional=True),
-            Tensor(name="output_generation_logits", shape=(-1,), dtype=numpy.bool_, optional=True),
-            Tensor(name="output_context_logits", shape=(-1,), dtype=numpy.bool_, optional=True),
+            Tensor(
+                name="output_generation_logits",
+                shape=(-1,),
+                dtype=numpy.bool_,
+                optional=True,
+            ),
+            Tensor(
+                name="output_context_logits",
+                shape=(-1,),
+                dtype=numpy.bool_,
+                optional=True,
+            ),
         )
         return inputs
 
@@ -428,9 +476,7 @@ class vLLMExporter(ITritonDeployable):
 
     @batch
     def triton_infer_fn(self, **inputs: numpy.ndarray):
-        """
-        This function is used to perform inference on a batch of prompts.
-        """
+        """This function is used to perform inference on a batch of prompts."""
         request_ids = []
         num_requests = len(inputs["prompts"])
         for index in range(num_requests):
@@ -441,13 +487,11 @@ class vLLMExporter(ITritonDeployable):
         responses = [r[0] for r in responses]
 
         output_tensor = cast_output(responses, numpy.bytes_)
-        return {'outputs': output_tensor}
+        return {"outputs": output_tensor}
 
     @batch
     def triton_infer_fn_streaming(self, **inputs: numpy.ndarray):
-        """
-        This function is used to perform streaming inference.
-        """
+        """This function is used to perform streaming inference."""
         request_ids = []
         num_requests = len(inputs["prompts"])
         for index in range(num_requests):
@@ -457,7 +501,7 @@ class vLLMExporter(ITritonDeployable):
         for responses in self._forward_streaming(request_ids):
             responses = [r[0] for r in responses]
             output_tensor = cast_output(responses, numpy.bytes_)
-            yield {'outputs': output_tensor}
+            yield {"outputs": output_tensor}
 
     # Mimic the TensorRTLLM exporter's forward function, even though we don't support many of its features.
     def forward(
@@ -479,13 +523,12 @@ class vLLMExporter(ITritonDeployable):
         output_generation_logits: bool = False,
         output_context_logits: bool = False,
     ) -> Union[List[List[str]], Iterable[List[List[str]]]]:
-        """
-        The forward function performs LLM evaluation on the provided array of prompts with other parameters shared,
-        and returns the generated texts. If 'streaming' is True, the output texts are returned incrementally
+        """The forward function performs LLM evaluation on the provided array of prompts with other parameters shared, and returns the generated texts.
+
+        If 'streaming' is True, the output texts are returned incrementally
         with a generator: one token appended to each output at a time. If 'streaming' is false, the final output texts
         are returned as a single list of responses.
         """
-
         if stop_words_list is not None and stop_words_list != []:
             raise NotImplementedError("stop_words_list is not supported")
 
@@ -502,7 +545,9 @@ class vLLMExporter(ITritonDeployable):
             raise NotImplementedError("prompt_embeddings_table is not supported")
 
         if prompt_embeddings_checkpoint_path is not None:
-            raise NotImplementedError("prompt_embeddings_checkpoint_path is not supported")
+            raise NotImplementedError(
+                "prompt_embeddings_checkpoint_path is not supported"
+            )
 
         if output_log_probs:
             raise NotImplementedError("output_log_probs is not supported")

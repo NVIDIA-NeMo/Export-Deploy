@@ -34,8 +34,7 @@ def mock_runner():
 
 
 class TestTensorRTMMExporter:
-
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_init(self, model_dir):
         # Test basic initialization
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
@@ -45,7 +44,7 @@ class TestTensorRTMMExporter:
         assert exporter.runner is None
         assert exporter.modality == "vision"
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_init_invalid_modality(self, model_dir):
         # Test initialization with invalid modality
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
@@ -53,18 +52,21 @@ class TestTensorRTMMExporter:
         with pytest.raises(AssertionError):
             TensorRTMMExporter(model_dir, modality="invalid")
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     @patch("nemo_export.tensorrt_mm_exporter.build_mllama_engine")
     def test_export_mllama(self, mock_build, model_dir):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         exporter.export(
-            visual_checkpoint_path="dummy/path", model_type="mllama", tensor_parallel_size=1, load_model=False
+            visual_checkpoint_path="dummy/path",
+            model_type="mllama",
+            tensor_parallel_size=1,
+            load_model=False,
         )
         mock_build.assert_called_once()
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
     @patch("nemo_export.tensorrt_mm_exporter.build_visual_engine")
     def test_export_neva(self, mock_visual, mock_trtllm, model_dir):
@@ -72,12 +74,15 @@ class TestTensorRTMMExporter:
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         exporter.export(
-            visual_checkpoint_path="dummy/path", model_type="neva", tensor_parallel_size=1, load_model=False
+            visual_checkpoint_path="dummy/path",
+            model_type="neva",
+            tensor_parallel_size=1,
+            load_model=False,
         )
         mock_trtllm.assert_called_once()
         mock_visual.assert_called_once()
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_forward_without_loading(self, model_dir):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
@@ -86,7 +91,7 @@ class TestTensorRTMMExporter:
             exporter.forward("test prompt", "test_image.jpg")
         assert "should be exported and" in str(exc_info.value)
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_forward(self, model_dir, mock_runner):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
@@ -94,14 +99,17 @@ class TestTensorRTMMExporter:
         exporter.runner = mock_runner
 
         result = exporter.forward(
-            input_text="What's in this image?", input_media="test_image.jpg", batch_size=1, max_output_len=30
+            input_text="What's in this image?",
+            input_media="test_image.jpg",
+            batch_size=1,
+            max_output_len=30,
         )
 
         assert result == "Test response"
         mock_runner.load_test_media.assert_called_once()
         mock_runner.run.assert_called_once()
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_get_triton_input(self, model_dir):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
@@ -115,7 +123,7 @@ class TestTensorRTMMExporter:
         assert inputs[0].name == "input_text"
         assert inputs[0].dtype == bytes
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_get_triton_output(self, model_dir):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
@@ -126,7 +134,7 @@ class TestTensorRTMMExporter:
         assert outputs[0].name == "outputs"
         assert outputs[0].dtype == bytes
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_forward_with_all_params(self, model_dir, mock_runner):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
@@ -161,7 +169,7 @@ class TestTensorRTMMExporter:
             ["lora1", "lora2"],
         )
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_get_input_media_tensors_vision(self, model_dir):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
@@ -173,22 +181,7 @@ class TestTensorRTMMExporter:
         assert tensors[0].shape == (-1, -1, -1, 3)
         assert tensors[0].dtype == np.uint8
 
-    @pytest.mark.run_only_on('GPU')
-    def test_get_input_media_tensors_audio(self, model_dir):
-        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
-
-        exporter = TensorRTMMExporter(model_dir, load_model=False, modality="audio")
-        tensors = exporter.get_input_media_tensors()
-
-        assert len(tensors) == 2
-        assert tensors[0].name == "input_signal"
-        assert tensors[0].shape == (-1,)
-        assert tensors[0].dtype == np.single
-        assert tensors[1].name == "input_signal_length"
-        assert tensors[1].shape == (1,)
-        assert tensors[1].dtype == np.intc
-
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_export_with_invalid_model_type(self, model_dir):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
@@ -201,7 +194,7 @@ class TestTensorRTMMExporter:
                 load_model=False,
             )
 
-    @pytest.mark.run_only_on('GPU')
+    @pytest.mark.run_only_on("GPU")
     def test_export_with_existing_files(self, model_dir):
         import os
 

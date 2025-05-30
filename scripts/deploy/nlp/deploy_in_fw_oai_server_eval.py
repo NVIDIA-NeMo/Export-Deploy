@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+
 from nemo.collections.llm.api import deploy
 
 # NOTE: This script is an example script to deploy a nemo2 model in-framework (i.e wo converting the model to any
@@ -22,29 +23,37 @@ from nemo.collections.llm.api import deploy
 
 def get_parser():
     parser = argparse.ArgumentParser(description="NeMo2.0 Deployment")
-    parser.add_argument(
-        "--nemo_checkpoint",
-        type=str,
-        help="NeMo 2.0 checkpoint to be evaluated",
-    ),
-    parser.add_argument(
-        "--ngpus",
-        type=int,
-        default=1,
-        help="Num of gpus per node",
-    ),
-    parser.add_argument(
-        "--nnodes",
-        type=int,
-        default=1,
-        help="Num of nodes",
-    ),
-    parser.add_argument(
-        "--tensor_parallelism_size",
-        type=int,
-        default=1,
-        help="Tensor parallelism size to deploy the model",
-    ),
+    (
+        parser.add_argument(
+            "--nemo_checkpoint",
+            type=str,
+            help="NeMo 2.0 checkpoint to be evaluated",
+        ),
+    )
+    (
+        parser.add_argument(
+            "--ngpus",
+            type=int,
+            default=1,
+            help="Num of gpus per node",
+        ),
+    )
+    (
+        parser.add_argument(
+            "--nnodes",
+            type=int,
+            default=1,
+            help="Num of nodes",
+        ),
+    )
+    (
+        parser.add_argument(
+            "--tensor_parallelism_size",
+            type=int,
+            default=1,
+            help="Tensor parallelism size to deploy the model",
+        ),
+    )
     parser.add_argument(
         "--pipeline_parallelism_size",
         type=int,

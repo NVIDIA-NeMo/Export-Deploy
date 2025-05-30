@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Convert a NeMo 2.0 checkpoint to NeMo 1.0 for TRTLLM export.
+"""Convert a NeMo 2.0 checkpoint to NeMo 1.0 for TRTLLM export.
+
 Example to run this conversion script:
 ```
     python /opt/NeMo/scripts/scripts/export/convert_nemo2_for_export.py \
@@ -29,9 +29,8 @@ import os
 import shutil
 from argparse import ArgumentParser
 
-from omegaconf import OmegaConf
-
 from nemo.lightning import io
+from omegaconf import OmegaConf
 
 
 def get_args():

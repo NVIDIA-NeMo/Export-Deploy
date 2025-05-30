@@ -26,9 +26,7 @@ from nemo_deploy.utils import cast_output, str_ndarray2list
 
 
 class vLLMHFExporter(ITritonDeployable):
-    """
-    The Exporter class uses vLLM APIs to convert a HF model to vLLM and makes the class,
-    deployable with Triton server.
+    """The Exporter class uses vLLM APIs to convert a HF model to vLLM and makes the class, deployable with Triton server.
 
     Example:
         from nemo_export import vLLMHFExporter
@@ -52,8 +50,8 @@ class vLLMHFExporter(ITritonDeployable):
         self.lora_models = None
 
     def export(self, model, enable_lora: bool = False):
-        """
-        Exports the HF checkpoint to vLLM and initializes the engine.
+        """Exports the HF checkpoint to vLLM and initializes the engine.
+
         Args:
             model (str): model name or the path
         """
@@ -117,14 +115,23 @@ class vLLMHFExporter(ITritonDeployable):
         if lora_model_name is not None:
             if self.lora_models is None:
                 raise Exception("No lora models are available.")
-            assert lora_model_name in self.lora_models.keys(), "Lora model was not added before"
-            lora_request = LoRARequest(lora_model_name, 1, self.lora_models[lora_model_name])
+            assert lora_model_name in self.lora_models.keys(), (
+                "Lora model was not added before"
+            )
+            lora_request = LoRARequest(
+                lora_model_name, 1, self.lora_models[lora_model_name]
+            )
 
         sampling_params = SamplingParams(
-            max_tokens=max_output_len, temperature=temperature, top_k=int(top_k), top_p=top_p
+            max_tokens=max_output_len,
+            temperature=temperature,
+            top_k=int(top_k),
+            top_p=top_p,
         )
 
-        request_output = self.model.generate(input_texts, sampling_params, lora_request=lora_request)
+        request_output = self.model.generate(
+            input_texts, sampling_params, lora_request=lora_request
+        )
         output = []
         for o in request_output:
             output.append(o.outputs[0].text)
