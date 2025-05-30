@@ -26,19 +26,39 @@ NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and 
 
 ### Using Docker
 
-Build a container with all dependencies:
+NeMo-Export-Deploy provides support for TRT-LLM and vLLM.  
+
+Build a container with TRT-LLM support:
 
 ```bash
 docker build \
     -f docker/Dockerfile.ci \
     -t nemo-export-deploy \
+    --build-arg INFERENCE_ENGINE=trtllm \
+    .
+```
+
+Or, alternatively to build a container with vLLM support, run:
+
+```bash
+docker build \
+    -f docker/Dockerfile.ci \
+    -t nemo-export-deploy \
+    --build-arg INFERENCE_ENGINE=vllm \
     .
 ```
 
 Start an interactive terminal inside the container:
 
 ```bash
-docker run --rm -it --entrypoint bash --shm-size=4g --gpus all ${PWD}/:/opt/checkpoints/ nemo-export-deploy
+docker run \
+    --rm \
+    -it \
+    --entrypoint bash \
+    --shm-size=4g \
+    --gpus all \
+    -v ${PWD}/:/opt/checkpoints/ \
+    nemo-export-deploy
 ```
 
 ### Export and Deploy LLM Examples
