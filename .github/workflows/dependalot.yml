@@ -96,6 +96,7 @@ jobs:
         id: create-pull-request
         env:
           title: "chore(🤖): Bump dependencies (${{ steps.date.outputs.main }})"
+          GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
         with:
           branch: dependabot-${{ steps.ref.outputs.date }}-main
           base: main
