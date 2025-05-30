@@ -30,7 +30,7 @@ from nemo_export.multimodal.build import (
     build_visual_engine,
     extract_lora_ckpt,
 )
-from nemo_export.multimodal.run import MultimodalModelRunner, SpeechllmModelRunner
+from nemo_export.multimodal.run import MultimodalModelRunner
 from nemo_export.tarutils import unpack_tarball
 
 use_deploy = True
@@ -382,6 +382,3 @@ class TensorRTMMExporter(ITritonDeployable):
                 self.runner = TRTLLMRunner(args)
             else:
                 self.runner = MultimodalModelRunner(visual_dir, llm_dir, self.modality)
-        elif self.modality == "audio":
-            perception_dir = os.path.join(self.model_dir, "perception_engine")
-            self.runner = SpeechllmModelRunner(perception_dir, llm_dir, self.modality)
