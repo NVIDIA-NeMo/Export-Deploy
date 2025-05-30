@@ -72,6 +72,8 @@ jobs:
           GPG_TTY: /dev/tty
         run: |
           echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
+          KEY_ID=$(gpg --list-keys --with-colons | grep '^pub' | cut -d: -f5)
+          echo -e "trust\n5\ny" | gpg --command-fd 0 --edit-key "$KEY_ID"
 
           rm -rf /tmp/gpg.sh
           cat <<EOF > /tmp/gpg.sh
