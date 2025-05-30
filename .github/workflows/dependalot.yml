@@ -68,13 +68,12 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
           GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
           GPG_TTY: /dev/tty
-        run: echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
-
-      - name: Add the custom gpg siging program that passes the passphrase to the gpg CLI
         run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
+
           rm -rf /tmp/gpg.sh
           echo '#!/bin/bash' >> /tmp/gpg.sh
-          echo 'gpg --batch --pinentry-mode=loopback --passphrase $GPG_KEY_PASSPHRASE $@' >> /tmp/gpg.sh
+          echo 'gpg --batch --pinentry-mode=loopback --passphrase $GPG_PASSPHRASE $@' >> /tmp/gpg.sh
           chmod +x /tmp/gpg.sh
 
       - name: Configure Git
