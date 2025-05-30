@@ -114,3 +114,7 @@ jobs:
           committer: "oliver könig <okoenig@nvidia.com>"
           signoff: true
           sign-commits: true
+
+      - name: Verify commit signature
+        run: |
+          git log --show-signature -1
