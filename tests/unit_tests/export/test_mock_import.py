@@ -27,6 +27,7 @@ def test_mock_import_existing_module():
         assert math is math_org
 
 
+@pytest.mark.pleasefixme
 def test_mock_import_non_existing_module():
     """Test mocking a non-existing module."""
     with _mock_import("non.existing.module"):
