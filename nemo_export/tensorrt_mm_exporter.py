@@ -247,11 +247,6 @@ class TensorRTMMExporter(ITritonDeployable):
         """Get input media tensors."""
         if self.modality == "vision":
             return [Tensor(name="input_media", shape=(-1, -1, -1, 3), dtype=np.uint8)]
-        elif self.modality == "audio":
-            return [
-                Tensor(name="input_signal", shape=(-1,), dtype=np.single),
-                Tensor(name="input_signal_length", shape=(1,), dtype=np.intc),
-            ]
         return []
 
     @property
