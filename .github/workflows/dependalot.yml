@@ -83,7 +83,7 @@ jobs:
           git config --global commit.gpgsign true
           git config --global user.signingkey 2A0D811D627CDD85
           git config --global gpg.program /tmp/gpg.sh
-          git config --global user.name "oliver könig"
+          git config --global user.name "Oliver König"
           git config --global user.email "okoenig@nvidia.com"
 
       - name: Download lock file
@@ -113,7 +113,7 @@ jobs:
 
             🙏 Please merge this PR only if the CI workflow completed successfully.
           commit-message: "build: uv.lock"
-          committer: "oliver könig <okoenig@nvidia.com>"
+          committer: "Oliver König <okoenig@nvidia.com>"
           signoff: true
           sign-commits: true
 
