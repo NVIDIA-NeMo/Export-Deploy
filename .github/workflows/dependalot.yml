@@ -99,3 +99,4 @@ jobs:
             🙏 Please merge this PR only if the CI workflow completed successfully.
           commit-message: "build: uv.lock"
           committer: "Oliver König <okoenig@nvidia.com>"
+          signoff: true
