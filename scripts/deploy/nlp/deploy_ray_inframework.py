@@ -29,6 +29,7 @@ def get_available_cpus():
 
 
 def parse_args():
+    """Parse command-line arguments for the Ray deployment script."""
     parser = argparse.ArgumentParser(description="Deploy a Megatron model using Ray")
     parser.add_argument(
         "--nemo_checkpoint",
@@ -127,12 +128,14 @@ def parse_args():
 
 
 def signal_handler(signum, frame, deployer):
+    """Handle signal interrupts and gracefully shutdown the deployer."""
     LOGGER.info("Received interrupt signal. Shutting down gracefully...")
     deployer.stop()
     sys.exit(0)
 
 
 def main():
+    """Main function to deploy a Megatron model using Ray."""
     args = parse_args()
     
     # If num_cpus is not specified, use all available CPUs
@@ -149,12 +152,18 @@ def main():
     
     # Validate the parallelism configuration
     # Each replica should use: tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size GPUs
-    parallelism_per_replica = args.tensor_model_parallel_size * args.pipeline_model_parallel_size * args.context_parallel_size
+    parallelism_per_replica = (args.tensor_model_parallel_size * 
+                              args.pipeline_model_parallel_size * 
+                              args.context_parallel_size)
     
     if parallelism_per_replica != gpus_per_replica:
-        LOGGER.error(f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})")
-        LOGGER.error(f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, GPUs per replica: {gpus_per_replica}")
-        LOGGER.error(f"Each replica needs: tensor_parallel({args.tensor_model_parallel_size}) * pipeline_parallel({args.pipeline_model_parallel_size}) * context_parallel({args.context_parallel_size}) = {parallelism_per_replica} GPUs")
+        LOGGER.error(f"Parallelism per replica ({parallelism_per_replica}) must equal "
+                    f"GPUs per replica ({gpus_per_replica})")
+        LOGGER.error(f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, "
+                    f"GPUs per replica: {gpus_per_replica}")
+        LOGGER.error(f"Each replica needs: tensor_parallel({args.tensor_model_parallel_size}) * "
+                    f"pipeline_parallel({args.pipeline_model_parallel_size}) * "
+                    f"context_parallel({args.context_parallel_size}) = {parallelism_per_replica} GPUs")
         sys.exit(1)
     
     LOGGER.info(f"Configuration: {args.num_replicas} replicas, {gpus_per_replica} GPUs per replica")
@@ -181,7 +190,8 @@ def main():
         
         # Create the Multi-Rank Megatron model deployment
         app = MegatronRayDeployable.options(
-            num_replicas=args.num_replicas,  # Configurable replicas, typically 1 since multi-rank deployable uses internal parallelism
+            num_replicas=args.num_replicas,  # Configurable replicas, typically 1 since multi-rank 
+                                           # deployable uses internal parallelism
             ray_actor_options={
                 "num_cpus": args.num_cpus_per_replica  # Using default from the multi_rank implementation
             }

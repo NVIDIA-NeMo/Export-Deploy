@@ -23,6 +23,8 @@ from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 
 # Create a mock of the ModelWorker class without decorators for testing
 class MockModelWorker:
+    """Mock implementation of ModelWorker class for testing purposes."""
+    
     def __init__(
         self,
         nemo_checkpoint_filepath: str,
@@ -59,6 +61,8 @@ class MockModelWorker:
 
 # Create a mock of the MegatronRayDeployable class without decorators for testing
 class MockMegatronRayDeployable:
+    """Mock implementation of MegatronRayDeployable class for testing purposes."""
+    
     def __init__(
         self,
         nemo_checkpoint_filepath: str,
@@ -87,6 +91,7 @@ class MockMegatronRayDeployable:
 # Mock fixtures to simulate dependencies
 @pytest.fixture
 def mock_megatron_model():
+    """Fixture to create a mock MegatronLLMDeployableNemo2 instance."""
     with patch("nemo_deploy.nlp.megatronllm_deployable_ray.MegatronLLMDeployableNemo2") as mock:
         mock_instance = MagicMock(spec=MegatronLLMDeployableNemo2)
         mock_instance.ray_infer_fn = MagicMock()
@@ -102,6 +107,7 @@ def mock_megatron_model():
 
 @pytest.fixture
 def mock_ray():
+    """Fixture to create a mock Ray instance."""
     with patch("nemo_deploy.nlp.megatronllm_deployable_ray.ray") as mock_ray:
         # Mock Ray remote decorator
         mock_ray.remote.return_value = lambda cls: cls
@@ -121,6 +127,7 @@ def mock_ray():
 
 @pytest.fixture
 def mock_torch():
+    """Fixture to create a mock torch instance."""
     with patch("nemo_deploy.nlp.megatronllm_deployable_ray.torch") as mock_torch:
         mock_torch.cuda.device_count.return_value = 4
         yield mock_torch
@@ -128,6 +135,7 @@ def mock_torch():
 
 @pytest.fixture
 def mock_find_port():
+    """Fixture to mock the find_available_port function."""
     with patch("nemo_deploy.nlp.megatronllm_deployable_ray.find_available_port") as mock:
         mock.return_value = 29500
         yield mock
@@ -135,6 +143,7 @@ def mock_find_port():
 
 @pytest.fixture
 def mock_worker_class():
+    """Fixture to provide the mock worker class for testing."""
     # Use our custom mock class for testing
     with patch("nemo_deploy.nlp.megatronllm_deployable_ray.ModelWorker", MockModelWorker):
         yield MockModelWorker
@@ -142,6 +151,7 @@ def mock_worker_class():
 
 @pytest.fixture
 def mock_deployable_class():
+    """Fixture to provide the mock deployable class for testing."""
     # Use our custom mock class for testing
     with patch("nemo_deploy.nlp.megatronllm_deployable_ray.MegatronRayDeployable", MockMegatronRayDeployable):
         yield MockMegatronRayDeployable
@@ -149,6 +159,7 @@ def mock_deployable_class():
 
 @pytest.fixture
 def mock_worker_instance(mock_megatron_model, mock_worker_class, mock_torch):
+    """Fixture to create a mock worker instance for testing."""
     # Create a mock worker instance
     worker = mock_worker_class(
         nemo_checkpoint_filepath="test/model.nemo",
@@ -168,6 +179,7 @@ def mock_worker_instance(mock_megatron_model, mock_worker_class, mock_torch):
 
 @pytest.fixture
 def mock_deployable_instance(mock_deployable_class, mock_find_port, mock_ray):
+    """Fixture to create a mock deployable instance for testing."""
     # Create a mock deployable instance
     instance = mock_deployable_class(
         nemo_checkpoint_filepath="test/model.nemo",
@@ -474,7 +486,9 @@ class TestMegatronRayDeployable:
     def test_chat_completions_error_handling(self, mock_deployable_instance):
         """Test error handling in chat completions endpoint."""
         # Set up the mock to raise an error
-        mock_deployable_instance.chat_completions.side_effect = HTTPException(status_code=500, detail="Chat completion error")
+        mock_deployable_instance.chat_completions.side_effect = HTTPException(
+            status_code=500, detail="Chat completion error"
+        )
         
         request = {
             "messages": [{"role": "user", "content": "Hello"}],
