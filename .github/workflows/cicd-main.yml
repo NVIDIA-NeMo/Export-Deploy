@@ -86,7 +86,7 @@ jobs:
           ruff check .
 
   cicd-wait-in-queue:
-    needs: [pre-flight, linting]
+    needs: [pre-flight]
     runs-on: ubuntu-latest
     environment: test
     if: |
