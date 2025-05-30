@@ -74,8 +74,10 @@ jobs:
           echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
 
           rm -rf /tmp/gpg.sh
-          echo '#!/bin/bash' >> /tmp/gpg.sh
-          echo 'gpg --batch --pinentry-mode=loopback --passphrase $GPG_PASSPHRASE $@' >> /tmp/gpg.sh
+          cat <<EOF > /tmp/gpg.sh
+          #!/bin/bash
+          gpg --batch --pinentry-mode=loopback --passphrase '${GPG_PASSPHRASE}' "\$@"
+          EOF
           chmod +x /tmp/gpg.sh
 
       - name: Configure Git
