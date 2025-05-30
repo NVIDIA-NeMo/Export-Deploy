@@ -60,7 +60,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: lock-file
-          path: uv.lock
 
       - name: Create Bump PR
         uses: peter-evans/create-pull-request@v7
