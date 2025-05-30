@@ -30,14 +30,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # - name: Upgrade lock file
+      #   run: |
+      #     docker run \
+      #     --rm \
+      #     -v $(pwd):/workspace \
+      #     -w /workspace \
+      #     nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
+      #     bash -c 'uv lock --upgrade'
+
       - name: Upgrade lock file
         run: |
-          docker run \
-          --rm \
-          -v $(pwd):/workspace \
-          -w /workspace \
-          nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
-          bash -c 'uv lock --upgrade'
+          echo test > uv.lock
 
       - name: Upload lock file
         uses: actions/upload-artifact@v4
@@ -52,6 +56,28 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install GPG
+        run: sudo apt-get install -y gnupg2
+
+      - name: Import GPG key
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
+          KEYGRIP=$(gpg --with-keygrip --list-secret-keys | awk '/Keygrip/ {print $3; exit}')
+          echo "$GPG_PASSPHRASE" | /usr/lib/gnupg2/gpg-preset-passphrase --preset "$KEYGRIP"
+        env:
+          GPG_TTY: /dev/tty
+
+      - name: Configure Git
+        run: |
+          KEYID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec/ {print $5; exit}')
+          git config --global user.name "$GIT_USER_NAME"
+          git config --global user.email "$GIT_USER_EMAIL"
+          git config --global user.signingkey "$KEYID"
+          git config --global commit.gpgsign true
 
       - name: Download lock file
         uses: actions/download-artifact@v4
