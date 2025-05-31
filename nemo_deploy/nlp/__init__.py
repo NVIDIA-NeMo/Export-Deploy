@@ -13,10 +13,11 @@
 # limitations under the License.
 
 
-from nemo_deploy.nlp.query_llm import NemoQueryLLM, NemoQueryLLMHF, NemoQueryLLMPyTorch
+from nemo_deploy.nlp.query_llm import NemoQueryLLM, NemoQueryLLMHF, NemoQueryLLMPyTorch, NemoQueryTRTLLMAPI
 
 __all__ = [
     "NemoQueryLLM",
     "NemoQueryLLMHF",
     "NemoQueryLLMPyTorch",
+    "NemoQueryTRTLLMAPI",
 ]
