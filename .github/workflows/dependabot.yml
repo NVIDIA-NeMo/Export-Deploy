@@ -53,7 +53,7 @@ jobs:
     with:
       nemo-target-branch: ${{ matrix.nemo-target-branch }}
       mcore-target-branch: ${{ matrix.mcore-target-branch }}
-      target-branch: ${{ matrix.target-branch }}
+      target-branch: ko3n1g/ci/bump-deps # ${{ matrix.target-branch }}
     secrets:
       PAT: ${{ secrets.PAT }}
 
