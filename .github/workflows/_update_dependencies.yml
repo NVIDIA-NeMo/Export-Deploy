@@ -1,0 +1,158 @@
+name: ~Update dependencies template
+on:
+  workflow_call:
+    inputs:
+      target-branch:
+        required: true
+        type: string
+        description: "The target branch to bump"
+      nemo-target-branch:
+        required: true
+        type: string
+        description: "The target branch to bump"
+      mcore-target-branch:
+        required: true
+        type: string
+        description: "The target branch to bump"
+    secrets:
+      PAT:
+        required: true
+
+jobs:
+  update-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ inputs.nemo-target-branch }}
+
+      - name: Set Git config
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "Github Actions"
+      - name: Merge weekly-bump-${{ inputs.nemo-target-branch }} back to base branch
+        env:
+          SOURCE_BRANCH: weekly-bump-${{ inputs.nemo-target-branch }}
+          TARGET_BRANCH: ${{ inputs.nemo-target-branch }}
+        run: |
+          if git ls-remote --exit-code origin $SOURCE_BRANCH; then
+            git fetch --unshallow
+            git checkout $SOURCE_BRANCH
+            git pull
+            git merge --no-ff $TARGET_BRANCH -m "chore: Auto-merge $TARGET_BRANCH into $SOURCE_BRANCH"
+          else
+            git checkout -b $SOURCE_BRANCH $TARGET_BRANCH
+          fi
+          git push -u origin $SOURCE_BRANCH
+
+  mcore:
+    uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.27.1
+    needs: [update-branch]
+    with:
+      source-repository: NVIDIA/Megatron-LM
+      source-ref: ${{ inputs.mcore-target-branch }}
+      yaml-path: '."vcs-dependencies"."megatron-lm".ref'
+      file: docker/manifest.json
+      base-branch: weekly-bump-${{ inputs.target-branch }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+  nemo:
+    uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.27.1
+    needs: [mcore]
+    with:
+      source-repository: NVIDIA/NeMo
+      source-ref: ${{ inputs.nemo-target-branch }}
+      yaml-path: '."vcs-dependencies"."megatron-lm".ref'
+      file: docker/manifest.json
+      base-branch: weekly-bump-${{ inputs.target-branch }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+  update-lockfile:
+    environment: nemo-ci
+    runs-on: linux-amd64-cpu16
+    needs: [nemo]
+    steps:
+      - name: Install Azure CLI
+        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Azure ACR Login
+        run: az acr login --name nemoci
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Upgrade lock file
+        run: |
+          docker run \
+          --rm \
+          -v $(pwd):/workspace \
+          -w /workspace \
+          nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
+          bash -c 'uv lock --upgrade'
+
+      - name: Upload lock file
+        uses: actions/upload-artifact@v4
+        with:
+          name: lock-file
+          path: uv.lock
+
+  create-pr:
+    needs: [update-lockfile]
+    runs-on: ubuntu-latest
+    environment: main
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+
+      - name: Install GPG
+        run: sudo apt-get install -y gnupg2
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
+        with:
+          gpg_private_key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PWD }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+
+      - name: Download lock file
+        uses: actions/download-artifact@v4
+        with:
+          name: lock-file
+
+      - name: Get todays date
+        id: date
+        run: echo "main=$(date +%F)" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Create Bump PR
+        uses: peter-evans/create-pull-request@v7
+        id: create-pull-request
+        with:
+          branch: dependabot-${{ steps.ref.outputs.date }}-main
+          base: main
+          title: "chore(🤖): Bump dependencies (${{ steps.date.outputs.main }})"
+          token: ${{ secrets.PAT }}
+          body: |
+            🚀 PR to bump dependencies.  
+
+            📝 Please remember the following to-do's before merge: 
+            - [ ] Verify the presubmit CI  
+
+            🙏 Please merge this PR only if the CI workflow completed successfully.
+          commit-message: "build: uv.lock"
+          committer: "Oliver König <okoenig@nvidia.com>"
+          signoff: true
