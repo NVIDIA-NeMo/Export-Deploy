@@ -35,6 +35,9 @@ jobs:
           SOURCE_BRANCH: weekly-bump-${{ inputs.target-branch }}
           TARGET_BRANCH: ${{ inputs.target-branch }}
         run: |
+          # Sanitize SOURCE_BRANCH by replacing slashes with dashes and removing any special characters
+          SOURCE_BRANCH=$(echo "$SOURCE_BRANCH" | sed 's/\//-/g' | sed 's/[^a-zA-Z0-9_-]//g')
+
           if git ls-remote --exit-code origin $SOURCE_BRANCH; then
             git fetch --unshallow
             git checkout $SOURCE_BRANCH
