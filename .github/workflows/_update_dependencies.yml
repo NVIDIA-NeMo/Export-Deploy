@@ -2,10 +2,6 @@ name: ~Update dependencies template
 on:
   workflow_call:
     inputs:
-      target-branch:
-        required: true
-        type: string
-        description: "The target branch to bump"
       nemo-target-branch:
         required: true
         type: string
