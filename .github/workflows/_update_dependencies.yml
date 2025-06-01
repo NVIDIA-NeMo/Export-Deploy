@@ -32,8 +32,8 @@ jobs:
           git config --local user.name "Github Actions"
       - name: Merge weekly-bump-${{ inputs.nemo-target-branch }} back to base branch
         env:
-          SOURCE_BRANCH: weekly-bump-${{ inputs.nemo-target-branch }}
-          TARGET_BRANCH: ${{ inputs.nemo-target-branch }}
+          SOURCE_BRANCH: weekly-bump-${{ inputs.target-branch }}
+          TARGET_BRANCH: ${{ inputs.target-branch }}
         run: |
           if git ls-remote --exit-code origin $SOURCE_BRANCH; then
             git fetch --unshallow

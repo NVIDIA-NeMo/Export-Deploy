@@ -43,9 +43,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - nemo-target-branch: ${{ needs.get-release-branch-names.outputs.nemo }}
-            mcore-target-branch: ${{ needs.get-release-branch-names.outputs.mcore }}
-            target-branch: ${{ needs.get-release-branch-names.outputs.nemo_export_deploy }}
+          # - nemo-target-branch: ${{ needs.get-release-branch-names.outputs.nemo }}
+          # mcore-target-branch: ${{ needs.get-release-branch-names.outputs.mcore }}
+          # target-branch: ${{ needs.get-release-branch-names.outputs.nemo_export_deploy }}
           - nemo-target-branch: main
             mcore-target-branch: main
             target-branch: main
