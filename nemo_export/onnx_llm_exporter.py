@@ -111,9 +111,7 @@ class OnnxLLMExporter(ITritonDeployable):
         self.model_input_names = None
         self.model_output_names = None
         self.onnx_runtime_session = None
-        self.calibration_data = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.quant_max_batch_size = None
 
         if self.model_name_or_path is not None:
             if model is not None:
