@@ -46,8 +46,6 @@ class DeployBase(ABC):
         self.allow_http = allow_http
         self.streaming = streaming
 
-
-
     @abstractmethod
     def deploy(self):
         pass
@@ -72,4 +70,3 @@ class DeployBase(ABC):
             )
         else:
             return True
-
