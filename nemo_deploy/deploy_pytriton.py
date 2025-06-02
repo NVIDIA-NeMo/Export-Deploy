@@ -94,7 +94,6 @@ class DeployPyTriton(DeployBase):
 
     def deploy(self):
         """Deploys any models to Triton Inference Server."""
-
         try:
             if self.streaming:
                 triton_config = TritonConfig(
