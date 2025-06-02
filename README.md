@@ -34,7 +34,7 @@ Build a container with TRT-LLM support:
 docker build \
     -f docker/Dockerfile.ci \
     -t nemo-export-deploy \
-    --build-arg INFERENCE_ENGINE=trtllm \
+    --build-arg INFERENCE_FRAMEWORK=trtllm \
     .
 ```
 
@@ -44,7 +44,7 @@ Or, alternatively to build a container with vLLM support, run:
 docker build \
     -f docker/Dockerfile.ci \
     -t nemo-export-deploy \
-    --build-arg INFERENCE_ENGINE=vllm \
+    --build-arg INFERENCE_FRAMEWORK=vllm \
     .
 ```
 
