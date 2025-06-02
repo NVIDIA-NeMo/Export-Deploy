@@ -19,12 +19,7 @@ import requests
 from PIL import Image
 
 from nemo_deploy.utils import str_list2numpy
-
-use_pytriton = True
-try:
-    from pytriton.client import ModelClient
-except Exception:
-    use_pytriton = False
+from pytriton.client import ModelClient
 
 try:
     from decord import VideoReader

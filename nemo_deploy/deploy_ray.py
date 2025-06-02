@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-use_ray = True
-try:
-    import ray
-    from ray import serve
-    from ray.serve import Application
-except Exception:
-    use_ray = False
+
+import ray
+from ray import serve
+from ray.serve import Application
+
 import logging
 
-from .ray_utils import find_available_port
+from nemo_deploy.ray_utils import find_available_port
 
 LOGGER = logging.getLogger("NeMo")
 

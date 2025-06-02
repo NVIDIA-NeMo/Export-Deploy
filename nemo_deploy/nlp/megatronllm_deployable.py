@@ -34,36 +34,10 @@ from nemo_deploy.utils import (
     str_ndarray2list,
 )
 
-from .inference.inference_base import create_mcore_engine
+from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
+from pytriton.decorators import batch, first_value
+from pytriton.model_config import Tensor
 
-
-@wrapt.decorator
-def noop_decorator(func):
-    """A no-op decorator that returns the original function unchanged.
-
-    Used as a fallback when pytriton's batch decorator is not available.
-
-    Args:
-        func: The function to decorate
-
-    Returns:
-        The original function without any modifications
-    """
-
-    def wrapper(*args, **kwargs):
-        """Wrapper method returning the func."""
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-use_pytriton = True
-batch = noop_decorator
-try:
-    from pytriton.decorators import batch, first_value
-    from pytriton.model_config import Tensor
-except Exception:
-    use_pytriton = False
 
 LOGGER = logging.getLogger("NeMo")
 

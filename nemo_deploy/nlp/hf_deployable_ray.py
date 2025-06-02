@@ -12,12 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-use_ray = True
-try:
-    from ray import serve
-except Exception:
-    use_ray = False
 
+from ray import serve
 import asyncio
 import logging
 import time
@@ -26,8 +22,8 @@ from typing import Any, Dict, List
 import torch
 from fastapi import FastAPI, HTTPException
 
-from ..ray_utils import find_available_port
-from .hf_deployable import HuggingFaceLLMDeploy
+from nemo_deploy.ray_utils import find_available_port
+from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
 
 LOGGER = logging.getLogger("NeMo")
 
