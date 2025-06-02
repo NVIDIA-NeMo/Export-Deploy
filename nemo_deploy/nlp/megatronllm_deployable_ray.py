@@ -18,6 +18,7 @@ import os
 import time
 from typing import Any, Dict
 
+import numpy as np
 import ray
 import torch
 from fastapi import FastAPI, HTTPException
@@ -218,8 +219,21 @@ class MegatronRayDeployable:
             if temperature == 0.0 and top_p == 0.0:
                 LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
                 request["top_k"] = 1.0
+            
+            # Prepare inference inputs with proper parameter mapping
+            inference_inputs = {
+                "prompts": request.get("prompts", []),
+                "max_length": request.get("max_tokens", 256),
+                "temperature": request.get("temperature", 1.0),
+                "top_k": request.get("top_k", 0),
+                "top_p": request.get("top_p", 0.0),
+                "compute_logprob": True if request.get("logprobs") == 1 else False,
+                "apply_chat_template": False,
+            }
+            
             # Run tokenization and model inference in the thread pool
-            results = ray.get(self.primary_worker.infer.remote(request))
+            results = ray.get(self.primary_worker.infer.remote(inference_inputs))
+            LOGGER.error(f"Results: {results}")
             # Extract generated texts from results
             generated_texts = results.get("sentences", [])
 
@@ -227,6 +241,12 @@ class MegatronRayDeployable:
             prompt_tokens = sum(len(p.split()) for p in request.get("prompts", []))
             completion_tokens = sum(len(r.split()) for r in generated_texts)
             total_tokens = prompt_tokens + completion_tokens
+            
+            # Convert numpy arrays to Python lists for JSON serialization
+            log_probs_data = results.get("log_probs", None)
+            if log_probs_data is not None and isinstance(log_probs_data, np.ndarray):
+                log_probs_data = log_probs_data.tolist()
+            
             output = {
                 "id": f"cmpl-{int(time.time())}",
                 "object": "text_completion",
@@ -238,14 +258,14 @@ class MegatronRayDeployable:
                         "index": 0,
                         "logprobs": (
                             {
-                                "token_logprobs": results.get("logits", None),
-                                "top_logprobs": results.get("scores", None),
+                                "token_logprobs": log_probs_data,
+                                "top_logprobs": log_probs_data,
                             }
-                            if results.get("logits") is not None
+                            if log_probs_data is not None
                             else None
                         ),
                         "finish_reason": (
-                            "length" if len(generated_texts[0]) >= request.get('max_tokens', 50) else "stop"
+                            "length" if generated_texts and len(generated_texts[0]) >= request.get('max_tokens', 256) else "stop"
                         ),
                     }
                 ],
@@ -274,9 +294,9 @@ class MegatronRayDeployable:
                 "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
                 "max_length": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
-                "top_k": 0,
+                "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0.0),
-                "compute_logprob": False,
+                "compute_logprob": True if request.get("logprobs") == 1 else False,
                 "apply_chat_template": True,
             }
 
@@ -291,6 +311,11 @@ class MegatronRayDeployable:
             completion_tokens = sum(len(r.split()) for r in generated_texts)
             total_tokens = prompt_tokens + completion_tokens
 
+            # Convert numpy arrays to Python lists for JSON serialization
+            log_probs_data = results.get("log_probs", None)
+            if log_probs_data is not None and isinstance(log_probs_data, np.ndarray):
+                log_probs_data = log_probs_data.tolist()
+
             output = {
                 "id": f"chatcmpl-{int(time.time())}",
                 "object": "chat.completion",
@@ -300,6 +325,14 @@ class MegatronRayDeployable:
                     {
                         "message": {"role": "assistant", "content": generated_texts[0] if generated_texts else ""},
                         "index": 0,
+                        "logprobs": (
+                            {
+                                "token_logprobs": log_probs_data,
+                                "top_logprobs": log_probs_data,
+                            }
+                            if log_probs_data is not None
+                            else None
+                        ),
                         "finish_reason": (
                             "length" if generated_texts and len(generated_texts[0]) >= inference_inputs["max_length"] else "stop"
                         ),

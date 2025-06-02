@@ -466,7 +466,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 - top_k (int): Top-k sampling parameter (default: 1)
                 - top_p (float): Top-p sampling parameter (default: 0.0)
                 - max_length (int): Maximum number of tokens to generate (default: 256)
-                - compute_logprob (bool): Whether to compute log probabilities (default: False)
+                - logprobs (int): Whether to compute log probabilities (default: 0)
                 - apply_chat_template (bool): Whether to apply chat template (default: False)
 
         Returns:
