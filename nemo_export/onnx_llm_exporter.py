@@ -101,7 +101,7 @@ class OnnxLLMExporter(ITritonDeployable):
             tokenizer (HF or NeMo tokenizer): tokenizer class.
             model_name_or_path (str): a path for ckpt or HF model ID
             load_runtime (bool): load ONNX runtime if there is any exported model available in
-                                 the onnx_model_dir folder.
+                the onnx_model_dir folder.
         """
         self.onnx_model_dir = onnx_model_dir
         self.model_name_or_path = model_name_or_path
@@ -126,6 +126,8 @@ class OnnxLLMExporter(ITritonDeployable):
                     )
                 else:
                     self._load_hf_model()
+
+        self.model.to(self.device)
 
         if load_runtime:
             self._load_runtime()
@@ -489,7 +491,6 @@ class OnnxLLMExporter(ITritonDeployable):
             )
             quant_cfg = QUANT_CFG_CHOICES[quant_cfg]
 
-        self.model.to(self.device, dtype=torch.float16)
         logging.info("Starting quantization...")
         mtq.quantize(self.model, quant_cfg, forward_loop=forward_loop)
         logging.info("Quantization is completed.")
