@@ -109,24 +109,6 @@ wheels = [
 ]
 
 [[package]]
-name = "aiobotocore"
-version = "2.22.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "aiohttp", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "aioitertools", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "botocore", version = "1.37.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "jmespath", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "multidict", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "python-dateutil", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "wrapt", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9c/4c/113c4f5611103bba8e5252805fbee7944f5d9541addba9a96b091c0c4308/aiobotocore-2.22.0.tar.gz", hash = "sha256:11091477266b75c2b5d28421c1f2bc9a87d175d0b8619cb830805e7a113a170b", size = 110322, upload-time = "2025-05-01T16:45:45.484Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/00/8e/ffa5840cb7de19ada85bda1fae1ae22671a18992e9373f2e2df9db5389b5/aiobotocore-2.22.0-py3-none-any.whl", hash = "sha256:b4e6306f79df9d81daff1f9d63189a2dbee4b77ce3ab937304834e35eaaeeccf", size = 78930, upload-time = "2025-05-01T16:45:43.508Z" },
-]
-
-[[package]]
 name = "aiofiles"
 version = "24.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -240,15 +222,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6f/6d/d89e846a5444b3d5eb8985a6ddb0daef3774928e1bfbce8e84ec97b0ffa7/aiohttp_cors-0.8.1.tar.gz", hash = "sha256:ccacf9cb84b64939ea15f859a146af1f662a6b1d68175754a07315e305fb1403", size = 38626, upload-time = "2025-03-31T14:16:20.048Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/98/3b/40a68de458904bcc143622015fff2352b6461cd92fd66d3527bf1c6f5716/aiohttp_cors-0.8.1-py3-none-any.whl", hash = "sha256:3180cf304c5c712d626b9162b195b1db7ddf976a2a25172b35bb2448b890a80d", size = 25231, upload-time = "2025-03-31T14:16:18.478Z" },
-]
-
-[[package]]
-name = "aioitertools"
-version = "0.12.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/06/de/38491a84ab323b47c7f86e94d2830e748780525f7a10c8600b67ead7e9ea/aioitertools-0.12.0.tar.gz", hash = "sha256:c2a9055b4fbb7705f561b9d86053e8af5d10cc845d22c32008c43490b2d8dd6b", size = 19369, upload-time = "2024-09-02T03:33:40.349Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/85/13/58b70a580de00893223d61de8fea167877a3aed97d4a5e1405c9159ef925/aioitertools-0.12.0-py3-none-any.whl", hash = "sha256:fc1f5fac3d737354de8831cbba3eb04f79dd649d8f3afb4c5b114925e662a796", size = 24345, upload-time = "2024-09-02T03:34:59.454Z" },
 ]
 
 [[package]]
@@ -454,8 +427,8 @@ name = "bitsandbytes"
 version = "0.45.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
-    { name = "torch" },
+    { name = "numpy", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "torch", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/20/0f/3a5f062c0ed2252ed128ff028b36d2a46a763a2919b00f12ca5274493ff3/bitsandbytes-0.45.3-py3-none-manylinux_2_24_x86_64.whl", hash = "sha256:720d67ffa8a5c61c958fb62517e8abbb2ab0ac1b33b66506ae911cb34c836c70", size = 76058963, upload-time = "2025-02-24T20:17:02.103Z" },
@@ -541,62 +514,12 @@ wheels = [
 
 [[package]]
 name = "boto3"
-version = "1.37.3"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-]
-dependencies = [
-    { name = "botocore", version = "1.37.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "jmespath", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "s3transfer", version = "0.11.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/7e/3f/135ec0771e6d0e1af2ad7023a15df6677d96112072838d948c9b5075efe1/boto3-1.37.3.tar.gz", hash = "sha256:21f3ce0ef111297e63a6eb998a25197b8c10982970c320d4c6e8db08be2157be", size = 111160, upload-time = "2025-02-27T20:28:15.588Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/8c/213511a505af2239a673de4de145d013379275c569185187922f93dbdf14/boto3-1.37.3-py3-none-any.whl", hash = "sha256:2063b40af99fd02f6228ff52397b552ff3353831edaf8d25cc04801827ab9794", size = 139344, upload-time = "2025-02-27T20:28:13.085Z" },
-]
-
-[[package]]
-name = "boto3"
 version = "1.38.27"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-]
 dependencies = [
-    { name = "botocore", version = "1.38.27", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "jmespath", marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "s3transfer", version = "0.13.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "botocore" },
+    { name = "jmespath" },
+    { name = "s3transfer" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e7/96/fc74d8521d2369dd8c412438401ff12e1350a1cd3eab5c758ed3dd5e5f82/boto3-1.38.27.tar.gz", hash = "sha256:94bd7fdd92d5701b362d4df100d21e28f8307a67ff56b6a8b0398119cf22f859", size = 111875, upload-time = "2025-05-30T19:32:41.352Z" }
 wheels = [
@@ -605,62 +528,12 @@ wheels = [
 
 [[package]]
 name = "botocore"
-version = "1.37.3"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-]
-dependencies = [
-    { name = "jmespath", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "python-dateutil", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "urllib3", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/74/fb/b243ab806d2e1e6b8a475b731cc59a1f1e4709eded4884b988a27bbc996b/botocore-1.37.3.tar.gz", hash = "sha256:fe8403eb55a88faf9b0f9da6615e5bee7be056d75e17af66c3c8f0a3b0648da4", size = 13574648, upload-time = "2025-02-27T20:27:59.559Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/54/772118f15b5990173aa5264946cc8c9ff70c8f02d72ee6d63167a985188c/botocore-1.37.3-py3-none-any.whl", hash = "sha256:d01bd3bf4c80e61fa88d636ad9f5c9f60a551d71549b481386c6b4efe0bb2b2e", size = 13342066, upload-time = "2025-02-27T20:27:53.137Z" },
-]
-
-[[package]]
-name = "botocore"
 version = "1.38.27"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-]
 dependencies = [
-    { name = "jmespath", marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "python-dateutil", marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "urllib3", marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "jmespath" },
+    { name = "python-dateutil" },
+    { name = "urllib3" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/36/5e/67899214ad57f7f26af5bd776ac5eb583dc4ecf5c1e52e2cbfdc200e487a/botocore-1.38.27.tar.gz", hash = "sha256:9788f7efe974328a38cbade64cc0b1e67d27944b899f88cb786ae362973133b6", size = 13919963, upload-time = "2025-05-30T19:32:29.657Z" }
 wheels = [
@@ -1220,8 +1093,8 @@ name = "cupy-cuda12x"
 version = "13.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "fastrlock" },
-    { name = "numpy" },
+    { name = "fastrlock", marker = "sys_platform != 'darwin'" },
+    { name = "numpy", marker = "sys_platform != 'darwin'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/55/ba/2fd0bbaf59ca964fc519fc3d9c8dc67813c83f75b3728d455fd7f89e6f09/cupy_cuda12x-13.4.1-cp310-cp310-manylinux2014_aarch64.whl", hash = "sha256:113a4f6b5e89d8e3f0cb150708fa8586fde5f682d2d5bf4703ad8dde66063a5e", size = 117383051, upload-time = "2025-03-21T07:24:28.751Z" },
@@ -1360,7 +1233,7 @@ name = "decord"
 version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/11/79/936af42edf90a7bd4e41a6cac89c913d4b47fa48a26b042d5129a9242ee3/decord-0.6.0-py3-none-manylinux2010_x86_64.whl", hash = "sha256:51997f20be8958e23b7c4061ba45d0efcd86bffd5fe81c695d0befee0d442976", size = 13602299, upload-time = "2021-06-14T21:30:55.486Z" },
@@ -2001,9 +1874,9 @@ version = "25.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cffi", marker = "(platform_python_implementation == 'CPython' and sys_platform == 'win32') or (platform_python_implementation != 'CPython' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'win32' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "greenlet", marker = "platform_python_implementation == 'CPython' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "zope-event" },
-    { name = "zope-interface" },
+    { name = "greenlet", marker = "(platform_python_implementation == 'CPython' and sys_platform != 'darwin') or (platform_python_implementation == 'CPython' and extra == 'extra-18-nemo-export-deploy-trtllm') or (platform_python_implementation == 'CPython' and extra != 'extra-18-nemo-export-deploy-vllm') or (platform_python_implementation != 'CPython' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "zope-event", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "zope-interface", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f1/58/267e8160aea00ab00acd2de97197eecfe307064a376fb5c892870a8a6159/gevent-25.5.1.tar.gz", hash = "sha256:582c948fa9a23188b890d0bc130734a506d039a2e5ad87dae276a456cc683e61", size = 6388207, upload-time = "2025-05-12T12:57:59.833Z" }
 wheels = [
@@ -2048,10 +1921,10 @@ name = "geventhttpclient"
 version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "brotli" },
-    { name = "certifi" },
-    { name = "gevent" },
-    { name = "six" },
+    { name = "brotli", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "certifi", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "gevent", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "six", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/68/98/1ee9fbab4ae97d5f0f05035059a56a61a9c966331e6c837f974b402fdf63/geventhttpclient-2.0.2.tar.gz", hash = "sha256:8135a85200b170def7293d01dd1557931fcd1bec1ac78c52ad7cedd22368b9ba", size = 73821, upload-time = "2022-08-31T07:58:22.189Z" }
 wheels = [
@@ -3579,8 +3452,7 @@ dependencies = [
     { name = "pillow", version = "10.3.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
     { name = "pillow", version = "11.2.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trtllm'" },
     { name = "pyyaml" },
-    { name = "s3fs", version = "0.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "s3fs", version = "2024.12.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "s3fs" },
     { name = "torch" },
     { name = "tqdm" },
     { name = "webdataset" },
@@ -3665,12 +3537,12 @@ name = "mlx-lm"
 version = "0.24.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jinja2" },
-    { name = "mlx" },
-    { name = "numpy" },
-    { name = "protobuf" },
-    { name = "pyyaml" },
-    { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" }, extra = ["sentencepiece"], marker = "extra == 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "jinja2", marker = "sys_platform == 'darwin'" },
+    { name = "mlx", marker = "sys_platform == 'darwin'" },
+    { name = "numpy", marker = "sys_platform == 'darwin'" },
+    { name = "protobuf", marker = "sys_platform == 'darwin'" },
+    { name = "pyyaml", marker = "sys_platform == 'darwin'" },
+    { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" }, extra = ["sentencepiece"], marker = "(sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f0/9a/1691d79ace5b262f962606b03a7a6a85381a934070d6dcaba579f39f6b41/mlx_lm-0.24.1.tar.gz", hash = "sha256:5df8aa87504df28bd77c91be09f68c551bde6f141f204d3b37157f3c3ede26c1", size = 145454, upload-time = "2025-05-14T13:19:35.341Z" }
 wheels = [
@@ -3994,6 +3866,7 @@ trtllm = [
 ]
 vllm = [
     { name = "nvidia-modelopt", version = "0.29.0", source = { registry = "https://pypi.org/simple" }, extra = ["torch"], marker = "extra == 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "pandas" },
     { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" } },
     { name = "vllm" },
 ]
@@ -4038,6 +3911,7 @@ requires-dist = [
     { name = "nvidia-modelopt", extras = ["torch"], marker = "extra == 'vllm'", specifier = ">=0.29.0" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
     { name = "omegaconf", specifier = "<=2.3" },
+    { name = "pandas", marker = "extra == 'vllm'" },
     { name = "peft" },
     { name = "pydantic-settings" },
     { name = "ray" },
@@ -4138,8 +4012,7 @@ multimodal-only = [
 ]
 nlp-only = [
     { name = "accelerated-scan" },
-    { name = "boto3", version = "1.37.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "boto3", version = "1.38.27", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "boto3" },
     { name = "faiss-cpu" },
     { name = "flask-restful" },
     { name = "ftfy" },
@@ -4520,7 +4393,7 @@ name = "nvidia-cudnn-cu12"
 version = "9.1.0.70"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12" },
+    { name = "nvidia-cublas-cu12", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9f/fd/713452cd72343f682b1c7b9321e23829f00b842ceaedcda96e742ea0b0b3/nvidia_cudnn_cu12-9.1.0.70-py3-none-manylinux2014_x86_64.whl", hash = "sha256:165764f44ef8c61fcdfdfdbe769d687e06374059fbb388b6c89ecb0e28793a6f", size = 664752741, upload-time = "2024-04-22T15:24:15.253Z" },
@@ -4532,7 +4405,7 @@ name = "nvidia-cufft-cu12"
 version = "11.2.1.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12" },
+    { name = "nvidia-nvjitlink-cu12", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7a/8a/0e728f749baca3fbeffad762738276e5df60851958be7783af121a7221e7/nvidia_cufft_cu12-11.2.1.3-py3-none-manylinux2014_aarch64.whl", hash = "sha256:5dad8008fc7f92f5ddfa2101430917ce2ffacd86824914c82e28990ad7f00399", size = 211422548, upload-time = "2024-06-18T19:33:39.396Z" },
@@ -4555,9 +4428,9 @@ name = "nvidia-cusolver-cu12"
 version = "11.6.1.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12" },
-    { name = "nvidia-cusparse-cu12" },
-    { name = "nvidia-nvjitlink-cu12" },
+    { name = "nvidia-cublas-cu12", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-cusparse-cu12", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-nvjitlink-cu12", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/46/6b/a5c33cf16af09166845345275c34ad2190944bcc6026797a39f8e0a282e0/nvidia_cusolver_cu12-11.6.1.9-py3-none-manylinux2014_aarch64.whl", hash = "sha256:d338f155f174f90724bbde3758b7ac375a70ce8e706d70b018dd3375545fc84e", size = 127634111, upload-time = "2024-06-18T19:35:01.793Z" },
@@ -4570,7 +4443,7 @@ name = "nvidia-cusparse-cu12"
 version = "12.3.1.170"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12" },
+    { name = "nvidia-nvjitlink-cu12", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/96/a9/c0d2f83a53d40a4a41be14cea6a0bf9e668ffcf8b004bd65633f433050c0/nvidia_cusparse_cu12-12.3.1.170-py3-none-manylinux2014_aarch64.whl", hash = "sha256:9d32f62896231ebe0480efd8a7f702e143c98cfaa0e8a76df3386c1ba2b54df3", size = 207381987, upload-time = "2024-06-18T19:35:32.989Z" },
@@ -4831,16 +4704,16 @@ name = "nvidia-pytriton"
 version = "0.5.14"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "grpcio" },
-    { name = "importlib-metadata" },
-    { name = "numpy" },
-    { name = "protobuf" },
-    { name = "pyzmq" },
-    { name = "sh" },
-    { name = "tritonclient", extra = ["grpc", "http"] },
-    { name = "typer" },
-    { name = "typing-inspect" },
-    { name = "wrapt" },
+    { name = "grpcio", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "importlib-metadata", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "numpy", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "protobuf", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "pyzmq", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "sh", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "tritonclient", extra = ["grpc", "http"], marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "typer", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "typing-inspect", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "wrapt", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d9/10/c5ef4ce226b88de7ccb5e3693a45025b307b5f7f92f9982af1895223b891/nvidia_pytriton-0.5.14-py3-none-manylinux_2_35_aarch64.whl", hash = "sha256:dffd191e0b74611fc01d62c520a9b965afd82802633158119f1b66dc52c7dded", size = 53812353, upload-time = "2025-02-12T10:45:15.387Z" },
@@ -4852,13 +4725,13 @@ name = "nvidia-resiliency-ext"
 version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "defusedxml" },
-    { name = "nvidia-ml-py" },
-    { name = "packaging" },
-    { name = "psutil" },
-    { name = "pynvml" },
-    { name = "pyyaml" },
-    { name = "torch" },
+    { name = "defusedxml", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "nvidia-ml-py", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "packaging", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "psutil", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "pynvml", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "pyyaml", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "torch", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a4/a5/ea0ae066c21432f3df573894524715a654f7a56dcfc9822635a495849b85/nvidia_resiliency_ext-0.4.0-cp310-cp310-manylinux_2_31_aarch64.whl", hash = "sha256:f83f8a8f2f86637d429e074d2d08d33dc4ebd3968c08cad3131cadc8f2b86890", size = 436052, upload-time = "2025-05-28T05:32:35.2Z" },
@@ -6970,42 +6843,9 @@ wheels = [
 name = "s3fs"
 version = "0.4.2"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-]
 dependencies = [
-    { name = "botocore", version = "1.38.27", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "fsspec", marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "botocore" },
+    { name = "fsspec" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d9/9a/504cb277632c4d325beabbd03bb43778f0decb9be22d9e0e6c62f44540c7/s3fs-0.4.2.tar.gz", hash = "sha256:2ca5de8dc18ad7ad350c0bd01aef0406aa5d0fff78a561f0f710f9d9858abdd0", size = 57527, upload-time = "2020-03-31T15:24:26.388Z" }
 wheels = [
@@ -7013,76 +6853,11 @@ wheels = [
 ]
 
 [[package]]
-name = "s3fs"
-version = "2024.12.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-]
-dependencies = [
-    { name = "aiobotocore", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "aiohttp", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "fsspec", marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/96/88/e2fc4fc2a618126ac3cea9b16a4abc5a37dff2522067c9730b5d72d67ac3/s3fs-2024.12.0.tar.gz", hash = "sha256:1b0f3a8f5946cca5ba29871d6792ab1e4528ed762327d8aefafc81b73b99fd56", size = 76578, upload-time = "2024-12-19T20:05:42.779Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f7/af/eaec1466887348d7f6cc9d3a668b30b62a4629fb187d0268146118ba3d5e/s3fs-2024.12.0-py3-none-any.whl", hash = "sha256:d8665549f9d1de083151582437a2f10d5f3b3227c1f8e67a2b0b730db813e005", size = 30196, upload-time = "2024-12-19T20:05:40.095Z" },
-]
-
-[[package]]
-name = "s3transfer"
-version = "0.11.3"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-]
-dependencies = [
-    { name = "botocore", version = "1.37.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version != '3.12.*' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/39/24/1390172471d569e281fcfd29b92f2f73774e95972c965d14b6c802ff2352/s3transfer-0.11.3.tar.gz", hash = "sha256:edae4977e3a122445660c7c114bba949f9d191bae3b34a096f18a1c8c354527a", size = 148042, upload-time = "2025-02-26T20:44:57.459Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e4/81/48c41b554a54d75d4407740abb60e3a102ae416284df04d1dbdcbe3dbf24/s3transfer-0.11.3-py3-none-any.whl", hash = "sha256:ca855bdeb885174b5ffa95b9913622459d4ad8e331fc98eb01e6d5eb6a30655d", size = 84246, upload-time = "2025-02-26T20:44:55.509Z" },
-]
-
-[[package]]
 name = "s3transfer"
 version = "0.13.0"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-]
 dependencies = [
-    { name = "botocore", version = "1.38.27", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version != '3.12.*' or platform_machine != 'aarch64' or sys_platform != 'linux' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "botocore" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ed/5d/9dcc100abc6711e8247af5aa561fc07c4a046f72f659c3adea9a449e191a/s3transfer-0.13.0.tar.gz", hash = "sha256:f5e6db74eb7776a37208001113ea7aa97695368242b364d73e91c981ac522177", size = 150232, upload-time = "2025-05-22T19:24:50.245Z" }
 wheels = [
@@ -8418,8 +8193,8 @@ wheels = [
 
 [package.optional-dependencies]
 sentencepiece = [
-    { name = "protobuf" },
-    { name = "sentencepiece" },
+    { name = "protobuf", marker = "sys_platform == 'darwin'" },
+    { name = "sentencepiece", marker = "sys_platform == 'darwin'" },
 ]
 
 [[package]]
@@ -8450,9 +8225,9 @@ name = "tritonclient"
 version = "2.51.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
-    { name = "python-rapidjson" },
-    { name = "urllib3" },
+    { name = "numpy", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "python-rapidjson", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "urllib3", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/23/a6/301bd2f431346adac05ff3c062bbcec0a93b567f1d3ef0d3ccf353a5bcd6/tritonclient-2.51.0-py3-none-any.whl", hash = "sha256:eef99681b0a18ee72808d887d2324a38a81fa1250924e595db46256b83f13668", size = 98012, upload-time = "2024-10-28T20:27:32.065Z" },
@@ -8462,17 +8237,17 @@ wheels = [
 
 [package.optional-dependencies]
 grpc = [
-    { name = "grpcio" },
-    { name = "numpy" },
-    { name = "packaging" },
-    { name = "protobuf" },
-    { name = "python-rapidjson" },
+    { name = "grpcio", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "numpy", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "packaging", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "protobuf", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "python-rapidjson", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 http = [
-    { name = "aiohttp" },
-    { name = "geventhttpclient" },
-    { name = "numpy" },
-    { name = "python-rapidjson" },
+    { name = "aiohttp", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "geventhttpclient", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "numpy", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "python-rapidjson", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 
 [[package]]
@@ -9113,8 +8888,8 @@ name = "xformers"
 version = "0.0.29.post2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
-    { name = "torch" },
+    { name = "numpy", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "torch", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/27/ed/04ec7ef97a7e1c836add41ef5a2aef8cbdd45c0190ca42cc08f3c21e2b7b/xformers-0.0.29.post2.tar.gz", hash = "sha256:6ca3d1a6db6f2abff25c1154adee96987f77f4dfd5141771805afa5fc13e9395", size = 8468494, upload-time = "2025-02-01T02:33:48.209Z" }
 wheels = [
@@ -9414,7 +9189,7 @@ name = "zope-event"
 version = "5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "setuptools" },
+    { name = "setuptools", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/46/c2/427f1867bb96555d1d34342f1dd97f8c420966ab564d58d18469a1db8736/zope.event-5.0.tar.gz", hash = "sha256:bac440d8d9891b4068e2b5a2c5e2c9765a9df762944bda6955f96bb9b91e67cd", size = 17350, upload-time = "2023-06-23T06:28:35.709Z" }
 wheels = [
@@ -9426,7 +9201,7 @@ name = "zope-interface"
 version = "7.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "setuptools" },
+    { name = "setuptools", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/30/93/9210e7606be57a2dfc6277ac97dcc864fd8d39f142ca194fdc186d596fda/zope.interface-7.2.tar.gz", hash = "sha256:8b49f1a3d1ee4cdaf5b32d2e738362c7f5e40ac8b46dd7d1a65e82a4872728fe", size = 252960, upload-time = "2024-11-28T08:45:39.224Z" }
 wheels = [
