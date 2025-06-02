@@ -268,14 +268,16 @@ class MegatronRayDeployable:
             messages = request.get('messages', [])
 
             # Prepare inference parameters
+            # For chat templates, we need to pass the entire messages list as a single prompt
+            # so that apply_chat_template receives the full conversation context
             inference_inputs = {
-                "prompts": messages,
+                "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
                 "max_length": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": 0,
                 "top_p": request.get("top_p", 0.0),
                 "compute_logprob": False,
-                "apply_chat_template": True,  # We already applied the template
+                "apply_chat_template": True,
             }
 
             # Run model inference in the thread pool
@@ -296,10 +298,10 @@ class MegatronRayDeployable:
                 "model": self.model_id,
                 "choices": [
                     {
-                        "message": {"role": "assistant", "content": generated_texts},
+                        "message": {"role": "assistant", "content": generated_texts[0] if generated_texts else ""},
                         "index": 0,
                         "finish_reason": (
-                            "length" if len(generated_texts[0]) >= inference_inputs["max_length"] else "stop"
+                            "length" if generated_texts and len(generated_texts[0]) >= inference_inputs["max_length"] else "stop"
                         ),
                     }
                 ],
