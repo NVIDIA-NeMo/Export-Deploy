@@ -62,6 +62,12 @@ def parse_args():
         help="Size of the pipeline model parallelism",
     )
     parser.add_argument(
+        "--expert_model_parallel_size",
+        type=int,
+        default=1,
+        help="Size of the expert model parallelism",
+    )
+    parser.add_argument(
         "--context_parallel_size",
         type=int,
         default=1,
@@ -201,6 +207,7 @@ def main():
             num_nodes=args.num_nodes,
             tensor_model_parallel_size=args.tensor_model_parallel_size,
             pipeline_model_parallel_size=args.pipeline_model_parallel_size,
+            expert_model_parallel_size=args.expert_model_parallel_size,
             context_parallel_size=args.context_parallel_size,
             model_id=args.model_id,
             enable_cuda_graphs=args.enable_cuda_graphs,

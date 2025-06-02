@@ -44,6 +44,7 @@ class ModelWorker:
         tensor_model_parallel_size: int,
         pipeline_model_parallel_size: int,
         context_parallel_size: int,
+        expert_model_parallel_size: int,
         master_port: str,
         replica_id: int = 0,
         enable_cuda_graphs: bool = False,
@@ -72,6 +73,7 @@ class ModelWorker:
                 num_nodes=world_size // torch.cuda.device_count(),
                 tensor_model_parallel_size=tensor_model_parallel_size,
                 pipeline_model_parallel_size=pipeline_model_parallel_size,
+                expert_model_parallel_size=expert_model_parallel_size,
                 context_parallel_size=context_parallel_size,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
@@ -110,6 +112,7 @@ class MegatronRayDeployable:
         tensor_model_parallel_size: int = 1,
         pipeline_model_parallel_size: int = 1,
         context_parallel_size: int = 1,
+        expert_model_parallel_size: int = 1,
         model_id: str = "nemo-model",
         enable_cuda_graphs: bool = False,
         enable_flash_decode: bool = False
@@ -161,6 +164,7 @@ class MegatronRayDeployable:
                 tensor_model_parallel_size=tensor_model_parallel_size,
                 pipeline_model_parallel_size=pipeline_model_parallel_size,
                 context_parallel_size=context_parallel_size,
+                expert_model_parallel_size=expert_model_parallel_size,
                 master_port=master_port,
                 replica_id=replica_id,
                 enable_cuda_graphs=enable_cuda_graphs,
@@ -182,6 +186,7 @@ class MegatronRayDeployable:
                     tensor_model_parallel_size=tensor_model_parallel_size,
                     pipeline_model_parallel_size=pipeline_model_parallel_size,
                     context_parallel_size=context_parallel_size,
+                    expert_model_parallel_size=expert_model_parallel_size,
                     master_port=master_port,
                     replica_id=replica_id,
                     enable_cuda_graphs=enable_cuda_graphs,
@@ -208,9 +213,11 @@ class MegatronRayDeployable:
         try:
             if "prompt" in request:
                 request["prompts"] = [request["prompt"]]
-            if "top_k" in request and "top_p" in request:
-                # MCore path only allows one parameter to be > 0
-                request["top_k"] = 0
+            temperature = request.get("temperature", 0.0)
+            top_p = request.get("top_p", 0.0)
+            if temperature == 0.0 and top_p == 0.0:
+                LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
+                request["top_k"] = 1.0
             # Run tokenization and model inference in the thread pool
             results = ray.get(self.primary_worker.infer.remote(request))
             # Extract generated texts from results
@@ -260,19 +267,15 @@ class MegatronRayDeployable:
             # Extract parameters from the request dictionary
             messages = request.get('messages', [])
 
-            # Convert messages to a single prompt
-            prompt = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages])
-            prompt += "\nassistant:"
-
             # Prepare inference parameters
             inference_inputs = {
-                "prompts": [prompt],
+                "prompts": messages,
                 "max_length": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": 0,
                 "top_p": request.get("top_p", 0.0),
                 "compute_logprob": False,
-                "apply_chat_template": False,  # We already applied the template
+                "apply_chat_template": True,  # We already applied the template
             }
 
             # Run model inference in the thread pool
@@ -282,7 +285,7 @@ class MegatronRayDeployable:
             generated_texts = results["sentences"]
 
             # Calculate token counts
-            prompt_tokens = len(prompt.split())
+            prompt_tokens = sum(len(str(msg).split()) for msg in messages)
             completion_tokens = sum(len(r.split()) for r in generated_texts)
             total_tokens = prompt_tokens + completion_tokens
 

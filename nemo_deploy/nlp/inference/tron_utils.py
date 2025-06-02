@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 from dataclasses import dataclass, field
 from typing import Callable, List, Literal, Optional, Union
@@ -14,6 +15,7 @@ from megatron.core.transformer.module import Float16Module, MegatronModule
 from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.t5.model.t5 import T5Config
 
+LOGGER = logging.getLogger("NeMo")
 
 @dataclass
 class RNGConfig:
@@ -118,7 +120,7 @@ def print_rank_0(message: str) -> None:
     """
     rank = get_rank_safe()
     if rank == 0:
-        print(message, flush=True)
+        LOGGER.info(message)
 
 
 def initialize_distributed(
@@ -144,15 +146,14 @@ def initialize_distributed(
     device_count = torch.cuda.device_count()
     if torch.distributed.is_initialized():
         if get_rank_safe() == 0:
-            print(
-                "torch distributed is already initialized, skipping initialization ...",
-                flush=True,
+            LOGGER.info(
+                "torch distributed is already initialized, skipping initialization ..."
             )
     else:
         if get_rank_safe() == 0:
-            print("> initializing torch distributed ...", flush=True)
+            LOGGER.info("> initializing torch distributed ...")
         else:
-            print(f"Current rank: {get_rank_safe()}")
+            LOGGER.info(f"Current rank: {get_rank_safe()}")
 
         # Manually set the device ids.
         if device_count > 0:
@@ -186,7 +187,7 @@ def initialize_distributed(
     # data-parallel communicators.
     if device_count > 0:
         if parallel_state.model_parallel_is_initialized():
-            print("model parallel is already initialized")
+            LOGGER.info("model parallel is already initialized")
         else:
             parallel_state.initialize_model_parallel(
                 model_config.tensor_model_parallel_size,
@@ -214,11 +215,11 @@ def initialize_distributed(
                 create_gloo_process_groups=dist_config.use_gloo_process_groups,
             )
             if get_rank_safe() == 0:
-                print(
+                LOGGER.info(
                     f"> initialized tensor model parallel with size "
                     f"{parallel_state.get_tensor_model_parallel_world_size()}"
                 )
-                print(
+                LOGGER.info(
                     f"> initialized pipeline model parallel with size "
                     f"{parallel_state.get_pipeline_model_parallel_world_size()}"
                 )
@@ -310,7 +311,7 @@ def _initialize_tp_communicators(
     except TypeError:
         # Fallback for older TE versions
         if bootstrap_backend != "mpi":
-            print("Warning: Transformer Engine may only support MPI bootstrap backend")
+            LOGGER.info("Warning: Transformer Engine may only support MPI bootstrap backend")
 
         # Create a MPI process group for TP communication bootstrap
         torch.distributed.new_group(backend="mpi")
@@ -424,18 +425,12 @@ def get_model_from_config(
 
     # Print number of parameters.
     if parallel_state.get_data_parallel_rank() == 0:
-        print(
+        LOGGER.info(
             " > number of parameters on (tensor, pipeline) model parallel rank ({}, {}): {}".format(
                 parallel_state.get_tensor_model_parallel_rank(),
                 parallel_state.get_pipeline_model_parallel_rank(),
-                sum(
-                    [
-                        sum([p.nelement() for p in model_module.parameters()])
-                        for model_module in model
-                    ]
-                ),
-            ),
-            flush=True,
+                sum([sum([p.nelement() for p in model_module.parameters()]) for model_module in model]),
+            )
         )
 
     # GPU allocation.

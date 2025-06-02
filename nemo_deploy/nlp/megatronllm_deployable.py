@@ -262,6 +262,14 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 self.mcore_tokenizer.tokenizer.tokenizer.chat_template
             )
             bos_token = self.mcore_tokenizer.tokenizer.tokenizer.bos_token
+            
+            # Check if chat_template is None or empty
+            if tokenizer_chat_template is None:
+                raise ValueError(
+                    "The tokenizer does not have a chat template defined. "
+                    "If you would like to evaluate a chat model, ensure your model's tokenizer has a chat template."
+                )
+            
             template = Template(tokenizer_chat_template)
         except AttributeError:
             # If the tokenizer does not have chat_template
@@ -329,7 +337,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         "apply_chat_template",
     )
     def triton_infer_fn(self, **inputs: np.ndarray):
-        output_infer = {}
+        # Extract triton-specific inputs
         prompts = str_ndarray2list(inputs.pop("prompts"))
         temperature = inputs.pop("temperature", 1.0)
         top_k = inputs.pop("top_k", 1)
@@ -337,14 +345,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         num_tokens_to_generate = inputs.pop("max_length", 256)
         log_probs = inputs.pop("compute_logprob", False)
         apply_chat_template = inputs.pop("apply_chat_template", False)
-        text_only = True
-
         if apply_chat_template:
-            # Deserialize the JSON string back to a dictionary
             prompts = [self.str_to_dict(prompt) for prompt in prompts]
-            prompts = [self.apply_chat_template(prompt) for prompt in prompts]
-            # Input to generate should be list of string, otherwise if its string directly TE raises an error:
-            # The provided qkv memory layout is not supported!
+
         if torch.distributed.is_initialized():
             if torch.distributed.get_world_size() > 1:
                 torch.distributed.broadcast(
@@ -361,38 +364,28 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                     ],
                     src=0,
                 )
-
-        inference_params = CommonInferenceParams(
+        # Use the shared inference function
+        output_texts, output_log_probs = self._infer_fn(
+            prompts=prompts,
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,
             num_tokens_to_generate=num_tokens_to_generate,
-            return_log_probs=log_probs,
+            log_probs=log_probs,
+            apply_chat_template=apply_chat_template,
         )
-
-        results = self.generate(prompts, inference_params)
-        output_texts = [r.generated_text if text_only else r for r in results]
-        output_texts = self.remove_eos_token(output_texts)
+        # Format output for triton
         output_infer = {"sentences": cast_output(output_texts, np.bytes_)}
-        if log_probs:
-            output_log_probs = []  ## will have 2 np arrays if 2 prompts are sent
-            for r in results:
-                # Convert to torch tensor and then move to cpu as generated_log_probs is a list and cant be moved
-                # to cpu otherwise
-                lp = torch.tensor(r.generated_log_probs).cpu().detach().numpy()
-                if len(lp) == 0:
-                    output_log_probs.append([0])
-                else:
-                    output_log_probs.append(lp)
-            output_infer["log_probs"] = np.array(output_log_probs)
+        if output_log_probs is not None:
+            output_infer["log_probs"] = output_log_probs
 
         return output_infer
-    
+
     def _infer_fn(
         self,
         prompts,
-        temperature=1.0,
-        top_k=1,
+        temperature=0.0,
+        top_k=0.0,
         top_p=0.0,
         num_tokens_to_generate=256,
         log_probs=False,
@@ -418,7 +411,6 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             tuple: (output_texts, output_log_probs) where output_log_probs is None if log_probs is False
         """
         if apply_chat_template:
-            prompts = [self.str_to_dict(prompt) for prompt in prompts]
             prompts = [self.apply_chat_template(prompt) for prompt in prompts]
 
         if torch.distributed.is_initialized():
@@ -484,7 +476,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         """
         prompts = inputs.get("prompts", [])
         temperature = inputs.get("temperature", 1.0)
-        top_k = inputs.get("top_k", 1)
+        top_k = inputs.get("top_k", 0.0)
         top_p = inputs.get("top_p", 0.0)
         num_tokens_to_generate = inputs.get("max_length", 256)
         log_probs = inputs.get("compute_logprob", False)
