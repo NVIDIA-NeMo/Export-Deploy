@@ -233,7 +233,6 @@ class MegatronRayDeployable:
             
             # Run tokenization and model inference in the thread pool
             results = ray.get(self.primary_worker.infer.remote(inference_inputs))
-            LOGGER.error(f"Results: {results}")
             # Extract generated texts from results
             generated_texts = results.get("sentences", [])
 
