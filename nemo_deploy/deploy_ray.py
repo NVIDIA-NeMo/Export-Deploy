@@ -62,10 +62,7 @@ class DeployRay:
             Exception: If Ray is not installed.
         """
         # Initialize Ray with proper configuration
-        if not use_ray:
-            raise Exception(
-                "Ray is not installed. Please install Ray to use this feature."
-            )
+
         try:
             # Try to connect to existing Ray cluster
             ray.init(
