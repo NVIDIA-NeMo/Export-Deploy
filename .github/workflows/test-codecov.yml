@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         flag: [unit-test, e2e]
+    environment: main
     steps:
       - name: Checkout
         uses: actions/checkout@v4
