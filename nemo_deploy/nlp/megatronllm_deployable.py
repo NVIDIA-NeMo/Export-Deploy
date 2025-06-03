@@ -94,6 +94,7 @@ class MegatronLLMDeploy:
         """Returns the appropriate deployable instance for the given NeMo checkpoint.
 
         Args:
+
             nemo_checkpoint_filepath (str): Path to the .nemo checkpoint file.
             num_devices (int): Number of devices to use for deployment.
             num_nodes (int): Number of nodes to use for deployment.
@@ -103,6 +104,7 @@ class MegatronLLMDeploy:
             enable_flash_decode (bool): Whether to enable flash decode for inference.
             enable_cuda_graphs (bool): Whether to enable CUDA graphs for inference.
             legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
+
         Returns:
             ITritonDeployable: An instance of a deployable class compatible with Triton inference server.
         """
