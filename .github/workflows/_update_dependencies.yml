@@ -81,7 +81,7 @@ jobs:
     with:
       source-repository: NVIDIA/NeMo
       source-ref: ${{ inputs.nemo-target-branch }}
-      yaml-path: '."vcs-dependencies"."megatron-lm".ref'
+      yaml-path: '."vcs-dependencies"."nemo".ref'
       file: docker/manifest.json
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
       pr-branch: bump-ci-container--test
