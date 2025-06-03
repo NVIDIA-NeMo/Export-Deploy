@@ -38,6 +38,7 @@ dependencies = [
     "transformers",
     "wandb",
     "webdataset>=0.2.86",
+    "nvidia-pytriton; platform_system != 'Darwin' ",
 ]
 
 [project.optional-dependencies]
@@ -47,10 +48,7 @@ vllm = [
     "nvidia-modelopt[torch]>=0.29.0",
     "pandas",
 ]
-trtllm = [
-    "tensorrt-llm~=0.18.2",
-    "nvidia-pytriton; platform_system != 'Darwin' ",
-]
+trtllm = ["tensorrt-llm~=0.18.2"]
 te = ["transformer-engine[pytorch]==2.2.0"]
 
 [dependency-groups]
