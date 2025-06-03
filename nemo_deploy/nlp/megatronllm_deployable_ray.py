@@ -356,8 +356,7 @@ class MegatronRayDeployable:
                 {
                     "id": self.model_id,
                     "object": "model",
-                    "created": int(time.time()),
-                    "owned_by": "nvidia",
+                    "created": int(time.time())
                 }
             ],
             "object": "list",
