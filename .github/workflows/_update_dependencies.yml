@@ -17,6 +17,10 @@ on:
     secrets:
       PAT:
         required: true
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
 
 jobs:
   update-branch:
@@ -57,6 +61,7 @@ jobs:
   mcore:
     uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.27.1
     needs: [update-branch]
+    name: Bump Megatron-LM
     with:
       source-repository: NVIDIA/Megatron-LM
       source-ref: ${{ inputs.mcore-target-branch }}
@@ -69,6 +74,7 @@ jobs:
   nemo:
     uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.27.1
     needs: [update-branch, mcore]
+    name: Bump NeMo
     with:
       source-repository: NVIDIA/NeMo
       source-ref: ${{ inputs.nemo-target-branch }}
