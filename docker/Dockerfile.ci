@@ -39,7 +39,7 @@ RUN --mount=type=bind,source=pyproject.toml,target=/workspace/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=nemo_export/__init__.py,target=/workspace/nemo_export/__init__.py \
     --mount=type=bind,source=nemo_deploy/__init__.py,target=/workspace/nemo_deploy/__init__.py \
-    --mount=type=bind,source=package_info.py,target=/workspace/package_info.py bash -exu <<"EOF"
+    --mount=type=bind,source=nemo_export_deploy_common/package_info.py,target=/workspace/nemo_export_deploy_common/package_info.py bash -exu <<"EOF"
     uv venv ${UV_PROJECT_ENVIRONMENT}
     uv sync --link-mode symlink --locked 
     if [ -n "$INFERENCE_FRAMEWORK" ]; then
