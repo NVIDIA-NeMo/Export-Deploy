@@ -94,7 +94,6 @@ class MegatronLLMDeploy:
         """Returns the appropriate deployable instance for the given NeMo checkpoint.
 
         Args:
-
             nemo_checkpoint_filepath (str): Path to the .nemo checkpoint file.
             num_devices (int): Number of devices to use for deployment.
             num_nodes (int): Number of nodes to use for deployment.
