@@ -183,11 +183,11 @@ def test_triton_input_output(deployable):
         outputs = deployable.get_triton_output
 
         # Extract mock calls to see what was created
-        input_calls = mock_tensor.call_args_list[:9]  # First 9 calls are for inputs
-        output_calls = mock_tensor.call_args_list[9:]  # Rest are for outputs
+        input_calls = mock_tensor.call_args_list[:11]  # First 9 calls are for inputs
+        output_calls = mock_tensor.call_args_list[11:]  # Rest are for outputs
 
         # Check inputs (simplified to just check count and first param names)
-        assert len(input_calls) == 9
+        assert len(input_calls) == 11
         input_names = [call[1]["name"] for call in input_calls]
         assert "prompts" in input_names
         assert "max_length" in input_names
@@ -200,7 +200,7 @@ def test_triton_input_output(deployable):
         assert "apply_chat_template" in input_names
 
         # Check outputs
-        assert len(output_calls) == 2
+        assert len(output_calls) == 3
         output_names = [call[1]["name"] for call in output_calls]
         assert "sentences" in output_names
         assert "log_probs" in output_names

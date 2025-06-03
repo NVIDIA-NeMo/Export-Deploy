@@ -79,6 +79,12 @@ def get_parser():
         help="Expert tensor parallelism size to deploy the model",
     )
     parser.add_argument(
+        "--max_input_len",
+        type=int,
+        default=4096,
+        help="Max input length for the underlying Triton server",
+    )
+    parser.add_argument(
         "--max_batch_size",
         type=int,
         default=8,
@@ -100,4 +106,5 @@ if __name__ == "__main__":
         expert_model_parallel_size=args.expert_model_parallel_size,
         expert_tensor_parallel_size=args.expert_tensor_parallel_size,
         max_batch_size=args.max_batch_size,
+        max_input_len=args.max_input_len,
     )
