@@ -76,8 +76,8 @@ jobs:
       - name: Parse manifest.json
         id: manifest-json
         run: |
-          MCORE_REF=$(cat docker/manifest.json | jq -r '.vcs-dependencies.megatron-lm.ref')
-          NEMO_REF=$(cat docker/manifest.json | jq -r '.vcs-dependencies.nemo.ref')
+          MCORE_REF=$(cat docker/manifest.json | jq -r '."vcs-dependencies"."megatron-lm".ref')
+          NEMO_REF=$(cat docker/manifest.json | jq -r '."vcs-dependencies".nemo.ref')
           echo "MCORE_REF=$MCORE_REF" | tee -a $GITHUB_OUTPUT
           echo "NEMO_REF=$NEMO_REF" | tee -a $GITHUB_OUTPUT
 
