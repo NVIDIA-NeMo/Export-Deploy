@@ -13,9 +13,16 @@
 # limitations under the License.
 
 # WAR for trtllm and lightning conflict
+from package_info import __version__, __package_name__
+
 try:
     from nemo.lightning import io
 
-    __all__ = ["io"]
+    HAVE_IO = True
 except (ImportError, ModuleNotFoundError):
-    pass
+    HAVE_IO = False
+
+__all__ = ["__version__", "__package_name__"]
+
+if HAVE_IO:
+    __all__ += ["io"]
