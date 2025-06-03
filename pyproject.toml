@@ -118,7 +118,11 @@ python_files = "test_*.py"
 
 [tool.coverage.run]
 concurrency = ["thread", "multiprocessing"]
-omit = ["/tmp/*", "/workspace/tests/*"]
+omit = [
+    "/tmp/*",
+    "/workspace/tests/*",
+    "/workspace/nemo_export_deploy_common/*",
+]
 
 [tool.coverage.paths]
 source = [
@@ -126,6 +130,7 @@ source = [
     "/workspace",
     "/home/runner/work/NeMo-Export-Deploy/NeMo-Export-Deploy",
 ]
+
 
 [tool.ruff.lint]
 # Enable all `pydocstyle` rules, limiting to those that adhere to the
