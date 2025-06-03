@@ -9,6 +9,9 @@ packages = ["nemo_export", "nemo_deploy"]
 version = { attr = "package_info.__version__" }                 # any module attribute compatible with ast.literal_eval
 readme = { file = "README.md", content-type = "text/markdown" }
 
+[tool.setuptools.package-data]
+"" = ["package_info.py"]
+
 [project]
 name = "nemo-export-deploy"
 dynamic = ["version", "readme"]
