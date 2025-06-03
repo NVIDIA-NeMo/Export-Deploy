@@ -82,8 +82,11 @@ jobs:
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
       pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
       pr-title: "chore(🤖): Bump dependencies (${{ needs.update-branch.outputs.date }})"
+      use-gpgkey: true
     secrets:
       PAT: ${{ secrets.PAT }}
+      GPG_KEY: ${{ secrets.SSH_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
 
   nemo:
     uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@ko3n1g/feat/override-pr-base-branch
@@ -96,8 +99,11 @@ jobs:
       file: docker/manifest.json
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
       pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
+      use-gpgkey: true
     secrets:
       PAT: ${{ secrets.PAT }}
+      GPG_KEY: ${{ secrets.SSH_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
 
   update-lockfile:
     environment: nemo-ci
