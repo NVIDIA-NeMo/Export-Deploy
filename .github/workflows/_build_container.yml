@@ -45,6 +45,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       cache-from: ${{ steps.cache-from.outputs.LAST_PRS }}
+      mcore-ref: ${{ steps.manifest-json.outputs.MCORE_REF }}
+      nemo-ref: ${{ steps.manifest-json.outputs.NEMO_REF }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -71,6 +73,14 @@ jobs:
           echo "$LAST_PRS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Parse manifest.json
+        id: manifest-json
+        run: |
+          MCORE_REF=$(cat docker/manifest.json | jq -r '.vcs-dependencies.megatron-lm.ref')
+          NEMO_REF=$(cat docker/manifest.json | jq -r '.vcs-dependencies.nemo.ref')
+          echo "MCORE_REF=$MCORE_REF" | tee -a $GITHUB_OUTPUT
+          echo "NEMO_REF=$NEMO_REF" | tee -a $GITHUB_OUTPUT
+
   build:
     uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_build_container.yml@v0.29.0
     needs: [pre-flight]
@@ -84,6 +94,8 @@ jobs:
       has-azure-credentials: true
       build-args: |
         INFERENCE_FRAMEWORK=${{ inputs.inference-framework }}
+        MCORE_REF=${{ needs.pre-flight.outputs.mcore-ref }}
+        NEMO_REF=${{ needs.pre-flight.outputs.nemo-ref }}
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
