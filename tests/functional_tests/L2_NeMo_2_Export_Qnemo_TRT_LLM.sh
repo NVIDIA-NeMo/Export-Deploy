@@ -21,11 +21,15 @@ python tests/functional_tests/utils/test_hf_import.py \
   --hf_model /tmp/llama_tiny_hf \
   --output_path /tmp/nemo2_ckpt
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace scripts/llm/ptq.py \
-  -nc /tmp/nemo2_ckpt \
-  -algo int8_sq \
-  -out /tmp/nemo2_ptq \
-  --export_format trtllm
+python tests/functional_tests/utils/create_ptq_ckpt.py \
+  --nemo_checkpoint /tmp/nemo2_ckpt \
+  --algorithm int8_sq \
+  --calibration_dataset tests/functional_tests/data/calibration_dataset.json \
+  --calibration_batch_size 2 \
+  --calibration_dataset_size 6 \
+  --export_format trtllm \
+  --export_path /tmp/nemo2_ptq \
+  --generate_sample
 
 coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_export.py \
   --model_name test \
