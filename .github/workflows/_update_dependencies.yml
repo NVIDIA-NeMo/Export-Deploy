@@ -23,6 +23,10 @@ on:
         required: true
       AZURE_SUBSCRIPTION_ID:
         required: true
+      SSH_KEY:
+        required: true
+      SSH_PWD:
+        required: true
 
 jobs:
   update-branch:
