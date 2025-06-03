@@ -130,6 +130,11 @@ def parse_args():
         default=1,
         help="Number of replicas for the deployment",
     )
+    parser.add_argument(
+        "--legacy_ckpt",
+        action="store_true",
+        help="Whether to use legacy checkpoint format",
+    )
     return parser.parse_args()
 
 
@@ -211,7 +216,8 @@ def main():
             context_parallel_size=args.context_parallel_size,
             model_id=args.model_id,
             enable_cuda_graphs=args.enable_cuda_graphs,
-            enable_flash_decode=args.enable_flash_decode
+            enable_flash_decode=args.enable_flash_decode,
+            legacy_ckpt=args.legacy_ckpt
         )
 
         # Deploy the model

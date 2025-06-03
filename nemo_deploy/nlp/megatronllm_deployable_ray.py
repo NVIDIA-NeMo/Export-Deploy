@@ -50,6 +50,7 @@ class ModelWorker:
         replica_id: int = 0,
         enable_cuda_graphs: bool = False,
         enable_flash_decode: bool = False,
+        legacy_ckpt: bool = False
     ):
         # Use replica-specific environment variables to avoid conflicts
         os.environ["MASTER_PORT"] = master_port
@@ -78,6 +79,7 @@ class ModelWorker:
                 context_parallel_size=context_parallel_size,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
+                legacy_ckpt=legacy_ckpt
             )
             if rank != 0:
                 self.model.generate_other_ranks()
@@ -116,7 +118,8 @@ class MegatronRayDeployable:
         expert_model_parallel_size: int = 1,
         model_id: str = "nemo-model",
         enable_cuda_graphs: bool = False,
-        enable_flash_decode: bool = False
+        enable_flash_decode: bool = False,
+        legacy_ckpt: bool = False
     ):
         """Initialize the distributed Megatron LLM model deployment.
         
@@ -132,6 +135,7 @@ class MegatronRayDeployable:
             enable_flash_decode (bool): Whether to enable Flash Attention decode.
             max_batch_size (int): Maximum batch size for request batching.
             batch_wait_timeout_s (float): Maximum time to wait for batching requests.
+            legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
         """
         try:
             self.model_id = model_id
@@ -170,6 +174,7 @@ class MegatronRayDeployable:
                 replica_id=replica_id,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
+                legacy_ckpt=legacy_ckpt
             )
             worker_futures.append(rank_0_worker)
             

@@ -89,6 +89,7 @@ class MegatronLLMDeploy:
         random_seed: Optional[int] = None,
         enable_flash_decode: bool = False,
         enable_cuda_graphs: bool = False,
+        legacy_ckpt: bool = False
     ):
         """Returns the appropriate deployable instance for the given NeMo checkpoint.
 
@@ -100,7 +101,8 @@ class MegatronLLMDeploy:
             pipeline_model_parallel_size (int): Size of the pipeline model parallelism.
             context_parallel_size (int): Size of the context parallelism.
             enable_flash_decode (bool): Whether to enable flash decode for inference.
-
+            enable_cuda_graphs (bool): Whether to enable CUDA graphs for inference.
+            legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
         Returns:
             ITritonDeployable: An instance of a deployable class compatible with Triton inference server.
         """
@@ -117,6 +119,7 @@ class MegatronLLMDeploy:
                 random_seed=random_seed,
                 enable_flash_decode=enable_flash_decode,
                 enable_cuda_graphs=enable_cuda_graphs,
+                legacy_ckpt=legacy_ckpt
             )
         else:
             raise Exception("Only NeMo 2.0 checkpoint is supported.")
@@ -141,6 +144,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         random_seed (Optional[int]): random seed for inference. Defaults to None.
         enable_flash_decode (bool): enable flash decode for inference. Defaults to False.
         enable_cuda_graphs (bool): enable CUDA graphs for inference. Defaults to False.`
+        legacy_ckpt (bool): use legacy checkpoint format. Defaults to False.
     """
 
     def __init__(
@@ -159,6 +163,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         enable_cuda_graphs: bool = False,
         max_batch_size: int = 8,
         random_seed: Optional[int] = None,
+        legacy_ckpt: bool = False
     ):
         self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = (
             create_mcore_engine(
@@ -176,6 +181,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 context_parallel_size=context_parallel_size,
                 enable_flash_decode=enable_flash_decode,
                 enable_cuda_graphs=enable_cuda_graphs,
+                legacy_ckpt=legacy_ckpt
             )
         )
         self.enable_cuda_graphs = enable_cuda_graphs

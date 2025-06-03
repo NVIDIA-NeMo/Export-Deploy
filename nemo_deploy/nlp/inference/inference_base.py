@@ -25,6 +25,7 @@ from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
 from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
 from nemo.collections.llm.t5.model.t5 import T5Config
+from megatron.core.dist_checkpointing.validation import StrictHandling
 from nemo.lightning import io
 from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
 from nemo.lightning.io.pl import ckpt_to_weights_subdir
@@ -43,13 +44,14 @@ LOGGER = logging.getLogger("NeMo")
 
 
 def _load_dist_shards_into_model(
-    model: List[MegatronModule], weights_dir: Path
+    model: List[MegatronModule], weights_dir: Path, legacy_ckpt: bool = False
 ) -> None:
     """Load a NeMo-2 distributed checkpoint (torch_dist .distcp shards) into an already-constructed Megatron model list.
 
     Args:
         model (List[MegatronModule]): The list of Megatron model modules
         weights_dir (Path): Path to the weights directory containing shards
+        legacy_ckpt (bool): Whether to use legacy checkpoint format
     """
     # Build a sharded_state_dict that mirrors `generate_state_dict()`
     sharded_state_dict = {}
@@ -62,11 +64,17 @@ def _load_dist_shards_into_model(
     # Get the default strategy for that directory
     load_strategy = get_default_load_sharded_strategy(str(weights_dir))
 
+    if legacy_ckpt:
+        strict = StrictHandling.LOG_ALL
+    else:
+        strict = StrictHandling.ASSUME_OK_UNEXPECTED
+
     # Materialise the shards in-place
     dist_ckpt.load(
-        sharded_state_dict,
-        str(weights_dir),
-        load_strategy,
+        sharded_state_dict=sharded_state_dict,
+        checkpoint_dir=str(weights_dir),
+        sharded_strategy=load_strategy,
+        strict=strict
     )
 
     # Normal torch `load_state_dict()` still required for non-sharded
@@ -144,17 +152,19 @@ def peel(m: torch.nn.Module) -> torch.nn.Module:
 def load_nemo_checkpoint_to_tron_model(
     model: List[MegatronModule],
     path: Path,
+    legacy_ckpt: bool = False
 ) -> None:
     """Load NeMo checkpoint weights into a Tron model.
 
     Args:
         model (List[MegatronModule]): Tron model modules list (from get_model_from_config)
         path (Path): Path to NeMo checkpoint directory
+        legacy_ckpt (bool): Whether to use legacy checkpoint format
     """
     weights_dir = ckpt_to_weights_subdir(path, is_saving=False)
     LOGGER.info(f"Loading NeMo checkpoint from {weights_dir}")
 
-    _load_dist_shards_into_model(model, weights_dir)
+    _load_dist_shards_into_model(model, weights_dir, legacy_ckpt)
 
 
 def setup_model_and_tokenizer_for_inference(
@@ -167,6 +177,7 @@ def setup_model_and_tokenizer_for_inference(
     micro_batch_size: Optional[int] = None,
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
+    legacy_ckpt: bool = False
 ) -> Tuple[List[MegatronModule], MCoreTokenizerWrappper]:
     """Initialize a Megatron-Core model and tokenizer for inference from a NeMo-2.0 checkpoint.
 
@@ -180,7 +191,7 @@ def setup_model_and_tokenizer_for_inference(
         micro_batch_size (Optional[int]): Micro batch size for model execution (defaults to 1)
         enable_flash_decode (bool): Whether to enable flash attention decoding
         enable_cuda_graphs (bool): Whether to enable CUDA graphs optimization
-
+        legacy_ckpt (bool): Whether to use legacy checkpoint format
     Returns:
         Tuple[List[MegatronModule], MCoreTokenizerWrappper]: Tuple containing:
             - List of instantiated Megatron-Core modules
@@ -259,7 +270,7 @@ def setup_model_and_tokenizer_for_inference(
             model_module.configure_model()
 
     # Load checkpoint weights
-    load_nemo_checkpoint_to_tron_model(model, checkpoint_path)
+    load_nemo_checkpoint_to_tron_model(model, checkpoint_path, legacy_ckpt)
 
     # Get MCore model
     model = [peel(m) for m in model]
@@ -318,6 +329,7 @@ def create_mcore_engine(
     expert_model_parallel_size: Optional[int] = None,
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
+    legacy_ckpt: bool = False
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, MCoreTokenizerWrappper]:
     """Set up the model, tokenizer and MCoreEngine for inference.
 
@@ -334,7 +346,7 @@ def create_mcore_engine(
         expert_model_parallel_size (Optional[int]): Size of expert model parallelism
         enable_flash_decode (bool): Whether to enable flash attention decoding
         enable_cuda_graphs (bool): Whether to enable CUDA graphs optimization
-
+        legacy_ckpt (bool): Whether to use legacy checkpoint format
     Returns:
         Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, MCoreTokenizerWrappper]: Tuple containing:
             - MCoreEngineWithCleanup: Engine for text generation with proper cleanup
@@ -401,6 +413,7 @@ def create_mcore_engine(
         params_dtype=params_dtype,
         enable_flash_decode=enable_flash_decode,
         enable_cuda_graphs=enable_cuda_graphs,
+        legacy_ckpt=legacy_ckpt
     )
     model = modelList[0]
     vocab_size = None
