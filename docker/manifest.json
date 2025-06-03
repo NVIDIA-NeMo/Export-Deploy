@@ -9,7 +9,7 @@
             "ref": "main"
         },
         "nemo": {
-            "repo": "https://github.com/NVIDIA/NeMo",
+            "repo": "https://github.com/NVIDIA/NeMo.git",
             "ref": "main"
         },
         "trt-llm": {
