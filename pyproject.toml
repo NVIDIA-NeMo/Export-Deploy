@@ -3,14 +3,12 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["nemo_export", "nemo_deploy"]
+packages = ["nemo_export", "nemo_deploy", "nemo_export_deploy_common"]
 
 [tool.setuptools.dynamic]
-version = { attr = "package_info.__version__" }                 # any module attribute compatible with ast.literal_eval
+version = { attr = "nemo_export_deploy_common.package_info.__version__" } # any module attribute compatible with ast.literal_eval
 readme = { file = "README.md", content-type = "text/markdown" }
 
-[tool.setuptools.package-data]
-"" = ["package_info.py"]
 
 [project]
 name = "nemo-export-deploy"

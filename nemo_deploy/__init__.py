@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from package_info import __version__, __package_name__
+from nemo_export_deploy_common.package_info import __version__, __package_name__
 
 from nemo_deploy.deploy_base import DeployBase
 from nemo_deploy.deploy_pytriton import DeployPyTriton
