@@ -2,8 +2,6 @@ name: Test Codecov
 
 on:
   push:
-    branches:
-      - main
 
 jobs:
   Coverage:
