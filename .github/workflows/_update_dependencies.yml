@@ -24,13 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: ${{ inputs.nemo-target-branch }}
+          ref: ${{ inputs.target-branch }}
 
       - name: Set Git config
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "Github Actions"
-      - name: Merge weekly-bump-${{ inputs.nemo-target-branch }} back to base branch
+      - name: Merge weekly-bump-${{ inputs.target-branch }} back to base branch
         env:
           SOURCE_BRANCH: weekly-bump-${{ inputs.target-branch }}
           TARGET_BRANCH: ${{ inputs.target-branch }}
