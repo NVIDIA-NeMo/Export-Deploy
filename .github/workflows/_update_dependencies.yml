@@ -140,20 +140,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: main
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
-
-      - name: Rebase against ${{ needs.update-branch.outputs.source-branch }}
-        run: |
-          if git ls-remote --exit-code origin ${{ needs.update-branch.outputs.source-branch }}; then
-            git fetch origin ${{ needs.update-branch.outputs.source-branch }}
-            git rebase origin/${{ needs.update-branch.outputs.source-branch }}
-          fi
+          ref: ${{ needs.update-branch.outputs.bump-branch }}
 
       - name: Install GPG
         run: sudo apt-get install -y gnupg2
@@ -171,25 +162,8 @@ jobs:
         with:
           name: lock-file
 
-      - name: Get todays date
-        id: date
-        run: echo "main=$(date +%F)" | tee -a "$GITHUB_OUTPUT"
-
-      - name: Create Bump PR
-        uses: peter-evans/create-pull-request@v7
-        id: create-pull-request
-        with:
-          branch: ${{ needs.update-branch.outputs.bump-branch }}
-          base: ${{ needs.update-branch.outputs.source-branch }}
-          title: "chore(🤖): Bump dependencies (${{ steps.date.outputs.main }})"
-          token: ${{ secrets.PAT }}
-          body: |
-            🚀 PR to bump dependencies.  
-
-            📝 Please remember the following to-do's before merge: 
-            - [ ] Verify the presubmit CI  
-
-            🙏 Please merge this PR only if the CI workflow completed successfully.
-          commit-message: "build: uv.lock"
-          committer: "Oliver König <okoenig@nvidia.com>"
-          signoff: true
+      - name: Commit changes
+        run: |
+          git add uv.lock
+          git commit -m -S "build: uv.lock"
+          git push
