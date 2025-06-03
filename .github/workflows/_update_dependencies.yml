@@ -21,6 +21,8 @@ on:
 jobs:
   update-branch:
     runs-on: ubuntu-latest
+    outputs:
+      source-branch: ${{ steps.merge-branch.outputs.source-branch }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -30,13 +32,17 @@ jobs:
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "Github Actions"
+
       - name: Merge weekly-bump-${{ inputs.target-branch }} back to base branch
         env:
           SOURCE_BRANCH: weekly-bump-${{ inputs.target-branch }}
           TARGET_BRANCH: ${{ inputs.target-branch }}
+        id: merge-branch
         run: |
           # Sanitize SOURCE_BRANCH by replacing slashes with dashes and removing any special characters
           SOURCE_BRANCH=$(echo "$SOURCE_BRANCH" | sed 's/\//-/g' | sed 's/[^a-zA-Z0-9_-]//g')
+
+          echo "source-branch=$SOURCE_BRANCH" | tee -a $GITHUB_OUTPUT
 
           if git ls-remote --exit-code origin $SOURCE_BRANCH; then
             git fetch --unshallow
@@ -56,19 +62,19 @@ jobs:
       source-ref: ${{ inputs.mcore-target-branch }}
       yaml-path: '."vcs-dependencies"."megatron-lm".ref'
       file: docker/manifest.json
-      base-branch: weekly-bump-${{ inputs.target-branch }}
+      base-branch: ${{ needs.update-branch.outputs.source-branch }}
     secrets:
       PAT: ${{ secrets.PAT }}
 
   nemo:
     uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.27.1
-    needs: [mcore]
+    needs: [update-branch, mcore]
     with:
       source-repository: NVIDIA/NeMo
       source-ref: ${{ inputs.nemo-target-branch }}
       yaml-path: '."vcs-dependencies"."megatron-lm".ref'
       file: docker/manifest.json
-      base-branch: weekly-bump-${{ inputs.target-branch }}
+      base-branch: ${{ needs.update-branch.outputs.source-branch }}
     secrets:
       PAT: ${{ secrets.PAT }}
 
