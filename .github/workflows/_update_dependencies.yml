@@ -99,6 +99,7 @@ jobs:
       file: docker/manifest.json
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
       pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
+      pr-title: "chore(🤖): Bump dependencies (${{ needs.update-branch.outputs.date }})"
       use-gpgkey: true
     secrets:
       PAT: ${{ secrets.PAT }}
@@ -110,16 +111,27 @@ jobs:
     runs-on: linux-amd64-cpu16
     needs: [nemo]
     steps:
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Install Azure CLI
+        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Azure ACR Login
+        run: az acr login --name nemoci
 
       - name: Upgrade lock file
         run: |
-          uv lock --upgrade
+          docker run \
+          --rm \
+          -v $(pwd):/workspace \
+          -w /workspace \
+          nemoci.azurecr.io/nemo_container_export_deploy_trtllm:main \
+          bash -c 'uv lock --upgrade'
 
       - name: Upload lock file
         uses: actions/upload-artifact@v4
