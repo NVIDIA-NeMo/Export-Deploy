@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       source-branch: ${{ steps.merge-branch.outputs.source-branch }}
+      bump-branch: bump-ci-container-${{ steps.ref.outputs.date }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -38,6 +39,10 @@ jobs:
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "Github Actions"
+
+      - name: Get latest source commit
+        id: ref
+        run: echo "date=$(date +%F)" | tee -a "$GITHUB_OUTPUT"
 
       - name: Merge weekly-bump-${{ inputs.target-branch }} back to base branch
         env:
@@ -70,7 +75,7 @@ jobs:
       yaml-path: '."vcs-dependencies"."megatron-lm".ref'
       file: docker/manifest.json
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
-      pr-branch: bump-ci-container--test
+      pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
     secrets:
       PAT: ${{ secrets.PAT }}
 
@@ -84,7 +89,7 @@ jobs:
       yaml-path: '."vcs-dependencies"."nemo".ref'
       file: docker/manifest.json
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
-      pr-branch: bump-ci-container--test
+      pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
     secrets:
       PAT: ${{ secrets.PAT }}
 
@@ -125,7 +130,7 @@ jobs:
           path: uv.lock
 
   create-pr:
-    needs: [update-lockfile]
+    needs: [update-lockfile, update-branch]
     runs-on: ubuntu-latest
     environment: main
     steps:
@@ -161,8 +166,8 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         id: create-pull-request
         with:
-          branch: dependabot-${{ steps.ref.outputs.date }}-main
-          base: main
+          branch: ${{ needs.update-branch.outputs.bump-branch }}
+          base: ${{ needs.update-branch.outputs.source-branch }}
           title: "chore(🤖): Bump dependencies (${{ steps.date.outputs.main }})"
           token: ${{ secrets.PAT }}
           body: |
