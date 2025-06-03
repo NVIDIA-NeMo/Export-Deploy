@@ -1,7 +1,7 @@
 {
     "vcs-dependencies": {
         "transformer_engine": {
-            "repo": "https://github.com/NVIDIA/TransformerEngine",
+            "repo": "https://github.com/NVIDIA/TransformerEngine.git",
             "ref": "bee4649c15a79ffcb9689ca7c0c963f5febaa28a"
         },
         "megatron-lm": {
