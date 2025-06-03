@@ -61,7 +61,7 @@ jobs:
           git push -u origin $SOURCE_BRANCH
 
   mcore:
-    uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.27.1
+    uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@ko3n1g/feat/override-pr-base-branch
     needs: [update-branch]
     name: Bump Megatron-LM
     with:
@@ -70,11 +70,12 @@ jobs:
       yaml-path: '."vcs-dependencies"."megatron-lm".ref'
       file: docker/manifest.json
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
+      pr-branch: bump-ci-container--test
     secrets:
       PAT: ${{ secrets.PAT }}
 
   nemo:
-    uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.27.1
+    uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@ko3n1g/feat/override-pr-base-branch
     needs: [update-branch, mcore]
     name: Bump NeMo
     with:
@@ -83,6 +84,7 @@ jobs:
       yaml-path: '."vcs-dependencies"."megatron-lm".ref'
       file: docker/manifest.json
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
+      pr-branch: bump-ci-container--test
     secrets:
       PAT: ${{ secrets.PAT }}
 
