@@ -398,8 +398,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         apply_chat_template=False,
         text_only=True
     ):
-        """
-        Private helper function that handles the core inference logic shared between triton and ray inference.
+        """Private helper function that handles the core inference logic shared between triton and ray inference.
 
         Args:
             prompts (List[str]): List of input prompts
@@ -460,8 +459,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         return output_texts, output_log_probs
 
     def ray_infer_fn(self, inputs: dict):
-        """
-        Ray-compatible inference function that takes a dictionary of inputs and returns a dictionary of outputs.
+        """Ray-compatible inference function that takes a dictionary of inputs and returns a dictionary of outputs.
 
         Args:
             inputs (dict): Dictionary containing the following optional keys:
