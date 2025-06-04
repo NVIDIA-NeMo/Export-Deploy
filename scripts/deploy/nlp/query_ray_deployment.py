@@ -71,7 +71,7 @@ def test_chat_completions_endpoint(base_url: str, model_id: str) -> None:
     url = f"{base_url}/v1/chat/completions/"
     payload = {
         "model": model_id,
-        "messages": [{"role": "user", "content": "Hello, how are you?"}],
+        "messages": [{"role": "user", "content": "Hello, how are you doing?"}],
         "max_tokens": 50,
         "temperature": 0.7,
         "logprobs": 1
