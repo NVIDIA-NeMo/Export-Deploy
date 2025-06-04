@@ -55,9 +55,11 @@ docker run \
     --rm \
     -it \
     --entrypoint bash \
+    --workdir /opt/nemo-export-deploy \
     --shm-size=4g \
     --gpus all \
-    -v ${PWD}/:/opt/checkpoints/ \
+    -v ${PWD}:/opt/nemo-export-deploy \
+    -v ${PWD}/checkpoints/:/opt/checkpoints/ \
     nemo-export-deploy
 ```
 
@@ -284,7 +286,7 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
            output_path=Path('/opt/checkpoints/hf_llama32_1B_nemo2')
        )
 
-## pip Installation
+## Installation
 
 For NeMo-Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
 
@@ -293,7 +295,7 @@ pip install nemo-export-deploy
 pip install nemo-run # Needs to be installed additionally
 ```
 
-### pip installation with Megatron-Core and TransformerEngine support
+### Installation with Megatron-Core and TransformerEngine support
 
 Prerequisites for pip installation:
 
@@ -308,7 +310,7 @@ pip install torch pybind11 setuptools
 pip install -e --build-isolation '.[te]'
 ```
 
-### pip installation with TRT-LLM or vLLM support
+### Installation with TRT-LLM or vLLM support
 
 Additionally to Megatron-Core/TransformerEngine, users may also add TRT-LLM or vLLM support. Note that TRT-LLM and vLLM are mutually exclusive, attempting to install both together will likely result in an error.
 
