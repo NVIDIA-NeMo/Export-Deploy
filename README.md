@@ -290,6 +290,7 @@ For NeMo-Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support
 
 ```bash
 pip install nemo-export-deploy
+pip install nemo-run # Needs to be installed additionally
 ```
 
 ### pip installation with Megatron-Core and TransformerEngine support
