@@ -1,20 +1,20 @@
 {
-    "vcs-dependencies": {
-        "transformer_engine": {
-            "repo": "https://github.com/NVIDIA/TransformerEngine.git",
-            "ref": "bee4649c15a79ffcb9689ca7c0c963f5febaa28a"
-        },
-        "megatron-lm": {
-            "repo": "https://github.com/NVIDIA/Megatron-LM.git",
-            "ref": "main"
-        },
-        "nemo": {
-            "repo": "https://github.com/NVIDIA/NeMo.git",
-            "ref": "main"
-        },
-        "trt-llm": {
-            "repo": "https://github.com/NVIDIA/TensorRT-LLM.git",
-            "ref": "v0.18.0"
-        }
+  "vcs-dependencies": {
+    "transformer_engine": {
+      "repo": "https://github.com/NVIDIA/TransformerEngine.git",
+      "ref": "bee4649c15a79ffcb9689ca7c0c963f5febaa28a"
+    },
+    "megatron-lm": {
+      "repo": "https://github.com/NVIDIA/Megatron-LM.git",
+      "ref": "cde60ce22ecd621f032744d24d0fbdc960f50493"
+    },
+    "nemo": {
+      "repo": "https://github.com/NVIDIA/NeMo.git",
+      "ref": "main"
+    },
+    "trt-llm": {
+      "repo": "https://github.com/NVIDIA/TensorRT-LLM.git",
+      "ref": "v0.18.0"
     }
+  }
 }
