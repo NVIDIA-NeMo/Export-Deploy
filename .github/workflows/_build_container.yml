@@ -82,7 +82,7 @@ jobs:
           echo "NEMO_REF=$NEMO_REF" | tee -a $GITHUB_OUTPUT
 
   build:
-    uses: NVIDIA-NeMo/NeMo-FW-CI-templates/.github/workflows/_build_container.yml@v0.29.0
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_build_container.yml@v0.29.0
     needs: [pre-flight]
     with:
       image-name: ${{ inputs.image-name }}
