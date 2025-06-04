@@ -71,7 +71,7 @@ jobs:
           git push -u origin $SOURCE_BRANCH
 
   mcore:
-    uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.36.1
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.36.1
     needs: [update-branch]
     name: Bump Megatron-LM
     with:
@@ -89,7 +89,7 @@ jobs:
       GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
 
   nemo:
-    uses: NVIDIA/NeMo-FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.36.1
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.36.1
     needs: [update-branch, mcore]
     name: Bump NeMo
     with:
