@@ -184,6 +184,7 @@ class NemoQueryLLMPyTorch(NemoQueryLLMBase):
                         log_probs_output
                     )
                     # TODO athitten: get top_n_logprobs from mcore once available
+                    # we take 1st element because cast_output adds an extra dimension
                     if top_log_probs_output is not None:
                         n_log_probs_output = [
                             json.loads(top_log_prob[0])

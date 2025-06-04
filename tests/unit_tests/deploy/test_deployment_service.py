@@ -89,7 +89,7 @@ class TestTritonSettings:
 
 
 class TestCompletionRequest:
-    def test_default_values(self):
+    def test_default_completions_values(self):
         request = CompletionRequest(model="test_model", prompt="test prompt")
         assert request.model == "test_model"
         assert request.prompt == "test prompt"
