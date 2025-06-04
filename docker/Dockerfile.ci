@@ -62,6 +62,6 @@ RUN bash -exu <<"EOF"
     
     if [ -n "$MCORE_REF" ]; then
     uv pip install --no-cache-dir --upgrade --force-reinstall --no-deps \
-        megatron-core@git+https://github.com/NVIDIA/Megatron-LM.git@${MCORE_REF} \
+        megatron-core@git+https://github.com/NVIDIA/Megatron-LM.git@${MCORE_REF}
     fi
 EOF
