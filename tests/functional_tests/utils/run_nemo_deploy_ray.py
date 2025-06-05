@@ -14,10 +14,8 @@
 
 
 import argparse
-import json
 import logging
 import multiprocessing
-import signal
 import sys
 import time
 from pathlib import Path
@@ -30,7 +28,6 @@ try:
     from nemo_deploy.deploy_ray import DeployRay
     from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
     from ray import serve
-    import ray
 except Exception as e:
     print(f"Ray dependencies not available: {e}")
     run_ray_tests = False
