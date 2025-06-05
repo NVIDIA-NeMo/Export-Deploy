@@ -301,7 +301,7 @@ class MegatronRayDeployable:
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0.0),
                 "compute_logprob": True if request.get("logprobs") == 1 else False,
-                "apply_chat_template": True,
+                "apply_chat_template": request.get("apply_chat_template", True),
             }
 
             # Run model inference in the thread pool
