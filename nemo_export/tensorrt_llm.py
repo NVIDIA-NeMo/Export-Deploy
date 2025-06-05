@@ -77,7 +77,8 @@ from tensorrt_llm.plugin import PluginConfig
 from transformers import PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
-from nemo_export.tarutils import TarPath, unpack_tarball
+from nemo_deploy.utils import cast_output, str_ndarray2list
+from nemo_export.tarutils import unpack_tarball
 from nemo_export.trt_llm.converter.model_converter import (
     determine_quantization_settings,
     model_to_trtllm_ckpt,
@@ -100,7 +101,6 @@ from nemo_export.trt_llm.qnemo.tokenizer_utils import (
     get_nmt_tokenizer,
 )
 from nemo_export.trt_llm.qnemo.utils import is_qnemo_checkpoint
-from nemo_export.trt_llm.tensorrt_llm_build import build_and_save_engine
 from nemo_export.trt_llm.tensorrt_llm_run import (
     generate,
     generate_streaming,
@@ -111,38 +111,24 @@ from nemo_export.trt_llm.tensorrt_llm_run import (
 )
 from nemo_export.trt_llm.utils import is_rank
 from nemo_export.utils import (
-    is_nemo_tarfile,
     prepare_directory_for_export,
     torch_dtype_from_precision,
 )
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
+from megatron.core.export.data_type import DataType
+from megatron.core.export.export_config import ExportConfig
+from megatron.core.export.model_type import ModelType
+from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
+    DEFAULT_CONVERSION_DICT,
+)
+from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
+from tensorrt_llm.layers import MoeConfig
 
-use_deploy = True
-try:
-    from nemo_deploy.utils import cast_output, str_ndarray2list
-except Exception:
-    use_deploy = False
+from pytriton.decorators import batch, first_value
+from pytriton.model_config import Tensor
+
 
 LOGGER = logging.getLogger("NeMo")
-
-
-@wrapt.decorator
-def noop_decorator(func):
-    """No op decorator."""
-
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-use_pytriton = True
-batch = noop_decorator
-try:
-    from pytriton.decorators import batch, first_value
-    from pytriton.model_config import Tensor
-except Exception:
-    use_pytriton = False
 
 
 # pylint: disable=line-too-long
@@ -217,12 +203,10 @@ class TensorRTLLM(ITritonDeployable):
         delete_existing_files: bool = True,
         tensor_parallelism_size: int = 1,
         pipeline_parallelism_size: int = 1,
-        gpus_per_node: Optional[int] = None,
         max_input_len: int = 256,
         max_output_len: Optional[int] = None,
         max_batch_size: int = 8,
         use_parallel_embedding: bool = False,
-        use_embedding_sharing: bool = False,
         paged_kv_cache: bool = True,
         remove_input_padding: bool = True,
         paged_context_fmha: bool = False,
@@ -237,12 +221,9 @@ class TensorRTLLM(ITritonDeployable):
         multiple_profiles: bool = False,
         gpt_attention_plugin: str = "auto",
         gemm_plugin: str = "auto",
-        use_mcore_path: bool = True,
         reduce_fusion: bool = True,
         fp8_quantized: Optional[bool] = None,
         fp8_kvcache: Optional[bool] = None,
-        gather_context_logits: Optional[bool] = False,
-        gather_generation_logits: Optional[bool] = False,
         build_rank: Optional[int] = 0,
     ):
         """Exports nemo checkpoints to TensorRT-LLM.
@@ -253,12 +234,10 @@ class TensorRTLLM(ITritonDeployable):
             delete_existing_files (bool): if True, deletes all the files in model_dir.
             tensor_parallelism_size (int): tensor parallelism.
             pipeline_parallelism_size (int): pipeline parallelism.
-            gpus_per_node (int): number of gpus per node.
             max_input_len (int): max input length.
             max_output_len (int): max output length.
             max_batch_size (int): max batch size.
             use_parallel_embedding (bool): whether to use parallel embedding feature of TRT-LLM or not
-            use_embedding_sharing (bool):
             paged_kv_cache (bool): if True, uses kv cache feature of the TensorRT-LLM.
             paged_context_fmha (bool): whether to use paged context fmha feature of TRT-LLM or not
             remove_input_padding (bool): enables removing input padding or not.
@@ -274,24 +253,11 @@ class TensorRTLLM(ITritonDeployable):
             multiple_profiles: (bool): enables multiple profiles feature of TRT-LLM. Default = False
             gpt_attention_plugin (str): enable the gpt attention plugin. Default = "auto"
             gemm_plugin (str): enable the gpt plugin. Default = "auto"
-            use_mcore_path (bool) : Use the more recent mcore path for export
             reduce_fusion (bool): enables fusing extra kernels after custom TRT-LLM allReduce
             fp8_quantized (Optional[bool]): enables exporting to FP8 TRT-LLM checkpoints. If not set, autodetects the type.
             fp8_kvcache (Optional[bool]): enables FP8 KV-cache quantization. If not set, autodetects the type.
-            gather_context_logits (Optional[bool]): if True, enables gather_context_logits while building trtllm engine. Default: False
-            gather_generation_logits (Optional[bool]): if True, enables gather_generation_logits while building trtllm engine. Default: False
             build_rank (Optional[int]): rank to export the model on. If None, builds on all ranks.
         """
-        if not use_mcore_path:
-            warnings.warn(
-                "Exporting models using the local codebase with use_mcore_path=False is deprecated."
-                " Please install megatron-core and set use_mcore_path to True.",
-                stacklevel=2,
-            )
-
-        gpus_per_node = (
-            tensor_parallelism_size if gpus_per_node is None else gpus_per_node
-        )
         prepare_directory_for_export(
             self.model_dir,
             delete_existing_files=delete_existing_files,
@@ -402,171 +368,106 @@ class TensorRTLLM(ITritonDeployable):
                     )
 
                 model, model_config, self.tokenizer = load_nemo_model(
-                    nemo_checkpoint_path, nemo_export_dir, use_mcore_path
+                    nemo_checkpoint_path, nemo_export_dir, True
                 )
-                if use_mcore_path:
-                    from megatron.core.export.data_type import DataType
-                    from megatron.core.export.export_config import ExportConfig
-                    from megatron.core.export.model_type import ModelType
-                    from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
-                        DEFAULT_CONVERSION_DICT,
+
+                share_embeddings_and_output_weights = model_config.get(
+                    "share_embeddings_and_output_weights", False
+                )
+                fp8_quantized, fp8_kvcache = determine_quantization_settings(
+                    model_config, fp8_quantized, fp8_kvcache
+                )
+
+                # We build the transformer config using the nemo model config.
+                transformer_config = self.get_transformer_config(model_config)
+                input_model_type = getattr(ModelType, model_type)
+
+                # MCore export supports some default conversion dictionaries
+                mcore_model_conversion_dict = DEFAULT_CONVERSION_DICT
+
+                # All Mcore conversion dicts start with "decoder.layers.4.blah.blah" , while nemo models start with "model.decoder.layers.4.blahblah". so we append model. to the keys
+                nemo_model_conversion_dict = {
+                    f"model.{key}": value
+                    for key, value in mcore_model_conversion_dict.items()
+                } | {  # Mapping for NeMo 2.0
+                    f"module.{key}": value
+                    for key, value in mcore_model_conversion_dict.items()
+                }
+
+                # TODO: Workaround: Gemma uses gated activation, while mcore does not handle openai-gelu
+                # as a gated function. Remove once !11614 is merged.
+                activation = model_config.get("activation", "gelu")
+                if activation == "openai-gelu" and input_model_type.name == "gemma":
+                    activation = "geglu"
+
+                trtllm_helper = TRTLLMHelper(
+                    transformer_config=transformer_config,
+                    model_type=input_model_type,
+                    trtllm_conversion_dict=nemo_model_conversion_dict,
+                    position_embedding_type=model_config.get("position_embedding_type"),
+                    max_position_embeddings=model_config.get("max_position_embeddings"),
+                    rotary_percentage=model_config.get("rotary_percentage", 1.0),
+                    rotary_base=model_config.get("rotary_base", 10000),
+                    moe_tp_mode=model_config.get("moe_tp_mode", 2),
+                    multi_query_mode=model_config.get("multi_query_mode", False),
+                    activation=activation,
+                    seq_len_interpolation_factor=model_config.get(
+                        "seq_len_interpolation_factor"
+                    ),
+                    moe_renorm_mode=model_config.get(
+                        "moe_renorm_mode",
+                        MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE,
+                    ),
+                    share_embeddings_and_output_weights=share_embeddings_and_output_weights,
+                )
+
+                input_dtype = getattr(DataType, dtype)
+                export_config = ExportConfig(
+                    tensor_parallelism_size,
+                    pipeline_parallelism_size,
+                    use_parallel_embedding,
+                    share_embeddings_and_output_weights,
+                )
+
+                trtllm_model_weights_list, trtllm_model_config_list = (
+                    trtllm_helper.get_trtllm_pretrained_config_and_model_weights(
+                        model_state_dict=model,
+                        export_config=export_config,
+                        dtype=input_dtype,
+                        state_dict_split_by_layer_numbers=False,
+                        fp8_quantized=fp8_quantized,
+                        fp8_kvcache=fp8_kvcache,
                     )
-                    from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
-                    from tensorrt_llm.layers import MoeConfig
+                )
 
-                    share_embeddings_and_output_weights = model_config.get(
-                        "share_embeddings_and_output_weights", False
+                for trtllm_model_weights, trtllm_model_config in zip(
+                    trtllm_model_weights_list, trtllm_model_config_list
+                ):
+                    trtllm_helper.build_and_save_engine(
+                        max_input_len=max_input_len,
+                        max_output_len=max_output_len,
+                        max_batch_size=max_batch_size,
+                        engine_dir=self.engine_dir,
+                        trtllm_model_weights=trtllm_model_weights,
+                        trtllm_model_config=trtllm_model_config,
+                        lora_ckpt_list=self.lora_ckpt_list,
+                        use_lora_plugin=use_lora_plugin,
+                        max_lora_rank=max_lora_rank,
+                        lora_target_modules=lora_target_modules,
+                        max_prompt_embedding_table_size=0,
+                        paged_kv_cache=paged_kv_cache,
+                        remove_input_padding=remove_input_padding,
+                        paged_context_fmha=paged_context_fmha,
+                        use_refit=False,
+                        max_num_tokens=max_num_tokens,
+                        max_seq_len=max_seq_len,
+                        opt_num_tokens=opt_num_tokens,
+                        max_beam_width=1,
+                        tokens_per_block=128,
+                        multiple_profiles=multiple_profiles,
+                        gpt_attention_plugin=gpt_attention_plugin,
+                        gemm_plugin=gemm_plugin,
                     )
-                    fp8_quantized, fp8_kvcache = determine_quantization_settings(
-                        model_config, fp8_quantized, fp8_kvcache
-                    )
-
-                    # We build the transformer config using the nemo model config.
-                    transformer_config = self.get_transformer_config(model_config)
-                    input_model_type = getattr(ModelType, model_type)
-
-                    # MCore export supports some default conversion dictionaries
-                    mcore_model_conversion_dict = DEFAULT_CONVERSION_DICT
-
-                    # All Mcore conversion dicts start with "decoder.layers.4.blah.blah" , while nemo models start with "model.decoder.layers.4.blahblah". so we append model. to the keys
-                    nemo_model_conversion_dict = {
-                        f"model.{key}": value
-                        for key, value in mcore_model_conversion_dict.items()
-                    } | {  # Mapping for NeMo 2.0
-                        f"module.{key}": value
-                        for key, value in mcore_model_conversion_dict.items()
-                    }
-
-                    # TODO: Workaround: Gemma uses gated activation, while mcore does not handle openai-gelu
-                    # as a gated function. Remove once !11614 is merged.
-                    activation = model_config.get("activation", "gelu")
-                    if activation == "openai-gelu" and input_model_type.name == "gemma":
-                        activation = "geglu"
-
-                    trtllm_helper = TRTLLMHelper(
-                        transformer_config=transformer_config,
-                        model_type=input_model_type,
-                        trtllm_conversion_dict=nemo_model_conversion_dict,
-                        position_embedding_type=model_config.get(
-                            "position_embedding_type"
-                        ),
-                        max_position_embeddings=model_config.get(
-                            "max_position_embeddings"
-                        ),
-                        rotary_percentage=model_config.get("rotary_percentage", 1.0),
-                        rotary_base=model_config.get("rotary_base", 10000),
-                        moe_tp_mode=model_config.get("moe_tp_mode", 2),
-                        multi_query_mode=model_config.get("multi_query_mode", False),
-                        activation=activation,
-                        seq_len_interpolation_factor=model_config.get(
-                            "seq_len_interpolation_factor"
-                        ),
-                        moe_renorm_mode=model_config.get(
-                            "moe_renorm_mode",
-                            MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE,
-                        ),
-                        share_embeddings_and_output_weights=share_embeddings_and_output_weights,
-                    )
-
-                    input_dtype = getattr(DataType, dtype)
-                    export_config = ExportConfig(
-                        tensor_parallelism_size,
-                        pipeline_parallelism_size,
-                        use_parallel_embedding,
-                        share_embeddings_and_output_weights,
-                    )
-
-                    trtllm_model_weights_list, trtllm_model_config_list = (
-                        trtllm_helper.get_trtllm_pretrained_config_and_model_weights(
-                            model_state_dict=model,
-                            export_config=export_config,
-                            dtype=input_dtype,
-                            state_dict_split_by_layer_numbers=False,
-                            fp8_quantized=fp8_quantized,
-                            fp8_kvcache=fp8_kvcache,
-                        )
-                    )
-
-                    for trtllm_model_weights, trtllm_model_config in zip(
-                        trtllm_model_weights_list, trtllm_model_config_list
-                    ):
-                        trtllm_helper.build_and_save_engine(
-                            max_input_len=max_input_len,
-                            max_output_len=max_output_len,
-                            max_batch_size=max_batch_size,
-                            engine_dir=self.engine_dir,
-                            trtllm_model_weights=trtllm_model_weights,
-                            trtllm_model_config=trtllm_model_config,
-                            lora_ckpt_list=self.lora_ckpt_list,
-                            use_lora_plugin=use_lora_plugin,
-                            max_lora_rank=max_lora_rank,
-                            lora_target_modules=lora_target_modules,
-                            max_prompt_embedding_table_size=0,
-                            paged_kv_cache=paged_kv_cache,
-                            remove_input_padding=remove_input_padding,
-                            paged_context_fmha=paged_context_fmha,
-                            use_refit=False,
-                            max_num_tokens=max_num_tokens,
-                            max_seq_len=max_seq_len,
-                            opt_num_tokens=opt_num_tokens,
-                            max_beam_width=1,
-                            tokens_per_block=128,
-                            multiple_profiles=multiple_profiles,
-                            gpt_attention_plugin=gpt_attention_plugin,
-                            gemm_plugin=gemm_plugin,
-                        )
-                else:
-                    if model_type == "gpt" or model_type == "starcoder":
-                        model_type = "gptnext"
-
-                    if model_type == "mixtral":
-                        model_type = "llama"
-
-                    trtllm_model_weights_list, trtllm_model_config_list = (
-                        model_to_trtllm_ckpt(
-                            model=model,
-                            nemo_model_config=model_config,
-                            nemo_export_dir=nemo_export_dir,
-                            decoder_type=model_type,
-                            dtype=dtype,
-                            tensor_parallel_size=tensor_parallelism_size,
-                            pipeline_parallel_size=pipeline_parallelism_size,
-                            gpus_per_node=gpus_per_node,
-                            use_parallel_embedding=use_parallel_embedding,
-                            use_embedding_sharing=use_embedding_sharing,
-                            fp8_quantized=fp8_quantized,
-                            fp8_kvcache=fp8_kvcache,
-                        )
-                    )
-
-                    for trtllm_model_weights, trtllm_model_config in zip(
-                        trtllm_model_weights_list, trtllm_model_config_list
-                    ):
-                        build_and_save_engine(
-                            max_input_len=max_input_len,
-                            max_output_len=max_output_len,
-                            max_batch_size=max_batch_size,
-                            model_config=trtllm_model_config,
-                            model_weights=trtllm_model_weights,
-                            model_dir=self.engine_dir,
-                            model_type=model_type,
-                            lora_ckpt_list=self.lora_ckpt_list,
-                            use_lora_plugin=use_lora_plugin,
-                            max_lora_rank=max_lora_rank,
-                            lora_target_modules=lora_target_modules,
-                            max_prompt_embedding_table_size=0,
-                            paged_kv_cache=paged_kv_cache,
-                            remove_input_padding=remove_input_padding,
-                            paged_context_fmha=paged_context_fmha,
-                            max_num_tokens=max_num_tokens,
-                            opt_num_tokens=opt_num_tokens,
-                            max_seq_len=max_seq_len,
-                            multiple_profiles=multiple_profiles,
-                            gpt_attention_plugin=gpt_attention_plugin,
-                            gemm_plugin=gemm_plugin,
-                            gather_context_logits=gather_context_logits,
-                            gather_generation_logits=gather_generation_logits,
-                        )
 
             tokenizer_path = os.path.join(nemo_export_dir, "tokenizer.model")
             tokenizer_path_nemo2 = os.path.join(nemo_export_dir, "nemo_context")
@@ -1122,7 +1023,6 @@ class TensorRTLLM(ITritonDeployable):
         max_batch_size: int = 4,
         use_refit: bool = True,
         reshard_model: bool = False,
-        use_mcore_path: bool = True,
     ):
         """Convert a model parallel nemo model to TensorRT-LLM."""
         assert tensorrt_llm.mpi_rank() == torch.distributed.get_rank()
@@ -1139,110 +1039,79 @@ class TensorRTLLM(ITritonDeployable):
         if self.dp_size > 1:
             self.model_dir = os.path.join(self.model_dir, f"dp_rank{self.dp_rank}")
 
-        if use_mcore_path:
-            from megatron.core.export.model_type import ModelType
-            from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
-            from tensorrt_llm.layers import MoeConfig
+        storage_dtype = torch_dtype_from_precision(model_config.precision)
+        model_state_dict = self.gather_and_reshard_model(
+            model_config, model, storage_dtype
+        )
+        # We build the transformer config using the nemo model config.
+        transformer_config = self.get_transformer_config(model_config)
+        input_model_type = getattr(ModelType, model_type)
 
-            storage_dtype = torch_dtype_from_precision(model_config.precision)
-            model_state_dict = self.gather_and_reshard_model(
-                model_config, model, storage_dtype
-            )
-            # We build the transformer config using the nemo model config.
-            transformer_config = self.get_transformer_config(model_config)
-            input_model_type = getattr(ModelType, model_type)
+        nemo_model_conversion_dict = self.get_nemo_to_trtllm_conversion_dict(
+            model_state_dict
+        )
+        self.trtllm_helper = TRTLLMHelper(
+            transformer_config=transformer_config,
+            model_type=input_model_type,
+            trtllm_conversion_dict=nemo_model_conversion_dict,
+            position_embedding_type=model_config.get("position_embedding_type"),
+            max_position_embeddings=model_config.get("max_position_embeddings"),
+            rotary_percentage=model_config.get("rotary_percentage", 1.0),
+            rotary_base=model_config.get("rotary_base", 10000),
+            moe_tp_mode=model_config.get("moe_tp_mode", 2),
+            multi_query_mode=model_config.get("multi_query_mode", False),
+            activation=model_config.get("activation", "gelu"),
+            seq_len_interpolation_factor=model_config.get(
+                "seq_len_interpolation_factor"
+            ),
+            moe_renorm_mode=model_config.get(
+                "moe_renorm_mode",
+                MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE,
+            ),
+            share_embeddings_and_output_weights=model_config.get(
+                "share_embeddings_and_output_weights", False
+            ),
+        )
 
-            nemo_model_conversion_dict = self.get_nemo_to_trtllm_conversion_dict(
-                model_state_dict
-            )
-            self.trtllm_helper = TRTLLMHelper(
-                transformer_config=transformer_config,
-                model_type=input_model_type,
-                trtllm_conversion_dict=nemo_model_conversion_dict,
-                position_embedding_type=model_config.get("position_embedding_type"),
-                max_position_embeddings=model_config.get("max_position_embeddings"),
-                rotary_percentage=model_config.get("rotary_percentage", 1.0),
-                rotary_base=model_config.get("rotary_base", 10000),
-                moe_tp_mode=model_config.get("moe_tp_mode", 2),
-                multi_query_mode=model_config.get("multi_query_mode", False),
-                activation=model_config.get("activation", "gelu"),
-                seq_len_interpolation_factor=model_config.get(
-                    "seq_len_interpolation_factor"
-                ),
-                moe_renorm_mode=model_config.get(
-                    "moe_renorm_mode",
-                    MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE,
-                ),
-                share_embeddings_and_output_weights=model_config.get(
-                    "share_embeddings_and_output_weights", False
-                ),
-            )
+        input_dtype = self.get_input_dtype(storage_dtype)
 
-            input_dtype = self.get_input_dtype(storage_dtype)
-
-            trtllm_model_weights_list, trtllm_model_config_list = (
-                self.trtllm_helper.get_trtllm_pretrained_config_and_model_weights(
-                    model_state_dict=model_state_dict,
-                    dtype=input_dtype,
-                    state_dict_split_by_layer_numbers=True,
-                    on_device_distributed_conversion=True,
-                    vocab_size=self.tokenizer.vocab_size,
-                    gpus_per_node=gpus_per_node,
-                )
-            )
-            trtllm_model_config = trtllm_model_config_list[0]
-            trtllm_model_weights = trtllm_model_weights_list[0]
-
-            if reshard_model:
-                assert self.pp_size == 1, "Reshard is true, but pp size is not one"
-                # MCORE Export will use parallel_state to determine pp .
-                # Since we reshard to pp = 1, we need to modify the config and mapping
-                world_size = self.tp_size * self.pp_size
-                trtllm_model_config.pp_size = self.pp_size
-                trtllm_model_config.world_size = world_size
-                trtllm_model_config.mapping = tensorrt_llm.Mapping(
-                    world_size=world_size,
-                    rank=self.mp_rank,
-                    tp_size=self.tp_size,
-                    pp_size=self.pp_size,
-                )
-
-            engine = self.trtllm_helper.build_and_save_engine(
-                max_input_len=max_input_len,
-                max_output_len=max_output_len,
-                max_seq_len=max_input_len + max_output_len,
-                max_batch_size=max_batch_size,
-                trtllm_model_config=trtllm_model_config,
-                trtllm_model_weights=trtllm_model_weights,
-                engine_dir=self.model_dir,
-                use_refit=use_refit,
-            )
-        else:
-            weights, model_config = model_to_trtllm_ckpt(
-                model=model,
-                nemo_model_config=model_config,
-                nemo_export_dir=self.model_dir,
-                decoder_type=model_type,
-                tensor_parallel_size=self.tp_size,
-                pipeline_parallel_size=self.pp_size,
-                gpus_per_node=gpus_per_node,
-                use_parallel_embedding=True,
-                use_distributed_convert=True,
-                model_parallel_rank=self.mp_rank,
+        trtllm_model_weights_list, trtllm_model_config_list = (
+            self.trtllm_helper.get_trtllm_pretrained_config_and_model_weights(
+                model_state_dict=model_state_dict,
+                dtype=input_dtype,
+                state_dict_split_by_layer_numbers=True,
+                on_device_distributed_conversion=True,
                 vocab_size=self.tokenizer.vocab_size,
+                gpus_per_node=gpus_per_node,
+            )
+        )
+        trtllm_model_config = trtllm_model_config_list[0]
+        trtllm_model_weights = trtllm_model_weights_list[0]
+
+        if reshard_model:
+            assert self.pp_size == 1, "Reshard is true, but pp size is not one"
+            # MCORE Export will use parallel_state to determine pp .
+            # Since we reshard to pp = 1, we need to modify the config and mapping
+            world_size = self.tp_size * self.pp_size
+            trtllm_model_config.pp_size = self.pp_size
+            trtllm_model_config.world_size = world_size
+            trtllm_model_config.mapping = tensorrt_llm.Mapping(
+                world_size=world_size,
+                rank=self.mp_rank,
+                tp_size=self.tp_size,
+                pp_size=self.pp_size,
             )
 
-            engine = build_and_save_engine(
-                max_input_len=max_input_len,
-                max_output_len=max_output_len,
-                max_seq_len=max_input_len + max_output_len,
-                max_batch_size=max_batch_size,
-                model_config=model_config[0],
-                model_weights=weights[0],
-                model_dir=self.model_dir,
-                model_type=model_type,
-                use_refit=use_refit,
-            )
+        engine = self.trtllm_helper.build_and_save_engine(
+            max_input_len=max_input_len,
+            max_output_len=max_output_len,
+            max_seq_len=max_input_len + max_output_len,
+            max_batch_size=max_batch_size,
+            trtllm_model_config=trtllm_model_config,
+            trtllm_model_weights=trtllm_model_weights,
+            engine_dir=self.model_dir,
+            use_refit=use_refit,
+        )
 
         torch.distributed.barrier()
 
@@ -1254,37 +1123,27 @@ class TensorRTLLM(ITritonDeployable):
 
         load_distributed(self.model_dir, self.mp_rank, gpus_per_node)
 
-    def refit(self, model, model_config, use_mcore_path=True):
+    def refit(self, model, model_config):
         """Refits an TensorRT engine using an instantiated nemo model.
 
         This function should only be used after calling build()
         """
-        weights_dict = None
-        if use_mcore_path:
-            storage_dtype = torch_dtype_from_precision(model_config.precision)
+        storage_dtype = torch_dtype_from_precision(model_config.precision)
 
-            model_state_dict = self.gather_and_reshard_model(
-                model_config, model, storage_dtype
-            )
+        model_state_dict = self.gather_and_reshard_model(
+            model_config, model, storage_dtype
+        )
 
-            nemo_model_conversion_dict = self.get_nemo_to_trtllm_conversion_dict(
-                model_state_dict
-            )
-            self.trtllm_helper.weights_converter.convert(
-                model_state_dict=model_state_dict,
-                tokenizer_vocab_size=self.tokenizer.vocab_size,
-                trtllm_conversion_dict=nemo_model_conversion_dict,
-            )
-            weights_dict = self.trtllm_helper.weights_converter.trtllm_model_weights
+        nemo_model_conversion_dict = self.get_nemo_to_trtllm_conversion_dict(
+            model_state_dict
+        )
+        self.trtllm_helper.weights_converter.convert(
+            model_state_dict=model_state_dict,
+            tokenizer_vocab_size=self.tokenizer.vocab_size,
+            trtllm_conversion_dict=nemo_model_conversion_dict,
+        )
+        weights_dict = self.trtllm_helper.weights_converter.trtllm_model_weights
 
-        else:
-            weights_dict = dist_model_to_trt_llm_ckpt(
-                model=model,
-                nemo_model_config=model_config,
-                inference_tp_size=self.tp_size,
-                inference_pp_size=self.pp_size,
-                tokenizer_vocab_size=self.tokenizer.vocab_size,
-            )
         load_distributed(self.model_dir, self.mp_rank, self.gpus_per_node)
         gc.collect()
         torch.cuda.empty_cache()
