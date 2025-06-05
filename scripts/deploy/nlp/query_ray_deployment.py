@@ -126,7 +126,6 @@ def main():
 
     # Test all endpoints
     test_completions_endpoint(base_url, args.model_id)
-    test_chat_completions_endpoint(base_url, args.model_id)
     test_health_endpoint(base_url)
     test_models_endpoint(base_url)
 

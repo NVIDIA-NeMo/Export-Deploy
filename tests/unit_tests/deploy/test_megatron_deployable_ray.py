@@ -24,7 +24,7 @@ from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 # Create a mock of the ModelWorker class without decorators for testing
 class MockModelWorker:
     """Mock implementation of ModelWorker class for testing purposes."""
-    
+
     def __init__(
         self,
         nemo_checkpoint_filepath: str,
@@ -62,7 +62,7 @@ class MockModelWorker:
 # Create a mock of the MegatronRayDeployable class without decorators for testing
 class MockMegatronRayDeployable:
     """Mock implementation of MegatronRayDeployable class for testing purposes."""
-    
+
     def __init__(
         self,
         nemo_checkpoint_filepath: str,
@@ -111,17 +111,17 @@ def mock_ray():
     with patch("nemo_deploy.nlp.megatronllm_deployable_ray.ray") as mock_ray:
         # Mock Ray remote decorator
         mock_ray.remote.return_value = lambda cls: cls
-        
+
         # Mock Ray services
         mock_ray._private.services.get_node_ip_address.return_value = "127.0.0.1"
-        
+
         # Mock ray.get
         mock_ray.get.return_value = {
             "sentences": ["Generated response 1", "Generated response 2"],
             "logits": [0.1, 0.2, 0.3],
             "scores": [0.9, 0.8, 0.7],
         }
-        
+
         yield mock_ray
 
 
@@ -171,7 +171,7 @@ def mock_worker_instance(mock_megatron_model, mock_worker_class, mock_torch):
         master_port="29500",
         replica_id=0,
     )
-    
+
     # Mock the model instance
     worker.model = mock_megatron_model.return_value
     yield worker
@@ -190,7 +190,7 @@ def mock_deployable_instance(mock_deployable_class, mock_find_port, mock_ray):
         context_parallel_size=1,
         model_id="test-model",
     )
-    
+
     # Mock workers
     mock_workers = []
     for i in range(2):
@@ -203,10 +203,10 @@ def mock_deployable_instance(mock_deployable_class, mock_find_port, mock_ray):
             "scores": [0.9, 0.8, 0.7],
         }
         mock_workers.append(mock_worker)
-    
+
     instance.workers = mock_workers
     instance.primary_worker = mock_workers[0]
-    
+
     # Mock async methods to return expected values directly
     instance.completions = MagicMock()
     instance.completions.return_value = {
@@ -228,7 +228,7 @@ def mock_deployable_instance(mock_deployable_class, mock_find_port, mock_ray):
             "total_tokens": 30,
         },
     }
-    
+
     instance.chat_completions = MagicMock()
     instance.chat_completions.return_value = {
         "id": f"chatcmpl-{int(time.time())}",
@@ -248,7 +248,7 @@ def mock_deployable_instance(mock_deployable_class, mock_find_port, mock_ray):
             "total_tokens": 40,
         },
     }
-    
+
     instance.list_models = MagicMock()
     instance.list_models.return_value = {
         "data": [
@@ -261,10 +261,10 @@ def mock_deployable_instance(mock_deployable_class, mock_find_port, mock_ray):
         ],
         "object": "list",
     }
-    
+
     instance.health_check = MagicMock()
     instance.health_check.return_value = {"status": "healthy"}
-    
+
     yield instance
 
 
@@ -283,7 +283,7 @@ class TestModelWorker:
             master_port="29500",
             replica_id=0,
         )
-        
+
         assert worker.rank == 0
         assert worker.world_size == 2
         assert worker.master_port == "29500"
@@ -300,7 +300,7 @@ class TestModelWorker:
             master_port="29500",
             replica_id=0,
         )
-        
+
         assert worker.rank == 1
         assert worker.world_size == 2
 
@@ -317,7 +317,7 @@ class TestModelWorker:
             replica_id=0,
             enable_cuda_graphs=True,
         )
-        
+
         assert worker.enable_cuda_graphs is True
 
     def test_init_with_flash_decode(self, mock_megatron_model, mock_worker_class, mock_torch):
@@ -333,15 +333,15 @@ class TestModelWorker:
             replica_id=0,
             enable_flash_decode=True,
         )
-        
+
         assert worker.enable_flash_decode is True
 
     def test_infer(self, mock_worker_instance):
         """Test the infer method of ModelWorker."""
         inputs = {"prompts": ["Test prompt"], "max_length": 100}
-        
+
         result = mock_worker_instance.infer(inputs)
-        
+
         assert "sentences" in result
         assert "logits" in result
         assert "scores" in result
@@ -359,7 +359,7 @@ class TestMegatronRayDeployable:
             num_nodes=1,
             model_id="test-model",
         )
-        
+
         assert deployable.num_gpus == 1
         assert deployable.num_nodes == 1
         assert deployable.model_id == "test-model"
@@ -374,7 +374,7 @@ class TestMegatronRayDeployable:
             pipeline_model_parallel_size=2,
             model_id="test-model",
         )
-        
+
         assert deployable.num_gpus == 4
         assert deployable.tensor_model_parallel_size == 2
         assert deployable.pipeline_model_parallel_size == 2
@@ -382,7 +382,7 @@ class TestMegatronRayDeployable:
     def test_completions_basic(self, mock_deployable_instance):
         """Test the completions endpoint with basic request."""
         result = mock_deployable_instance.completions({"prompt": "Test prompt", "max_tokens": 100, "temperature": 0.7})
-        
+
         assert result["object"] == "text_completion"
         assert result["model"] == "test-model"
         assert "choices" in result
@@ -413,14 +413,14 @@ class TestMegatronRayDeployable:
                 "total_tokens": 10,
             },
         }
-        
+
         result = mock_deployable_instance.completions({
             "prompts": ["Test prompt 1", "Test prompt 2"],
             "max_tokens": 50,
             "top_k": 5,
             "top_p": 0.9,
         })
-        
+
         assert result["object"] == "text_completion"
         assert result["choices"][0]["logprobs"] is not None
 
@@ -428,12 +428,12 @@ class TestMegatronRayDeployable:
         """Test error handling in completions endpoint."""
         # Set up the mock to raise an error
         mock_deployable_instance.completions.side_effect = HTTPException(status_code=500, detail="Inference error")
-        
+
         request = {"prompt": "Test prompt"}
-        
+
         with pytest.raises(HTTPException) as excinfo:
             mock_deployable_instance.completions(request)
-        
+
         assert excinfo.value.status_code == 500
 
     def test_chat_completions_basic(self, mock_deployable_instance):
@@ -446,7 +446,7 @@ class TestMegatronRayDeployable:
             "max_tokens": 100,
             "temperature": 0.7,
         })
-        
+
         assert result["object"] == "chat.completion"
         assert result["model"] == "test-model"
         assert "choices" in result
@@ -473,14 +473,14 @@ class TestMegatronRayDeployable:
                 "total_tokens": 50,
             },
         }
-        
+
         result = mock_deployable_instance.chat_completions({
             "messages": [{"role": "user", "content": "Tell me a story"}],
             "max_tokens": 30,
             "temperature": 1.2,
             "top_p": 0.8,
         })
-        
+
         assert result["choices"][0]["finish_reason"] == "length"
 
     def test_chat_completions_error_handling(self, mock_deployable_instance):
@@ -489,20 +489,20 @@ class TestMegatronRayDeployable:
         mock_deployable_instance.chat_completions.side_effect = HTTPException(
             status_code=500, detail="Chat completion error"
         )
-        
+
         request = {
             "messages": [{"role": "user", "content": "Hello"}],
         }
-        
+
         with pytest.raises(HTTPException) as excinfo:
             mock_deployable_instance.chat_completions(request)
-        
+
         assert excinfo.value.status_code == 500
 
     def test_list_models(self, mock_deployable_instance):
         """Test the list_models endpoint."""
         result = mock_deployable_instance.list_models()
-        
+
         assert result["object"] == "list"
         assert "data" in result
         assert len(result["data"]) == 1
@@ -512,7 +512,7 @@ class TestMegatronRayDeployable:
     def test_health_check(self, mock_deployable_instance):
         """Test the health_check endpoint."""
         result = mock_deployable_instance.health_check()
-        
+
         assert result["status"] == "healthy"
 
     def test_parallelism_validation(self, mock_deployable_class):
@@ -527,7 +527,7 @@ class TestMegatronRayDeployable:
             context_parallel_size=2,  # 2 * 2 * 2 = 8, matches num_gpus
             model_id="test-model",
         )
-        
+
         assert deployable.tensor_model_parallel_size == 2
         assert deployable.pipeline_model_parallel_size == 2
         assert deployable.context_parallel_size == 2
@@ -539,13 +539,13 @@ class TestMegatronRayDeployable:
             num_gpus=1,
             model_id="test-model-1",
         )
-        
+
         deployable2 = mock_deployable_class(
             nemo_checkpoint_filepath="test/model.nemo",
             num_gpus=1,
             model_id="test-model-2",
         )
-        
+
         # Different instances should have different replica IDs based on hash
         # (This is implicit in the actual implementation)
         assert deployable1.model_id != deployable2.model_id
@@ -553,4 +553,3 @@ class TestMegatronRayDeployable:
 
 if __name__ == "__main__":
     pytest.main()
-
