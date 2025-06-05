@@ -2,13 +2,13 @@
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
-
 [tool.setuptools]
-packages = ["nemo_export", "nemo_deploy"]
+packages = ["nemo_export", "nemo_deploy", "nemo_export_deploy_common"]
 
 [tool.setuptools.dynamic]
-version = { attr = "package_info.__version__" }                 # any module attribute compatible with ast.literal_eval
+version = { attr = "nemo_export_deploy_common.package_info.__version__" } # any module attribute compatible with ast.literal_eval
 readme = { file = "README.md", content-type = "text/markdown" }
+
 
 [project]
 name = "nemo-export-deploy"
@@ -21,7 +21,6 @@ dependencies = [
     "megatron-core>=0.12.0",
     "accelerate",
     "fastapi",
-    "nvidia-pytriton; platform_system != 'Darwin' ",
     "pydantic-settings",
     "ray",
     "ray[serve]",
@@ -39,6 +38,7 @@ dependencies = [
     "transformers",
     "wandb",
     "webdataset>=0.2.86",
+    "nvidia-pytriton; platform_system != 'Darwin' ",
 ]
 
 [project.optional-dependencies]
@@ -46,6 +46,7 @@ vllm = [
     "vllm==0.8.5.post1",
     "transformers==4.51.3",
     "nvidia-modelopt[torch]>=0.29.0",
+    "pandas",
 ]
 trtllm = ["tensorrt-llm~=0.18.2"]
 te = ["transformer-engine[pytorch]==2.2.0"]
@@ -93,6 +94,11 @@ default-groups = ["linting", "build", "test"]
 #  --link-mode=symlink (fastest option when uv cache and venv on different file-system; caveat: venv is brittle since it depends on the environment/container)
 link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }]]
+override-dependencies = [
+    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]@git+https://github.com/NVIDIA/NeMo.git@259d684e73c45091f0b6144342133e6ceb7e824c",
+    "megatron-core@git+https://github.com/NVIDIA/Megatron-LM.git@54afff44f29e1117b2057ced6fa5be583e35cb7b",
+    "urllib3>1.27.0",
+]
 
 [tool.black]
 line-length = 120
@@ -112,10 +118,19 @@ python_files = "test_*.py"
 
 [tool.coverage.run]
 concurrency = ["thread", "multiprocessing"]
-omit = ["/tmp/*", "/workspace/tests/*"]
+omit = [
+    "/tmp/*",
+    "/workspace/tests/*",
+    "/workspace/nemo_export_deploy_common/*",
+]
 
 [tool.coverage.paths]
-source = ["/workspace/nemo_export/", "/workspace/nemo_deploy/"]
+source = [
+    ".",
+    "/workspace",
+    "/home/runner/work/NeMo-Export-Deploy/NeMo-Export-Deploy",
+]
+
 
 [tool.ruff.lint]
 # Enable all `pydocstyle` rules, limiting to those that adhere to the
