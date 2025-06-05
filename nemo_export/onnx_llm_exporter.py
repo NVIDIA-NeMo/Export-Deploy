@@ -206,9 +206,9 @@ class OnnxLLMExporter(ITritonDeployable):
             example_inputs = get_example_inputs(self.tokenizer, self.device)
 
         if "dimensions" in input_names:
-            example_inputs["dimensions"] = torch.tensor(
-                [1] * example_inputs["input_ids"].shape[0]
-            ).to(self.device)
+            example_inputs["dimensions"] = torch.ones(
+                len(example_inputs["input_ids"]), dtype=torch.int64, device=self.device
+            )
 
         if isinstance(export_dtype, str):
             export_dtype = {"fp16": torch.float16, "fp32": torch.float32}[export_dtype]
