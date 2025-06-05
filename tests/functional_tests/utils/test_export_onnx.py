@@ -152,11 +152,14 @@ def export_onnx_trt(args):
     prompt = ["hello", "world"]
 
     prompt = onnx_exporter.get_tokenizer(prompt)
-    prompt["dimensions"] = [[2]]
+    prompt["dimensions"] = [2, 4]
+    prompt = dict(prompt)
 
     output = onnx_exporter.forward(prompt)
     if output is None:
         logging.warning("Output is None because ONNX runtime is not installed.")
+    else:
+        print("Output:", output)
 
 
 if __name__ == "__main__":
