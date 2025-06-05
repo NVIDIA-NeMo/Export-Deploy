@@ -479,8 +479,9 @@ class OnnxLLMExporter(ITritonDeployable):
         Quantize model by calibrating it using a given forward loop.
 
         Args:
-            quant_cfg (str, dict): ...
-            forward_loop (callable): ...
+            quant_cfg (str, dict): Quantization type to use.
+            forward_loop (callable): A fcuntion that accepts the model as a single parameter
+                and runs sample data though it. This is used for calibration during quantization.
         """
         if isinstance(quant_cfg, str):
             assert quant_cfg in QUANT_CFG_CHOICES, (
@@ -492,7 +493,6 @@ class OnnxLLMExporter(ITritonDeployable):
         logging.info("Starting quantization...")
         mtq.quantize(self.model, quant_cfg, forward_loop=forward_loop)
         logging.info("Quantization is completed.")
-        return self.model
 
     @property
     def get_model(self):
