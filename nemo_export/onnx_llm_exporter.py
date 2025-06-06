@@ -199,7 +199,7 @@ class OnnxLLMExporter(ITritonDeployable):
         opset: int = 20,
         dynamic_axes_input: Optional[dict] = None,
         dynamic_axes_output: Optional[dict] = None,
-        export_dtype: Union[torch.dtype, str] = "fp32",
+        export_dtype: Union[torch.dtype, str] = "fp16",
         verbose: bool = False,
     ):
         if example_inputs is None:
