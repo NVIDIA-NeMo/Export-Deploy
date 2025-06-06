@@ -83,8 +83,6 @@ class HFRayDeployable:
             ImportError: If Ray is not installed.
             Exception: If model initialization fails.
         """
-        if not use_ray:
-            raise ImportError("Ray is not installed")
         try:
             max_memory_dict = None
             self._setup_unique_distributed_parameters(device_map)

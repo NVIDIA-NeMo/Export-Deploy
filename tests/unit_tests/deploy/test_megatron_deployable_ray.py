@@ -22,17 +22,23 @@ import ray
 from ray import serve
 
 from nemo_deploy.deploy_ray import DeployRay
-from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable, ModelWorker
+from nemo_deploy.nlp.megatronllm_deployable_ray import (
+    MegatronRayDeployable,
+    ModelWorker,
+)
 
 
 # Fixtures for Ray cluster setup and model mocking
+
 
 @pytest.fixture(scope="session")
 def ray_cluster():
     """Setup a real Ray cluster for testing."""
     # Initialize Ray for testing
     if not ray.is_initialized():
-        ray.init(num_cpus=4, num_gpus=0, include_dashboard=False, ignore_reinit_error=True)
+        ray.init(
+            num_cpus=4, num_gpus=0, include_dashboard=False, ignore_reinit_error=True
+        )
 
     yield
 
@@ -53,7 +59,7 @@ def deploy_ray_instance(ray_cluster):
         num_cpus=2,
         num_gpus=0,  # Use CPU-only for testing
         include_dashboard=False,
-        ignore_reinit_error=True
+        ignore_reinit_error=True,
     )
 
     yield deploy_ray
@@ -84,13 +90,18 @@ def mock_nemo_checkpoint():
 @pytest.fixture
 def mock_megatron_model():
     """Mock the MegatronLLMDeployableNemo2 model to avoid loading real models."""
-    with patch("nemo_deploy.nlp.megatronllm_deployable_ray.MegatronLLMDeployableNemo2") as mock:
+    with patch(
+        "nemo_deploy.nlp.megatronllm_deployable_ray.MegatronLLMDeployableNemo2"
+    ) as mock:
         mock_instance = MagicMock()
 
         # Mock the ray_infer_fn method
         mock_instance.ray_infer_fn.return_value = {
             "sentences": ["Generated response 1", "Generated response 2"],
-            "log_probs": [[0.1, 0.2], [0.3, 0.4]],  # Use regular lists instead of numpy arrays
+            "log_probs": [
+                [0.1, 0.2],
+                [0.3, 0.4],
+            ],  # Use regular lists instead of numpy arrays
         }
 
         # Mock generate_other_ranks for non-rank-0 workers
@@ -103,16 +114,15 @@ def mock_megatron_model():
 @pytest.fixture
 def mock_environment_setup():
     """Mock environment variables and system calls."""
-    with patch.dict(os.environ, {}, clear=False), \
-            patch("torch.cuda.device_count") as mock_device_count, \
-            patch("time.sleep") as mock_sleep:
+    with (
+        patch.dict(os.environ, {}, clear=False),
+        patch("torch.cuda.device_count") as mock_device_count,
+        patch("time.sleep") as mock_sleep,
+    ):
         mock_device_count.return_value = 1
         mock_sleep.return_value = None
 
-        yield {
-            "device_count": mock_device_count,
-            "sleep": mock_sleep
-        }
+        yield {"device_count": mock_device_count, "sleep": mock_sleep}
 
 
 @pytest.fixture
@@ -130,7 +140,9 @@ def mock_model_worker(mock_megatron_model):
             # Create a mock model instead of loading real one
             self.model = mock_megatron_model.return_value
             # Initialize successfully
-            print(f"MockModelWorker initialized with args: {args[:2] if args else []}")  # Limit logging
+            print(
+                f"MockModelWorker initialized with args: {args[:2] if args else []}"
+            )  # Limit logging
 
         def infer(self, inputs):
             """Mock inference method that returns consistent results."""
@@ -138,9 +150,14 @@ def mock_model_worker(mock_megatron_model):
                 # Ensure we always return a valid response structure
                 result = {
                     "sentences": ["Generated response 1", "Generated response 2"],
-                    "log_probs": [[0.1, 0.2], [0.3, 0.4]],  # Use regular lists instead of numpy arrays
+                    "log_probs": [
+                        [0.1, 0.2],
+                        [0.3, 0.4],
+                    ],  # Use regular lists instead of numpy arrays
                 }
-                print(f"MockModelWorker.infer called with keys: {list(inputs.keys()) if inputs else []}")
+                print(
+                    f"MockModelWorker.infer called with keys: {list(inputs.keys()) if inputs else []}"
+                )
                 return result
             except Exception as e:
                 # Log but don't raise exceptions that might cause serialization issues
@@ -151,7 +168,9 @@ def mock_model_worker(mock_megatron_model):
                 }
 
     # Patch the original ModelWorker with our mock
-    with patch("nemo_deploy.nlp.megatronllm_deployable_ray.ModelWorker", MockModelWorker):
+    with patch(
+        "nemo_deploy.nlp.megatronllm_deployable_ray.ModelWorker", MockModelWorker
+    ):
         yield MockModelWorker
 
 
@@ -198,7 +217,12 @@ class TestMegatronRayDeployable:
         deploy_ray_instance.stop()
 
     def test_megatron_ray_deployable_initialization_single_gpu(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test basic initialization of MegatronRayDeployable with single GPU."""
         deployment_handle = MegatronRayDeployable.bind(
@@ -208,7 +232,7 @@ class TestMegatronRayDeployable:
             tensor_model_parallel_size=1,
             pipeline_model_parallel_size=1,
             context_parallel_size=1,
-            model_id="test-model"
+            model_id="test-model",
         )
 
         # Deploy the deployment
@@ -227,7 +251,12 @@ class TestMegatronRayDeployable:
         assert models_response["data"][0]["id"] == "test-model"
 
     def test_megatron_ray_deployable_initialization_multi_gpu(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test initialization with multiple GPUs."""
         deployment_handle = MegatronRayDeployable.bind(
@@ -237,7 +266,7 @@ class TestMegatronRayDeployable:
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=1,
             context_parallel_size=1,
-            model_id="test-multi-gpu-model"
+            model_id="test-multi-gpu-model",
         )
 
         # Deploy the deployment
@@ -251,7 +280,12 @@ class TestMegatronRayDeployable:
         assert health_response["status"] == "healthy"
 
     def test_megatron_ray_deployable_invalid_parallelism(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test initialization with invalid parallelism configuration."""
         deployment_handle = MegatronRayDeployable.bind(
@@ -260,7 +294,7 @@ class TestMegatronRayDeployable:
             num_nodes=1,
             tensor_model_parallel_size=2,  # This would require 2 GPUs
             pipeline_model_parallel_size=1,
-            context_parallel_size=1
+            context_parallel_size=1,
         )
 
         # This should fail when we try to deploy it
@@ -268,14 +302,19 @@ class TestMegatronRayDeployable:
             serve.run(deployment_handle, name="test-invalid-parallelism")
 
     def test_list_models_endpoint(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test list models endpoint."""
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
             num_nodes=1,
-            model_id="test-list-models"
+            model_id="test-list-models",
         )
 
         serve.run(deployment_handle, name="test-list-models-deployment")
@@ -290,14 +329,19 @@ class TestMegatronRayDeployable:
         assert "created" in response["data"][0]
 
     def test_health_check_endpoint(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test health check endpoint."""
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
             num_nodes=1,
-            model_id="test-health-model"
+            model_id="test-health-model",
         )
 
         serve.run(deployment_handle, name="test-health-deployment")
@@ -308,7 +352,12 @@ class TestMegatronRayDeployable:
         assert response["status"] == "healthy"
 
     def test_initialization_with_cuda_graphs(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test initialization with CUDA graphs enabled."""
         deployment_handle = MegatronRayDeployable.bind(
@@ -316,7 +365,7 @@ class TestMegatronRayDeployable:
             num_gpus=1,
             num_nodes=1,
             enable_cuda_graphs=True,
-            model_id="test-cuda-graphs-model"
+            model_id="test-cuda-graphs-model",
         )
 
         serve.run(deployment_handle, name="test-cuda-graphs-deployment")
@@ -327,7 +376,12 @@ class TestMegatronRayDeployable:
         assert health_response["status"] == "healthy"
 
     def test_initialization_with_flash_decode(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test initialization with Flash Decode enabled."""
         deployment_handle = MegatronRayDeployable.bind(
@@ -335,7 +389,7 @@ class TestMegatronRayDeployable:
             num_gpus=1,
             num_nodes=1,
             enable_flash_decode=True,
-            model_id="test-flash-decode-model"
+            model_id="test-flash-decode-model",
         )
 
         serve.run(deployment_handle, name="test-flash-decode-deployment")
@@ -346,7 +400,12 @@ class TestMegatronRayDeployable:
         assert health_response["status"] == "healthy"
 
     def test_initialization_with_legacy_checkpoint(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test initialization with legacy checkpoint format."""
         deployment_handle = MegatronRayDeployable.bind(
@@ -354,7 +413,7 @@ class TestMegatronRayDeployable:
             num_gpus=1,
             num_nodes=1,
             legacy_ckpt=True,
-            model_id="test-legacy-ckpt-model"
+            model_id="test-legacy-ckpt-model",
         )
 
         serve.run(deployment_handle, name="test-legacy-ckpt-deployment")
@@ -365,7 +424,12 @@ class TestMegatronRayDeployable:
         assert health_response["status"] == "healthy"
 
     def test_multi_node_initialization(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test initialization with multiple nodes."""
         deployment_handle = MegatronRayDeployable.bind(
@@ -375,7 +439,7 @@ class TestMegatronRayDeployable:
             tensor_model_parallel_size=4,
             pipeline_model_parallel_size=1,
             context_parallel_size=1,
-            model_id="test-multi-node-model"
+            model_id="test-multi-node-model",
         )
 
         serve.run(deployment_handle, name="test-multi-node-deployment")
@@ -385,7 +449,12 @@ class TestMegatronRayDeployable:
         assert health_response["status"] == "healthy"
 
     def test_pipeline_parallelism_initialization(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test initialization with pipeline parallelism."""
         deployment_handle = MegatronRayDeployable.bind(
@@ -395,7 +464,7 @@ class TestMegatronRayDeployable:
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=2,
             context_parallel_size=1,
-            model_id="test-pipeline-parallel-model"
+            model_id="test-pipeline-parallel-model",
         )
 
         serve.run(deployment_handle, name="test-pipeline-parallel-deployment")
@@ -405,7 +474,12 @@ class TestMegatronRayDeployable:
         assert health_response["status"] == "healthy"
 
     def test_context_parallelism_initialization(
-            self, mock_nemo_checkpoint, mock_model_worker, mock_environment_setup, ray_cluster, cleanup_serve
+        self,
+        mock_nemo_checkpoint,
+        mock_model_worker,
+        mock_environment_setup,
+        ray_cluster,
+        cleanup_serve,
     ):
         """Test initialization with context parallelism."""
         deployment_handle = MegatronRayDeployable.bind(
@@ -415,7 +489,7 @@ class TestMegatronRayDeployable:
             tensor_model_parallel_size=1,
             pipeline_model_parallel_size=1,
             context_parallel_size=2,
-            model_id="test-context-parallel-model"
+            model_id="test-context-parallel-model",
         )
 
         serve.run(deployment_handle, name="test-context-parallel-deployment")

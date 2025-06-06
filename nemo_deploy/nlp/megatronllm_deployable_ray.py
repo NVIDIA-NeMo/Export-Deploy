@@ -40,19 +40,19 @@ class ModelWorker:
     """
 
     def __init__(
-            self,
-            nemo_checkpoint_filepath: str,
-            rank: int,
-            world_size: int,
-            tensor_model_parallel_size: int,
-            pipeline_model_parallel_size: int,
-            context_parallel_size: int,
-            expert_model_parallel_size: int,
-            master_port: str,
-            replica_id: int = 0,
-            enable_cuda_graphs: bool = False,
-            enable_flash_decode: bool = False,
-            legacy_ckpt: bool = False
+        self,
+        nemo_checkpoint_filepath: str,
+        rank: int,
+        world_size: int,
+        tensor_model_parallel_size: int,
+        pipeline_model_parallel_size: int,
+        context_parallel_size: int,
+        expert_model_parallel_size: int,
+        master_port: str,
+        replica_id: int = 0,
+        enable_cuda_graphs: bool = False,
+        enable_flash_decode: bool = False,
+        legacy_ckpt: bool = False,
     ):
         # Use replica-specific environment variables to avoid conflicts
         os.environ["MASTER_PORT"] = master_port
@@ -66,9 +66,15 @@ class ModelWorker:
 
         # Use INFO level logging only for important initialization steps
         if rank == 0:  # Only log from rank 0 to reduce noise
-            LOGGER.info(f"Replica {replica_id} - Initializing workers for world_size={world_size}")
-            LOGGER.info(f"Replica {replica_id} - MASTER_PORT: {os.environ['MASTER_PORT']}")
-            LOGGER.info(f"Replica {replica_id} - MASTER_ADDR: {os.environ['MASTER_ADDR']}")
+            LOGGER.info(
+                f"Replica {replica_id} - Initializing workers for world_size={world_size}"
+            )
+            LOGGER.info(
+                f"Replica {replica_id} - MASTER_PORT: {os.environ['MASTER_PORT']}"
+            )
+            LOGGER.info(
+                f"Replica {replica_id} - MASTER_ADDR: {os.environ['MASTER_ADDR']}"
+            )
 
         try:
             self.model = MegatronLLMDeployableNemo2(
@@ -81,12 +87,14 @@ class ModelWorker:
                 context_parallel_size=context_parallel_size,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
-                legacy_ckpt=legacy_ckpt
+                legacy_ckpt=legacy_ckpt,
             )
             if rank != 0:
                 self.model.generate_other_ranks()
         except Exception as e:
-            LOGGER.error(f"Replica {replica_id} - Failed to initialize model for rank {rank}: {str(e)}")
+            LOGGER.error(
+                f"Replica {replica_id} - Failed to initialize model for rank {rank}: {str(e)}"
+            )
             raise
 
     def infer(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
@@ -96,9 +104,7 @@ class ModelWorker:
 
 @serve.deployment(
     num_replicas=1,
-    ray_actor_options={
-        "num_cpus": 8
-    },
+    ray_actor_options={"num_cpus": 8},
     max_ongoing_requests=32,
 )
 @serve.ingress(app)
@@ -110,18 +116,18 @@ class MegatronRayDeployable:
     """
 
     def __init__(
-            self,
-            nemo_checkpoint_filepath: str,
-            num_gpus: int = 1,
-            num_nodes: int = 1,
-            tensor_model_parallel_size: int = 1,
-            pipeline_model_parallel_size: int = 1,
-            context_parallel_size: int = 1,
-            expert_model_parallel_size: int = 1,
-            model_id: str = "nemo-model",
-            enable_cuda_graphs: bool = False,
-            enable_flash_decode: bool = False,
-            legacy_ckpt: bool = False
+        self,
+        nemo_checkpoint_filepath: str,
+        num_gpus: int = 1,
+        num_nodes: int = 1,
+        tensor_model_parallel_size: int = 1,
+        pipeline_model_parallel_size: int = 1,
+        context_parallel_size: int = 1,
+        expert_model_parallel_size: int = 1,
+        model_id: str = "nemo-model",
+        enable_cuda_graphs: bool = False,
+        enable_flash_decode: bool = False,
+        legacy_ckpt: bool = False,
     ):
         """Initialize the distributed Megatron LLM model deployment.
 
@@ -144,7 +150,11 @@ class MegatronRayDeployable:
             world_size = num_gpus * num_nodes
 
             # Validate parallelism configuration
-            total_parallel_size = tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size
+            total_parallel_size = (
+                tensor_model_parallel_size
+                * pipeline_model_parallel_size
+                * context_parallel_size
+            )
             if total_parallel_size != world_size:
                 raise ValueError(
                     f"Total parallelism size ({total_parallel_size}) must equal total GPUs per replica ({world_size})"
@@ -156,8 +166,14 @@ class MegatronRayDeployable:
             # Pre-allocate master port to avoid race conditions between workers
             # Use replica-specific port to avoid conflicts between replicas
             base_port = 29500 + (replica_id % 100) * 100
-            master_port = str(find_available_port(base_port, ray._private.services.get_node_ip_address()))
-            LOGGER.info(f"Replica {replica_id} - Pre-allocated master port: {master_port}")
+            master_port = str(
+                find_available_port(
+                    base_port, ray._private.services.get_node_ip_address()
+                )
+            )
+            LOGGER.info(
+                f"Replica {replica_id} - Pre-allocated master port: {master_port}"
+            )
 
             # Create workers with proper synchronization for distributed initialization
             # Rank 0 must be created first as it acts as the master in PyTorch distributed
@@ -176,7 +192,7 @@ class MegatronRayDeployable:
                 replica_id=replica_id,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
-                legacy_ckpt=legacy_ckpt
+                legacy_ckpt=legacy_ckpt,
             )
             worker_futures.append(rank_0_worker)
 
@@ -204,12 +220,16 @@ class MegatronRayDeployable:
 
             # Wait for all workers to be created and store them
             self.workers = worker_futures
-            LOGGER.info(f"Replica {replica_id} - All {world_size} workers created successfully")
+            LOGGER.info(
+                f"Replica {replica_id} - All {world_size} workers created successfully"
+            )
 
             # Primary worker for coordinating inference
             self.primary_worker = self.workers[0]
 
-            LOGGER.info(f"Replica {replica_id} - Initialized {world_size} model workers across {num_nodes} nodes")
+            LOGGER.info(
+                f"Replica {replica_id} - Initialized {world_size} model workers across {num_nodes} nodes"
+            )
 
         except Exception as e:
             LOGGER.error(f"Error initializing distributed model deployment: {str(e)}")
@@ -224,7 +244,9 @@ class MegatronRayDeployable:
             temperature = request.get("temperature", 0.0)
             top_p = request.get("top_p", 0.0)
             if temperature == 0.0 and top_p == 0.0:
-                LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
+                LOGGER.warning(
+                    "Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling."
+                )
                 request["top_k"] = 1.0
 
             # Prepare inference inputs with proper parameter mapping
@@ -271,8 +293,11 @@ class MegatronRayDeployable:
                             else None
                         ),
                         "finish_reason": (
-                            "length" if generated_texts and len(generated_texts[0]) >= request.get('max_tokens',
-                                                                                                   256) else "stop"
+                            "length"
+                            if generated_texts
+                            and len(generated_texts[0])
+                            >= request.get("max_tokens", 256)
+                            else "stop"
                         ),
                     }
                 ],
@@ -285,20 +310,24 @@ class MegatronRayDeployable:
             return output
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Error during inference: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Error during inference: {str(e)}"
+            )
 
     @app.post("/v1/chat/completions/")
     async def chat_completions(self, request: Dict[Any, Any]):
         """Handle chat completion requests."""
         try:
             # Extract parameters from the request dictionary
-            messages = request.get('messages', [])
+            messages = request.get("messages", [])
 
             # Prepare inference parameters
             # For chat templates, we need to pass the entire messages list as a single prompt
             # so that apply_chat_template receives the full conversation context
             inference_inputs = {
-                "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
+                "prompts": [
+                    messages
+                ],  # Wrap messages in a list so apply_chat_template gets the full conversation
                 "max_length": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
@@ -330,7 +359,10 @@ class MegatronRayDeployable:
                 "model": self.model_id,
                 "choices": [
                     {
-                        "message": {"role": "assistant", "content": generated_texts[0] if generated_texts else ""},
+                        "message": {
+                            "role": "assistant",
+                            "content": generated_texts[0] if generated_texts else "",
+                        },
                         "index": 0,
                         "logprobs": (
                             {
@@ -341,8 +373,11 @@ class MegatronRayDeployable:
                             else None
                         ),
                         "finish_reason": (
-                            "length" if generated_texts and len(generated_texts[0]) >= inference_inputs[
-                                "max_length"] else "stop"
+                            "length"
+                            if generated_texts
+                            and len(generated_texts[0])
+                            >= inference_inputs["max_length"]
+                            else "stop"
                         ),
                     }
                 ],
@@ -355,18 +390,16 @@ class MegatronRayDeployable:
             return output
         except Exception as e:
             LOGGER.error(f"Error during chat completion: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Error during chat completion: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Error during chat completion: {str(e)}"
+            )
 
     @app.get("/v1/models")
     async def list_models(self):
         """List available models."""
         return {
             "data": [
-                {
-                    "id": self.model_id,
-                    "object": "model",
-                    "created": int(time.time())
-                }
+                {"id": self.model_id, "object": "model", "created": int(time.time())}
             ],
             "object": "list",
         }

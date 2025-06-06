@@ -77,7 +77,7 @@ from tensorrt_llm.plugin import PluginConfig
 from transformers import PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
-from nemo_export.tarutils import TarPath, unpack_tarball
+from nemo_export.tarutils import unpack_tarball
 from nemo_export.trt_llm.converter.model_converter import (
     determine_quantization_settings,
     model_to_trtllm_ckpt,
@@ -111,7 +111,6 @@ from nemo_export.trt_llm.tensorrt_llm_run import (
 )
 from nemo_export.trt_llm.utils import is_rank
 from nemo_export.utils import (
-    is_nemo_tarfile,
     prepare_directory_for_export,
     torch_dtype_from_precision,
 )
