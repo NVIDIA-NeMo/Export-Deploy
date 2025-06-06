@@ -6,7 +6,7 @@
     },
     "megatron-lm": {
       "repo": "https://github.com/NVIDIA/Megatron-LM.git",
-      "ref": "ff64f962d39988609dd5699bcfbef23d4f244ec1"
+      "ref": "4eb36f878a48bfaed10c5619f4970cc3587cf4af"
     },
     "nemo": {
       "repo": "https://github.com/NVIDIA/NeMo.git",
