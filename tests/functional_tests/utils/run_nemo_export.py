@@ -89,7 +89,7 @@ class AccuracyResult:
     evaluation_time: float
 
 
-def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
+def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
     # lambada dataset based accuracy test, which includes more than 5000 sentences.
     # Use generated last token with original text's last token for accuracy comparison.
     # If the generated last token start with the original token, trtllm_correct make an increment.
@@ -134,7 +134,6 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
                         top_k=1,
                         top_p=0,
                         temperature=0.1,
-                        task_ids=task_ids,
                         lora_uids=lora_uids,
                     )
                     model_output = model_output[0][0].strip().lower()
@@ -169,11 +168,10 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
                 else:
                     deployed_output = nq.query_llm(
                         prompts=[prompt],
-                        max_output_len=1,
+                        max_length=1,
                         top_k=1,
                         top_p=0,
                         temperature=0.1,
-                        task_id=task_ids,
                     )
                     deployed_output = deployed_output[0][0].strip().lower()
 
@@ -237,8 +235,6 @@ def run_inference(
     max_output_len=128,
     max_num_tokens=None,
     use_parallel_embedding=False,
-    ptuning=False,
-    p_tuning_checkpoint=None,
     lora=False,
     lora_checkpoint=None,
     tp_size=1,
@@ -290,20 +286,7 @@ def run_inference(
                 )
             )
 
-        prompt_embeddings_checkpoint_path = None
         task_ids = None
-        max_prompt_embedding_table_size = 0
-
-        if ptuning:
-            if Path(p_tuning_checkpoint).exists():
-                prompt_embeddings_checkpoint_path = p_tuning_checkpoint
-                max_prompt_embedding_table_size = 8192
-                task_ids = ["0"]
-                if debug:
-                    print("---- PTuning enabled.")
-            else:
-                print("---- PTuning could not be enabled and skipping the test.")
-                return (None, None)
 
         lora_ckpt_list = None
         lora_uids = None
@@ -356,7 +339,6 @@ def run_inference(
                     max_seq_len=(max_input_len + max_output_len),
                     max_batch_size=max_batch_size,
                     use_parallel_embedding=use_parallel_embedding,
-                    max_prompt_embedding_table_size=max_prompt_embedding_table_size,
                     use_lora_plugin=use_lora_plugin,
                     lora_target_modules=lora_target_modules,
                     max_num_tokens=max_num_tokens,
@@ -366,19 +348,12 @@ def run_inference(
                     **trt_llm_export_kwargs,
                 )
 
-        if ptuning:
-            exporter.add_prompt_table(
-                task_name="0",
-                prompt_embeddings_checkpoint_path=prompt_embeddings_checkpoint_path,
-            )
-
         output = exporter.forward(
             input_texts=prompts,
             max_output_len=max_output_len,
             top_k=top_k,
             top_p=top_p,
             temperature=temperature,
-            task_ids=task_ids,
             lora_uids=lora_uids,
             streaming=streaming,
             stop_words_list=stop_words_list,
@@ -397,7 +372,7 @@ def run_inference(
                 functional_result.regular_pass = False
 
         output_cpp = ""
-        if test_cpp_runtime and not use_lora_plugin and not ptuning and not use_vllm:
+        if test_cpp_runtime and not use_lora_plugin and not use_vllm:
             # This may cause OOM for large models as it creates 2nd instance of a model
             exporter_cpp = TensorRTLLM(
                 model_dir,
@@ -471,7 +446,7 @@ def run_inference(
         if run_accuracy:
             print("Start model accuracy testing ...")
             accuracy_result = get_accuracy_with_lambada(
-                exporter, nq, task_ids, lora_uids, test_data_path
+                exporter, nq, lora_uids, test_data_path
             )
 
         if test_deployment:
@@ -549,7 +524,7 @@ def run_in_framework_inference(
             print("Start model accuracy testing ...")
             # This script is not written with torch.distributed support in mind, so running non-deployed in-framework models on multiple devices will not work
             accuracy_result = get_accuracy_with_lambada(
-                deployed_model, nq, None, None, test_data_path
+                deployed_model, nq, None, test_data_path
             )
 
         nm.stop()
@@ -626,11 +601,6 @@ def get_args():
     parser.add_argument(
         "--p_tuning_checkpoint",
         type=str,
-    )
-    parser.add_argument(
-        "--ptuning",
-        type=str,
-        default="False",
     )
     parser.add_argument(
         "--lora_checkpoint",
@@ -781,7 +751,6 @@ def get_args():
         "enable_flash_decode", args.enable_flash_decode
     )
     args.lora = str_to_bool("lora", args.lora)
-    args.ptuning = str_to_bool("ptuning", args.ptuning)
     args.use_parallel_embedding = str_to_bool(
         "use_parallel_embedding", args.use_parallel_embedding
     )
@@ -805,11 +774,6 @@ def run_inference_tests(args):
 
     if args.in_framework and not in_framework_supported:
         raise UsageError("In-framework inference is not supported in this environment.")
-
-    if args.use_vllm and (args.ptuning or args.lora):
-        raise UsageError(
-            "The vLLM integration currently does not support P-tuning or LoRA."
-        )
 
     if args.test_deployment and not triton_supported:
         raise UsageError(
@@ -873,8 +837,6 @@ def run_inference_tests(args):
                 max_output_len=args.max_output_len,
                 max_num_tokens=args.max_num_tokens,
                 use_parallel_embedding=args.use_parallel_embedding,
-                ptuning=args.ptuning,
-                p_tuning_checkpoint=args.p_tuning_checkpoint,
                 lora=args.lora,
                 lora_checkpoint=args.lora_checkpoint,
                 top_k=args.top_k,
