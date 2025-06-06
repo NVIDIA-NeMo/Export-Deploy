@@ -475,12 +475,12 @@ class OnnxLLMExporter(ITritonDeployable):
         quant_cfg: Union[str, Dict[str, Any]],
         forward_loop: Optional[Callable],
     ) -> None:
-        """Quantize model by calibrating it using a given forward loop.
+        """Quantize the model by calibrating it using a given forward loop.
 
         Args:
-            quant_cfg (str, dict): Quantization type to use.
-            forward_loop (callable): A fcuntion that accepts the model as a single parameter
-                and runs sample data though it. This is used for calibration during quantization.
+            quant_cfg (str or dict): The quantization configuration to use.
+            forward_loop (callable): A function that accepts the model as a single parameter
+                and runs sample data through it. This is used for calibration during quantization.
         """
         if isinstance(quant_cfg, str):
             assert quant_cfg in QUANT_CFG_CHOICES, (
