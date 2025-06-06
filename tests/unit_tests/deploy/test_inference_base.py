@@ -199,7 +199,7 @@ class TestInferenceBase(unittest.TestCase):
         # Verify calls
         mock_ckpt_to_weights.assert_called_once_with(self.mock_path, is_saving=False)
         mock_load_shards.assert_called_once_with(
-            self.mock_model_list, self.mock_weights_dir
+            self.mock_model_list, self.mock_weights_dir, False
         )
 
     @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
