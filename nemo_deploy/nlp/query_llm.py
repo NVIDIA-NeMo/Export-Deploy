@@ -15,16 +15,10 @@
 import time
 from abc import ABC
 from typing import List, Optional
-
 import numpy as np
 
 from nemo_deploy.utils import str_list2numpy
-
-use_pytriton = True
-try:
-    from pytriton.client import DecoupledModelClient, ModelClient
-except Exception:
-    use_pytriton = False
+from pytriton.client import DecoupledModelClient, ModelClient
 
 
 class NemoQueryLLMBase(ABC):
@@ -342,7 +336,6 @@ class NemoQueryLLM(NemoQueryLLMBase):
         top_p=None,
         temperature=None,
         random_seed=None,
-        task_id=None,
         lora_uids=None,
         use_greedy: bool = None,
         repetition_penalty: float = None,
@@ -367,7 +360,6 @@ class NemoQueryLLM(NemoQueryLLMBase):
             stop_words_list (List(str)): list of stop words.
             bad_words_list (List(str)): list of bad words.
             no_repeat_ngram_size (int): no repeat ngram size.
-            task_id (str): downstream task id if virtual tokens are used.
             init_timeout (flat): timeout for the connection.
             openai_format_response: return response similar to OpenAI API format
             output_generation_logits: return generation logits from model on PyTriton
@@ -407,10 +399,6 @@ class NemoQueryLLM(NemoQueryLLMBase):
             inputs["no_repeat_ngram_size"] = np.full(
                 prompts.shape, no_repeat_ngram_size, dtype=np.single
             )
-
-        if task_id is not None:
-            task_id = np.char.encode(task_id, "utf-8")
-            inputs["task_id"] = np.full((prompts.shape[0], len([task_id])), task_id)
 
         if lora_uids is not None:
             lora_uids = np.char.encode(lora_uids, "utf-8")
@@ -496,7 +484,6 @@ class NemoQueryLLM(NemoQueryLLMBase):
         top_p=0.0,
         temperature=1.0,
         random_seed=None,
-        task_id=None,
         lora_uids=None,
         init_timeout=60.0,
     ):
@@ -512,7 +499,6 @@ class NemoQueryLLM(NemoQueryLLMBase):
             stop_words_list (List(str)): list of stop words.
             bad_words_list (List(str)): list of bad words.
             no_repeat_ngram_size (int): no repeat ngram size.
-            task_id (str): downstream task id if virtual tokens are used.
             init_timeout (flat): timeout for the connection.
         """
         prompts = str_list2numpy(prompts)
@@ -551,10 +537,6 @@ class NemoQueryLLM(NemoQueryLLMBase):
             inputs["no_repeat_ngram_size"] = np.full(
                 prompts.shape, no_repeat_ngram_size, dtype=np.single
             )
-
-        if task_id is not None:
-            task_id = np.char.encode(task_id, "utf-8")
-            inputs["task_id"] = np.full((prompts.shape[0], len([task_id])), task_id)
 
         if lora_uids is not None:
             lora_uids = np.char.encode(lora_uids, "utf-8")

@@ -89,7 +89,7 @@ def _load_dist_shards_into_model(
         sharded_state_dict=sharded_state_dict,
         checkpoint_dir=str(weights_dir),
         sharded_strategy=load_strategy,
-        strict=strict
+        strict=strict,
     )
 
     # Normal torch `load_state_dict()` still required for non-sharded
@@ -165,9 +165,7 @@ def peel(m: torch.nn.Module) -> torch.nn.Module:
 
 
 def load_nemo_checkpoint_to_tron_model(
-    model: List[MegatronModule],
-    path: Path,
-    legacy_ckpt: bool = False
+    model: List[MegatronModule], path: Path, legacy_ckpt: bool = False
 ) -> None:
     """Load NeMo checkpoint weights into a Tron model.
 
@@ -192,7 +190,7 @@ def setup_model_and_tokenizer_for_inference(
     micro_batch_size: Optional[int] = None,
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
-    legacy_ckpt: bool = False
+    legacy_ckpt: bool = False,
 ) -> Tuple[List[MegatronModule], MCoreTokenizerWrappper]:
     """Initialize a Megatron-Core model and tokenizer for inference from a NeMo-2.0 checkpoint.
 
@@ -344,7 +342,7 @@ def create_mcore_engine(
     expert_model_parallel_size: Optional[int] = None,
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
-    legacy_ckpt: bool = False
+    legacy_ckpt: bool = False,
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, MCoreTokenizerWrappper]:
     """Set up the model, tokenizer and MCoreEngine for inference.
 
@@ -428,7 +426,7 @@ def create_mcore_engine(
         params_dtype=params_dtype,
         enable_flash_decode=enable_flash_decode,
         enable_cuda_graphs=enable_cuda_graphs,
-        legacy_ckpt=legacy_ckpt
+        legacy_ckpt=legacy_ckpt,
     )
     model = modelList[0]
     vocab_size = None
