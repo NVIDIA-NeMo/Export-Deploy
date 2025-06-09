@@ -767,7 +767,7 @@ class TensorRTLLM(ITritonDeployable):
 
         if len(config.architectures) != 1:
             raise ValueError(
-                f"Ambigous architecture choice: {config.architectures}, please specify model_type explicitly."
+                f"Ambiguous architecture choice: {config.architectures}, please specify model_type explicitly."
             )
 
         return config.architectures[0]

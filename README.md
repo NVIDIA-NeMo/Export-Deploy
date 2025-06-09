@@ -208,7 +208,6 @@ nm.serve()
 from nemo_deploy import DeployPyTriton
 from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
-
 # Export multimodal model
 exporter = TensorRTMMExporter(model_dir="/path/to/export/dir", modality="vision")
 exporter.export(
