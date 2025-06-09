@@ -75,7 +75,7 @@ from tensorrt_llm.models import (
     WhisperEncoder,
 )
 from tensorrt_llm.plugin import PluginConfig
-from transformers import PreTrainedTokenizerBase
+from transformers import AutoConfig, PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
 from nemo_export.tarutils import TarPath, unpack_tarball
@@ -664,6 +664,9 @@ class TensorRTLLM(ITritonDeployable):
             ValueError: If model_type is not supported or dtype cannot be determined
         """
         LOGGER.info("Starting HF export to TRT-LLM")
+        if model_type is None:
+            model_type = self.get_hf_model_type(hf_model_path)
+
         if model_type not in self.get_supported_hf_model_mapping:
             raise ValueError(
                 f"Model {model_type} is not currently a supported model type. "
@@ -750,6 +753,24 @@ class TensorRTLLM(ITritonDeployable):
         LOGGER.info(f"Generarated TRT-LLM checkpoint at dir:{self.model_dir}")
         LOGGER.info(f"Loading the TRT-LLM checkpoint:{self.model_dir}")
         self._load()
+
+    def get_hf_model_type(self, model_dir: str) -> str:
+        """Infer the HuggingFace model_type from the 'architectures' field in config.json.
+
+        Args:
+            model_dir (str): Path to the HuggingFace model directory or model id at Hugging Face Hub
+
+        Returns:
+            str: The inferred model_type (e.g., "LlamaForCausalLM")
+        """
+        config = AutoConfig.from_pretrained(model_dir)
+
+        if len(config.architectures) != 1:
+            raise ValueError(
+                f"Ambigous architecture choice: {config.architectures}, please specify model_type explicitly."
+            )
+
+        return config.architectures[0]
 
     def get_hf_model_dtype(self, model_dir: str) -> Optional[str]:
         """Read the config file from a Hugging Face model directory and identify the model's data type.

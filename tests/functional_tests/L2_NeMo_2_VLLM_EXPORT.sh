@@ -24,7 +24,6 @@ python tests/functional_tests/utils/test_hf_import.py \
   --min_tps 1 \
   --max_tps 1 \
   --use_vllm True \
-  --model_type llama \
   --max_output_len 128 \
   --test_deployment True \
   --model_name nemo2_ckpt \

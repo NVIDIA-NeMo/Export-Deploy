@@ -72,20 +72,19 @@ The following examples demonstrate how to export and deploy Large Language Model
 Please note that Llama models require special access permissions from Meta. To use Llama models, you must first accept Meta's license agreement and obtain access credentials. For instructions on obtaining access, please refer to the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) below.
 
 ```python
-from nemo.export.tensorrt_llm import TensorRTLLM
-from nemo.deploy import DeployPyTriton
+from nemo_export.tensorrt_llm import TensorRTLLM
+from nemo_deploy import DeployPyTriton
 
 # Export model to TensorRT-LLM
-trt_llm_exporter = TensorRTLLM(model_dir="/tmp/hf_llama32_1B_hf")
-trt_llm_exporter.export_hf_model(
-    hf_model_path="hf://meta-llama/Llama-3.2-1B",
-    model_type="llama",
+exporter = TensorRTLLM(model_dir="/tmp/hf_llama32_1B_hf")
+exporter.export_hf_model(
+    hf_model_path="/opt/checkpoints/hf_llama32_1B_hf",
     tensor_parallelism_size=1,
 )
 
 # Generate output
 output = exporter.forward(
-    input_text=["What is the color of a banana? "], 
+    input_texts=["What is the color of a banana?"],
     top_k=1,
     top_p=0.0,
     temperature=1.0,
@@ -94,7 +93,7 @@ output = exporter.forward(
 print("output: ", output)
 
 # Deploy to Triton
-nm = DeployPyTriton(model=trt_llm_exporter, triton_model_name="llama", http_port=8000)
+nm = DeployPyTriton(model=exporter, triton_model_name="llama", http_port=8000)
 nm.deploy()
 nm.serve()
 ```
@@ -106,20 +105,19 @@ After running the code above, Triton Inference Server will start and begin servi
 Before running the example below, ensure you have a NeMo checkpoint file. If you don't have a checkpoint yet, see the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) for step-by-step instructions on creating one.
 
 ```python
-from nemo.export.tensorrt_llm import TensorRTLLM
-from nemo.deploy import DeployPyTriton
+from nemo_export.tensorrt_llm import TensorRTLLM
+from nemo_deploy import DeployPyTriton
 
 # Export model to TensorRT-LLM
-trt_llm_exporter = TensorRTLLM(model_dir="/tmp/hf_llama32_1B_nemo2")
-trt_llm_exporter.export(
-    nemo_checkpoint_path="/opt/checkpoints/hf_llama32_1B_nemo2",    
-    model_type="llama",
+exporter = TensorRTLLM(model_dir="/tmp/hf_llama32_1B_nemo2")
+exporter.export(
+    nemo_checkpoint_path="/opt/checkpoints/hf_llama32_1B_nemo2",
     tensor_parallelism_size=1,
 )
 
 # Generate output
 output = exporter.forward(
-    input_text=["What is the color of a banana? "], 
+    input_texts=["What is the color of a banana?"],
     top_k=1,
     top_p=0.0,
     temperature=1.0,
@@ -128,7 +126,7 @@ output = exporter.forward(
 print("output: ", output)
 
 # Deploy to Triton
-nm = DeployPyTriton(model=trt_llm_exporter, triton_model_name="llama", http_port=8000)
+nm = DeployPyTriton(model=exporter, triton_model_name="llama", http_port=8000)
 nm.deploy()
 nm.serve()
 ```
@@ -136,20 +134,20 @@ nm.serve()
 #### Export NeMo Models vLLM and Deploy using Triton Inference Server
 
 ```python
-from nemo.export.vllm_exporter import vLLMExporter
-from nemo.deploy import DeployPyTriton
+from nemo_export.vllm_exporter import vLLMExporter
+from nemo_deploy import DeployPyTriton
 
 # Export model to vLLM
 exporter = vLLMExporter()
 exporter.export(
     nemo_checkpoint="/opt/checkpoints/hf_llama32_1B_nemo2",
-    model_type="llama",
+    model_dir="/tmp/hf_llama32_1B_nemo2",
     tensor_parallel_size=1,
 )
 
 # Generate output
 output = exporter.forward(
-    input_text=["What is the color of a banana? "], 
+    input_texts=["What is the color of a banana?"],
     top_k=1,
     top_p=0.0,
     temperature=1.0,
@@ -168,12 +166,13 @@ nm.serve()
 You can also deploy NeMo and Hugging Face models directly using Triton Inference Server without exporting to inference optimized libraries like TensorRT-LLM or vLLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
 
 ```python
+from nemo_deploy import DeployPyTriton
 from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 
 model = MegatronLLMDeployableNemo2(
+    nemo_checkpoint_filepath="/opt/checkpoints/hf_llama32_1B_nemo2",
     num_devices=1,
     num_nodes=1,
-    nemo_checkpoint_filepath="/opt/checkpoints/hf_llama32_1B_nemo2",    
 )
 
 # Deploy to Triton
@@ -187,11 +186,12 @@ nm.serve()
 You can also deploy NeMo and Hugging Face models directly using Triton Inference Server without exporting to inference optimized libraries like TensorRT-LLM or vLLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
 
 ```python
-from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
+from nemo_deploy import DeployPyTriton
+from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
 
 model = HuggingFaceLLMDeploy(
-    hf_model_id_path="hf://meta-llama/Llama-3.2-1B",    
-    device_map="auto,
+    hf_model_id_path="hf://meta-llama/Llama-3.2-1B",
+    device_map="auto",
 )
 
 # Deploy to Triton
@@ -205,8 +205,9 @@ nm.serve()
 #### Export NeMo Multimodal Models to TensorRT-LLM and Deploy using Triton Inference Server
 
 ```python
-from nemo.export.tensorrt_mm_exporter import TensorRTMMExporter
-from nemo.deploy import DeployPyTriton
+from nemo_deploy import DeployPyTriton
+from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
 
 # Export multimodal model
 exporter = TensorRTMMExporter(model_dir="/path/to/export/dir", modality="vision")
@@ -228,12 +229,12 @@ nm.serve()
 #### Query LLM Model
 
 ```python
-from nemo.deploy import NemoQueryLLM
+from nemo_deploy.nlp import NemoQueryLLM
 
 nq = NemoQueryLLM(url="localhost:8000", model_name="llama")
 output = nq.query_llm(
     prompts=["What is the capital of France?"],
-    max_output_len=100
+    max_output_len=100,
 )
 print(output)
 ```
@@ -241,13 +242,13 @@ print(output)
 #### Query Multimodal Model
 
 ```python
-from nemo.deploy.multimodal import NemoQueryMultimodal
+from nemo_deploy.multimodal import NemoQueryMultimodal
 
 nq = NemoQueryMultimodal(url="localhost:8000", model_name="neva", model_type="neva")
 output = nq.query(
     input_text="What is in this image?",
     input_media="/path/to/image.jpg",
-    max_output_len=30
+    max_output_len=30,
 )
 print(output)
 ```
@@ -282,8 +283,8 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
    if __name__ == "__main__":
        import_ckpt(
            model=LlamaModel(Llama32Config1B()),
-           source='hf://meta-llama/Llama-3.2-1B',
-           output_path=Path('/opt/checkpoints/hf_llama32_1B_nemo2')
+           source="hf://meta-llama/Llama-3.2-1B",
+           output_path=Path("/opt/checkpoints/hf_llama32_1B_nemo2"),
        )
 
 ## Installation
