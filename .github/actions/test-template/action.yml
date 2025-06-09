@@ -188,7 +188,7 @@ runs:
           set -e
 
           docker exec -t nemo_container_${{ github.run_id }} bash -c '\
-            uv pip install -e --no-deps . && \
+            uv pip install -e . && \
             bash tests/${{ inputs.is_unit_test == 'true' && 'unit_tests' || 'functional_tests' }}/${{ inputs.script }}.sh && \
             echo "Finished successfully." || echo "Did not finish."'
         ) 2>&1 | tee err.log
