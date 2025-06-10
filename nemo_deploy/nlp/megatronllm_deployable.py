@@ -375,6 +375,10 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
         # Format output for triton
         output_infer["sentences"] = cast_output(output_infer["sentences"], np.bytes_)
+        if "top_logprobs" in output_infer.keys():
+            output_infer["top_logprobs"] = cast_output(
+                output_infer["top_logprobs"], np.bytes_
+            )
         return output_infer
 
     def _infer_fn(
@@ -490,9 +494,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 # TODO: if echo=True add top_logprobs for input tokens once supported
                 top_n_lp = dict_to_str(r.generated_top_n_logprobs)
                 output_top_n_log_probs.append(top_n_lp)
-            output_infer["top_logprobs"] = cast_output(
-                output_top_n_log_probs, np.bytes_
-            )
+            output_infer["top_logprobs"] = output_top_n_log_probs
 
         return output_infer
 

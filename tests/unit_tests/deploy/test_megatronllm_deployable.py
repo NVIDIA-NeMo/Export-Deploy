@@ -230,7 +230,7 @@ def test_infer_fn_basic(deployable):
         mock_remove_eos.return_value = ["Generated text 1", "Generated text 2"]
 
         # Test without log probabilities
-        output_texts, output_log_probs = deployable._infer_fn(
+        output_infer = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
             top_k=1,
@@ -240,8 +240,8 @@ def test_infer_fn_basic(deployable):
             apply_chat_template=False,
         )
 
-        assert output_texts == ["Generated text 1", "Generated text 2"]
-        assert output_log_probs is None
+        assert output_infer["sentences"] == ["Generated text 1", "Generated text 2"]
+        assert not "log_probs" in output_infer.keys()
 
         # Verify generate was called with correct parameters
         mock_generate.assert_called_once()
@@ -283,7 +283,7 @@ def test_infer_fn_with_log_probs(deployable):
         mock_tensor.return_value = mock_tensor_instance
 
         # Test with log probabilities
-        output_texts, output_log_probs = deployable._infer_fn(
+        output_infer = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
             top_k=1,
@@ -293,9 +293,9 @@ def test_infer_fn_with_log_probs(deployable):
             apply_chat_template=False,
         )
 
-        assert output_texts == ["Generated text"]
-        assert output_log_probs is not None
-        assert len(output_log_probs) == 1
+        assert output_infer["sentences"] == ["Generated text"]
+        assert "log_probs" in output_infer.keys()
+        assert len(output_infer["log_probs"]) == 1
 
         # Verify torch.tensor was called with log probs
         mock_tensor.assert_called_once_with([0.1, 0.2, 0.3])
@@ -319,7 +319,7 @@ def test_infer_fn_with_chat_template(deployable):
         mock_remove_eos.return_value = ["Generated response"]
 
         # Test with chat template
-        output_texts, output_log_probs = deployable._infer_fn(
+        output_infer = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
             top_k=1,
@@ -329,8 +329,8 @@ def test_infer_fn_with_chat_template(deployable):
             apply_chat_template=True,
         )
 
-        assert output_texts == ["Generated response"]
-        assert output_log_probs is None
+        assert output_infer["sentences"] == ["Generated response"]
+        assert not "log_probs" in output_infer.keys()
 
         # Verify chat template was applied
         mock_apply_template.assert_called_once_with(
@@ -364,7 +364,7 @@ def test_infer_fn_with_distributed(deployable):
         mock_remove_eos.return_value = ["Generated text", "Generated text"]
 
         # Test with distributed setup
-        output_texts, output_log_probs = deployable._infer_fn(
+        output_infer = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
             top_k=1,
@@ -374,8 +374,8 @@ def test_infer_fn_with_distributed(deployable):
             apply_chat_template=False,
         )
 
-        assert output_texts == ["Generated text", "Generated text"]
-        assert output_log_probs is None
+        assert output_infer["sentences"] == ["Generated text", "Generated text"]
+        assert not "log_probs" in output_infer.keys()
 
         # Verify distributed operations were called
         mock_broadcast.assert_called_once()
@@ -410,7 +410,7 @@ def test_infer_fn_empty_log_probs(deployable):
         mock_tensor.return_value = mock_tensor_instance
 
         # Test with log probabilities but empty results
-        output_texts, output_log_probs = deployable._infer_fn(
+        output_infer = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
             top_k=1,
@@ -420,10 +420,10 @@ def test_infer_fn_empty_log_probs(deployable):
             apply_chat_template=False,
         )
 
-        assert output_texts == ["Generated text"]
-        assert output_log_probs is not None
+        assert output_infer["sentences"] == ["Generated text"]
+        assert "log_probs" in output_infer.keys()
         # When log probs are empty, should default to [0]
-        assert len(output_log_probs) == 1
+        assert len(output_infer["log_probs"]) == 1
 
 
 @pytest.mark.run_only_on("GPU")
@@ -441,10 +441,11 @@ def test_ray_infer_fn_basic(deployable):
 
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
-        mock_infer_fn.return_value = (["Generated text 1", "Generated text 2"], None)
+        mock_infer_fn.return_value = {
+            "sentences": ["Generated text 1", "Generated text 2"]
+        }
 
         result = deployable.ray_infer_fn(inputs)
-
         assert result == {"sentences": ["Generated text 1", "Generated text 2"]}
 
         # Verify _infer_fn was called with correct parameters
@@ -456,6 +457,9 @@ def test_ray_infer_fn_basic(deployable):
             num_tokens_to_generate=256,
             log_probs=False,
             apply_chat_template=False,
+            text_only=True,
+            top_logprobs=0,
+            echo=False,
         )
 
 
@@ -466,7 +470,7 @@ def test_ray_infer_fn_with_defaults(deployable):
 
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
-        mock_infer_fn.return_value = (["Generated text"], None)
+        mock_infer_fn.return_value = {"sentences": ["Generated text"]}
 
         result = deployable.ray_infer_fn(inputs)
 
@@ -481,6 +485,9 @@ def test_ray_infer_fn_with_defaults(deployable):
             num_tokens_to_generate=256,  # default
             log_probs=False,  # default
             apply_chat_template=False,  # default
+            text_only=True,
+            top_logprobs=0,
+            echo=False,
         )
 
 
@@ -492,7 +499,10 @@ def test_ray_infer_fn_with_log_probs(deployable):
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
         mock_log_probs = np.array([[0.1, 0.2, 0.3]])
-        mock_infer_fn.return_value = (["Generated text"], mock_log_probs)
+        mock_infer_fn.return_value = {
+            "sentences": ["Generated text"],
+            "log_probs": mock_log_probs,
+        }
 
         result = deployable.ray_infer_fn(inputs)
 
@@ -514,7 +524,7 @@ def test_ray_infer_fn_with_chat_template(deployable):
 
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
-        mock_infer_fn.return_value = (["Generated response"], None)
+        mock_infer_fn.return_value = {"sentences": ["Generated response"]}
 
         result = deployable.ray_infer_fn(inputs)
 
@@ -534,7 +544,7 @@ def test_ray_infer_fn_empty_prompts(deployable):
 
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
-        mock_infer_fn.return_value = ([], None)
+        mock_infer_fn.return_value = {"sentences": []}
 
         result = deployable.ray_infer_fn(inputs)
 
@@ -562,7 +572,10 @@ def test_ray_infer_fn_all_parameters(deployable):
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
         mock_log_probs = np.array([[0.1, 0.2]])
-        mock_infer_fn.return_value = (["Generated response"], mock_log_probs)
+        mock_infer_fn.return_value = {
+            "sentences": ["Generated response"],
+            "log_probs": mock_log_probs,
+        }
 
         result = deployable.ray_infer_fn(inputs)
 
@@ -580,4 +593,7 @@ def test_ray_infer_fn_all_parameters(deployable):
             num_tokens_to_generate=512,
             log_probs=True,
             apply_chat_template=True,
+            text_only=True,
+            top_logprobs=0,
+            echo=False,
         )
