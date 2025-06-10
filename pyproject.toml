@@ -122,6 +122,7 @@ omit = [
     "/tmp/*",
     "/workspace/tests/*",
     "/workspace/nemo_export_deploy_common/*",
+    "/workspace/*.py",
 ]
 
 [tool.coverage.paths]
