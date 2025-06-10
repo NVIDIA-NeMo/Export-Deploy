@@ -56,6 +56,7 @@ overrides = [
     { name = "megatron-core", git = "https://github.com/NVIDIA/Megatron-LM.git?rev=54afff44f29e1117b2057ced6fa5be583e35cb7b" },
     { name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], git = "https://github.com/NVIDIA/NeMo.git?rev=5e63ca3c1631bb156187705f9c4cf643a67f9c05" },
     { name = "torch", marker = "sys_platform == 'never'" },
+    { name = "torchvision", marker = "sys_platform == 'never'" },
     { name = "urllib3", specifier = ">1.27.0" },
 ]
 
@@ -4383,7 +4384,7 @@ torch = [
     { name = "safetensors", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
     { name = "torch", marker = "(sys_platform == 'never' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "torchprofile", marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
-    { name = "torchvision", version = "0.22.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "torchvision", marker = "(sys_platform == 'never' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
 ]
 
 [[package]]
@@ -4436,8 +4437,7 @@ torch = [
     { name = "safetensors", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
     { name = "torch", marker = "(sys_platform == 'never' and extra != 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "torchprofile", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torchvision", version = "0.21.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torchvision", version = "0.22.0", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "torchvision", marker = "(sys_platform == 'never' and extra != 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
 ]
 
 [[package]]
@@ -4683,8 +4683,7 @@ dependencies = [
     { name = "sentencepiece" },
     { name = "timm" },
     { name = "torch", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torchvision", version = "0.21.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "torchvision", version = "0.22.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "torchvision", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "tqdm" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2a/a3/4dc94bfbfc45cbc49f0b7cac1aee1f2b15420013b26e18a94fdcdd906a2a/open_clip_torch-2.24.0.tar.gz", hash = "sha256:1ae2482aee313827c399eb8a4e735f0b0cd31e4c62085ce2dbfa3a13190219ff", size = 1479567, upload-time = "2024-01-08T10:35:55.753Z" }
@@ -7591,8 +7590,7 @@ dependencies = [
     { name = "omegaconf" },
     { name = "pytorch-lightning" },
     { name = "torch", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torchvision", version = "0.21.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "torchvision", version = "0.22.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "torchvision", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "tqdm" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/03/ba/b22d13b38dee3805982a3ee2ef03234f11b6f26aa6220c92b23a0fc760a3/taming-transformers-0.0.1.tar.gz", hash = "sha256:bdaffda4dcdee8f64930f4fe4f43bc83e6f4d3e264cfd8811f62ac0b3a423ccc", size = 42100, upload-time = "2021-03-10T14:42:05.181Z" }
@@ -7749,7 +7747,7 @@ dependencies = [
     { name = "strenum" },
     { name = "tensorrt" },
     { name = "torch", marker = "sys_platform == 'never'" },
-    { name = "torchvision", version = "0.22.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "torchvision", marker = "sys_platform == 'never'" },
     { name = "transformers" },
     { name = "uvicorn" },
     { name = "wheel" },
@@ -7849,8 +7847,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "safetensors" },
     { name = "torch", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torchvision", version = "0.21.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "torchvision", version = "0.22.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "torchvision", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/bc/0c/66b0f9b4a4cb9ffdac7b52b17b37c7d3c4f75623b469e388b0c6d89b4e88/timm-1.0.15.tar.gz", hash = "sha256:756a3bc30c96565f056e608a9b559daed904617eaadb6be536f96874879b1055", size = 2230258, upload-time = "2025-02-23T05:05:55.959Z" }
 wheels = [
@@ -8021,8 +8018,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "torch", marker = "sys_platform == 'never'" },
-    { name = "torchvision", version = "0.21.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torchvision", version = "0.22.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra != 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "torchvision", marker = "sys_platform == 'never'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/6f/36/574c0c46e818533b78b3c09505211162918188325ab4165ef11a3f295755/torchprofile-0.0.4.tar.gz", hash = "sha256:96b6da17d752a06b02977e078aea95614893b31d4117dd5dcd081f30ce65611b", size = 4557, upload-time = "2021-06-22T04:58:03.592Z" }
 wheels = [
@@ -8047,88 +8043,12 @@ wheels = [
 
 [[package]]
 name = "torchvision"
-version = "0.21.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux'",
-    "python_full_version >= '3.13' and sys_platform == 'darwin'",
-    "python_full_version == '3.12.*' and sys_platform == 'darwin'",
-    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux'",
-    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.11.*' and sys_platform == 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux'",
-    "python_full_version < '3.11' and sys_platform == 'darwin'",
-    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux'",
-]
-dependencies = [
-    { name = "numpy", marker = "extra == 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "pillow", version = "11.2.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm'" },
-    { name = "torch", marker = "(sys_platform == 'never' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/20/72eb0b5b08fa293f20fc41c374e37cf899f0033076f0144d2cdc48f9faee/torchvision-0.21.0-1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:5568c5a1ff1b2ec33127b629403adb530fab81378d9018ca4ed6508293f76e2b", size = 2327643, upload-time = "2025-03-18T17:25:51.165Z" },
-    { url = "https://files.pythonhosted.org/packages/4e/3d/b7241abfa3e6651c6e00796f5de2bd1ce4d500bf5159bcbfeea47e711b93/torchvision-0.21.0-1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:ff96666b94a55e802ea6796cabe788541719e6f4905fc59c380fed3517b6a64d", size = 2329320, upload-time = "2025-03-18T17:25:52.272Z" },
-    { url = "https://files.pythonhosted.org/packages/52/5b/76ca113a853b19c7b1da761f8a72cb6429b3bd0bf932537d8df4657f47c3/torchvision-0.21.0-1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:ffa2a16499508fe6798323e455f312c7c55f2a88901c9a7c0fb1efa86cf7e327", size = 2329878, upload-time = "2025-03-18T17:25:50.039Z" },
-    { url = "https://files.pythonhosted.org/packages/4e/fe/5e193353706dab96fe73ae100d5a633ff635ce310e0d92f3bc2958d075b1/torchvision-0.21.0-1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:7e9e9afa150e40cd2a8f0701c43cb82a8d724f512896455c0918b987f94b84a4", size = 2280711, upload-time = "2025-03-18T17:25:46.012Z" },
-    { url = "https://files.pythonhosted.org/packages/8e/0d/143bd264876fad17c82096b6c2d433f1ac9b29cdc69ee45023096976ee3d/torchvision-0.21.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:044ea420b8c6c3162a234cada8e2025b9076fa82504758cd11ec5d0f8cd9fa37", size = 1784140, upload-time = "2025-01-29T16:28:54.122Z" },
-    { url = "https://files.pythonhosted.org/packages/5e/44/32e2d2d174391374d5ff3c4691b802e8efda9ae27ab9062eca2255b006af/torchvision-0.21.0-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:b0c0b264b89ab572888244f2e0bad5b7eaf5b696068fc0b93e96f7c3c198953f", size = 7237187, upload-time = "2025-01-29T16:28:47.156Z" },
-    { url = "https://files.pythonhosted.org/packages/0e/6b/4fca9373eda42c1b04096758306b7bd55f7d8f78ba273446490855a0f25d/torchvision-0.21.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:54815e0a56dde95cc6ec952577f67e0dc151eadd928e8d9f6a7f821d69a4a734", size = 14699067, upload-time = "2025-01-29T16:28:36.086Z" },
-    { url = "https://files.pythonhosted.org/packages/aa/f7/799ddd538b21017cbf80294c92e9efbf6db08dff6efee37c3be114a81845/torchvision-0.21.0-cp310-cp310-win_amd64.whl", hash = "sha256:abbf1d7b9d52c00d2af4afa8dac1fb3e2356f662a4566bd98dfaaa3634f4eb34", size = 1560542, upload-time = "2025-01-29T16:28:52.608Z" },
-    { url = "https://files.pythonhosted.org/packages/29/88/00c69db213ee2443ada8886ec60789b227e06bb869d85ee324578221a7f7/torchvision-0.21.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:110d115333524d60e9e474d53c7d20f096dbd8a080232f88dddb90566f90064c", size = 1784141, upload-time = "2025-01-29T16:28:51.207Z" },
-    { url = "https://files.pythonhosted.org/packages/be/a2/b0cedf0a411f1a5d75cfc0b87cde56dd1ddc1878be46a42c905cd8580220/torchvision-0.21.0-cp311-cp311-manylinux1_x86_64.whl", hash = "sha256:3891cd086c5071bda6b4ee9d266bb2ac39c998c045c2ebcd1e818b8316fb5d41", size = 7237719, upload-time = "2025-01-29T16:28:20.724Z" },
-    { url = "https://files.pythonhosted.org/packages/8c/a1/ee962ef9d0b2bf7a6f8b14cb95acb70e05cd2101af521032a09e43f8582f/torchvision-0.21.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:54454923a50104c66a9ab6bd8b73a11c2fc218c964b1006d5d1fe5b442c3dcb6", size = 14700617, upload-time = "2025-01-29T16:28:30.247Z" },
-    { url = "https://files.pythonhosted.org/packages/88/53/4ad334b9b1d8dd99836869fec139cb74a27781298360b91b9506c53f1d10/torchvision-0.21.0-cp311-cp311-win_amd64.whl", hash = "sha256:49bcfad8cfe2c27dee116c45d4f866d7974bcf14a5a9fbef893635deae322f2f", size = 1560523, upload-time = "2025-01-29T16:28:48.751Z" },
-    { url = "https://files.pythonhosted.org/packages/6e/1b/28f527b22d5e8800184d0bc847f801ae92c7573a8c15979d92b7091c0751/torchvision-0.21.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:97a5814a93c793aaf0179cfc7f916024f4b63218929aee977b645633d074a49f", size = 1784140, upload-time = "2025-01-29T16:28:44.694Z" },
-    { url = "https://files.pythonhosted.org/packages/36/63/0722e153fd27d64d5b0af45b5c8cb0e80b35a68cf0130303bc9a8bb095c7/torchvision-0.21.0-cp312-cp312-manylinux1_x86_64.whl", hash = "sha256:b578bcad8a4083b40d34f689b19ca9f7c63e511758d806510ea03c29ac568f7b", size = 7238673, upload-time = "2025-01-29T16:28:27.631Z" },
-    { url = "https://files.pythonhosted.org/packages/bb/ea/03541ed901cdc30b934f897060d09bbf7a98466a08ad1680320f9ce0cbe0/torchvision-0.21.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:5083a5b1fec2351bf5ea9900a741d54086db75baec4b1d21e39451e00977f1b1", size = 14701186, upload-time = "2025-01-29T16:28:16.491Z" },
-    { url = "https://files.pythonhosted.org/packages/4c/6a/c7752603060d076dfed95135b78b047dc71792630cbcb022e3693d6f32ef/torchvision-0.21.0-cp312-cp312-win_amd64.whl", hash = "sha256:6eb75d41e3bbfc2f7642d0abba9383cc9ae6c5a4ca8d6b00628c225e1eaa63b3", size = 1560520, upload-time = "2025-01-29T16:28:42.122Z" },
-    { url = "https://files.pythonhosted.org/packages/f9/56/47d456b61c3bbce7bed4af3925c83d405bb87468e659fd3cf3d9840c3b51/torchvision-0.21.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:659b76c86757cb2ee4ca2db245e0740cfc3081fef46f0f1064d11adb4a8cee31", size = 1784141, upload-time = "2025-01-29T16:28:39.01Z" },
-    { url = "https://files.pythonhosted.org/packages/cb/4c/99880813aa50e64447fb1c4c6c804a793d2d78f7f7c53e99ddee7fa175fa/torchvision-0.21.0-cp313-cp313-manylinux1_x86_64.whl", hash = "sha256:084ac3f5a1f50c70d630a488d19bf62f323018eae1b1c1232f2b7047d3a7b76d", size = 7238714, upload-time = "2025-01-29T16:28:25.658Z" },
-    { url = "https://files.pythonhosted.org/packages/0b/2d/3c3ee10608310a395594aac7da8640372ed79c6585910ccae6919658dcdc/torchvision-0.21.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:5045a3a5f21ec3eea6962fa5f2fa2d4283f854caec25ada493fcf4aab2925467", size = 2281252, upload-time = "2025-01-29T16:28:40.687Z" },
-    { url = "https://files.pythonhosted.org/packages/ed/b4/fc60e3bc003879d3de842baea258fffc3586f4b49cd435a5ba1e09c33315/torchvision-0.21.0-cp313-cp313-win_amd64.whl", hash = "sha256:9147f5e096a9270684e3befdee350f3cacafd48e0c54ab195f45790a9c146d67", size = 1560519, upload-time = "2025-01-29T16:28:22.527Z" },
-]
-
-[[package]]
-name = "torchvision"
 version = "0.22.0"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.13' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.12.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-]
 dependencies = [
-    { name = "numpy" },
-    { name = "pillow", version = "10.3.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
-    { name = "pillow", version = "11.2.1", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "numpy", marker = "sys_platform != 'darwin' and sys_platform != 'linux'" },
+    { name = "pillow", version = "10.3.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "pillow", version = "11.2.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "torch", marker = "sys_platform == 'never'" },
 ]
 wheels = [
@@ -8630,7 +8550,7 @@ dependencies = [
     { name = "tokenizers" },
     { name = "torch", marker = "sys_platform == 'never'" },
     { name = "torchaudio" },
-    { name = "torchvision", version = "0.21.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "torchvision", marker = "sys_platform == 'never'" },
     { name = "tqdm" },
     { name = "transformers" },
     { name = "typing-extensions" },
