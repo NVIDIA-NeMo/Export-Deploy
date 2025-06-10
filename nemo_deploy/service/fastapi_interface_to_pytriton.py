@@ -55,8 +55,7 @@ triton_settings = TritonSettings()
 
 
 class BaseRequest(BaseModel):
-    """
-    Common parameters for completions and chat requests for the server.
+    """Common parameters for completions and chat requests for the server.
 
     Attributes:
         model (str): The name of the model to use for completion.
@@ -84,8 +83,7 @@ class BaseRequest(BaseModel):
 
 
 class CompletionRequest(BaseRequest):
-    """
-    Represents a request for text completion.
+    """Represents a request for text completion.
 
     Attributes:
         prompt (str): The input text to generate a response from.
@@ -99,8 +97,7 @@ class CompletionRequest(BaseRequest):
 
 
 class ChatCompletionRequest(BaseRequest):
-    """
-    Represents a request for chat completion.
+    """Represents a request for chat completion.
 
     Attributes:
         messages (list[dict]): A list of message dictionaries for chat completion.
@@ -114,8 +111,7 @@ class ChatCompletionRequest(BaseRequest):
 
 @app.get("/v1/health")
 def health_check():
-    """
-    Health check endpoint to verify that the API is running.
+    """Health check endpoint to verify that the API is running.
 
     Returns:
         dict: A dictionary indicating the status of the application.
@@ -125,9 +121,9 @@ def health_check():
 
 @app.get("/v1/triton_health")
 async def check_triton_health():
-    """
-    This method exposes endpoint "/triton_health" which can be used to verify if Triton server is accessible while
-    running the REST or FastAPI application.
+    """This method exposes endpoint "/triton_health".
+    
+    This can be used to verify if Triton server is accessible while running the REST or FastAPI application.
     Verify by running: curl http://service_http_address:service_port/v1/triton_health and the returned status should
     inform if the server is accessible.
     """
@@ -201,9 +197,10 @@ async def query_llm_async(
     n_top_logprobs,
     echo,
 ):
-    """
-    Sends requests to `NemoQueryLLMPyTorch.query_llm` in a non-blocking way, allowing the server to process
-    concurrent requests. This way enables batching of requests in the underlying Triton server.
+    """Sends requests to `NemoQueryLLMPyTorch.query_llm` in a non-blocking way.
+    
+    This allows the server to process concurrent requests. This way enables batching of requests
+    in the underlying Triton server.
     """
     import asyncio
     import concurrent
