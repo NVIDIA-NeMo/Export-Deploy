@@ -20,23 +20,24 @@ import tempfile
 from pathlib import Path
 from time import time
 from typing import List
+from types import SimpleNamespace
 
 import tensorrt as trt
 import torch
 import yaml
-from PIL import Image
 from tensorrt_llm._common import check_max_num_tokens
 from tensorrt_llm.builder import BuildConfig, Builder
 from tensorrt_llm.commands.build import build as build_trtllm
 from tensorrt_llm.mapping import Mapping
 from tensorrt_llm.models import MLLaMAForCausalLM
 from tensorrt_llm.plugin import PluginConfig
-from transformers import AutoModel, AutoProcessor, MllamaForConditionalGeneration
+from tensorrt_llm.tools.multimodal_builder import VisionEngineBuilder
+from transformers import AutoModel, AutoProcessor
 
+from nemo.collections import llm
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 
-from .converter import convert_mllama_nemo_to_hf
 
 logger = trt.Logger(trt.Logger.INFO)
 
@@ -97,12 +98,6 @@ def build_mllama_trtllm_engine(
     lora_ckpt_list: List[str] = None,
 ):
     """Build mllama TRTLLM engine from HF."""
-    if max_batch_size < 4:
-        print(
-            "TensorRT LLM may hit a runtime issue with batch size is smaller than 4 on some models."
-            " Force set to 4"
-        )
-        max_batch_size = 4
 
     plugin_config = PluginConfig()
     plugin_config.gpt_attention_plugin = "auto"
@@ -581,43 +576,23 @@ def build_mllama_visual_engine(
     vision_max_batch_size: int = 1,
 ):
     """Build mllama visual engine."""
-    hf_model = MllamaForConditionalGeneration.from_pretrained(
-        hf_model_path, torch_dtype="auto", device_map="auto"
-    )
-    model_dtype = hf_model.dtype
-
-    class MLLaMAVisionWrapper(torch.nn.Module):
-        # pylint: disable=C0115,C0116
-        def __init__(self, vision_model, output_proj):
-            super().__init__()
-            self.vision_model = vision_model
-            self.output_proj = output_proj
-
-        def forward(self, pixel_values, aspect_ratio_ids, aspect_ratio_mask):
-            out = self.vision_model(
-                pixel_values, aspect_ratio_ids, aspect_ratio_mask
-            ).last_hidden_state
-            out = self.output_proj(out)
-            return out
-
-    wrapper = MLLaMAVisionWrapper(hf_model.vision_model, hf_model.multi_modal_projector)
-
     processor = AutoProcessor.from_pretrained(processor_name)
-    image = Image.new("RGB", [2048, 2688])
-    inputs = processor(images=image, return_tensors="pt").to(model_dtype)
+    processor_path = os.path.join(hf_model_path, "processor")
+    processor.save_pretrained(processor_path)
 
-    export_visual_wrapper_onnx(
-        wrapper,
-        tuple([value for _, value in inputs.items()]),
-        model_dir,
-        input_names=[key for key in inputs],
-        dynamic_axes={key: {0: "batch"} for key in inputs},
+    for item in os.listdir(processor_path):
+        src = os.path.join(processor_path, item)
+        dst = os.path.join(hf_model_path, item)
+        shutil.copy2(src, dst)
+
+    args = SimpleNamespace(
+        model_path=hf_model_path,
+        output_dir=model_dir,
+        max_batch_size=vision_max_batch_size,
+        model_type="mllama",
     )
-    shapes = [{k: list(v.shape) for k, v in inputs.items()}] * 3
-    shapes[2] = shapes[0].copy()
-    for k, v in shapes[2].items():
-        shapes[2][k] = [vision_max_batch_size] + v[1:]
-    build_trt_engine("mllama", shapes, model_dir, vision_max_batch_size, model_dtype)
+    builder = VisionEngineBuilder(args)
+    builder.build()
 
 
 def build_visual_engine(
@@ -688,26 +663,21 @@ def build_mllama_engine(
     max_batch_size: int = 1,
     max_multimodal_len: int = 1024,
     dtype: str = "bfloat16",
-    use_lora_plugin: str = None,
-    lora_target_modules: List[str] = None,
-    max_lora_rank: int = 64,
-    lora_ckpt_list: List[str] = None,
 ):
     """Build mllama engine."""
-    new_state_dict, config = convert_mllama_nemo_to_hf(checkpoint_path, processor_name)
-
-    hf_model = MllamaForConditionalGeneration(config)
-    hf_model = hf_model.to(torch.bfloat16)
-    hf_model.load_state_dict(new_state_dict)
-
     with tempfile.TemporaryDirectory() as tmp_dir:
         hf_model_path = os.path.join(tmp_dir, "hf_checkpoint")
-        hf_model.save_pretrained(hf_model_path)
-        del hf_model, new_state_dict
+
+        llm.export_ckpt(
+            path=checkpoint_path,
+            target='hf',
+            output_path=hf_model_path,
+        )
 
         build_mllama_visual_engine(
             os.path.join(model_dir, "visual_engine"),
             hf_model_path,
+            processor_name=processor_name,
             vision_max_batch_size=vision_max_batch_size,
         )
         build_mllama_trtllm_engine(

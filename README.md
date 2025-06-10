@@ -212,13 +212,13 @@ from nemo.deploy import DeployPyTriton
 exporter = TensorRTMMExporter(model_dir="/path/to/export/dir", modality="vision")
 exporter.export(
     visual_checkpoint_path="/path/to/model.nemo",
-    model_type="neva",
-    llm_model_type="llama",
+    model_type="mllama",
+    llm_model_type="mllama",
     tensor_parallel_size=1,
 )
 
 # Deploy to Triton
-nm = DeployPyTriton(model=exporter, triton_model_name="neva", port=8000)
+nm = DeployPyTriton(model=exporter, triton_model_name="mllama", port=8000)
 nm.deploy()
 nm.serve()
 ```
@@ -243,7 +243,7 @@ print(output)
 ```python
 from nemo.deploy.multimodal import NemoQueryMultimodal
 
-nq = NemoQueryMultimodal(url="localhost:8000", model_name="neva", model_type="neva")
+nq = NemoQueryMultimodal(url="localhost:8000", model_name="mllama", model_type="mllama")
 output = nq.query(
     input_text="What is in this image?",
     input_media="/path/to/image.jpg",
