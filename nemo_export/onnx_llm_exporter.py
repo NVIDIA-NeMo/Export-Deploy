@@ -22,7 +22,9 @@ import numpy as np
 import tensorrt as trt
 import torch
 import wrapt
-from nemo.collections.llm.modelopt.quantization.quant_cfg_choices import get_quant_cfg_choices
+from nemo.collections.llm.modelopt.quantization.quant_cfg_choices import (
+    get_quant_cfg_choices,
+)
 from nemo.utils import logging
 from transformers import AutoModel, AutoTokenizer
 

@@ -133,7 +133,9 @@ def export_onnx_trt(args):
 
         def forward_loop(model, data, tokenizer):
             for inputs in tqdm(data):
-                batch = tokenizer(inputs, padding=True, truncation=True, return_tensors="pt")
+                batch = tokenizer(
+                    inputs, padding=True, truncation=True, return_tensors="pt"
+                )
                 batch = {k: v.to(model.device) for k, v in batch.items()}
                 with torch.no_grad():
                     model(**batch)
@@ -143,7 +145,9 @@ def export_onnx_trt(args):
             batch_size=args.calibration_batch_size,
             calib_size=args.calibration_dataset_size,
         )
-        forward_loop = partial(forward_loop, data=data, tokenizer=onnx_exporter.tokenizer)
+        forward_loop = partial(
+            forward_loop, data=data, tokenizer=onnx_exporter.tokenizer
+        )
 
         onnx_exporter.quantize(quant_cfg=args.quant_cfg, forward_loop=forward_loop)
 

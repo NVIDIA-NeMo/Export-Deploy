@@ -124,7 +124,10 @@ def get_model_device_type(module: torch.nn.Module) -> str:
     return all_device_types.pop() if all_device_types else "cpu"
 
 
-def get_example_inputs(tokenizer: PreTrainedTokenizerBase, device: Optional[Union[str, torch.device]] = None) -> Dict[str, torch.Tensor]:
+def get_example_inputs(
+    tokenizer: PreTrainedTokenizerBase,
+    device: Optional[Union[str, torch.device]] = None,
+) -> Dict[str, torch.Tensor]:
     """Gets example data to feed to the model during ONNX export.
 
     Args:
