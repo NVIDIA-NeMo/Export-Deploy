@@ -1,4 +1,4 @@
-# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2020-2025, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,16 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from nemo_export_deploy_common.package_info import __version__, __package_name__
-
-from nemo_deploy.deploy_base import DeployBase
-from nemo_deploy.deploy_pytriton import DeployPyTriton
-from nemo_deploy.triton_deployable import ITritonDeployable
-
-__all__ = [
-    "DeployBase",
-    "DeployPyTriton",
-    "ITritonDeployable",
-    "__version__",
-    "__package_name__",
-]
+coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_deploy_ray.py \
+    --model_name test_model \
+    --checkpoint_path /home/TestData/llm/models/llama32_1b_nemo2 \
+    --num_gpus 1 \
+    --debug

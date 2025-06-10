@@ -20,8 +20,8 @@ from typing import List, Optional
 import numpy as np
 import torch
 import torch.distributed
-import wrapt
 from jinja2 import Template
+
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 from megatron.core.inference.inference_request import InferenceRequest
 
@@ -34,36 +34,10 @@ from nemo_deploy.utils import (
     str_ndarray2list,
 )
 
-from .inference.inference_base import create_mcore_engine
+from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
+from pytriton.decorators import batch, first_value
+from pytriton.model_config import Tensor
 
-
-@wrapt.decorator
-def noop_decorator(func):
-    """A no-op decorator that returns the original function unchanged.
-
-    Used as a fallback when pytriton's batch decorator is not available.
-
-    Args:
-        func: The function to decorate
-
-    Returns:
-        The original function without any modifications
-    """
-
-    def wrapper(*args, **kwargs):
-        """Wrapper method returning the func."""
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-use_pytriton = True
-batch = noop_decorator
-try:
-    from pytriton.decorators import batch, first_value
-    from pytriton.model_config import Tensor
-except Exception:
-    use_pytriton = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -88,6 +62,7 @@ class MegatronLLMDeploy:
         random_seed: Optional[int] = None,
         enable_flash_decode: bool = False,
         enable_cuda_graphs: bool = False,
+        legacy_ckpt: bool = False,
     ):
         """Returns the appropriate deployable instance for the given NeMo checkpoint.
 
@@ -99,6 +74,8 @@ class MegatronLLMDeploy:
             pipeline_model_parallel_size (int): Size of the pipeline model parallelism.
             context_parallel_size (int): Size of the context parallelism.
             enable_flash_decode (bool): Whether to enable flash decode for inference.
+            enable_cuda_graphs (bool): Whether to enable CUDA graphs for inference.
+            legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
 
         Returns:
             ITritonDeployable: An instance of a deployable class compatible with Triton inference server.
@@ -116,6 +93,7 @@ class MegatronLLMDeploy:
                 random_seed=random_seed,
                 enable_flash_decode=enable_flash_decode,
                 enable_cuda_graphs=enable_cuda_graphs,
+                legacy_ckpt=legacy_ckpt,
             )
         else:
             raise Exception("Only NeMo 2.0 checkpoint is supported.")
@@ -147,6 +125,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         random_seed (Optional[int]): random seed for inference. Defaults to None.
         enable_flash_decode (bool): enable flash decode for inference. Defaults to False.
         enable_cuda_graphs (bool): enable CUDA graphs for inference. Defaults to False.`
+        legacy_ckpt (bool): use legacy checkpoint format. Defaults to False.
     """
 
     def __init__(
@@ -165,6 +144,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         enable_cuda_graphs: bool = False,
         max_batch_size: int = 8,
         random_seed: Optional[int] = None,
+        legacy_ckpt: bool = False,
     ):
         self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = (
             create_mcore_engine(
@@ -182,6 +162,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 context_parallel_size=context_parallel_size,
                 enable_flash_decode=enable_flash_decode,
                 enable_cuda_graphs=enable_cuda_graphs,
+                legacy_ckpt=legacy_ckpt,
             )
         )
         self.enable_cuda_graphs = enable_cuda_graphs
@@ -268,6 +249,14 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 self.mcore_tokenizer.tokenizer.tokenizer.chat_template
             )
             bos_token = self.mcore_tokenizer.tokenizer.tokenizer.bos_token
+
+            # Check if chat_template is None or empty
+            if tokenizer_chat_template is None:
+                raise ValueError(
+                    "The tokenizer does not have a chat template defined. "
+                    "If you would like to evaluate a chat model, ensure your model's tokenizer has a chat template."
+                )
+
             template = Template(tokenizer_chat_template)
         except AttributeError:
             # If the tokenizer does not have chat_template
@@ -352,11 +341,71 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         text_only = True
 
         if apply_chat_template:
-            # Deserialize the JSON string back to a dictionary
             prompts = [self.str_to_dict(prompt) for prompt in prompts]
+
+        if torch.distributed.is_initialized():
+            if torch.distributed.get_world_size() > 1:
+                torch.distributed.broadcast(
+                    torch.tensor([0], dtype=torch.long, device="cuda"), src=0
+                )
+                broadcast_list(prompts, src=0)
+                broadcast_list(
+                    data=[
+                        temperature,
+                        top_k,
+                        top_p,
+                        num_tokens_to_generate,
+                        log_probs,
+                    ],
+                    src=0,
+                )
+        # Use the shared inference function
+        return self._infer_fn(
+            prompts=prompts,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+            num_tokens_to_generate=num_tokens_to_generate,
+            log_probs=log_probs,
+            apply_chat_template=apply_chat_template,
+            text_only=text_only,
+            top_logprobs=top_logprobs,
+            echo=echo,
+        )
+
+    def _infer_fn(
+        self,
+        prompts,
+        temperature=0.0,
+        top_k=0.0,
+        top_p=0.0,
+        num_tokens_to_generate=256,
+        log_probs=False,
+        apply_chat_template=False,
+        text_only=True,
+        top_logprobs=0,
+        echo=False,
+    ):
+        """Private helper function that handles the core inference logic shared between triton and ray inference.
+
+        Args:
+            prompts (List[str]): List of input prompts
+            max_batch_size (int): Maximum batch size for inference
+            random_seed (int): Random seed for reproducibility
+            temperature (float): Sampling temperature
+            top_k (int): Top-k sampling parameter
+            top_p (float): Top-p sampling parameter
+            num_tokens_to_generate (int): Maximum number of tokens to generate
+            log_probs (bool): Whether to compute log probabilities
+            apply_chat_template (bool): Whether to apply chat template
+            text_only (bool): Whether to return only text or full results
+
+        Returns:
+            tuple: (output_texts, output_log_probs) where output_log_probs is None if log_probs is False
+        """
+        if apply_chat_template:
             prompts = [self.apply_chat_template(prompt) for prompt in prompts]
-            # Input to generate should be list of string, otherwise if its string directly TE raises an error:
-            # The provided qkv memory layout is not supported!
+
         if torch.distributed.is_initialized():
             if torch.distributed.get_world_size() > 1:
                 torch.distributed.broadcast(
@@ -392,8 +441,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             output_texts = [r.generated_text if text_only else r for r in results]
         output_texts = self.remove_eos_token(output_texts)
         output_infer = {"sentences": cast_output(output_texts, np.bytes_)}
+
         if log_probs:
-            output_log_probs = []  ## will have 2 np arrays if 2 prompts are sent
+            output_log_probs = []
             for r in results:
                 # Convert to torch tensor and then move to cpu as generated_log_probs is a list and cant be moved
                 # to cpu otherwise
@@ -424,7 +474,6 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                         for arr in output_log_probs
                     ]
                 )
-
                 output_infer["log_probs"] = padded
             else:
                 output_infer["log_probs"] = np.array(output_log_probs)
@@ -442,3 +491,41 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             )
 
         return output_infer
+
+    def ray_infer_fn(self, inputs: dict):
+        """Ray-compatible inference function that takes a dictionary of inputs and returns a dictionary of outputs.
+
+        Args:
+            inputs (dict): Dictionary containing the following optional keys:
+                - prompts (List[str]): List of input prompts
+                - max_batch_size (int): Maximum batch size for inference (default: 32)
+                - random_seed (int): Random seed for reproducibility (default: None)
+                - temperature (float): Sampling temperature (default: 1.0)
+                - top_k (int): Top-k sampling parameter (default: 1)
+                - top_p (float): Top-p sampling parameter (default: 0.0)
+                - max_length (int): Maximum number of tokens to generate (default: 256)
+                - logprobs (int): Whether to compute log probabilities (default: 0)
+                - apply_chat_template (bool): Whether to apply chat template (default: False)
+
+        Returns:
+            dict: Dictionary containing:
+                - sentences (List[str]): List of generated texts
+                - log_probs (List[float], optional): List of log probabilities if compute_logprob is True
+        """
+        prompts = inputs.get("prompts", [])
+        temperature = inputs.get("temperature", 1.0)
+        top_k = inputs.get("top_k", 0)
+        top_p = inputs.get("top_p", 0.0)
+        num_tokens_to_generate = inputs.get("max_length", 256)
+        log_probs = inputs.get("compute_logprob", False)
+        apply_chat_template = inputs.get("apply_chat_template", False)
+
+        return self._infer_fn(
+            prompts=prompts,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+            num_tokens_to_generate=num_tokens_to_generate,
+            log_probs=log_probs,
+            apply_chat_template=apply_chat_template,
+        )

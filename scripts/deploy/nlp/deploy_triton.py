@@ -61,22 +61,6 @@ def get_args(argv):
         "-hfp", "--hf_model_id_path", type=str, help="Huggingface model path or id"
     )
     parser.add_argument(
-        "-ptnc",
-        "--ptuning_nemo_checkpoint",
-        nargs="+",
-        type=str,
-        required=False,
-        help="Source .nemo file for prompt embeddings table",
-    )
-    parser.add_argument(
-        "-ti",
-        "--task_ids",
-        nargs="+",
-        type=str,
-        required=False,
-        help="Unique task names for the prompt embedding.",
-    )
-    parser.add_argument(
         "-mt",
         "--model_type",
         type=str,
@@ -209,13 +193,6 @@ def get_args(argv):
     )
     parser.add_argument(
         "-gp", "--gemm_plugin", default="auto", type=str, help="dtype of gpt plugin"
-    )
-    parser.add_argument(
-        "-mpet",
-        "--max_prompt_embedding_table_size",
-        default=None,
-        type=int,
-        help="Max prompt embedding table size",
     )
     parser.add_argument(
         "-npkc",
@@ -472,38 +449,6 @@ def get_trtllm_deployable(args):
             "Model type is required to be defined if a nemo checkpoint is provided."
         )
 
-    ptuning_tables_files = []
-    if not args.ptuning_nemo_checkpoint is None:
-        if args.max_prompt_embedding_table_size is None:
-            raise ValueError(
-                "max_prompt_embedding_table_size parameter is needed for the prompt tuning table(s)."
-            )
-
-        for pt_checkpoint in args.ptuning_nemo_checkpoint:
-            ptuning_nemo_checkpoint_path = Path(pt_checkpoint)
-            if ptuning_nemo_checkpoint_path.exists():
-                if ptuning_nemo_checkpoint_path.is_file():
-                    ptuning_tables_files.append(pt_checkpoint)
-                else:
-                    raise IsADirectoryError(
-                        "Could not read the prompt tuning tables from {0}".format(
-                            pt_checkpoint
-                        )
-                    )
-            else:
-                raise FileNotFoundError(
-                    "File or directory {0} does not exist.".format(pt_checkpoint)
-                )
-
-        if args.task_ids is not None:
-            if len(ptuning_tables_files) != len(args.task_ids):
-                raise RuntimeError(
-                    "Number of task ids and prompt embedding tables have to match. "
-                    "There are {0} tables and {1} task ids.".format(
-                        len(ptuning_tables_files), len(args.task_ids)
-                    )
-                )
-
     trt_llm_exporter = TensorRTLLM(
         model_dir=trt_llm_path,
         lora_ckpt_list=args.lora_ckpt,
@@ -529,7 +474,6 @@ def get_trtllm_deployable(args):
                 opt_num_tokens=args.opt_num_tokens,
                 max_seq_len=args.max_seq_len,
                 use_parallel_embedding=args.use_parallel_embedding,
-                max_prompt_embedding_table_size=args.max_prompt_embedding_table_size,
                 paged_kv_cache=(not args.no_paged_kv_cache),
                 remove_input_padding=(not args.disable_remove_input_padding),
                 dtype=args.dtype,
@@ -567,27 +511,6 @@ def get_trtllm_deployable(args):
                 + str(error)
             )
 
-    try:
-        for i, prompt_embeddings_checkpoint_path in enumerate(ptuning_tables_files):
-            if args.task_ids is not None:
-                task_id = args.task_ids[i]
-            else:
-                task_id = i
-
-            LOGGER.info(
-                "Adding prompt embedding table: {0} with task id: {1}.".format(
-                    prompt_embeddings_checkpoint_path, task_id
-                )
-            )
-            trt_llm_exporter.add_prompt_table(
-                task_name=str(task_id),
-                prompt_embeddings_checkpoint_path=prompt_embeddings_checkpoint_path,
-            )
-    except Exception as error:
-        raise RuntimeError(
-            "An error has occurred during adding the prompt embedding table(s). Error message: "
-            + str(error)
-        )
     return trt_llm_exporter
 
 
