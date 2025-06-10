@@ -394,8 +394,7 @@ def load_nemo_config(nemo_ckpt: Union[str, Path]) -> Dict[Any, Any]:
 
 
 def get_model_type(nemo_ckpt: Union[str, Path], use_vllm_type: bool = False) -> Optional[str]:
-    """Determine the model type from a NeMo checkpoint for TensorRT-LLM engine build
-    or vLLM model converters available.
+    """Determine the model type from a NeMo checkpoint for TensorRT-LLM engine build or vLLM model converters.
 
     Args:
         nemo_ckpt (Union[str, Path]): Path to the NeMo checkpoint file.
