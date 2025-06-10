@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-use_ray = True
-try:
-    import ray
-    from ray import serve
-    from ray.serve import Application
-except Exception:
-    use_ray = False
+
+import ray
+from ray import serve
+from ray.serve import Application
+
 import logging
 
-from .ray_utils import find_available_port
+from nemo_deploy.ray_utils import find_available_port
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -64,10 +62,7 @@ class DeployRay:
             Exception: If Ray is not installed.
         """
         # Initialize Ray with proper configuration
-        if not use_ray:
-            raise Exception(
-                "Ray is not installed. Please install Ray to use this feature."
-            )
+
         try:
             # Try to connect to existing Ray cluster
             ray.init(
