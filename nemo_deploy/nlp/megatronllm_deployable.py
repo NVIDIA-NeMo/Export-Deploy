@@ -338,7 +338,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         apply_chat_template = inputs.pop("apply_chat_template", False)
         top_logprobs = inputs.pop("n_top_logprobs", 0)
         echo = inputs.pop("echo", False)
-        text_only = True
+        text_only = inputs.pop("text_only", True)
 
         if apply_chat_template:
             prompts = [self.str_to_dict(prompt) for prompt in prompts]
@@ -360,7 +360,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                     src=0,
                 )
         # Use the shared inference function
-        return self._infer_fn(
+        output_infer = self._infer_fn(
             prompts=prompts,
             temperature=temperature,
             top_k=top_k,
@@ -372,6 +372,10 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             top_logprobs=top_logprobs,
             echo=echo,
         )
+
+        # Format output for triton
+        output_infer["sentences"] = cast_output(output_infer["sentences"], np.bytes_)
+        return output_infer
 
     def _infer_fn(
         self,
@@ -401,7 +405,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             text_only (bool): Whether to return only text or full results
 
         Returns:
-            tuple: (output_texts, output_log_probs) where output_log_probs is None if log_probs is False
+            dict: sentences and required log probs.
         """
         if apply_chat_template:
             prompts = [self.apply_chat_template(prompt) for prompt in prompts]
@@ -440,7 +444,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         else:
             output_texts = [r.generated_text if text_only else r for r in results]
         output_texts = self.remove_eos_token(output_texts)
-        output_infer = {"sentences": cast_output(output_texts, np.bytes_)}
+        output_infer = {"sentences": output_texts}
 
         if log_probs:
             output_log_probs = []
@@ -519,6 +523,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         num_tokens_to_generate = inputs.get("max_length", 256)
         log_probs = inputs.get("compute_logprob", False)
         apply_chat_template = inputs.get("apply_chat_template", False)
+        top_logprobs = inputs.pop("n_top_logprobs", 0)
+        echo = inputs.pop("echo", False)
+        text_only = inputs.pop("text_only", True)
 
         return self._infer_fn(
             prompts=prompts,
@@ -528,4 +535,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             num_tokens_to_generate=num_tokens_to_generate,
             log_probs=log_probs,
             apply_chat_template=apply_chat_template,
+            text_only=text_only,
+            top_logprobs=top_logprobs,
+            echo=echo,
         )
