@@ -22,9 +22,7 @@ from nemo.utils import logging
 
 
 class TritonSettings(BaseSettings):
-    """
-    TritonSettings class that gets the values of TRITON_HTTP_ADDRESS and TRITON_PORT.
-    """
+    """TritonSettings class that gets the values of TRITON_HTTP_ADDRESS and TRITON_PORT."""
 
     _triton_service_port: int
     _triton_service_ip: str
@@ -43,16 +41,12 @@ class TritonSettings(BaseSettings):
 
     @property
     def triton_service_port(self):
-        """
-        Returns the port number for the Triton service.
-        """
+        """Returns the port number for the Triton service."""
         return self._triton_service_port
 
     @property
     def triton_service_ip(self):
-        """
-        Returns the IP address for the Triton service.
-        """
+        """Returns the IP address for the Triton service."""
         return self._triton_service_ip
 
 
@@ -152,9 +146,7 @@ async def check_triton_health():
 
 
 def convert_numpy(obj):
-    """
-    Convert NumPy arrays in output to lists
-    """
+    """Convert NumPy arrays in output to lists."""
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     elif isinstance(obj, dict):
@@ -178,9 +170,7 @@ def _helper_fun(
     n_top_logprobs,
     echo,
 ):
-    """
-    run_in_executor doesn't allow to pass kwargs, so we have this helper function to pass args as a list
-    """
+    """run_in_executor doesn't allow to pass kwargs, so we have this helper function to pass args as a list."""
     nq = NemoQueryLLMPyTorch(url=url, model_name=model)
     output = nq.query_llm(
         prompts=prompts,
@@ -240,9 +230,7 @@ async def query_llm_async(
 
 @app.post("/v1/completions/")
 async def completions_v1(request: CompletionRequest):
-    """
-    Defines the completions endpoint and queries the model deployed on PyTriton server.
-    """
+    """Defines the completions endpoint and queries the model deployed on PyTriton server."""
     url = f"http://{triton_settings.triton_service_ip}:{triton_settings.triton_service_port}"
     logging.info(f"Request: {request}")
     prompts = request.prompt
@@ -286,17 +274,13 @@ async def completions_v1(request: CompletionRequest):
 
 
 def dict_to_str(messages):
-    """
-    Serializes dict to str
-    """
+    """Serializes dict to str."""
     return json.dumps(messages)
 
 
 @app.post("/v1/chat/completions/")
 async def chat_completions_v1(request: ChatCompletionRequest):
-    """
-    Defines the chat completions endpoint and queries the model deployed on PyTriton server.
-    """
+    """Defines the chat completions endpoint and queries the model deployed on PyTriton server."""
     url = f"http://{triton_settings.triton_service_ip}:{triton_settings.triton_service_port}"
     logging.info(f"Request: {request}")
     prompts = request.messages

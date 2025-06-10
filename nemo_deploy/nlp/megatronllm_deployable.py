@@ -100,9 +100,7 @@ class MegatronLLMDeploy:
 
 
 def dict_to_str(messages):
-    """
-    Serializes dict to str
-    """
+    """Serializes dict to str."""
     return json.dumps(messages)
 
 
