@@ -32,6 +32,7 @@ from nemo.collections.llm.t5.model.t5 import T5Config
 
 LOGGER = logging.getLogger("NeMo")
 
+
 @dataclass
 class RNGConfig:
     """Configuration settings for random number generation."""
@@ -326,7 +327,9 @@ def _initialize_tp_communicators(
     except TypeError:
         # Fallback for older TE versions
         if bootstrap_backend != "mpi":
-            LOGGER.info("Warning: Transformer Engine may only support MPI bootstrap backend")
+            LOGGER.info(
+                "Warning: Transformer Engine may only support MPI bootstrap backend"
+            )
 
         # Create a MPI process group for TP communication bootstrap
         torch.distributed.new_group(backend="mpi")
@@ -444,7 +447,12 @@ def get_model_from_config(
             " > number of parameters on (tensor, pipeline) model parallel rank ({}, {}): {}".format(
                 parallel_state.get_tensor_model_parallel_rank(),
                 parallel_state.get_pipeline_model_parallel_rank(),
-                sum([sum([p.nelement() for p in model_module.parameters()]) for model_module in model]),
+                sum(
+                    [
+                        sum([p.nelement() for p in model_module.parameters()])
+                        for model_module in model
+                    ]
+                ),
             )
         )
 
