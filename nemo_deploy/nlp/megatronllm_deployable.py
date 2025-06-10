@@ -20,7 +20,6 @@ from typing import List, Optional
 import numpy as np
 import torch
 import torch.distributed
-import wrapt
 from jinja2 import Template
 
 from megatron.core.inference.common_inference_params import CommonInferenceParams
@@ -35,36 +34,10 @@ from nemo_deploy.utils import (
     str_ndarray2list,
 )
 
-from .inference.inference_base import create_mcore_engine
+from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
+from pytriton.decorators import batch, first_value
+from pytriton.model_config import Tensor
 
-
-@wrapt.decorator
-def noop_decorator(func):
-    """A no-op decorator that returns the original function unchanged.
-
-    Used as a fallback when pytriton's batch decorator is not available.
-
-    Args:
-        func: The function to decorate
-
-    Returns:
-        The original function without any modifications
-    """
-
-    def wrapper(*args, **kwargs):
-        """Wrapper method returning the func."""
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-use_pytriton = True
-batch = noop_decorator
-try:
-    from pytriton.decorators import batch, first_value
-    from pytriton.model_config import Tensor
-except Exception:
-    use_pytriton = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -89,7 +62,7 @@ class MegatronLLMDeploy:
         random_seed: Optional[int] = None,
         enable_flash_decode: bool = False,
         enable_cuda_graphs: bool = False,
-        legacy_ckpt: bool = False
+        legacy_ckpt: bool = False,
     ):
         """Returns the appropriate deployable instance for the given NeMo checkpoint.
 
@@ -120,7 +93,7 @@ class MegatronLLMDeploy:
                 random_seed=random_seed,
                 enable_flash_decode=enable_flash_decode,
                 enable_cuda_graphs=enable_cuda_graphs,
-                legacy_ckpt=legacy_ckpt
+                legacy_ckpt=legacy_ckpt,
             )
         else:
             raise Exception("Only NeMo 2.0 checkpoint is supported.")
@@ -164,7 +137,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         enable_cuda_graphs: bool = False,
         max_batch_size: int = 8,
         random_seed: Optional[int] = None,
-        legacy_ckpt: bool = False
+        legacy_ckpt: bool = False,
     ):
         self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = (
             create_mcore_engine(
@@ -182,7 +155,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 context_parallel_size=context_parallel_size,
                 enable_flash_decode=enable_flash_decode,
                 enable_cuda_graphs=enable_cuda_graphs,
-                legacy_ckpt=legacy_ckpt
+                legacy_ckpt=legacy_ckpt,
             )
         )
         self.enable_cuda_graphs = enable_cuda_graphs
@@ -269,14 +242,14 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 self.mcore_tokenizer.tokenizer.tokenizer.chat_template
             )
             bos_token = self.mcore_tokenizer.tokenizer.tokenizer.bos_token
-            
+
             # Check if chat_template is None or empty
             if tokenizer_chat_template is None:
                 raise ValueError(
                     "The tokenizer does not have a chat template defined. "
                     "If you would like to evaluate a chat model, ensure your model's tokenizer has a chat template."
                 )
-            
+
             template = Template(tokenizer_chat_template)
         except AttributeError:
             # If the tokenizer does not have chat_template
@@ -397,7 +370,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         num_tokens_to_generate=256,
         log_probs=False,
         apply_chat_template=False,
-        text_only=True
+        text_only=True,
     ):
         """Private helper function that handles the core inference logic shared between triton and ray inference.
 
@@ -421,7 +394,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
         if torch.distributed.is_initialized():
             if torch.distributed.get_world_size() > 1:
-                torch.distributed.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
+                torch.distributed.broadcast(
+                    torch.tensor([0], dtype=torch.long, device="cuda"), src=0
+                )
                 broadcast_list(prompts, src=0)
                 broadcast_list(
                     data=[
