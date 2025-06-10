@@ -62,3 +62,6 @@ RUN bash -exu <<"EOF"
             megatron-core@git+https://github.com/NVIDIA/Megatron-LM.git@${MCORE_REF}
     fi
 EOF
+
+# For trt-llm
+ENV LD_LIBRARY_PATH=/opt/hpcx/ucx/lib:$LD_LIBRARY_PATH
