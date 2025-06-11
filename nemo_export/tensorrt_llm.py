@@ -1784,6 +1784,119 @@ class TensorRTLLM(ITritonDeployable):
             output = cast_output([err_msg], np.bytes_)
             return {"outputs": output}
 
+    def ray_infer_fn(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """Ray inference function that processes input dictionary and returns output without byte casting.
+        
+        Args:
+            inputs (Dict[str, Any]): Input dictionary containing:
+                - prompts: List of input prompts
+                - max_output_len: Maximum output length (optional)
+                - top_k: Top-k sampling parameter (optional)
+                - top_p: Top-p sampling parameter (optional)
+                - temperature: Sampling temperature (optional)
+                - random_seed: Random seed (optional)
+                - stop_words_list: List of stop words (optional)
+                - bad_words_list: List of bad words (optional)
+                - no_repeat_ngram_size: No repeat ngram size (optional)
+                - task_ids: Task IDs (optional)
+                - lora_uids: LoRA UIDs (optional)
+                - output_generation_logits: Whether to output generation logits (optional)
+                - output_context_logits: Whether to output context logits (optional)
+                - apply_chat_template: Whether to apply chat template (optional)
+                - compute_logprob: Whether to compute log probabilities (optional)
+                
+        Returns:
+            Dict[str, Any]: Output dictionary containing:
+                - sentences: List of generated text outputs
+                - generation_logits: Generation logits (if requested)
+                - context_logits: Context logits (if requested)
+                - log_probs: Log probabilities (if requested)
+        """
+        output_dict = {}
+        context_logits_available = False
+        generation_logits_available = False
+        
+        # Extract prompts - handle both list and single string cases
+        prompts = inputs.get("prompts", [])
+        if isinstance(prompts, str):
+            prompts = [prompts]
+        
+        infer_input = {"input_texts": prompts}
+        
+        try:
+            # Extract inference parameters
+            if "max_output_len" in inputs:
+                infer_input["max_output_len"] = inputs["max_output_len"]
+            if "top_k" in inputs:
+                infer_input["top_k"] = inputs["top_k"]
+            if "top_p" in inputs:
+                infer_input["top_p"] = inputs["top_p"]
+            if "temperature" in inputs:
+                infer_input["temperature"] = inputs["temperature"]
+            if "random_seed" in inputs:
+                infer_input["random_seed"] = inputs["random_seed"]
+            if "stop_words_list" in inputs:
+                stop_words_list = inputs["stop_words_list"]
+                # Ensure proper format for stop words
+                if isinstance(stop_words_list, list) and stop_words_list:
+                    if isinstance(stop_words_list[0], str):
+                        infer_input["stop_words_list"] = [[word] for word in stop_words_list]
+                    else:
+                        infer_input["stop_words_list"] = stop_words_list
+            if "bad_words_list" in inputs:
+                bad_words_list = inputs["bad_words_list"]
+                # Ensure proper format for bad words
+                if isinstance(bad_words_list, list) and bad_words_list:
+                    if isinstance(bad_words_list[0], str):
+                        infer_input["bad_words_list"] = [[word] for word in bad_words_list]
+                    else:
+                        infer_input["bad_words_list"] = bad_words_list
+            if "no_repeat_ngram_size" in inputs:
+                infer_input["no_repeat_ngram_size"] = inputs["no_repeat_ngram_size"]
+            if "task_ids" in inputs:
+                infer_input["task_ids"] = inputs["task_ids"]
+            if "lora_uids" in inputs:
+                infer_input["lora_uids"] = inputs["lora_uids"]
+            if "output_generation_logits" in inputs:
+                generation_logits_available = inputs["output_generation_logits"]
+                infer_input["output_generation_logits"] = inputs["output_generation_logits"]
+            if "output_context_logits" in inputs:
+                context_logits_available = inputs["output_context_logits"]
+                infer_input["output_context_logits"] = inputs["output_context_logits"]
+            if "output_log_probs" in inputs:
+                infer_input["output_log_probs"] = inputs["output_log_probs"]
+
+            # Call the forward method directly since this is now part of TensorRTLLM class
+            if generation_logits_available:
+                # generation_logits is a 4d torch tensor of dim [BS,1,#generated_tokens,vocab_size]
+                output_texts, generation_logits = self.forward(**infer_input)
+                # Convert generation_logits to list of numpy arrays
+                output_dict["generation_logits"] = [
+                    generation_logit.cpu().numpy() for generation_logit in generation_logits
+                ]
+                output_dict["sentences"] = output_texts
+            elif context_logits_available:
+                output_texts, context_logits = self.forward(**infer_input)
+                # context_logits is a list of tensors shaped [#tokens, vocab_size]
+                # Pad logits to handle different sequence lengths
+                context_logits = self._pad_logits(context_logits)
+                # Convert context_logits to list of numpy arrays
+                output_dict["context_logits"] = [
+                    logit_tensor.unsqueeze(0).cpu().numpy() for logit_tensor in context_logits
+                ]
+                output_dict["sentences"] = output_texts
+            else:
+                output_texts = self.forward(**infer_input)
+                output_dict["sentences"] = output_texts
+                
+        except Exception as error:
+            err_msg = f"An error occurred: {str(error)}"
+            LOGGER.error(err_msg)
+            output_dict["sentences"] = [err_msg] * len(prompts)
+            output_dict["error"] = err_msg
+
+        return output_dict
+
     def _prep_ptuning_table(self):
         self.task_vocab_size = 0
         for pt in self.ptuning_tables:
