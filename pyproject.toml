@@ -45,6 +45,7 @@ dependencies = [
 [project.optional-dependencies]
 vllm = ["vllm==0.8.5.post1", "pandas"]
 trtllm = ["tensorrt-llm~=0.20.0rc3"]
+te = ["transformer-engine[pytorch]==2.4.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`

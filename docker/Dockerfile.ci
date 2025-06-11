@@ -40,9 +40,9 @@ RUN --mount=type=bind,source=pyproject.toml,target=/workspace/pyproject.toml \
     uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
     uv sync --link-mode symlink --locked 
     if [ -n "$INFERENCE_FRAMEWORK" ]; then
-        uv sync --link-mode copy --locked --no-install-package torch --no-install-package torchvision --extra $INFERENCE_FRAMEWORK
+        uv sync --link-mode copy --locked --extra te --no-install-package torch --no-install-package torchvision --extra $INFERENCE_FRAMEWORK
     else
-        uv sync --link-mode copy --locked
+        uv sync --link-mode copy --locked --extra te
     fi
     # Install nemo-run separately since it conflicts with nvidia-pytriton
     uv pip install nemo-run
