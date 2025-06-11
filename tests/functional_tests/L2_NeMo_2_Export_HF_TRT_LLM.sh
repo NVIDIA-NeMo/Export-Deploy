@@ -15,7 +15,6 @@
 coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_export.py \
   --model_name test \
   --model_dir /tmp/trt_llm_model_dir/ \
-  --model_type LlamaForCausalLM \
   --use_huggingface True \
   --checkpoint_dir /home/TestData/llm/models/llama3.2-1B-hf/ \
   --min_tps 1 \

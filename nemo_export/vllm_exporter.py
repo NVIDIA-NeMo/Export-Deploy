@@ -43,6 +43,7 @@ from nemo_export.utils import (
     convert_lora_nemo_to_canonical,
     prepare_directory_for_export,
 )
+from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import get_model_type
 from nemo_export.vllm.model_config import NemoModelConfig
 from nemo_export.vllm.model_loader import NemoModelLoader
 
@@ -100,7 +101,7 @@ class vLLMExporter(ITritonDeployable):
         self,
         nemo_checkpoint: str,
         model_dir: str,
-        model_type: str,
+        model_type: Optional[str] = "auto",
         device: str = "auto",
         tensor_parallel_size: int = 1,
         pipeline_parallel_size: int = 1,
@@ -122,7 +123,8 @@ class vLLMExporter(ITritonDeployable):
                 The temp dir may persist between subsequent export operations, in which case
                 converted weights may be reused to speed up the export.
             model_type (str): type of the model, such as "llama", "mistral", "mixtral".
-                Needs to be compatible with transformers.AutoConfig.
+                Needs to be compatible with transformers.AutoConfig. If "auto" or None, the model type
+                is inferred from the given NeMo checkpoint.
             device (str): type of the device to use by the vLLM engine.
                 Supported values are "auto", "cuda", "cpu", "neuron".
             tensor_parallel_size (int): tensor parallelism.
@@ -155,6 +157,10 @@ class vLLMExporter(ITritonDeployable):
         device_config = DeviceConfig(device)
 
         assert quantization in {None, "fp8"}
+
+        if model_type is None or model_type == "auto":
+            # For NeMo 2.0 models we can get model_type from the model class name
+            model_type = get_model_type(nemo_checkpoint, True)
 
         model_config = NemoModelConfig(
             nemo_checkpoint,
