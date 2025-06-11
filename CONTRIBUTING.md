@@ -35,6 +35,22 @@ git commit -m "build: Adding dependencies"
 git push
 ```
 
+### Linting and Formatting
+
+We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting.
+
+Installation:
+
+```bash
+pip install ruff
+```
+
+Format:
+
+```bash
+ruff format .
+```
+
 ## Making Changes
 
 ### Workflow: Clone and Branch (No Fork Required)
