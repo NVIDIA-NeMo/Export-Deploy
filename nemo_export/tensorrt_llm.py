@@ -28,7 +28,6 @@ import safetensors
 import tensorrt_llm
 import torch
 import torch.nn.functional as F
-import wrapt
 from tensorrt_llm._common import check_max_num_tokens
 from tensorrt_llm._utils import numpy_to_torch
 from tensorrt_llm.builder import BuildConfig
@@ -83,7 +82,6 @@ from nemo_export.trt_llm.converter.model_converter import (
     model_to_trtllm_ckpt,
 )
 from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import (
-    dist_model_to_trt_llm_ckpt,
     get_layer_prefix,
 )
 from nemo_export.trt_llm.converter.utils import init_model_parallel_from_nemo
