@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-coverage run -a --data-file=/workspace/.coverage --source=/workspace coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/create_hf_model.py \
+coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/create_hf_model.py \
   --model_name_or_path /home/TestData/hf/Mixtral-8x7B-Instruct-v0.1 \
   --output_dir /tmp/mixtral_tiny_hf \
   --config_updates "{\"num_hidden_layers\": 2, \"hidden_size\": 128, \"intermediate_size\": 448, \"num_attention_heads\": 4, \"num_key_value_heads\": 2, \"head_dim\": 32, \"num_local_experts\": 4}"
