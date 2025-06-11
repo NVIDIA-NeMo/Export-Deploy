@@ -171,33 +171,6 @@ def export_visual_wrapper_onnx(
     )
 
 
-def export_perception_wrapper_onnx(
-    perception_wrapper,
-    input,
-    output_dir,
-    input_names=["processed_signal", "processed_signal_length"],
-    output_names=["encoded", "encoded_length"],
-    dynamic_axes={
-        "processed_signal": {0: "batch", 2: "time"},
-        "processed_signal_length": {0: "batch"},
-        "encoded": {0: "batch", 1: "time"},
-        "encoded_length": {0: "batch"},
-    },
-):
-    """Export perception wrapper to ONNX."""
-    logger.log(trt.Logger.INFO, "Exporting onnx")
-    os.makedirs(f"{output_dir}/onnx", exist_ok=True)
-    torch.onnx.export(
-        perception_wrapper,
-        input,
-        f"{output_dir}/onnx/perception_encoder.onnx",
-        opset_version=17,
-        input_names=input_names,
-        output_names=output_names,
-        dynamic_axes=dynamic_axes,
-    )
-
-
 def build_trt_engine(
     model_type,
     input_sizes,
