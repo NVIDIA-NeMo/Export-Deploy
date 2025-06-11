@@ -63,6 +63,17 @@ RUN bash -exu <<"EOF"
     fi
 EOF
 
+
+COPY external/patches/triton-lang_triton_6570_lazy_init.patch /workspace/external/patches/triton-lang_triton_6570_lazy_init.patch
+RUN bash -exu <<"EOF"
+    patch \
+        -p1 \
+        --force \
+        $(python -c "import triton; print(triton.__path__[0])")/runtime/autotuner.py \
+        /workspace/external/patches/triton-lang_triton_6570_lazy_init.patch 
+    
+EOF
+
 # For trt-llm
 ENV LD_LIBRARY_PATH=/opt/hpcx/ucx/lib:$LD_LIBRARY_PATH
 ENV LD_LIBRARY_PATH=/opt/hpcx/ompi/lib:$LD_LIBRARY_PATH
