@@ -168,7 +168,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                 else:
                     deployed_output = nq.query_llm(
                         prompts=[prompt],
-                        max_length=1,
+                        max_output_len=1,
                         top_k=1,
                         top_p=0,
                         temperature=0.1,
