@@ -168,7 +168,7 @@ def convert_nemo_to_trtllm(
     """Convert NeMo checkpoint to TensorRT-LLM model."""
     
     if debug:
-        print(f"\nConverting NeMo checkpoint to TensorRT-LLM...")
+        print("\nConverting NeMo checkpoint to TensorRT-LLM...")
         print(f"Source: {nemo_checkpoint_path}")
         print(f"Target: {trt_llm_path}")
         print(f"Model type: {model_type}")

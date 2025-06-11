@@ -269,7 +269,7 @@ def main():
             trtllmConverter = TensorRTLLM(**trtllm_kwargs)
             
             if args.nemo_checkpoint_path:
-                LOGGER.info(f"Exporting Nemo checkpoint to TensorRT-LLM")
+                LOGGER.info("Exporting Nemo checkpoint to TensorRT-LLM")
                 try:
                     trtllmConverter.export(
                         nemo_checkpoint_path=args.nemo_checkpoint_path,
@@ -286,7 +286,7 @@ def main():
                     LOGGER.error(f"Error exporting Nemo checkpoint to TensorRT-LLM: {str(e)}")
                     raise RuntimeError(f"Error exporting Nemo checkpoint to TensorRT-LLM: {str(e)}")
             elif args.hf_model_path:
-                LOGGER.info(f"Exporting HF model to TensorRT-LLM")
+                LOGGER.info("Exporting HF model to TensorRT-LLM")
                 try:
                     trtllmConverter.export_hf_model(
                         hf_model_path=args.hf_model_path,

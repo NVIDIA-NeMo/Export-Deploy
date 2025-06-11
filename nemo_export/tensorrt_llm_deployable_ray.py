@@ -19,7 +19,6 @@ import numpy as np
 
 from fastapi import FastAPI, HTTPException
 
-from nemo_deploy.ray_utils import find_available_port
 from nemo_export.tensorrt_llm import TensorRTLLM
 
 LOGGER = logging.getLogger("NeMo")

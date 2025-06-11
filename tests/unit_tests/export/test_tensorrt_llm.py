@@ -14,7 +14,7 @@
 
 import os
 import re
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 import torch
