@@ -16,6 +16,9 @@
 from pytriton.model_config import ModelConfig
 from pytriton.triton import Triton, TritonConfig
 from nemo_deploy.deploy_base import DeployBase
+import logging
+
+LOGGER = logging.getLogger("NeMo")
 
 
 class DeployPyTriton(DeployBase):
@@ -131,7 +134,7 @@ class DeployPyTriton(DeployBase):
                 )
         except Exception as e:
             self.triton = None
-            print(e)
+            LOGGER.error(e)
 
     def serve(self):
         """Starts serving the model and waits for the requests."""
@@ -142,7 +145,7 @@ class DeployPyTriton(DeployBase):
             self.triton.serve()
         except Exception as e:
             self.triton = None
-            print(e)
+            LOGGER.error(e)
 
     def run(self):
         """Starts serving the model asynchronously."""
