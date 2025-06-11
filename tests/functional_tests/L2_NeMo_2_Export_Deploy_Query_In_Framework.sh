@@ -16,7 +16,7 @@ python tests/functional_tests/utils/test_hf_import.py \
   --output_path /tmp/nemo2_ckpt \
   --config Llama32Config1B
 
-torchrun --nproc_per_node=2 scripts/deploy/nlp/deploy_inframework_triton.py \
+python -m torch.distributed.run --nproc_per_node=2 scripts/deploy/nlp/deploy_inframework_triton.py \
   --nemo_checkpoint /tmp/nemo2_ckpt \
   --triton_model_name llama \
   --tensor_parallelism_size 2 &
