@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-python tests/functional_tests/utils/test_hf_import.py \
+coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/test_hf_import.py \
   --hf_model meta-llama/Llama-3.2-1B \
   --output_path /tmp/nemo2_ckpt \
   --config Llama32Config1B
