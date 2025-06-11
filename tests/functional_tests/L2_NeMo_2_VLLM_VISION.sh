@@ -15,12 +15,13 @@
 export TRANSFORMERS_OFFLINE=1
 export HF_HOME=/home/TestData/vlm/vision/hf/
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/test_llava_next_InternVIT.py \
+coverage run -a --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/test_llava_next_InternVIT.py \
   --devices=1 \
   --max-steps=5
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace scripts/vlm/import_hf.py --input_name_or_path="OpenGVLab/InternViT-300M-448px-V2_5"
+coverage run -a --data-file=/workspace/.coverage --source=/workspace --parallel-mode scripts/vlm/import_hf.py --input_name_or_path="OpenGVLab/InternViT-300M-448px-V2_5"
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace scripts/vlm/import_hf.py --input_name_or_path="openai/clip-vit-large-patch14"
+coverage run -a --data-file=/workspace/.coverage --source=/workspace --parallel-mode scripts/vlm/import_hf.py --input_name_or_path="openai/clip-vit-large-patch14"
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace scripts/vlm/import_hf.py --input_name_or_path="google/siglip-base-patch16-224"
+coverage run -a --data-file=/workspace/.coverage --source=/workspace --parallel-mode scripts/vlm/import_hf.py --input_name_or_path="google/siglip-base-patch16-224"
+coverage combine

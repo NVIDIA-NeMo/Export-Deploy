@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_export.py \
+coverage run -a --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/run_nemo_export.py \
   --model_name test \
   --model_dir /tmp/trt_llm_model_dir/ \
   --use_huggingface True \
@@ -20,3 +20,4 @@ coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/funct
   --min_tps 1 \
   --test_deployment True \
   --debug
+coverage combine

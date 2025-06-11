@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/test_hf_import.py \
+coverage run -a --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/test_hf_import.py \
   --hf_model meta-llama/Llama-3.2-1B \
   --output_path /tmp/nemo2_ckpt \
   --config Llama32Config1B
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_export.py \
+coverage run -a --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/run_nemo_export.py \
   --model_name test \
   --model_type llama \
   --checkpoint_dir /tmp/nemo2_ckpt \
@@ -27,3 +27,4 @@ coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/funct
   --test_data_path tests/functional_tests/data/lambada.json \
   --accuracy_threshold 0.0 \
   --debug
+coverage combine
