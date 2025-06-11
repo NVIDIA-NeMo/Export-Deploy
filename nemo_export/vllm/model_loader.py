@@ -19,7 +19,7 @@ from typing import Any, Dict
 import safetensors.torch
 import torch
 from vllm.config import ModelConfig
-from vllm.model_executor.model_loader.loader import BaseModelLoader, _initialize_model
+from vllm.model_executor.model_loader import BaseModelLoader, get_model
 from vllm.model_executor.model_loader.utils import set_default_torch_dtype
 
 from nemo_export.utils import load_model_weights
@@ -59,7 +59,7 @@ class NemoModelLoader(BaseModelLoader):
 
         with set_default_torch_dtype(model_config.dtype):
             with torch.device(device_config.device):
-                model = _initialize_model(vllm_config)
+                model = get_model(vllm_config=vllm_config)
 
             config = model_config.nemo_model_config
             if "config" in config:

@@ -43,7 +43,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-vllm = ["vllm==0.8.5.post1", "pandas"]
+vllm = ["vllm", "pandas"]
 trtllm = ["tensorrt-llm~=0.20.0rc3"]
 te = ["transformer-engine[pytorch]==2.4.0"]
 
@@ -63,6 +63,8 @@ test = ["pytest", "pytest-mock", "coverage"]
 
 [tool.uv.sources]
 nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "5e63ca3c1631bb156187705f9c4cf643a67f9c05" }
+xformers = [{ index = "pytorch-cu128" }]
+vllm = [{ index = "pytorch-cu128" }]
 
 [tool.uv.workspace]
 
@@ -88,6 +90,12 @@ override-dependencies = [
     "triton; sys_platform == 'never'",
 ]
 prerelease = "allow"
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
 
 [tool.black]
 line-length = 120
