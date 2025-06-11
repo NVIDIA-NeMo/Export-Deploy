@@ -131,6 +131,8 @@ source = [
     "/home/runner/work/NeMo-Export-Deploy/NeMo-Export-Deploy",
 ]
 
+[tool.ruff]
+line-length = 119
 
 [tool.ruff.lint]
 # Enable all `pydocstyle` rules, limiting to those that adhere to the
