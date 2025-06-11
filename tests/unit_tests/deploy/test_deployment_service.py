@@ -19,6 +19,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
+import requests
 
 from nemo_deploy.service.fastapi_interface_to_pytriton import (
     ChatCompletionRequest,
@@ -87,6 +88,25 @@ class TestTritonSettings:
             assert settings.triton_service_port == 9000
             assert settings.triton_service_ip == "127.0.0.1"
 
+    def test_triton_settings_exception_handling(self):
+        """Test TritonSettings initialization when environment variables cause exceptions"""
+        with patch.dict(os.environ, {"TRITON_PORT": "invalid_port"}, clear=True):
+            with patch('nemo.utils.logging.error') as mock_logging:
+                settings = TritonSettings()
+
+                # The attributes won't be set due to the early return, so accessing properties will fail
+                with pytest.raises(AttributeError):
+                    _ = settings.triton_service_port
+
+                with pytest.raises(AttributeError):
+                    _ = settings.triton_service_ip
+
+                # Verify that the error was logged
+                mock_logging.assert_called_once()
+                # Check that the error message contains the expected content
+                args, kwargs = mock_logging.call_args
+                assert "An exception occurred trying to retrieve set args in TritonSettings class" in args[0]
+
 
 class TestCompletionRequest:
     def test_default_completions_values(self):
@@ -124,6 +144,24 @@ class TestHealthEndpoints:
         response = client.get("/v1/health")
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
+
+    def test_triton_health_check_not_ready(self, client):
+        """Test triton health check when server returns non-200 status"""
+        with patch("requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.status_code = 503
+            mock_get.return_value = mock_response
+
+            response = client.get("/v1/triton_health")
+            assert response.status_code == 503
+            assert "Triton server is not ready" in response.json()["detail"]
+
+    def test_triton_health_check_request_exception(self, client):
+        """Test triton health check when request fails"""
+        with patch("requests.get", side_effect=requests.RequestException("Connection failed")):
+            response = client.get("/v1/triton_health")
+            assert response.status_code == 503
+            assert "Cannot reach Triton server" in response.json()["detail"]
 
 
 class TestUtilityFunctions:
