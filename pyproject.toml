@@ -125,18 +125,28 @@ source = [
 line-length = 120
 
 [tool.ruff.format]
-skip-magic-trailing-comma = true
+quote-style = "double"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.ruff.lint]
 # Enable all `pydocstyle` rules, limiting to those that adhere to the
 # Google convention via `convention = "google"`, below.
-select = ["D", "F", "I"]
+select = [
+    "F541", # f-string without any placeholders
+    "F841", # local variable assigned but never used
+    "F401", # imported but unused
+    "E741", # ambiguous variable name
+    "F821", # undefined name
+    "E266", # too many leading '#' for block comment
+    "I",    # isort
+    "D101", # docstring
+    "D103",
+]
 
-# - On top of the Google convention, disable `D417`, which requires
-#   documentation for every function parameter.
-# - F841: local variable assigned but never used (exluced to favor readability)
-# TODO: Remove D10 once we are about to release to get all the docstrings written
-ignore = ["D417", "D10", "F841"]
+ignore = [
+    "E501", # Line too long - handled by formatter
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
