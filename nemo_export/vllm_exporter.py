@@ -39,8 +39,8 @@ from vllm.v1.engine.llm_engine import LLMEngine
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output
-from nemo_export.utils import convert_lora_nemo_to_canonical, prepare_directory_for_export
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import get_model_type
+from nemo_export.utils import convert_lora_nemo_to_canonical, prepare_directory_for_export
 from nemo_export.vllm.model_config import NemoModelConfig
 from nemo_export.vllm.model_loader import NemoModelLoader
 

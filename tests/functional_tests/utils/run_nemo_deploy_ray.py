@@ -25,9 +25,10 @@ import torch
 # Ray deployment imports
 run_ray_tests = True
 try:
+    from ray import serve
+
     from nemo_deploy.deploy_ray import DeployRay
     from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
-    from ray import serve
 except Exception as e:
     print(f"Ray dependencies not available: {e}")
     run_ray_tests = False

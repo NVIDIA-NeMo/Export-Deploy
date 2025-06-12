@@ -22,6 +22,7 @@ import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
 from megatron.core.dist_checkpointing.serialization import get_default_load_sharded_strategy
+from megatron.core.dist_checkpointing.validation import StrictHandling
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import GPTInferenceWrapper
 from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import InferenceWrapperConfig
@@ -32,7 +33,6 @@ from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
 from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
 from nemo.collections.llm.t5.model.t5 import T5Config
-from megatron.core.dist_checkpointing.validation import StrictHandling
 from nemo.lightning import io
 from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
 from nemo.lightning.io.pl import ckpt_to_weights_subdir

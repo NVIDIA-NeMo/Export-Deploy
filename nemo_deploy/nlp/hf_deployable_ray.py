@@ -13,17 +13,17 @@
 # limitations under the License.
 
 
-from ray import serve
 import logging
-import numpy as np
 import time
 from typing import Any, Dict
 
+import numpy as np
 import torch
 from fastapi import FastAPI, HTTPException
+from ray import serve
 
-from nemo_deploy.ray_utils import find_available_port
 from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from nemo_deploy.ray_utils import find_available_port
 
 LOGGER = logging.getLogger("NeMo")
 

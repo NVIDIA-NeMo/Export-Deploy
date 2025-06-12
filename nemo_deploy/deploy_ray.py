@@ -13,11 +13,11 @@
 # limitations under the License.
 
 
+import logging
+
 import ray
 from ray import serve
 from ray.serve import Application
-
-import logging
 
 from nemo_deploy.ray_utils import find_available_port
 

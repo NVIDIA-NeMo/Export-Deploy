@@ -14,11 +14,11 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 import numpy as np
+import pytest
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 
-from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2, MegatronLLMDeploy, dict_to_str
+from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeploy, MegatronLLMDeployableNemo2, dict_to_str
 
 
 @pytest.fixture

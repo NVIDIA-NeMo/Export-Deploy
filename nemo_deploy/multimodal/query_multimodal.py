@@ -17,9 +17,9 @@ from io import BytesIO
 import numpy as np
 import requests
 from PIL import Image
+from pytriton.client import ModelClient
 
 from nemo_deploy.utils import str_list2numpy
-from pytriton.client import ModelClient
 
 try:
     from decord import VideoReader

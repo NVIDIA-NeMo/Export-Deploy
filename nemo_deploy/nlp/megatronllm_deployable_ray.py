@@ -24,8 +24,8 @@ import torch
 from fastapi import FastAPI, HTTPException
 from ray import serve
 
-from .megatronllm_deployable import MegatronLLMDeployableNemo2
 from ..ray_utils import find_available_port
+from .megatronllm_deployable import MegatronLLMDeployableNemo2
 
 LOGGER = logging.getLogger("NeMo")
 

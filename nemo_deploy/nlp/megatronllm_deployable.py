@@ -21,17 +21,14 @@ import numpy as np
 import torch
 import torch.distributed
 from jinja2 import Template
-
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 from megatron.core.inference.inference_request import InferenceRequest
-
-from nemo_deploy import ITritonDeployable
-from nemo_deploy.utils import NEMO2, broadcast_list, cast_output, nemo_checkpoint_version, str_ndarray2list
-
-from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
 from pytriton.decorators import batch, first_value
 from pytriton.model_config import Tensor
 
+from nemo_deploy import ITritonDeployable
+from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
+from nemo_deploy.utils import NEMO2, broadcast_list, cast_output, nemo_checkpoint_version, str_ndarray2list
 
 LOGGER = logging.getLogger("NeMo")
 

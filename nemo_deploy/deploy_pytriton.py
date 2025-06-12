@@ -13,10 +13,12 @@
 # limitations under the License.
 
 
+import logging
+
 from pytriton.model_config import ModelConfig
 from pytriton.triton import Triton, TritonConfig
+
 from nemo_deploy.deploy_base import DeployBase
-import logging
 
 LOGGER = logging.getLogger("NeMo")
 

@@ -18,8 +18,8 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-from fastapi.testclient import TestClient
 import requests
+from fastapi.testclient import TestClient
 
 from nemo_deploy.service.fastapi_interface_to_pytriton import (
     ChatCompletionRequest,

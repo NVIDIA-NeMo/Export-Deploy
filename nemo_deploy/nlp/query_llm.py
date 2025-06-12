@@ -16,10 +16,11 @@ import json
 import time
 from abc import ABC
 from typing import List, Optional
+
 import numpy as np
+from pytriton.client import DecoupledModelClient, ModelClient
 
 from nemo_deploy.utils import str_list2numpy
-from pytriton.client import DecoupledModelClient, ModelClient
 
 
 class NemoQueryLLMBase(ABC):
