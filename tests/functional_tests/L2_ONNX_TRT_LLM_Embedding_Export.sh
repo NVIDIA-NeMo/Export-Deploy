@@ -11,6 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-coverage run -a --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/test_export_onnx.py \
+coverage run --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/test_export_onnx.py \
     --hf_model_path /home/TestData/llm/models/llama-3.2-nv-embedqa-1b-v2
 coverage combine
