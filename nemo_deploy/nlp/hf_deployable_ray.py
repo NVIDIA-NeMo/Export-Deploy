@@ -18,7 +18,7 @@ import asyncio
 import logging
 import numpy as np
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import torch
 from fastapi import FastAPI, HTTPException
