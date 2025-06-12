@@ -13,18 +13,11 @@
 # limitations under the License.
 
 import shutil
-from pathlib import (
-    Path,
-)
-from unittest.mock import (
-    MagicMock,
-    patch,
-)
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
-from nemo.collections import (
-    llm,
-)
+from nemo.collections import llm
 
 HF_PATH = "/home/TestData/nlp/megatron_llama/llama-ci-hf"
 OUTPUT_PATH = "/tmp/imported_nemo2"
@@ -42,47 +35,21 @@ def test_model_loading() -> None:
     """
 
     model = llm.LlamaModel(config=llm.Llama2Config7B)
-    nemo_path = llm.import_ckpt(
-        model,
-        "hf://" + HF_PATH,
-        output_path=Path(OUTPUT_PATH),
-    )
+    nemo_path = llm.import_ckpt(model, "hf://" + HF_PATH, output_path=Path(OUTPUT_PATH))
 
     assert nemo_path.exists()
     assert (nemo_path / "weights").exists()
     assert (nemo_path / "context").exists()
 
     export_path = Path("/tmp/trtllm_exported_model")
-    export_path.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    export_path.mkdir(parents=True, exist_ok=True)
     export_path_mcore = export_path / "mcore_export"
     export_path_local = export_path / "local_export"
 
-    with patch.dict(
-        "sys.modules",
-        {
-            "tensorrt_llm": dummy_module,
-            "tensorrt_llm._utils": dummy_module,
-        },
-    ):
-        from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
-            load_nemo_model,
-        )
+    with patch.dict("sys.modules", {"tensorrt_llm": dummy_module, "tensorrt_llm._utils": dummy_module}):
+        from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 
-        load_nemo_model(
-            nemo_path,
-            export_path_local,
-            False,
-        )
-        load_nemo_model(
-            nemo_path,
-            export_path_mcore,
-            True,
-        )
+        load_nemo_model(nemo_path, export_path_local, False)
+        load_nemo_model(nemo_path, export_path_mcore, True)
 
-    shutil.rmtree(
-        OUTPUT_PATH,
-        ignore_errors=True,
-    )
+    shutil.rmtree(OUTPUT_PATH, ignore_errors=True)

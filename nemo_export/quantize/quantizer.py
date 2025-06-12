@@ -14,48 +14,23 @@
 
 import os
 import tarfile
-from contextlib import (
-    nullcontext,
-)
-from typing import (
-    Callable,
-    Optional,
-)
+from contextlib import nullcontext
+from typing import Callable, Optional
 
 import torch
 import torch.distributed as dist
-from megatron.core import (
-    parallel_state,
-)
-from megatron.core.transformer.module import (
-    Float16Module,
-)
-from nemo.collections.nlp.models.language_modeling.megatron_gpt_model import (
-    MegatronGPTModel,
-)
-from nemo.collections.nlp.parts.utils_funcs import (
-    torch_dtype_from_precision,
-)
-from nemo.utils import (
-    logging,
-)
-from nemo.utils.distributed import (
-    temporary_directory,
-)
-from nemo.utils.model_utils import (
-    save_artifacts,
-    unwrap_model,
-)
-from omegaconf.omegaconf import (
-    DictConfig,
-    open_dict,
-)
+from megatron.core import parallel_state
+from megatron.core.transformer.module import Float16Module
+from nemo.collections.nlp.models.language_modeling.megatron_gpt_model import MegatronGPTModel
+from nemo.collections.nlp.parts.utils_funcs import torch_dtype_from_precision
+from nemo.utils import logging
+from nemo.utils.distributed import temporary_directory
+from nemo.utils.model_utils import save_artifacts, unwrap_model
+from omegaconf.omegaconf import DictConfig, open_dict
 
 try:
     import modelopt.torch.quantization as mtq
-    from modelopt.torch.export import (
-        export_tensorrt_llm_checkpoint,
-    )
+    from modelopt.torch.export import export_tensorrt_llm_checkpoint
 
     QUANT_CFG_CHOICES = {
         "int8": mtq.INT8_DEFAULT_CFG,
@@ -69,19 +44,12 @@ try:
 
     HAVE_MODELOPT = True
 
-except (
-    ImportError,
-    ModuleNotFoundError,
-) as e:
+except (ImportError, ModuleNotFoundError) as e:
     HAVE_MODELOPT = False
     HAVE_MODELOPT_ERROR = e
 
 
-SUPPORTED_DTYPE = [
-    16,
-    "16",
-    "bf16",
-]  # Default precision for non-quantized layers
+SUPPORTED_DTYPE = [16, "16", "bf16"]  # Default precision for non-quantized layers
 
 
 class Quantizer:
@@ -111,11 +79,7 @@ class Quantizer:
     for TensorRT-LLM deployment. This is useful to getting baseline results for a full-precision model.
     """
 
-    def __init__(
-        self,
-        quantization_config: Optional[DictConfig],
-        export_config: Optional[DictConfig],
-    ):
+    def __init__(self, quantization_config: Optional[DictConfig], export_config: Optional[DictConfig]):
         """Initialize Quantizer with quantization and export configurations.
 
         Expected keys in `quantization_config`:
@@ -147,41 +111,27 @@ class Quantizer:
 
             if "awq" in quantization_config.algorithm:
                 weight_quantizer = quant_cfg["quant_cfg"]["*weight_quantizer"]
-                if isinstance(
-                    weight_quantizer,
-                    list,
-                ):
+                if isinstance(weight_quantizer, list):
                     weight_quantizer = weight_quantizer[0]
                 weight_quantizer["block_sizes"][-1] = quantization_config.awq_block_size
 
             # Always turn on FP8 kv cache to save memory footprint.
             # For int8_sq, we use int8 kv cache.
             # TODO: Investigate why enabling FP8 kv cache will cause accuracy regressions for Nemotron.
-            enable_quant_kv_cache = quantization_config.get(
-                "enable_kv_cache",
-                None,
-            )
+            enable_quant_kv_cache = quantization_config.get("enable_kv_cache", None)
             if enable_quant_kv_cache is None:
                 enable_quant_kv_cache = (
                     "int8" not in quantization_config.algorithm and quantization_config.decoder_type != "gpt"
                 )
             logging.info(f"{'Enabled' if enable_quant_kv_cache else 'Disabled'} KV cache quantization")
             quant_cfg["quant_cfg"]["*output_quantizer"] = {
-                "num_bits": 8
-                if quantization_config.algorithm == "int8_sq"
-                else (
-                    4,
-                    3,
-                ),
+                "num_bits": 8 if quantization_config.algorithm == "int8_sq" else (4, 3),
                 "axis": None,
                 "enable": enable_quant_kv_cache,
             }
             if quantization_config.algorithm == "int8_sq":
                 logging.info(f"Using int8_sq alpha = {quantization_config.sq_alpha}")
-                quant_cfg["algorithm"] = {
-                    "method": "smoothquant",
-                    "alpha": quantization_config.sq_alpha,
-                }
+                quant_cfg["algorithm"] = {"method": "smoothquant", "alpha": quantization_config.sq_alpha}
 
             self.quant_cfg = quant_cfg
         else:
@@ -192,9 +142,7 @@ class Quantizer:
             assert export_config.dtype in SUPPORTED_DTYPE, f"Unsupported export dtype: {export_config.dtype}"
 
     @staticmethod
-    def _setup(
-        model: MegatronGPTModel,
-    ):
+    def _setup(model: MegatronGPTModel):
         """Setup model for quantization."""
         try:
             model.model.module.language_model.encoder.activations_checkpoint_method = None
@@ -207,22 +155,14 @@ class Quantizer:
                 return
 
             if model.trainer.strategy.launcher is not None:
-                model.trainer.strategy.launcher.launch(
-                    dummy,
-                    trainer=model.trainer,
-                )
+                model.trainer.strategy.launcher.launch(dummy, trainer=model.trainer)
             model.trainer.strategy.setup_environment()
 
     @staticmethod
-    def modify_model_config(
-        model_cfg: DictConfig,
-    ) -> DictConfig:
+    def modify_model_config(model_cfg: DictConfig) -> DictConfig:
         """Modify model config for quantization."""
         with open_dict(model_cfg):
-            if model_cfg.get(
-                "sequence_parallel",
-                False,
-            ):
+            if model_cfg.get("sequence_parallel", False):
                 logging.warning("Disabling sequence parallelism for quantization...")
                 model_cfg.sequence_parallel = False
             model_cfg.name = "modelopt"
@@ -231,44 +171,25 @@ class Quantizer:
         return model_cfg
 
     @staticmethod
-    def _sample_output(
-        model: MegatronGPTModel,
-    ):
+    def _sample_output(model: MegatronGPTModel):
         """Generate sample output for a model instance."""
         logging.info("Generating sample output for the model...")
 
         response = model.generate(
-            inputs=[
-                "Born in north-east France, Soyer trained as a",
-                "Born in California, Soyer trained as a",
-            ],
-            length_params={
-                "max_length": 100,
-                "min_length": 100,
-            },
+            inputs=["Born in north-east France, Soyer trained as a", "Born in California, Soyer trained as a"],
+            length_params={"max_length": 100, "min_length": 100},
         )
 
         logging.info(f'Example NeMo output before export: {response["sentences"]}"')
 
-    def quantize(
-        self,
-        model: MegatronGPTModel,
-        forward_loop: Callable[
-            [MegatronGPTModel],
-            None,
-        ],
-    ):
+    def quantize(self, model: MegatronGPTModel, forward_loop: Callable[[MegatronGPTModel], None]):
         """Quantize the model and calibrate using given forward loop."""
         assert self.quant_cfg is not None, "Quantization algorithm is not set"
 
         logging.info(f"Quantizing model to {self.quantization_config.algorithm}...")
         self._setup(model)
 
-        model = mtq.quantize(
-            model,
-            self.quant_cfg,
-            forward_loop,
-        )
+        model = mtq.quantize(model, self.quant_cfg, forward_loop)
 
         if self.quantization_config.decoder_type == "gpt":
             # We found squared_relu may have an under-calibration problem.
@@ -278,46 +199,27 @@ class Quantizer:
                 maxbound = 448
             elif self.quantization_config.algorithm == "int8_sq":
                 maxbound = 127
-            model = mtq.postprocess_amax(
-                model,
-                "*input_quantizer",
-                lambda amax: torch.clamp(
-                    amax,
-                    min=0.01 * maxbound,
-                ),
-            )
+            model = mtq.postprocess_amax(model, "*input_quantizer", lambda amax: torch.clamp(amax, min=0.01 * maxbound))
 
         if dist.get_rank() == 0:
             mtq.print_quant_summary(model)
 
         return model
 
-    def export(
-        self,
-        model: MegatronGPTModel,
-    ):
+    def export(self, model: MegatronGPTModel):
         """Export model to '.qnemo' format for TensorRT-LLM engine build."""
         assert self.export_config is not None, "Export config is not set"
         torch_dtype = torch_dtype_from_precision(self.export_config.dtype)
 
-        if self.export_config.get(
-            "sample_output",
-            True,
-        ):
+        if self.export_config.get("sample_output", True):
             self._sample_output(model)
 
         if model.cfg.megatron_amp_O2:
-            model.model = unwrap_model(
-                model.model,
-                Float16Module,
-            )
+            model.model = unwrap_model(model.model, Float16Module)
 
         # Setup model export handling: temporary directory for
         # '.qnemo' tarball or directly write to export_config.save_path
-        compress = self.export_config.get(
-            "compress",
-            False,
-        )
+        compress = self.export_config.get("compress", False)
         if compress:
             export_handler = temporary_directory()
         else:
@@ -339,20 +241,8 @@ class Quantizer:
                 f" and tokenizer config to {self.export_config.save_path}..."
             )
             if dist.get_rank() == 0:
-                save_artifacts(
-                    model,
-                    export_dir,
-                )
+                save_artifacts(model, export_dir)
                 if compress:
-                    os.makedirs(
-                        os.path.dirname(self.export_config.save_path),
-                        exist_ok=True,
-                    )
-                    with tarfile.open(
-                        self.export_config.save_path,
-                        "w",
-                    ) as tar:
-                        tar.add(
-                            export_dir,
-                            arcname="./",
-                        )
+                    os.makedirs(os.path.dirname(self.export_config.save_path), exist_ok=True)
+                    with tarfile.open(self.export_config.save_path, "w") as tar:
+                        tar.add(export_dir, arcname="./")

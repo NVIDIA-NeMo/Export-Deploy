@@ -15,11 +15,7 @@
 import argparse
 import json
 import os
-from typing import (
-    Any,
-    Dict,
-    Optional,
-)
+from typing import Any, Dict, Optional
 
 import transformers
 
@@ -44,30 +40,17 @@ python tests/setup/models/create_tiny_hf_model.py \
 """
 
 
-def get_hf_model_class(
-    hf_config,
-):
+def get_hf_model_class(hf_config):
     """Get HuggingFace model class from config."""
     if len(hf_config.architectures) > 1:
         print(f"More than one model architecture available, choosing 1st: {hf_config.architectures}")
     model_name = hf_config.architectures[0]
-    model_class = getattr(
-        transformers,
-        model_name,
-    )
+    model_class = getattr(transformers, model_name)
     return model_class
 
 
 def create_hf_model(
-    model_name_or_path: str,
-    output_dir: str,
-    config_updates: Optional[
-        Dict[
-            str,
-            Any,
-        ]
-    ] = None,
-    overwrite: bool = False,
+    model_name_or_path: str, output_dir: str, config_updates: Optional[Dict[str, Any]] = None, overwrite: bool = False
 ):
     """Create HuggingFace model with optional config updates."""
     if os.path.isdir(output_dir) and not overwrite:
@@ -85,10 +68,7 @@ def create_hf_model(
     model = model_class(hf_config)
     print(model)
 
-    os.makedirs(
-        output_dir,
-        exist_ok=True,
-    )
+    os.makedirs(output_dir, exist_ok=True)
     print(f"Saving model to {output_dir}...")
     tokenizer.save_pretrained(output_dir)
     model.save_pretrained(output_dir)
@@ -98,29 +78,12 @@ def create_hf_model(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Create a HuggingFace model (random initialization) for testing purposes.")
     parser.add_argument(
-        "--model_name_or_path",
-        required=True,
-        help="Model name or local path with model config and tokenizer",
+        "--model_name_or_path", required=True, help="Model name or local path with model config and tokenizer"
     )
+    parser.add_argument("--output_dir", required=True, help="Output directory")
     parser.add_argument(
-        "--output_dir",
-        required=True,
-        help="Output directory",
+        "--config_updates", type=json.loads, help="Parameter updates in JSON format to overwrite for model config"
     )
-    parser.add_argument(
-        "--config_updates",
-        type=json.loads,
-        help="Parameter updates in JSON format to overwrite for model config",
-    )
-    parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        help="Overwrite file if it exists",
-    )
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite file if it exists")
     args = parser.parse_args()
-    create_hf_model(
-        args.model_name_or_path,
-        args.output_dir,
-        args.config_updates,
-        args.overwrite,
-    )
+    create_hf_model(args.model_name_or_path, args.output_dir, args.config_updates, args.overwrite)

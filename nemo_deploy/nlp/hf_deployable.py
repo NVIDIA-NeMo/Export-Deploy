@@ -14,38 +14,17 @@
 
 
 import logging
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-)
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
-from peft import (
-    PeftModel,
-)
-from pytriton.decorators import (
-    batch,
-)
-from pytriton.model_config import (
-    Tensor,
-)
-from transformers import (
-    AutoModel,
-    AutoModelForCausalLM,
-    AutoTokenizer,
-)
+from peft import PeftModel
+from pytriton.decorators import batch
+from pytriton.model_config import Tensor
+from transformers import AutoModel, AutoModelForCausalLM, AutoTokenizer
 
-from nemo_deploy import (
-    ITritonDeployable,
-)
-from nemo_deploy.utils import (
-    broadcast_list,
-    cast_output,
-    str_ndarray2list,
-)
+from nemo_deploy import ITritonDeployable
+from nemo_deploy.utils import broadcast_list, cast_output, str_ndarray2list
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -114,10 +93,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         if model is None:
             self._load(**hf_kwargs)
 
-    def _load(
-        self,
-        **hf_kwargs,
-    ) -> None:
+    def _load(self, **hf_kwargs) -> None:
         """Load the HuggingFace pipeline with the specified model and task.
 
         This method initializes the HuggingFace AutoModel classes using the provided model
@@ -130,16 +106,10 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         assert self.task is not None, "A task has to be given for the generation task."
 
         if self.task == "text-generation":
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.hf_model_id_path,
-                **hf_kwargs,
-            )
+            self.model = AutoModelForCausalLM.from_pretrained(self.hf_model_id_path, **hf_kwargs)
 
             if self.hf_peft_model_id_path is not None:
-                self.model = PeftModel.from_pretrained(
-                    self.model,
-                    self.hf_peft_model_id_path,
-                )
+                self.model = PeftModel.from_pretrained(self.model, self.hf_peft_model_id_path)
         else:
             raise ValueError("Task {0} is not supported.".format(self.task))
         num_gpus = torch.cuda.device_count()
@@ -149,10 +119,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             self.model.cuda()
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.tokenizer_id_path,
-            trust_remote_code=hf_kwargs.pop(
-                "trust_remote_code",
-                False,
-            ),
+            trust_remote_code=hf_kwargs.pop("trust_remote_code", False),
             padding=self.tokenizer_padding,
             truncation=self.tokenizer_truncation,
             padding_side=self.tokenizer_padding_side,
@@ -161,10 +128,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
-    def generate(
-        self,
-        **kwargs: Any,
-    ) -> List[str]:
+    def generate(self, **kwargs: Any) -> List[str]:
         """Generate text based on the provided input prompts.
 
         This method processes input prompts through the loaded pipeline and
@@ -202,77 +166,34 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             padding=self.tokenizer_padding,
             truncation=self.tokenizer_truncation,
         )
-        kwargs = {
-            **inputs,
-            **kwargs,
-        }
+        kwargs = {**inputs, **kwargs}
         kwargs.pop("text_inputs")
-        for (
-            key,
-            val,
-        ) in kwargs.items():
+        for key, val in kwargs.items():
             if torch.is_tensor(val):
                 kwargs[key] = val.cuda()
 
         with torch.no_grad():
             generated_ids = self.model.generate(**kwargs)
-        return_dict_in_generate = kwargs.get(
-            "return_dict_in_generate",
-            False,
-        )
+        return_dict_in_generate = kwargs.get("return_dict_in_generate", False)
         if return_dict_in_generate:
-            output = {
-                "sentences": self.tokenizer.batch_decode(
-                    generated_ids["sequences"],
-                    skip_special_tokens=True,
-                )
-            }
-            if kwargs.get(
-                "output_logits",
-                False,
-            ):
+            output = {"sentences": self.tokenizer.batch_decode(generated_ids["sequences"], skip_special_tokens=True)}
+            if kwargs.get("output_logits", False):
                 output["logits"] = generated_ids["logits"]
-            if kwargs.get(
-                "output_scores",
-                False,
-            ):
+            if kwargs.get("output_scores", False):
                 output["scores"] = generated_ids["scores"]
         else:
-            output = self.tokenizer.batch_decode(
-                generated_ids,
-                skip_special_tokens=True,
-            )
+            output = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
         return output
 
-    def generate_other_ranks(
-        self,
-    ):
+    def generate_other_ranks(self):
         """Generate function for ranks other than the rank 0."""
         while True:
-            message = torch.empty(
-                1,
-                dtype=torch.long,
-                device="cuda",
-            )
-            torch.distributed.broadcast(
-                message,
-                src=0,
-            )
+            message = torch.empty(1, dtype=torch.long, device="cuda")
+            torch.distributed.broadcast(message, src=0)
             if message == 0:
-                prompts = broadcast_list(
-                    data=[None],
-                    src=0,
-                )
-                (
-                    temperature,
-                    top_k,
-                    top_p,
-                    num_tokens_to_generate,
-                    output_logits,
-                    output_scores,
-                ) = broadcast_list(
-                    data=[None],
-                    src=0,
+                prompts = broadcast_list(data=[None], src=0)
+                (temperature, top_k, top_p, num_tokens_to_generate, output_logits, output_scores) = broadcast_list(
+                    data=[None], src=0
                 )
 
                 return_dict_in_generate = False
@@ -294,99 +215,31 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 return
 
     @property
-    def get_triton_input(
-        self,
-    ):
+    def get_triton_input(self):
         inputs = (
-            Tensor(
-                name="prompts",
-                shape=(-1,),
-                dtype=bytes,
-            ),
-            Tensor(
-                name="max_length",
-                shape=(-1,),
-                dtype=np.int_,
-                optional=True,
-            ),
-            Tensor(
-                name="max_batch_size",
-                shape=(-1,),
-                dtype=np.int_,
-                optional=True,
-            ),
-            Tensor(
-                name="top_k",
-                shape=(-1,),
-                dtype=np.int_,
-                optional=True,
-            ),
-            Tensor(
-                name="top_p",
-                shape=(-1,),
-                dtype=np.single,
-                optional=True,
-            ),
-            Tensor(
-                name="temperature",
-                shape=(-1,),
-                dtype=np.single,
-                optional=True,
-            ),
-            Tensor(
-                name="random_seed",
-                shape=(-1,),
-                dtype=np.int_,
-                optional=True,
-            ),
-            Tensor(
-                name="max_length",
-                shape=(-1,),
-                dtype=np.int_,
-                optional=True,
-            ),
-            Tensor(
-                name="output_logits",
-                shape=(-1,),
-                dtype=np.bool_,
-                optional=True,
-            ),
-            Tensor(
-                name="output_scores",
-                shape=(-1,),
-                dtype=np.bool_,
-                optional=True,
-            ),
+            Tensor(name="prompts", shape=(-1,), dtype=bytes),
+            Tensor(name="max_length", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="max_batch_size", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="top_k", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="top_p", shape=(-1,), dtype=np.single, optional=True),
+            Tensor(name="temperature", shape=(-1,), dtype=np.single, optional=True),
+            Tensor(name="random_seed", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="max_length", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="output_logits", shape=(-1,), dtype=np.bool_, optional=True),
+            Tensor(name="output_scores", shape=(-1,), dtype=np.bool_, optional=True),
         )
         return inputs
 
     @property
-    def get_triton_output(
-        self,
-    ):
+    def get_triton_output(self):
         return (
-            Tensor(
-                name="sentences",
-                shape=(-1,),
-                dtype=bytes,
-            ),
-            Tensor(
-                name="logits",
-                shape=(-1,),
-                dtype=np.single,
-            ),
-            Tensor(
-                name="scores",
-                shape=(-1,),
-                dtype=np.single,
-            ),
+            Tensor(name="sentences", shape=(-1,), dtype=bytes),
+            Tensor(name="logits", shape=(-1,), dtype=np.single),
+            Tensor(name="scores", shape=(-1,), dtype=np.single),
         )
 
     @batch
-    def triton_infer_fn(
-        self,
-        **inputs: np.ndarray,
-    ):
+    def triton_infer_fn(self, **inputs: np.ndarray):
         output_infer = {}
 
         try:
@@ -403,28 +256,10 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
             if torch.distributed.is_initialized():
                 if torch.distributed.get_world_size() > 1:
-                    torch.distributed.broadcast(
-                        torch.tensor(
-                            [0],
-                            dtype=torch.long,
-                            device="cuda",
-                        ),
-                        src=0,
-                    )
+                    torch.distributed.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
+                    broadcast_list(prompts, src=0)
                     broadcast_list(
-                        prompts,
-                        src=0,
-                    )
-                    broadcast_list(
-                        data=[
-                            temperature,
-                            top_k,
-                            top_p,
-                            num_tokens_to_generate,
-                            output_logits,
-                            output_scores,
-                        ],
-                        src=0,
+                        data=[temperature, top_k, top_p, num_tokens_to_generate, output_logits, output_scores], src=0
                     )
 
             output = self.generate(
@@ -439,16 +274,8 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 return_dict_in_generate=return_dict_in_generate,
             )
 
-            if isinstance(
-                output,
-                dict,
-            ):
-                output_infer = {
-                    "sentences": cast_output(
-                        output["sentences"],
-                        np.bytes_,
-                    )
-                }
+            if isinstance(output, dict):
+                output_infer = {"sentences": cast_output(output["sentences"], np.bytes_)}
 
                 if "scores" in output.keys():
                     output_scores = []
@@ -458,11 +285,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                             output_scores.append([0])
                         else:
                             output_scores.append(lp)
-                    output_infer["scores"] = np.array(output_scores).transpose(
-                        1,
-                        0,
-                        2,
-                    )
+                    output_infer["scores"] = np.array(output_scores).transpose(1, 0, 2)
 
                 if "logits" in output.keys():
                     output_logits = []
@@ -472,35 +295,17 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                             output_logits.append([0])
                         else:
                             output_logits.append(lp)
-                    output_infer["logits"] = np.array(output_logits).transpose(
-                        1,
-                        0,
-                        2,
-                    )
+                    output_infer["logits"] = np.array(output_logits).transpose(1, 0, 2)
             else:
-                output_infer = {
-                    "sentences": cast_output(
-                        output,
-                        np.bytes_,
-                    )
-                }
+                output_infer = {"sentences": cast_output(output, np.bytes_)}
 
         except Exception as error:
             err_msg = "An error occurred: {0}".format(str(error))
-            output_infer["sentences"] = cast_output(
-                [err_msg],
-                np.bytes_,
-            )
+            output_infer["sentences"] = cast_output([err_msg], np.bytes_)
 
         return output_infer
 
-    def ray_infer_fn(
-        self,
-        inputs: Dict[
-            Any,
-            Any,
-        ],
-    ):
+    def ray_infer_fn(self, inputs: Dict[Any, Any]):
         """Perform inference using Ray with dictionary inputs and outputs.
 
         Args:
@@ -521,32 +326,12 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         """
         try:
             prompts = inputs.pop("prompts")
-            temperature = inputs.pop(
-                "temperature",
-                1.0,
-            )
-            top_k = int(
-                inputs.pop(
-                    "top_k",
-                    1,
-                )
-            )
-            top_p = inputs.pop(
-                "top_p",
-                0.0,
-            )
-            num_tokens_to_generate = inputs.pop(
-                "max_length",
-                256,
-            )
-            output_logits = inputs.pop(
-                "output_logits",
-                False,
-            )
-            output_scores = inputs.pop(
-                "output_scores",
-                False,
-            )
+            temperature = inputs.pop("temperature", 1.0)
+            top_k = int(inputs.pop("top_k", 1))
+            top_p = inputs.pop("top_p", 0.0)
+            num_tokens_to_generate = inputs.pop("max_length", 256)
+            output_logits = inputs.pop("output_logits", False)
+            output_scores = inputs.pop("output_scores", False)
             return self._infer_fn_common(
                 prompts=prompts,
                 temperature=temperature,
@@ -591,28 +376,10 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
         if torch.distributed.is_initialized():
             if torch.distributed.get_world_size() > 1:
-                torch.distributed.broadcast(
-                    torch.tensor(
-                        [0],
-                        dtype=torch.long,
-                        device="cuda",
-                    ),
-                    src=0,
-                )
+                torch.distributed.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
+                broadcast_list(prompts, src=0)
                 broadcast_list(
-                    prompts,
-                    src=0,
-                )
-                broadcast_list(
-                    data=[
-                        temperature,
-                        top_k,
-                        top_p,
-                        num_tokens_to_generate,
-                        output_logits,
-                        output_scores,
-                    ],
-                    src=0,
+                    data=[temperature, top_k, top_p, num_tokens_to_generate, output_logits, output_scores], src=0
                 )
 
         output = self.generate(
@@ -627,16 +394,10 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             return_dict_in_generate=return_dict_in_generate,
         )
 
-        if isinstance(
-            output,
-            dict,
-        ):
+        if isinstance(output, dict):
             output_infer = {"sentences": output["sentences"]}
             if cast_output_func:
-                output_infer["sentences"] = cast_output_func(
-                    output["sentences"],
-                    np.bytes_,
-                )
+                output_infer["sentences"] = cast_output_func(output["sentences"], np.bytes_)
 
             if "scores" in output.keys():
                 output_scores = []
@@ -646,11 +407,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                         output_scores.append([0])
                     else:
                         output_scores.append(lp)
-                output_infer["scores"] = np.array(output_scores).transpose(
-                    1,
-                    0,
-                    2,
-                )
+                output_infer["scores"] = np.array(output_scores).transpose(1, 0, 2)
 
             if "logits" in output.keys():
                 output_logits = []
@@ -660,17 +417,10 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                         output_logits.append([0])
                     else:
                         output_logits.append(lp)
-                output_infer["logits"] = np.array(output_logits).transpose(
-                    1,
-                    0,
-                    2,
-                )
+                output_infer["logits"] = np.array(output_logits).transpose(1, 0, 2)
         else:
             output_infer = {"sentences": output}
             if cast_output_func:
-                output_infer["sentences"] = cast_output_func(
-                    output,
-                    np.bytes_,
-                )
+                output_infer["sentences"] = cast_output_func(output, np.bytes_)
 
         return output_infer

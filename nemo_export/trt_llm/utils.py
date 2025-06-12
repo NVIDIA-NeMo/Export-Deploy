@@ -12,16 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (
-    Optional,
-)
+from typing import Optional
 
 import tensorrt_llm
 
 
-def is_rank(
-    rank: Optional[int],
-) -> bool:
+def is_rank(rank: Optional[int]) -> bool:
     """Check if the current MPI rank matches the specified rank.
 
     Args:
@@ -33,9 +29,6 @@ def is_rank(
     current_rank = tensorrt_llm.mpi_rank()
     if rank is None:
         return True
-    if isinstance(
-        rank,
-        int,
-    ):
+    if isinstance(rank, int):
         return current_rank == rank
     raise ValueError(f"Invalid rank argument {rank} of type {type(rank)}.")

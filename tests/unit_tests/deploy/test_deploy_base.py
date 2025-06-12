@@ -15,51 +15,33 @@
 
 import numpy as np
 import pytest
-from nemo_deploy.deploy_base import (
-    DeployBase,
-    ITritonDeployable,
-)
+from nemo_deploy.deploy_base import DeployBase, ITritonDeployable
 
 
 # Create a mock implementation of ITritonDeployable
 class MockTritonDeployable(ITritonDeployable):
-    def get_triton_input(
-        self,
-    ):
+    def get_triton_input(self):
         pass
 
-    def get_triton_output(
-        self,
-    ):
+    def get_triton_output(self):
         pass
 
-    def triton_infer_fn(
-        self,
-        **inputs: np.ndarray,
-    ):
+    def triton_infer_fn(self, **inputs: np.ndarray):
         pass
 
 
 # Create a concrete implementation of DeployBase for testing
 class TestDeployBase(DeployBase):
-    def deploy(
-        self,
-    ):
+    def deploy(self):
         pass
 
-    def serve(
-        self,
-    ):
+    def serve(self):
         pass
 
-    def run(
-        self,
-    ):
+    def run(self):
         pass
 
-    def stop(
-        self,
-    ):
+    def stop(self):
         pass
 
 
@@ -122,19 +104,14 @@ def test_init_custom_values():
     assert deploy.streaming is True
 
 
-def test_is_model_deployable_valid(
-    deploy_base,
-):
+def test_is_model_deployable_valid(deploy_base):
     """Test _is_model_deployable with a valid model"""
     assert deploy_base._is_model_deployable() is True
 
 
 def test_is_model_deployable_invalid():
     """Test _is_model_deployable with an invalid model"""
-    deploy = TestDeployBase(
-        triton_model_name="test_model",
-        model=object(),
-    )
+    deploy = TestDeployBase(triton_model_name="test_model", model=object())
     with pytest.raises(Exception) as exc_info:
         deploy._is_model_deployable()
     assert "This model is not deployable to Triton" in str(exc_info.value)

@@ -18,12 +18,8 @@ import multiprocessing
 import signal
 import sys
 
-from nemo_deploy.deploy_ray import (
-    DeployRay,
-)
-from nemo_deploy.nlp.megatronllm_deployable_ray import (
-    MegatronRayDeployable,
-)
+from nemo_deploy.deploy_ray import DeployRay
+from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -36,118 +32,45 @@ def get_available_cpus():
 def parse_args():
     """Parse command-line arguments for the Ray deployment script."""
     parser = argparse.ArgumentParser(description="Deploy a Megatron model using Ray")
+    parser.add_argument("--nemo_checkpoint", type=str, required=True, help="Path to the .nemo checkpoint file")
+    parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs to use per node")
+    parser.add_argument("--num_nodes", type=int, default=1, help="Number of nodes to use for deployment")
     parser.add_argument(
-        "--nemo_checkpoint",
-        type=str,
-        required=True,
-        help="Path to the .nemo checkpoint file",
+        "--tensor_model_parallel_size", type=int, default=1, help="Size of the tensor model parallelism"
     )
     parser.add_argument(
-        "--num_gpus",
-        type=int,
-        default=1,
-        help="Number of GPUs to use per node",
+        "--pipeline_model_parallel_size", type=int, default=1, help="Size of the pipeline model parallelism"
     )
     parser.add_argument(
-        "--num_nodes",
-        type=int,
-        default=1,
-        help="Number of nodes to use for deployment",
+        "--expert_model_parallel_size", type=int, default=1, help="Size of the expert model parallelism"
     )
+    parser.add_argument("--context_parallel_size", type=int, default=1, help="Size of the context parallelism")
     parser.add_argument(
-        "--tensor_model_parallel_size",
-        type=int,
-        default=1,
-        help="Size of the tensor model parallelism",
+        "--model_id", type=str, default="nemo-model", help="Identifier for the model in the API responses"
     )
-    parser.add_argument(
-        "--pipeline_model_parallel_size",
-        type=int,
-        default=1,
-        help="Size of the pipeline model parallelism",
-    )
-    parser.add_argument(
-        "--expert_model_parallel_size",
-        type=int,
-        default=1,
-        help="Size of the expert model parallelism",
-    )
-    parser.add_argument(
-        "--context_parallel_size",
-        type=int,
-        default=1,
-        help="Size of the context parallelism",
-    )
-    parser.add_argument(
-        "--model_id",
-        type=str,
-        default="nemo-model",
-        help="Identifier for the model in the API responses",
-    )
-    parser.add_argument(
-        "--host",
-        type=str,
-        default="0.0.0.0",
-        help="Host address to bind the Ray Serve server to",
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=1024,
-        help="Port number to use for the Ray Serve server",
-    )
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address to bind the Ray Serve server to")
+    parser.add_argument("--port", type=int, default=1024, help="Port number to use for the Ray Serve server")
     parser.add_argument(
         "--num_cpus",
         type=int,
         default=None,
         help="Number of CPUs to allocate for the Ray cluster. If None, will use all available CPUs.",
     )
+    parser.add_argument("--num_cpus_per_replica", type=float, default=8, help="Number of CPUs per model replica")
+    parser.add_argument("--include_dashboard", action="store_true", help="Whether to include the Ray dashboard")
     parser.add_argument(
-        "--num_cpus_per_replica",
-        type=float,
-        default=8,
-        help="Number of CPUs per model replica",
+        "--cuda_visible_devices", type=str, default="0,1", help="Comma-separated list of CUDA visible devices"
     )
     parser.add_argument(
-        "--include_dashboard",
-        action="store_true",
-        help="Whether to include the Ray dashboard",
+        "--enable_cuda_graphs", action="store_true", help="Whether to enable CUDA graphs for faster inference"
     )
-    parser.add_argument(
-        "--cuda_visible_devices",
-        type=str,
-        default="0,1",
-        help="Comma-separated list of CUDA visible devices",
-    )
-    parser.add_argument(
-        "--enable_cuda_graphs",
-        action="store_true",
-        help="Whether to enable CUDA graphs for faster inference",
-    )
-    parser.add_argument(
-        "--enable_flash_decode",
-        action="store_true",
-        help="Whether to enable Flash Attention decode",
-    )
-    parser.add_argument(
-        "--num_replicas",
-        type=int,
-        default=1,
-        help="Number of replicas for the deployment",
-    )
-    parser.add_argument(
-        "--legacy_ckpt",
-        action="store_true",
-        help="Whether to use legacy checkpoint format",
-    )
+    parser.add_argument("--enable_flash_decode", action="store_true", help="Whether to enable Flash Attention decode")
+    parser.add_argument("--num_replicas", type=int, default=1, help="Number of replicas for the deployment")
+    parser.add_argument("--legacy_ckpt", action="store_true", help="Whether to use legacy checkpoint format")
     return parser.parse_args()
 
 
-def signal_handler(
-    signum,
-    frame,
-    deployer,
-):
+def signal_handler(signum, frame, deployer):
     """Handle signal interrupts and gracefully shutdown the deployer."""
     LOGGER.info("Received interrupt signal. Shutting down gracefully...")
     deployer.stop()
@@ -197,37 +120,16 @@ def main():
         num_cpus=args.num_cpus,
         num_gpus=total_gpus,
         include_dashboard=args.include_dashboard,
-        runtime_env={
-            "env_vars": {
-                "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
-            }
-        },
+        runtime_env={"env_vars": {"CUDA_VISIBLE_DEVICES": args.cuda_visible_devices}},
     )
 
     # Set up signal handlers
-    signal.signal(
-        signal.SIGINT,
-        lambda signum, frame: signal_handler(
-            signum,
-            frame,
-            ray_deployer,
-        ),
-    )
-    signal.signal(
-        signal.SIGTERM,
-        lambda signum, frame: signal_handler(
-            signum,
-            frame,
-            ray_deployer,
-        ),
-    )
+    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
+    signal.signal(signal.SIGTERM, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
 
     try:
         # Start Ray Serve
-        ray_deployer.start(
-            host=args.host,
-            port=args.port,
-        )
+        ray_deployer.start(host=args.host, port=args.port)
 
         # Create the Multi-Rank Megatron model deployment
         app = MegatronRayDeployable.options(
@@ -251,10 +153,7 @@ def main():
         )
 
         # Deploy the model
-        ray_deployer.run(
-            app,
-            args.model_id,
-        )
+        ray_deployer.run(app, args.model_id)
 
         LOGGER.info(f"Megatron model deployed successfully at {args.host}:{args.port}")
         LOGGER.info("Press Ctrl+C to stop the deployment")

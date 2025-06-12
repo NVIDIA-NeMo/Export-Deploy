@@ -16,10 +16,7 @@
 import os
 import tempfile
 import unittest
-from unittest.mock import (
-    MagicMock,
-    patch,
-)
+from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
@@ -28,71 +25,41 @@ import torch
 @pytest.mark.run_only_on("GPU")
 class TestBuild(unittest.TestCase):
     @pytest.mark.run_only_on("GPU")
-    def setUp(
-        self,
-    ):
+    def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
         self.mock_config = {
             "mm_cfg": {
-                "vision_encoder": {
-                    "from_pretrained": "test_model",
-                    "hidden_size": 768,
-                },
+                "vision_encoder": {"from_pretrained": "test_model", "hidden_size": 768},
                 "mm_mlp_adapter_type": "linear",
                 "hidden_size": 4096,
             }
         }
         self.mock_weights = {
             "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.weight": torch.randn(
-                4096,
-                768,
+                4096, 768
             ),
             "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.bias": torch.randn(4096),
         }
 
     @pytest.mark.run_only_on("GPU")
-    def tearDown(
-        self,
-    ):
+    def tearDown(self):
         # Clean up temporary directory
         if os.path.exists(self.temp_dir):
-            for (
-                root,
-                dirs,
-                files,
-            ) in os.walk(
-                self.temp_dir,
-                topdown=False,
-            ):
+            for root, dirs, files in os.walk(self.temp_dir, topdown=False):
                 for name in files:
-                    os.remove(
-                        os.path.join(
-                            root,
-                            name,
-                        )
-                    )
+                    os.remove(os.path.join(root, name))
                 for name in dirs:
-                    os.rmdir(
-                        os.path.join(
-                            root,
-                            name,
-                        )
-                    )
+                    os.rmdir(os.path.join(root, name))
             os.rmdir(self.temp_dir)
 
     @pytest.mark.run_only_on("GPU")
     @patch("nemo_export.multimodal.build.TensorRTLLM")
-    def test_build_trtllm_engine(
-        self,
-        mock_trtllm,
-    ):
+    def test_build_trtllm_engine(self, mock_trtllm):
         # Test basic functionality
         mock_exporter = MagicMock()
         mock_trtllm.return_value = mock_exporter
 
-        from nemo_export.multimodal.build import (
-            build_trtllm_engine,
-        )
+        from nemo_export.multimodal.build import build_trtllm_engine
 
         build_trtllm_engine(
             model_dir=self.temp_dir,
@@ -111,19 +78,13 @@ class TestBuild(unittest.TestCase):
     @pytest.mark.run_only_on("GPU")
     @patch("nemo_export.multimodal.build.MLLaMAForCausalLM")
     @patch("nemo_export.multimodal.build.build_trtllm")
-    def test_build_mllama_trtllm_engine(
-        self,
-        mock_build_trtllm,
-        mock_mllama,
-    ):
+    def test_build_mllama_trtllm_engine(self, mock_build_trtllm, mock_mllama):
         # Test basic functionality
         mock_model = MagicMock()
         mock_mllama.from_hugging_face.return_value = mock_model
         mock_build_trtllm.return_value = MagicMock()
 
-        from nemo_export.multimodal.build import (
-            build_mllama_trtllm_engine,
-        )
+        from nemo_export.multimodal.build import build_mllama_trtllm_engine
 
         build_mllama_trtllm_engine(
             model_dir=self.temp_dir,

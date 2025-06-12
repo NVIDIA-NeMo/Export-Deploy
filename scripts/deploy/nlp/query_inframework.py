@@ -17,91 +17,27 @@ import logging
 import sys
 import time
 
-from nemo_deploy.nlp import (
-    NemoQueryLLMPyTorch,
-)
+from nemo_deploy.nlp import NemoQueryLLMPyTorch
 
 LOGGER = logging.getLogger("NeMo")
 
 
-def get_args(
-    argv,
-):
+def get_args(argv):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Queries Triton server running an in-framework Nemo model",
     )
-    parser.add_argument(
-        "-u",
-        "--url",
-        default="0.0.0.0",
-        type=str,
-        help="url for the triton server",
-    )
-    parser.add_argument(
-        "-mn",
-        "--model_name",
-        required=True,
-        type=str,
-        help="Name of the triton model",
-    )
+    parser.add_argument("-u", "--url", default="0.0.0.0", type=str, help="url for the triton server")
+    parser.add_argument("-mn", "--model_name", required=True, type=str, help="Name of the triton model")
     prompt_group = parser.add_mutually_exclusive_group(required=True)
-    prompt_group.add_argument(
-        "-p",
-        "--prompt",
-        required=False,
-        type=str,
-        help="Prompt",
-    )
-    prompt_group.add_argument(
-        "-pf",
-        "--prompt_file",
-        required=False,
-        type=str,
-        help="File to read the prompt from",
-    )
-    parser.add_argument(
-        "-mol",
-        "--max_output_len",
-        default=128,
-        type=int,
-        help="Max output token length",
-    )
-    parser.add_argument(
-        "-tk",
-        "--top_k",
-        default=1,
-        type=int,
-        help="top_k",
-    )
-    parser.add_argument(
-        "-tpp",
-        "--top_p",
-        default=0.0,
-        type=float,
-        help="top_p",
-    )
-    parser.add_argument(
-        "-t",
-        "--temperature",
-        default=1.0,
-        type=float,
-        help="temperature",
-    )
-    parser.add_argument(
-        "-it",
-        "--init_timeout",
-        default=60.0,
-        type=float,
-        help="init timeout for the triton server",
-    )
-    parser.add_argument(
-        "-clp",
-        "--compute_logprob",
-        default=None,
-        action="store_true",
-        help="Returns log_probs",
-    )
+    prompt_group.add_argument("-p", "--prompt", required=False, type=str, help="Prompt")
+    prompt_group.add_argument("-pf", "--prompt_file", required=False, type=str, help="File to read the prompt from")
+    parser.add_argument("-mol", "--max_output_len", default=128, type=int, help="Max output token length")
+    parser.add_argument("-tk", "--top_k", default=1, type=int, help="top_k")
+    parser.add_argument("-tpp", "--top_p", default=0.0, type=float, help="top_p")
+    parser.add_argument("-t", "--temperature", default=1.0, type=float, help="temperature")
+    parser.add_argument("-it", "--init_timeout", default=60.0, type=float, help="init timeout for the triton server")
+    parser.add_argument("-clp", "--compute_logprob", default=None, action="store_true", help="Returns log_probs")
 
     args = parser.parse_args(argv)
     return args
@@ -119,10 +55,7 @@ def query_llm(
     init_timeout=60.0,
 ):
     start_time = time.time()
-    nemo_query = NemoQueryLLMPyTorch(
-        url,
-        model_name,
-    )
+    nemo_query = NemoQueryLLMPyTorch(url, model_name)
     result = nemo_query.query_llm(
         prompts=prompts,
         max_length=max_output_len,
@@ -137,16 +70,11 @@ def query_llm(
     return result
 
 
-def query(
-    argv,
-):
+def query(argv):
     args = get_args(argv)
 
     if args.prompt_file is not None:
-        with open(
-            args.prompt_file,
-            "r",
-        ) as f:
+        with open(args.prompt_file, "r") as f:
             args.prompt = f.read()
 
     outputs = query_llm(

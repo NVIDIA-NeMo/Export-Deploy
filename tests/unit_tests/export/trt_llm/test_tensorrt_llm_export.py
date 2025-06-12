@@ -20,33 +20,14 @@ import pytest
 @pytest.mark.pleasefixme  # disabled since it required data
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
-@pytest.mark.parametrize(
-    "tensor_parallelism_size,pipeline_parallelism_size",
-    [
-        (
-            2,
-            1,
-        ),
-        (
-            1,
-            2,
-        ),
-    ],
-)
-def test_nemo2_convert_to_safe_tensors(
-    tensor_parallelism_size,
-    pipeline_parallelism_size,
-):
+@pytest.mark.parametrize("tensor_parallelism_size,pipeline_parallelism_size", [(2, 1), (1, 2)])
+def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_parallelism_size):
     """
     Test safe tensor exporter. This tests the whole nemo export until engine building.
     """
-    from pathlib import (
-        Path,
-    )
+    from pathlib import Path
 
-    from nemo_export.tensorrt_llm import (
-        TensorRTLLM,
-    )
+    from nemo_export.tensorrt_llm import TensorRTLLM
 
     trt_llm_exporter = TensorRTLLM(model_dir="/tmp/safe_tensor_test/")
     trt_llm_exporter.convert_to_safe_tensors(
@@ -77,13 +58,9 @@ def test_nemo2_convert_to_export():
     """
     Test safe tensor exporter. This tests the whole nemo export until engine building.
     """
-    from pathlib import (
-        Path,
-    )
+    from pathlib import Path
 
-    from nemo_export.tensorrt_llm import (
-        TensorRTLLM,
-    )
+    from nemo_export.tensorrt_llm import TensorRTLLM
 
     trt_llm_exporter = TensorRTLLM(model_dir="/tmp/safe_tensor_test_2/")
     trt_llm_exporter.export(

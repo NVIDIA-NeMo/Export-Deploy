@@ -15,16 +15,11 @@
 import argparse
 import sys
 import time
-from typing import (
-    Any,
-    Dict,
-)
+from typing import Any, Dict
 
 import numpy as np
 
-from nemo_deploy.nlp import (
-    NemoQueryLLMPyTorch,
-)
+from nemo_deploy.nlp import NemoQueryLLMPyTorch
 
 # Test prompts for benchmarking
 TEST_PROMPTS = [
@@ -41,89 +36,23 @@ TEST_PROMPTS = [
 ]
 
 
-def get_args(
-    argv,
-):
+def get_args(argv):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Benchmarks Triton server running an in-framework Nemo model",
     )
+    parser.add_argument("-u", "--url", default="0.0.0.0", type=str, help="url for the triton server")
+    parser.add_argument("-mn", "--model_name", required=True, type=str, help="Name of the triton model")
+    parser.add_argument("-n", "--num_queries", default=10, type=int, help="Number of queries to run")
+    parser.add_argument("-b", "--batch_size", default=1, type=int, help="Number of queries to send in a batch")
+    parser.add_argument("-mol", "--max_output_len", default=128, type=int, help="Max output token length")
+    parser.add_argument("-tk", "--top_k", default=1, type=int, help="top_k")
+    parser.add_argument("-tpp", "--top_p", default=0.0, type=float, help="top_p")
+    parser.add_argument("-t", "--temperature", default=1.0, type=float, help="temperature")
+    parser.add_argument("-it", "--init_timeout", default=60.0, type=float, help="init timeout for the triton server")
+    parser.add_argument("-clp", "--compute_logprob", default=None, action="store_true", help="Returns log_probs")
     parser.add_argument(
-        "-u",
-        "--url",
-        default="0.0.0.0",
-        type=str,
-        help="url for the triton server",
-    )
-    parser.add_argument(
-        "-mn",
-        "--model_name",
-        required=True,
-        type=str,
-        help="Name of the triton model",
-    )
-    parser.add_argument(
-        "-n",
-        "--num_queries",
-        default=10,
-        type=int,
-        help="Number of queries to run",
-    )
-    parser.add_argument(
-        "-b",
-        "--batch_size",
-        default=1,
-        type=int,
-        help="Number of queries to send in a batch",
-    )
-    parser.add_argument(
-        "-mol",
-        "--max_output_len",
-        default=128,
-        type=int,
-        help="Max output token length",
-    )
-    parser.add_argument(
-        "-tk",
-        "--top_k",
-        default=1,
-        type=int,
-        help="top_k",
-    )
-    parser.add_argument(
-        "-tpp",
-        "--top_p",
-        default=0.0,
-        type=float,
-        help="top_p",
-    )
-    parser.add_argument(
-        "-t",
-        "--temperature",
-        default=1.0,
-        type=float,
-        help="temperature",
-    )
-    parser.add_argument(
-        "-it",
-        "--init_timeout",
-        default=60.0,
-        type=float,
-        help="init timeout for the triton server",
-    )
-    parser.add_argument(
-        "-clp",
-        "--compute_logprob",
-        default=None,
-        action="store_true",
-        help="Returns log_probs",
-    )
-    parser.add_argument(
-        "-w",
-        "--warmup",
-        default=3,
-        type=int,
-        help="Number of warmup queries to run before benchmarking",
+        "-w", "--warmup", default=3, type=int, help="Number of warmup queries to run before benchmarking"
     )
 
     args = parser.parse_args(argv)
@@ -142,10 +71,7 @@ def run_benchmark(
     compute_logprob: bool = None,
     init_timeout: float = 60.0,
     warmup: int = 3,
-) -> Dict[
-    str,
-    Any,
-]:
+) -> Dict[str, Any]:
     """Run a benchmark of the LLM deployment.
 
     Args:
@@ -164,10 +90,7 @@ def run_benchmark(
     Returns:
         Dictionary containing benchmark results
     """
-    nemo_query = NemoQueryLLMPyTorch(
-        url,
-        model_name,
-    )
+    nemo_query = NemoQueryLLMPyTorch(url, model_name)
     latencies = []
     outputs = []
 
@@ -190,10 +113,7 @@ def run_benchmark(
 
     for batch_idx in range(num_batches):
         start_idx = batch_idx * batch_size
-        end_idx = min(
-            (batch_idx + 1) * batch_size,
-            num_queries,
-        )
+        end_idx = min((batch_idx + 1) * batch_size, num_queries)
         current_batch_size = end_idx - start_idx
 
         # Select prompts for this batch
@@ -220,14 +140,7 @@ def run_benchmark(
 
         for i in range(current_batch_size):
             latencies.append(per_query_latency)
-            outputs.append(
-                result[i]
-                if isinstance(
-                    result,
-                    list,
-                )
-                else result
-            )
+            outputs.append(result[i] if isinstance(result, list) else result)
             print(f"Query {start_idx + i + 1}/{num_queries} completed in {per_query_latency:.2f} seconds")
 
     # Calculate statistics
@@ -235,14 +148,8 @@ def run_benchmark(
     stats = {
         "mean_latency": np.mean(latencies),
         "median_latency": np.median(latencies),
-        "p95_latency": np.percentile(
-            latencies,
-            95,
-        ),
-        "p99_latency": np.percentile(
-            latencies,
-            99,
-        ),
+        "p95_latency": np.percentile(latencies, 95),
+        "p99_latency": np.percentile(latencies, 99),
         "min_latency": np.min(latencies),
         "max_latency": np.max(latencies),
         "std_latency": np.std(latencies),
@@ -255,12 +162,7 @@ def run_benchmark(
     return stats
 
 
-def print_benchmark_results(
-    stats: Dict[
-        str,
-        Any,
-    ],
-) -> None:
+def print_benchmark_results(stats: Dict[str, Any]) -> None:
     """Print benchmark results in a formatted way."""
     print("\nBenchmark Results:")
     print("=" * 50)
@@ -278,9 +180,7 @@ def print_benchmark_results(
     print(f"\nThroughput: {stats['queries_per_second']:.2f} queries/second")
 
 
-def benchmark(
-    argv,
-):
+def benchmark(argv):
     args = get_args(argv)
 
     stats = run_benchmark(

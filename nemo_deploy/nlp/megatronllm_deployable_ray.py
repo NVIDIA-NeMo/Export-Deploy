@@ -16,28 +16,16 @@
 import logging
 import os
 import time
-from typing import (
-    Any,
-    Dict,
-)
+from typing import Any, Dict
 
 import numpy as np
 import ray
 import torch
-from fastapi import (
-    FastAPI,
-    HTTPException,
-)
-from ray import (
-    serve,
-)
+from fastapi import FastAPI, HTTPException
+from ray import serve
 
-from .megatronllm_deployable import (
-    MegatronLLMDeployableNemo2,
-)
-from ..ray_utils import (
-    find_available_port,
-)
+from .megatronllm_deployable import MegatronLLMDeployableNemo2
+from ..ray_utils import find_available_port
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -101,25 +89,12 @@ class ModelWorker:
             LOGGER.error(f"Replica {replica_id} - Failed to initialize model for rank {rank}: {str(e)}")
             raise
 
-    def infer(
-        self,
-        inputs: Dict[
-            str,
-            Any,
-        ],
-    ) -> Dict[
-        str,
-        Any,
-    ]:
+    def infer(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Run inference on the model shard."""
         return self.model.ray_infer_fn(inputs)
 
 
-@serve.deployment(
-    num_replicas=1,
-    ray_actor_options={"num_cpus": 8},
-    max_ongoing_requests=32,
-)
+@serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 8}, max_ongoing_requests=32)
 @serve.ingress(app)
 class MegatronRayDeployable:
     """A Ray Serve deployment for distributed Megatron LLM models.
@@ -175,12 +150,7 @@ class MegatronRayDeployable:
             # Pre-allocate master port to avoid race conditions between workers
             # Use replica-specific port to avoid conflicts between replicas
             base_port = 29500 + (replica_id % 100) * 100
-            master_port = str(
-                find_available_port(
-                    base_port,
-                    ray._private.services.get_node_ip_address(),
-                )
-            )
+            master_port = str(find_available_port(base_port, ray._private.services.get_node_ip_address()))
             LOGGER.info(f"Replica {replica_id} - Pre-allocated master port: {master_port}")
 
             # Create workers with proper synchronization for distributed initialization
@@ -210,10 +180,7 @@ class MegatronRayDeployable:
             time.sleep(1)  # Give rank 0 time to start the distributed backend
 
             # Create remaining workers in parallel
-            for rank in range(
-                1,
-                world_size,
-            ):
+            for rank in range(1, world_size):
                 worker = ModelWorker.remote(
                     nemo_checkpoint_filepath=nemo_checkpoint_filepath,
                     rank=rank,
@@ -243,51 +210,24 @@ class MegatronRayDeployable:
             raise
 
     @app.post("/v1/completions/")
-    async def completions(
-        self,
-        request: Dict[
-            Any,
-            Any,
-        ],
-    ):
+    async def completions(self, request: Dict[Any, Any]):
         """Handle text completion requests."""
         try:
             if "prompt" in request:
                 request["prompts"] = [request["prompt"]]
-            temperature = request.get(
-                "temperature",
-                0.0,
-            )
-            top_p = request.get(
-                "top_p",
-                0.0,
-            )
+            temperature = request.get("temperature", 0.0)
+            top_p = request.get("top_p", 0.0)
             if temperature == 0.0 and top_p == 0.0:
                 LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
                 request["top_k"] = 1.0
 
             # Prepare inference inputs with proper parameter mapping
             inference_inputs = {
-                "prompts": request.get(
-                    "prompts",
-                    [],
-                ),
-                "max_length": request.get(
-                    "max_tokens",
-                    256,
-                ),
-                "temperature": request.get(
-                    "temperature",
-                    1.0,
-                ),
-                "top_k": request.get(
-                    "top_k",
-                    0,
-                ),
-                "top_p": request.get(
-                    "top_p",
-                    0.0,
-                ),
+                "prompts": request.get("prompts", []),
+                "max_length": request.get("max_tokens", 256),
+                "temperature": request.get("temperature", 1.0),
+                "top_k": request.get("top_k", 0),
+                "top_p": request.get("top_p", 0.0),
                 "compute_logprob": True if request.get("logprobs") == 1 else False,
                 "apply_chat_template": False,
             }
@@ -295,31 +235,16 @@ class MegatronRayDeployable:
             # Run tokenization and model inference in the thread pool
             results = ray.get(self.primary_worker.infer.remote(inference_inputs))
             # Extract generated texts from results
-            generated_texts = results.get(
-                "sentences",
-                [],
-            )
+            generated_texts = results.get("sentences", [])
 
             # Calculate token counts asynchronously
-            prompt_tokens = sum(
-                len(p.split())
-                for p in request.get(
-                    "prompts",
-                    [],
-                )
-            )
+            prompt_tokens = sum(len(p.split()) for p in request.get("prompts", []))
             completion_tokens = sum(len(r.split()) for r in generated_texts)
             total_tokens = prompt_tokens + completion_tokens
 
             # Convert numpy arrays to Python lists for JSON serialization
-            log_probs_data = results.get(
-                "log_probs",
-                None,
-            )
-            if log_probs_data is not None and isinstance(
-                log_probs_data,
-                np.ndarray,
-            ):
+            log_probs_data = results.get("log_probs", None)
+            if log_probs_data is not None and isinstance(log_probs_data, np.ndarray):
                 log_probs_data = log_probs_data.tolist()
 
             output = {
@@ -332,21 +257,13 @@ class MegatronRayDeployable:
                         "text": " ".join(generated_texts),
                         "index": 0,
                         "logprobs": (
-                            {
-                                "token_logprobs": log_probs_data,
-                                "top_logprobs": log_probs_data,
-                            }
+                            {"token_logprobs": log_probs_data, "top_logprobs": log_probs_data}
                             if log_probs_data is not None
                             else None
                         ),
                         "finish_reason": (
                             "length"
-                            if generated_texts
-                            and len(generated_texts[0])
-                            >= request.get(
-                                "max_tokens",
-                                256,
-                            )
+                            if generated_texts and len(generated_texts[0]) >= request.get("max_tokens", 256)
                             else "stop"
                         ),
                     }
@@ -360,53 +277,26 @@ class MegatronRayDeployable:
             return output
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error during inference: {str(e)}",
-            )
+            raise HTTPException(status_code=500, detail=f"Error during inference: {str(e)}")
 
     @app.post("/v1/chat/completions/")
-    async def chat_completions(
-        self,
-        request: Dict[
-            Any,
-            Any,
-        ],
-    ):
+    async def chat_completions(self, request: Dict[Any, Any]):
         """Handle chat completion requests."""
         try:
             # Extract parameters from the request dictionary
-            messages = request.get(
-                "messages",
-                [],
-            )
+            messages = request.get("messages", [])
 
             # Prepare inference parameters
             # For chat templates, we need to pass the entire messages list as a single prompt
             # so that apply_chat_template receives the full conversation context
             inference_inputs = {
                 "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
-                "max_length": request.get(
-                    "max_tokens",
-                    256,
-                ),
-                "temperature": request.get(
-                    "temperature",
-                    1.0,
-                ),
-                "top_k": request.get(
-                    "top_k",
-                    0,
-                ),
-                "top_p": request.get(
-                    "top_p",
-                    0.0,
-                ),
+                "max_length": request.get("max_tokens", 256),
+                "temperature": request.get("temperature", 1.0),
+                "top_k": request.get("top_k", 0),
+                "top_p": request.get("top_p", 0.0),
                 "compute_logprob": True if request.get("logprobs") == 1 else False,
-                "apply_chat_template": request.get(
-                    "apply_chat_template",
-                    True,
-                ),
+                "apply_chat_template": request.get("apply_chat_template", True),
             }
 
             # Run model inference in the thread pool
@@ -421,14 +311,8 @@ class MegatronRayDeployable:
             total_tokens = prompt_tokens + completion_tokens
 
             # Convert numpy arrays to Python lists for JSON serialization
-            log_probs_data = results.get(
-                "log_probs",
-                None,
-            )
-            if log_probs_data is not None and isinstance(
-                log_probs_data,
-                np.ndarray,
-            ):
+            log_probs_data = results.get("log_probs", None)
+            if log_probs_data is not None and isinstance(log_probs_data, np.ndarray):
                 log_probs_data = log_probs_data.tolist()
 
             output = {
@@ -438,16 +322,10 @@ class MegatronRayDeployable:
                 "model": self.model_id,
                 "choices": [
                     {
-                        "message": {
-                            "role": "assistant",
-                            "content": generated_texts[0] if generated_texts else "",
-                        },
+                        "message": {"role": "assistant", "content": generated_texts[0] if generated_texts else ""},
                         "index": 0,
                         "logprobs": (
-                            {
-                                "token_logprobs": log_probs_data,
-                                "top_logprobs": log_probs_data,
-                            }
+                            {"token_logprobs": log_probs_data, "top_logprobs": log_probs_data}
                             if log_probs_data is not None
                             else None
                         ),
@@ -467,30 +345,14 @@ class MegatronRayDeployable:
             return output
         except Exception as e:
             LOGGER.error(f"Error during chat completion: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error during chat completion: {str(e)}",
-            )
+            raise HTTPException(status_code=500, detail=f"Error during chat completion: {str(e)}")
 
     @app.get("/v1/models")
-    async def list_models(
-        self,
-    ):
+    async def list_models(self):
         """List available models."""
-        return {
-            "data": [
-                {
-                    "id": self.model_id,
-                    "object": "model",
-                    "created": int(time.time()),
-                }
-            ],
-            "object": "list",
-        }
+        return {"data": [{"id": self.model_id, "object": "model", "created": int(time.time())}], "object": "list"}
 
     @app.get("/v1/health")
-    async def health_check(
-        self,
-    ):
+    async def health_check(self):
         """Health check endpoint."""
         return {"status": "healthy"}

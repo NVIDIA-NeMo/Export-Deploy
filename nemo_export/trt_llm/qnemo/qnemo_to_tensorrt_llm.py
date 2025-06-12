@@ -16,19 +16,11 @@ import glob
 import os
 import subprocess
 import warnings
-from typing import (
-    List,
-    Optional,
-)
+from typing import List, Optional
 
-from tensorrt_llm.models import (
-    PretrainedConfig,
-)
+from tensorrt_llm.models import PretrainedConfig
 
-from nemo_export.trt_llm.qnemo.utils import (
-    CONFIG_NAME,
-    WEIGHTS_NAME,
-)
+from nemo_export.trt_llm.qnemo.utils import CONFIG_NAME, WEIGHTS_NAME
 
 
 def qnemo_to_tensorrt_llm(
@@ -64,22 +56,10 @@ def qnemo_to_tensorrt_llm(
         stacklevel=3,
     )
 
-    num_build_workers = len(
-        glob.glob(
-            os.path.join(
-                nemo_checkpoint_path,
-                WEIGHTS_NAME.format("*"),
-            )
-        )
-    )
+    num_build_workers = len(glob.glob(os.path.join(nemo_checkpoint_path, WEIGHTS_NAME.format("*"))))
     assert num_build_workers, f"No TensorRT-LLM weight files found in {nemo_checkpoint_path}"
 
-    config = PretrainedConfig.from_json_file(
-        os.path.join(
-            nemo_checkpoint_path,
-            CONFIG_NAME,
-        )
-    )
+    config = PretrainedConfig.from_json_file(os.path.join(nemo_checkpoint_path, CONFIG_NAME))
 
     log_level = "warning"
 
@@ -94,10 +74,7 @@ def qnemo_to_tensorrt_llm(
                 use_fused_mlp = False
     use_fused_mlp = use_fused_mlp and "RecurrentGemma" not in config.architecture
 
-    use_qdq = quant_algo in [
-        "FP8",
-        "W8A8_SQ_PER_CHANNEL",
-    ]
+    use_qdq = quant_algo in ["FP8", "W8A8_SQ_PER_CHANNEL"]
 
     speculative_decoding_mode = "medusa" if "Medusa" in config.architecture else None
 
@@ -134,16 +111,9 @@ def qnemo_to_tensorrt_llm(
     if speculative_decoding_mode:
         build_cmd += f"--speculative_decoding_mode {speculative_decoding_mode} "
 
-    build_cmd = build_cmd.replace(
-        "--",
-        "\\\n  --",
-    )  # Separate parameters line by line
+    build_cmd = build_cmd.replace("--", "\\\n  --")  # Separate parameters line by line
 
     print("trtllm-build command:")
     print(build_cmd)
 
-    subprocess.run(
-        build_cmd,
-        shell=True,
-        check=True,
-    )
+    subprocess.run(build_cmd, shell=True, check=True)

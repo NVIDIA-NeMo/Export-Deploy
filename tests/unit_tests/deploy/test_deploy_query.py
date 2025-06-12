@@ -14,85 +14,38 @@
 
 
 import numpy as np
-from pytriton.decorators import (
-    batch,
-)
-from pytriton.model_config import (
-    Tensor,
-)
+from pytriton.decorators import batch
+from pytriton.model_config import Tensor
 
-from nemo_deploy import (
-    DeployPyTriton,
-    ITritonDeployable,
-)
-from nemo_deploy.nlp import (
-    NemoQueryLLM,
-)
-from nemo_deploy.utils import (
-    cast_output,
-    str_ndarray2list,
-)
+from nemo_deploy import DeployPyTriton, ITritonDeployable
+from nemo_deploy.nlp import NemoQueryLLM
+from nemo_deploy.utils import cast_output, str_ndarray2list
 
 
 class MockModel(ITritonDeployable):
     @property
-    def get_triton_input(
-        self,
-    ):
+    def get_triton_input(self):
         inputs = (
-            Tensor(
-                name="prompts",
-                shape=(-1,),
-                dtype=bytes,
-            ),
-            Tensor(
-                name="max_output_len",
-                shape=(-1,),
-                dtype=np.int_,
-                optional=True,
-            ),
-            Tensor(
-                name="output_context_logits",
-                shape=(-1,),
-                dtype=np.bool_,
-                optional=False,
-            ),
-            Tensor(
-                name="output_generation_logits",
-                shape=(-1,),
-                dtype=np.bool_,
-                optional=False,
-            ),
+            Tensor(name="prompts", shape=(-1,), dtype=bytes),
+            Tensor(name="max_output_len", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="output_context_logits", shape=(-1,), dtype=np.bool_, optional=False),
+            Tensor(name="output_generation_logits", shape=(-1,), dtype=np.bool_, optional=False),
         )
         return inputs
 
     @property
-    def get_triton_output(
-        self,
-    ):
-        outputs = (
-            Tensor(
-                name="outputs",
-                shape=(-1,),
-                dtype=bytes,
-            ),
-        )
+    def get_triton_output(self):
+        outputs = (Tensor(name="outputs", shape=(-1,), dtype=bytes),)
         return outputs
 
     @batch
-    def triton_infer_fn(
-        self,
-        **inputs: np.ndarray,
-    ):
+    def triton_infer_fn(self, **inputs: np.ndarray):
         infer_input = {"input_texts": str_ndarray2list(inputs.pop("prompts"))}
         if "max_output_len" in inputs:
             infer_input["max_output_len"] = inputs.pop("max_output_len")[0][0]
 
         output_dict = dict()
-        output_dict["outputs"] = cast_output(
-            "I am good, how about you?",
-            np.bytes_,
-        )
+        output_dict["outputs"] = cast_output("I am good, how about you?", np.bytes_)
         return output_dict
 
 
@@ -113,14 +66,8 @@ def test_nemo_deploy_query():
     nm.deploy()
     nm.run()
 
-    nq = NemoQueryLLM(
-        url="localhost:9002",
-        model_name=model_name,
-    )
-    output_deployed = nq.query_llm(
-        prompts=["Hey, how is it going?"],
-        max_output_len=20,
-    )
+    nq = NemoQueryLLM(url="localhost:9002", model_name=model_name)
+    output_deployed = nq.query_llm(prompts=["Hey, how is it going?"], max_output_len=20)
     nm.stop()
 
     assert output_deployed is not None, "Output cannot be none."

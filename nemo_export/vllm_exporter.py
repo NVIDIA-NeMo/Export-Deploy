@@ -15,20 +15,12 @@
 import json
 import logging
 import os.path
-from typing import (
-    Iterable,
-    List,
-    Optional,
-    Union,
-)
+from typing import Iterable, List, Optional, Union
 
 import numpy
 import vllm.envs as envs
 import wrapt
-from vllm import (
-    RequestOutput,
-    SamplingParams,
-)
+from vllm import RequestOutput, SamplingParams
 from vllm.config import (
     CacheConfig,
     DeviceConfig,
@@ -40,53 +32,26 @@ from vllm.config import (
     SchedulerConfig,
     VllmConfig,
 )
-from vllm.executor.ray_utils import (
-    initialize_ray_cluster,
-)
-from vllm.lora.request import (
-    LoRARequest,
-)
-from vllm.v1.core.sched.scheduler import (
-    Scheduler as V1Scheduler,
-)
-from vllm.v1.engine.llm_engine import (
-    LLMEngine,
-)
+from vllm.executor.ray_utils import initialize_ray_cluster
+from vllm.lora.request import LoRARequest
+from vllm.v1.core.sched.scheduler import Scheduler as V1Scheduler
+from vllm.v1.engine.llm_engine import LLMEngine
 
-from nemo_deploy import (
-    ITritonDeployable,
-)
-from nemo_deploy.utils import (
-    cast_output,
-)
-from nemo_export.utils import (
-    convert_lora_nemo_to_canonical,
-    prepare_directory_for_export,
-)
-from nemo_export.vllm.model_config import (
-    NemoModelConfig,
-)
-from nemo_export.vllm.model_loader import (
-    NemoModelLoader,
-)
+from nemo_deploy import ITritonDeployable
+from nemo_deploy.utils import cast_output
+from nemo_export.utils import convert_lora_nemo_to_canonical, prepare_directory_for_export
+from nemo_export.vllm.model_config import NemoModelConfig
+from nemo_export.vllm.model_loader import NemoModelLoader
 
 LOGGER = logging.getLogger("NeMo")
 
 
 @wrapt.decorator
-def noop_decorator(
-    func,
-):
+def noop_decorator(func):
     """Used as batch if pytriton is not supported."""
 
-    def wrapper(
-        *args,
-        **kwargs,
-    ):
-        return func(
-            *args,
-            **kwargs,
-        )
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
 
     return wrapper
 
@@ -94,12 +59,8 @@ def noop_decorator(
 batch = noop_decorator
 use_pytriton = True
 try:
-    from pytriton.decorators import (
-        batch,
-    )
-    from pytriton.model_config import (
-        Tensor,
-    )
+    from pytriton.decorators import batch
+    from pytriton.model_config import Tensor
 except Exception:
     use_pytriton = False
 
@@ -128,9 +89,7 @@ class vLLMExporter(ITritonDeployable):
         server.serve()
     """
 
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         self.request_id = 0
         assert envs.VLLM_USE_V1, "Only vLLM V1 is supported"
 
@@ -185,18 +144,12 @@ class vLLMExporter(ITritonDeployable):
                 Possible choices are None (weights not quantized, default) and "fp8".
             delete_existing_files (bool): if True, deletes all the files in model_dir.
         """
-        prepare_directory_for_export(
-            model_dir,
-            delete_existing_files=delete_existing_files,
-        )
+        prepare_directory_for_export(model_dir, delete_existing_files=delete_existing_files)
 
         # Pouplate the basic configuration structures
         device_config = DeviceConfig(device)
 
-        assert quantization in {
-            None,
-            "fp8",
-        }
+        assert quantization in {None, "fp8"}
 
         model_config = NemoModelConfig(
             nemo_checkpoint,
@@ -214,52 +167,27 @@ class vLLMExporter(ITritonDeployable):
             enforce_eager=False,
         )
 
-        if model_config.nemo_model_config.get(
-            "fp8",
-            False,
-        ):
+        if model_config.nemo_model_config.get("fp8", False):
             LOGGER.warning(
                 "NeMo FP8 checkpoint detected, but exporting FP8 quantized engines is not supported for vLLM."
             )
 
         parallel_config = ParallelConfig(
-            pipeline_parallel_size=pipeline_parallel_size,
-            tensor_parallel_size=tensor_parallel_size,
+            pipeline_parallel_size=pipeline_parallel_size, tensor_parallel_size=tensor_parallel_size
         )
 
         # vllm/huggingface doesn't like the absense of config file. Place config in load dir.
-        if model_config.model and not os.path.exists(
-            os.path.join(
-                model_config.model,
-                "config.json",
-            )
-        ):
-            with open(
-                os.path.join(
-                    model_config.model,
-                    "config.json",
-                ),
-                "w",
-            ) as f:
-                json.dump(
-                    model_config.hf_text_config.to_dict(),
-                    f,
-                    indent=2,
-                )
+        if model_config.model and not os.path.exists(os.path.join(model_config.model, "config.json")):
+            with open(os.path.join(model_config.model, "config.json"), "w") as f:
+                json.dump(model_config.hf_text_config.to_dict(), f, indent=2)
 
         # Dynamic online FP8 quantization currently does not support in-memory conversion [TODO]
-        if quantization is not None and weight_storage in {
-            "auto",
-            "memory",
-        }:
+        if quantization is not None and weight_storage in {"auto", "memory"}:
             LOGGER.warning('Setting weight_storage = "file" for FP8 quantization')
             weight_storage = "file"
 
         # See if we have an up-to-date safetensors file
-        safetensors_file = os.path.join(
-            model_config.model,
-            "model.safetensors",
-        )
+        safetensors_file = os.path.join(model_config.model, "model.safetensors")
         safetensors_file_valid = os.path.exists(safetensors_file) and os.path.getmtime(
             safetensors_file
         ) > os.path.getmtime(nemo_checkpoint)
@@ -290,10 +218,7 @@ class vLLMExporter(ITritonDeployable):
 
         # Convert the weights ahead-of-time, if needed
         if save_weights:
-            NemoModelLoader.convert_and_store_nemo_weights(
-                model_config,
-                safetensors_file,
-            )
+            NemoModelLoader.convert_and_store_nemo_weights(model_config, safetensors_file)
         elif not inmemory_weight_conversion:
             LOGGER.info(f"Using cached weights in {safetensors_file}")
 
@@ -326,33 +251,25 @@ class vLLMExporter(ITritonDeployable):
 
         # Convert the LoRA checkpoints to vLLM compatible format and derive the configuration structure
         lora_config = self._prepare_lora_checkpoints(
-            model_dir=model_dir,
-            lora_checkpoints=lora_checkpoints,
-            dtype=model_config.dtype,
+            model_dir=model_dir, lora_checkpoints=lora_checkpoints, dtype=model_config.dtype
         )
 
         # Initialize the cluster and specify the executor class.
         if parallel_config.distributed_executor_backend == "ray":
             initialize_ray_cluster(parallel_config)
-            from vllm.v1.executor.ray_distributed_executor import (
-                RayDistributedExecutor,
-            )
+            from vllm.v1.executor.ray_distributed_executor import RayDistributedExecutor
 
             executor_class = RayDistributedExecutor
 
         elif parallel_config.distributed_executor_backend == "mp":
-            from vllm.v1.executor.multiproc_executor import (
-                MultiprocExecutor,
-            )
+            from vllm.v1.executor.multiproc_executor import MultiprocExecutor
 
             executor_class = MultiprocExecutor
 
         else:
             assert parallel_config.distributed_executor_backend == "uni" or parallel_config.world_size == 1
 
-            from vllm.v1.executor.abstract import (
-                UniProcExecutor,
-            )
+            from vllm.v1.executor.abstract import UniProcExecutor
 
             executor_class = UniProcExecutor
 
@@ -373,10 +290,7 @@ class vLLMExporter(ITritonDeployable):
         )
 
     def _prepare_lora_checkpoints(
-        self,
-        model_dir: str,
-        lora_checkpoints: Optional[List[str]],
-        dtype: str,
+        self, model_dir: str, lora_checkpoints: Optional[List[str]], dtype: str
     ) -> LoRAConfig:
         self.lora_checkpoints = []
 
@@ -389,36 +303,19 @@ class vLLMExporter(ITritonDeployable):
             if not os.path.isfile(nemo_file):
                 raise FileNotFoundError(f"LoRA checkpoint file '{nemo_file} does not exist'")
 
-            hf_lora_dir = os.path.join(
-                model_dir,
-                f"lora_{index}",
-            )
+            hf_lora_dir = os.path.join(model_dir, f"lora_{index}")
 
             LOGGER.info(f"Converting LoRA checkpoint '{nemo_file}' into '{hf_lora_dir}'...")
 
-            (
-                _,
-                lora_config,
-            ) = convert_lora_nemo_to_canonical(
-                nemo_file,
-                hf_lora_dir,
-                hf_format=True,
-            )
+            (_, lora_config) = convert_lora_nemo_to_canonical(nemo_file, hf_lora_dir, hf_format=True)
             self.lora_checkpoints.append(hf_lora_dir)
 
             rank = lora_config["peft"]["lora_tuning"]["adapter_dim"]
-            max_lora_rank = max(
-                max_lora_rank,
-                rank,
-            )
+            max_lora_rank = max(max_lora_rank, rank)
 
             index += 1
 
-        return LoRAConfig(
-            max_lora_rank=max_lora_rank,
-            max_loras=len(self.lora_checkpoints),
-            lora_dtype=dtype,
-        )
+        return LoRAConfig(max_lora_rank=max_lora_rank, max_loras=len(self.lora_checkpoints), lora_dtype=dtype)
 
     def _add_request_to_engine(
         self,
@@ -433,17 +330,12 @@ class vLLMExporter(ITritonDeployable):
             top_p = 1.0
 
         sampling_params = SamplingParams(
-            max_tokens=max_output_len,
-            temperature=temperature,
-            top_k=int(top_k),
-            top_p=top_p,
+            max_tokens=max_output_len, temperature=temperature, top_k=int(top_k), top_p=top_p
         )
 
         if lora_uid is not None and lora_uid >= 0 and lora_uid < len(self.lora_checkpoints):
             lora_request = LoRARequest(
-                lora_name=f"LoRA_{lora_uid}",
-                lora_int_id=lora_uid + 1,
-                lora_local_path=self.lora_checkpoints[lora_uid],
+                lora_name=f"LoRA_{lora_uid}", lora_int_id=lora_uid + 1, lora_local_path=self.lora_checkpoints[lora_uid]
             )
         else:
             lora_request = None
@@ -451,19 +343,11 @@ class vLLMExporter(ITritonDeployable):
         request_id = str(self.request_id)
         self.request_id += 1
 
-        self.engine.add_request(
-            request_id,
-            prompt,
-            sampling_params,
-            lora_request=lora_request,
-        )
+        self.engine.add_request(request_id, prompt, sampling_params, lora_request=lora_request)
 
         return request_id
 
-    def _forward_regular(
-        self,
-        request_ids: List[str],
-    ):
+    def _forward_regular(self, request_ids: List[str]):
         responses = [None] * len(request_ids)
         finished = [False] * len(request_ids)
 
@@ -485,10 +369,7 @@ class vLLMExporter(ITritonDeployable):
 
         return [[response] for response in responses]
 
-    def _forward_streaming(
-        self,
-        request_ids: List[str],
-    ):
+    def _forward_streaming(self, request_ids: List[str]):
         responses = [None] * len(request_ids)
         finished = [False] * len(request_ids)
 
@@ -507,18 +388,9 @@ class vLLMExporter(ITritonDeployable):
 
             yield [[response] for response in responses]
 
-    def _add_triton_request_to_engine(
-        self,
-        inputs: numpy.ndarray,
-        index: int,
-    ) -> str:
+    def _add_triton_request_to_engine(self, inputs: numpy.ndarray, index: int) -> str:
         if "lora_uids" in inputs:
-            lora_uid = int(
-                numpy.char.decode(
-                    inputs["lora_uids"][index][0],
-                    encoding="utf-8",
-                )
-            )
+            lora_uid = int(numpy.char.decode(inputs["lora_uids"][index][0], encoding="utf-8"))
         else:
             lora_uid = None
 
@@ -532,118 +404,51 @@ class vLLMExporter(ITritonDeployable):
         )
 
     @property
-    def get_triton_input(
-        self,
-    ):
+    def get_triton_input(self):
         inputs = (
-            Tensor(
-                name="prompts",
-                shape=(-1,),
-                dtype=bytes,
-            ),
-            Tensor(
-                name="max_output_len",
-                shape=(-1,),
-                dtype=numpy.int_,
-                optional=True,
-            ),
-            Tensor(
-                name="top_k",
-                shape=(-1,),
-                dtype=numpy.int_,
-                optional=True,
-            ),
-            Tensor(
-                name="top_p",
-                shape=(-1,),
-                dtype=numpy.single,
-                optional=True,
-            ),
-            Tensor(
-                name="temperature",
-                shape=(-1,),
-                dtype=numpy.single,
-                optional=True,
-            ),
-            Tensor(
-                name="lora_uids",
-                shape=(-1,),
-                dtype=bytes,
-                optional=True,
-            ),
-            Tensor(
-                name="output_generation_logits",
-                shape=(-1,),
-                dtype=numpy.bool_,
-                optional=True,
-            ),
-            Tensor(
-                name="output_context_logits",
-                shape=(-1,),
-                dtype=numpy.bool_,
-                optional=True,
-            ),
+            Tensor(name="prompts", shape=(-1,), dtype=bytes),
+            Tensor(name="max_output_len", shape=(-1,), dtype=numpy.int_, optional=True),
+            Tensor(name="top_k", shape=(-1,), dtype=numpy.int_, optional=True),
+            Tensor(name="top_p", shape=(-1,), dtype=numpy.single, optional=True),
+            Tensor(name="temperature", shape=(-1,), dtype=numpy.single, optional=True),
+            Tensor(name="lora_uids", shape=(-1,), dtype=bytes, optional=True),
+            Tensor(name="output_generation_logits", shape=(-1,), dtype=numpy.bool_, optional=True),
+            Tensor(name="output_context_logits", shape=(-1,), dtype=numpy.bool_, optional=True),
         )
         return inputs
 
     @property
-    def get_triton_output(
-        self,
-    ):
-        outputs = (
-            Tensor(
-                name="outputs",
-                shape=(-1,),
-                dtype=bytes,
-            ),
-        )
+    def get_triton_output(self):
+        outputs = (Tensor(name="outputs", shape=(-1,), dtype=bytes),)
         return outputs
 
     @batch
-    def triton_infer_fn(
-        self,
-        **inputs: numpy.ndarray,
-    ):
+    def triton_infer_fn(self, **inputs: numpy.ndarray):
         """This function is used to perform inference on a batch of prompts."""
         request_ids = []
         num_requests = len(inputs["prompts"])
         for index in range(num_requests):
-            request_id = self._add_triton_request_to_engine(
-                inputs,
-                index,
-            )
+            request_id = self._add_triton_request_to_engine(inputs, index)
             request_ids.append(request_id)
 
         responses = self._forward_regular(request_ids)
         responses = [r[0] for r in responses]
 
-        output_tensor = cast_output(
-            responses,
-            numpy.bytes_,
-        )
+        output_tensor = cast_output(responses, numpy.bytes_)
         return {"outputs": output_tensor}
 
     @batch
-    def triton_infer_fn_streaming(
-        self,
-        **inputs: numpy.ndarray,
-    ):
+    def triton_infer_fn_streaming(self, **inputs: numpy.ndarray):
         """This function is used to perform streaming inference."""
         request_ids = []
         num_requests = len(inputs["prompts"])
         for index in range(num_requests):
-            request_id = self._add_triton_request_to_engine(
-                inputs,
-                index,
-            )
+            request_id = self._add_triton_request_to_engine(inputs, index)
             request_ids.append(request_id)
 
         for responses in self._forward_streaming(request_ids):
             responses = [r[0] for r in responses]
-            output_tensor = cast_output(
-                responses,
-                numpy.bytes_,
-            )
+            output_tensor = cast_output(responses, numpy.bytes_)
             yield {"outputs": output_tensor}
 
     # Mimic the TensorRTLLM exporter's forward function, even though we don't support many of its features.
@@ -665,10 +470,7 @@ class vLLMExporter(ITritonDeployable):
         output_log_probs: bool = False,
         output_generation_logits: bool = False,
         output_context_logits: bool = False,
-    ) -> Union[
-        List[List[str]],
-        Iterable[List[List[str]]],
-    ]:
+    ) -> Union[List[List[str]], Iterable[List[List[str]]]]:
         """The forward function performs LLM evaluation on the provided array of prompts with other parameters shared, and returns the generated texts.
 
         If 'streaming' is True, the output texts are returned incrementally

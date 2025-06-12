@@ -14,15 +14,11 @@
 
 import tarfile
 import tempfile
-from pathlib import (
-    Path,
-)
+from pathlib import Path
 
 import pytest
 
-from nemo_export.tarutils import (
-    TarPath,
-)
+from nemo_export.tarutils import TarPath
 
 
 @pytest.fixture
@@ -40,45 +36,26 @@ def sample_tar():
 
         # Create tar file
         tar_path = Path(temp_dir) / "test.tar"
-        with tarfile.open(
-            tar_path,
-            "w",
-        ) as tar:
-            tar.add(
-                test_dir,
-                arcname=".",
-            )
+        with tarfile.open(tar_path, "w") as tar:
+            tar.add(test_dir, arcname=".")
 
         yield str(tar_path)
 
 
-def test_tar_path_initialization(
-    sample_tar,
-):
+def test_tar_path_initialization(sample_tar):
     # Test initialization with string path
     with TarPath(sample_tar) as path:
-        assert isinstance(
-            path,
-            TarPath,
-        )
+        assert isinstance(path, TarPath)
         assert path.exists()
 
     # Test initialization with tarfile object
-    with tarfile.open(
-        sample_tar,
-        "r",
-    ) as tar:
+    with tarfile.open(sample_tar, "r") as tar:
         path = TarPath(tar)
-        assert isinstance(
-            path,
-            TarPath,
-        )
+        assert isinstance(path, TarPath)
         assert path.exists()
 
 
-def test_path_operations(
-    sample_tar,
-):
+def test_path_operations(sample_tar):
     with TarPath(sample_tar) as root:
         # Test path division
         file_path = root / "file1.txt"
@@ -97,9 +74,7 @@ def test_path_operations(
         assert (root / "subdir").suffix == ""
 
 
-def test_file_operations(
-    sample_tar,
-):
+def test_file_operations(sample_tar):
     with TarPath(sample_tar) as root:
         # Test file existence
         assert (root / "file1.txt").exists()
@@ -118,9 +93,7 @@ def test_file_operations(
             assert content == b"content1"
 
 
-def test_directory_operations(
-    sample_tar,
-):
+def test_directory_operations(sample_tar):
     with TarPath(sample_tar) as root:
         # Test iterdir
         entries = list(root.iterdir())
@@ -137,9 +110,7 @@ def test_directory_operations(
         assert all(f.suffix == ".txt" for f in all_txt_files)
 
 
-def test_error_handling(
-    sample_tar,
-):
+def test_error_handling(sample_tar):
     with TarPath(sample_tar) as root:
         # Test opening non-existent file
         with pytest.raises(FileNotFoundError):

@@ -18,180 +18,81 @@ import os
 import sys
 import tempfile
 
-from nemo_deploy import (
-    DeployPyTriton,
-)
+from nemo_deploy import DeployPyTriton
 
 # Configure the NeMo logger to look the same as vLLM
-logging.basicConfig(
-    format="%(levelname)s %(asctime)s %(filename)s:%(lineno)d] %(message)s",
-    datefmt="%m-%d %H:%M:%S",
-)
+logging.basicConfig(format="%(levelname)s %(asctime)s %(filename)s:%(lineno)d] %(message)s", datefmt="%m-%d %H:%M:%S")
 LOGGER = logging.getLogger("NeMo")
 
 try:
-    from nemo_export.vllm_exporter import (
-        vLLMExporter,
-    )
+    from nemo_export.vllm_exporter import vLLMExporter
 except Exception as e:
     LOGGER.error(f"Cannot import the vLLM exporter. {type(e).__name__}: {e}")
     sys.exit(1)
 
 
-def get_args(
-    argv,
-):
+def get_args(argv):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Export NeMo models to vLLM and deploy them on Triton",
     )
-    parser.add_argument(
-        "-nc",
-        "--nemo_checkpoint",
-        type=str,
-        help="Source .nemo file",
-    )
+    parser.add_argument("-nc", "--nemo_checkpoint", type=str, help="Source .nemo file")
     parser.add_argument(
         "-mt",
         "--model_type",
         type=str,
         required=True,
-        choices=[
-            "llama",
-            "mistral",
-            "mixtral",
-            "starcoder2",
-            "gemma",
-        ],
+        choices=["llama", "mistral", "mixtral", "starcoder2", "gemma"],
         help="Type of the model",
     )
+    parser.add_argument("-tmn", "--triton_model_name", required=True, type=str, help="Name for the service")
+    parser.add_argument("-tmv", "--triton_model_version", default=1, type=int, help="Version for the service")
     parser.add_argument(
-        "-tmn",
-        "--triton_model_name",
-        required=True,
-        type=str,
-        help="Name for the service",
+        "-trp", "--triton_port", default=8000, type=int, help="Port for the Triton server to listen for requests"
     )
     parser.add_argument(
-        "-tmv",
-        "--triton_model_version",
-        default=1,
-        type=int,
-        help="Version for the service",
+        "-tha", "--triton_http_address", default="0.0.0.0", type=str, help="HTTP address for the Triton server"
     )
     parser.add_argument(
-        "-trp",
-        "--triton_port",
-        default=8000,
-        type=int,
-        help="Port for the Triton server to listen for requests",
+        "-tmr", "--triton_model_repository", default=None, type=str, help="Folder for the vLLM conversion"
     )
-    parser.add_argument(
-        "-tha",
-        "--triton_http_address",
-        default="0.0.0.0",
-        type=str,
-        help="HTTP address for the Triton server",
-    )
-    parser.add_argument(
-        "-tmr",
-        "--triton_model_repository",
-        default=None,
-        type=str,
-        help="Folder for the vLLM conversion",
-    )
-    parser.add_argument(
-        "-tps",
-        "--tensor_parallelism_size",
-        default=1,
-        type=int,
-        help="Tensor parallelism size",
-    )
+    parser.add_argument("-tps", "--tensor_parallelism_size", default=1, type=int, help="Tensor parallelism size")
     parser.add_argument(
         "-dt",
         "--dtype",
-        choices=[
-            "bfloat16",
-            "float16",
-            "fp8",
-            "int8",
-        ],
+        choices=["bfloat16", "float16", "fp8", "int8"],
         default="bfloat16",
         type=str,
         help="dtype of the model on vLLM",
     )
+    parser.add_argument("-mml", "--max_model_len", default=512, type=int, help="Max input + ouptut length of the model")
+    parser.add_argument("-mbs", "--max_batch_size", default=8, type=int, help="Max batch size of the model")
     parser.add_argument(
-        "-mml",
-        "--max_model_len",
-        default=512,
-        type=int,
-        help="Max input + ouptut length of the model",
+        "-lc", "--lora_ckpt", default=[], type=str, nargs="+", help="List of LoRA checkpoints in HF format"
     )
     parser.add_argument(
-        "-mbs",
-        "--max_batch_size",
-        default=8,
-        type=int,
-        help="Max batch size of the model",
+        "-es", "--enable_streaming", default=False, action="store_true", help="Enables streaming sentences."
     )
-    parser.add_argument(
-        "-lc",
-        "--lora_ckpt",
-        default=[],
-        type=str,
-        nargs="+",
-        help="List of LoRA checkpoints in HF format",
-    )
-    parser.add_argument(
-        "-es",
-        "--enable_streaming",
-        default=False,
-        action="store_true",
-        help="Enables streaming sentences.",
-    )
-    parser.add_argument(
-        "-dm",
-        "--debug_mode",
-        default=False,
-        action="store_true",
-        help="Enable debug mode",
-    )
+    parser.add_argument("-dm", "--debug_mode", default=False, action="store_true", help="Enable debug mode")
     parser.add_argument(
         "-ws",
         "--weight_storage",
         default="auto",
-        choices=[
-            "auto",
-            "cache",
-            "file",
-            "memory",
-        ],
+        choices=["auto", "cache", "file", "memory"],
         help='Strategy for storing converted weights for vLLM: "file" - always write weights into a file, '
         '"memory" - always do an in-memory conversion, "cache" - reuse existing files if they are '
         'newer than the nemo checkpoint, "auto" - use "cache" for multi-GPU runs and "memory" '
         "for single-GPU runs.",
     )
     parser.add_argument(
-        "-gmu",
-        "--gpu_memory_utilization",
-        default=0.9,
-        type=float,
-        help="GPU memory utilization percentage for vLLM.",
+        "-gmu", "--gpu_memory_utilization", default=0.9, type=float, help="GPU memory utilization percentage for vLLM."
     )
-    parser.add_argument(
-        "-q",
-        "--quantization",
-        choices=["fp8"],
-        help="Quantization method for vLLM.",
-    )
+    parser.add_argument("-q", "--quantization", choices=["fp8"], help="Quantization method for vLLM.")
     args = parser.parse_args(argv)
     return args
 
 
-def get_vllm_deployable(
-    args,
-    model_dir,
-):
+def get_vllm_deployable(args, model_dir):
     exporter = vLLMExporter()
     exporter.export(
         nemo_checkpoint=args.nemo_checkpoint,
@@ -208,9 +109,7 @@ def get_vllm_deployable(
     return exporter
 
 
-def nemo_deploy(
-    argv,
-):
+def nemo_deploy(argv):
     args = get_args(argv)
 
     if args.debug_mode:
@@ -239,10 +138,7 @@ def nemo_deploy(
         os.makedirs(model_dir)
 
     try:
-        triton_deployable = get_vllm_deployable(
-            args,
-            model_dir=model_dir,
-        )
+        triton_deployable = get_vllm_deployable(args, model_dir=model_dir)
 
         nm = DeployPyTriton(
             model=triton_deployable,

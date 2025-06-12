@@ -13,12 +13,7 @@
 # limitations under the License.
 
 import os
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Union,
-)
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import sentencepiece
@@ -39,15 +34,7 @@ class SentencePieceTokenizer:
     def __init__(
         self,
         model_path: Optional[str] = None,
-        special_tokens: Optional[
-            Union[
-                Dict[
-                    str,
-                    str,
-                ],
-                List[str],
-            ]
-        ] = None,
+        special_tokens: Optional[Union[Dict[str, str], List[str]]] = None,
         legacy: bool = False,
         tokenizer: Optional[sentencepiece.SentencePieceProcessor] = None,
     ):
@@ -77,10 +64,7 @@ class SentencePieceTokenizer:
             self.add_special_tokens(special_tokens)
         self.space_sensitive = self.text_to_tokens("x y") != self.text_to_tokens("x") + self.text_to_tokens("y")
 
-    def text_to_tokens(
-        self,
-        text,
-    ):
+    def text_to_tokens(self, text):
         if self.legacy:
             tokens = []
             idx = 0
@@ -97,10 +81,7 @@ class SentencePieceTokenizer:
                 if len(indices) == 0:
                     break
 
-                next_token = min(
-                    indices,
-                    key=indices.get,
-                )
+                next_token = min(indices, key=indices.get)
                 next_idx = idx + indices[next_token]
 
                 tokens.extend(self.tokenizer.encode_as_pieces(text[idx:next_idx]))
@@ -112,10 +93,7 @@ class SentencePieceTokenizer:
 
         return self.tokenizer.encode_as_pieces(text)
 
-    def encode(
-        self,
-        text,
-    ):
+    def encode(self, text):
         if self.legacy:
             ids = []
             idx = 0
@@ -132,10 +110,7 @@ class SentencePieceTokenizer:
                 if len(indices) == 0:
                     break
 
-                next_token = min(
-                    indices,
-                    key=indices.get,
-                )
+                next_token = min(indices, key=indices.get)
                 next_idx = idx + indices[next_token]
 
                 ids.extend(self.tokenizer.encode_as_ids(text[idx:next_idx]))
@@ -147,36 +122,21 @@ class SentencePieceTokenizer:
 
         return self.tokenizer.encode_as_ids(text)
 
-    def tokens_to_text(
-        self,
-        tokens,
-    ):
-        if isinstance(
-            tokens,
-            np.ndarray,
-        ):
+    def tokens_to_text(self, tokens):
+        if isinstance(tokens, np.ndarray):
             tokens = tokens.tolist()
 
         return self.tokenizer.decode_pieces(tokens)
 
-    def batch_decode(
-        self,
-        ids,
-    ):
-        if isinstance(
-            ids,
-            np.ndarray,
-        ) or torch.is_tensor(ids):
+    def batch_decode(self, ids):
+        if isinstance(ids, np.ndarray) or torch.is_tensor(ids):
             ids = ids.tolist()
 
         if self.legacy:
             text = ""
             last_i = 0
 
-            for (
-                i,
-                id,
-            ) in enumerate(ids):
+            for i, id in enumerate(ids):
                 if id in self.id_to_special_token:
                     text += self.tokenizer.decode_ids(ids[last_i:i]) + " "
                     text += self.id_to_special_token[id] + " "
@@ -187,19 +147,13 @@ class SentencePieceTokenizer:
 
         return self.tokenizer.decode(ids)
 
-    def token_to_id(
-        self,
-        token,
-    ):
+    def token_to_id(self, token):
         if self.legacy and token in self.special_token_to_id:
             return self.special_token_to_id[token]
 
         return self.tokenizer.piece_to_id(token)
 
-    def ids_to_tokens(
-        self,
-        ids,
-    ):
+    def ids_to_tokens(self, ids):
         tokens = []
         for id in ids:
             if id >= self.original_vocab_size:
@@ -208,37 +162,19 @@ class SentencePieceTokenizer:
                 tokens.append(self.tokenizer.id_to_piece(id))
         return tokens
 
-    def tokens_to_ids(
-        self,
-        tokens: Union[
-            str,
-            List[str],
-        ],
-    ) -> Union[
-        int,
-        List[int],
-    ]:
-        if isinstance(
-            tokens,
-            str,
-        ):
+    def tokens_to_ids(self, tokens: Union[str, List[str]]) -> Union[int, List[int]]:
+        if isinstance(tokens, str):
             tokens = [tokens]
         ids = []
         for token in tokens:
             ids.append(self.token_to_id(token))
         return ids
 
-    def add_special_tokens(
-        self,
-        special_tokens,
-    ):
+    def add_special_tokens(self, special_tokens):
         if not self.legacy:
             raise AttributeError("Special Token addition does not work when legacy is set to False.")
 
-        if isinstance(
-            special_tokens,
-            list,
-        ):
+        if isinstance(special_tokens, list):
             for token in special_tokens:
                 if (
                     self.tokenizer.piece_to_id(token) == self.tokenizer.unk_id()
@@ -247,19 +183,9 @@ class SentencePieceTokenizer:
                     self.special_token_to_id[token] = self.vocab_size
                     self.id_to_special_token[self.vocab_size] = token
                     self.vocab_size += 1
-        elif isinstance(
-            special_tokens,
-            dict,
-        ):
-            for (
-                token_name,
-                token,
-            ) in special_tokens.items():
-                setattr(
-                    self,
-                    token_name,
-                    token,
-                )
+        elif isinstance(special_tokens, dict):
+            for token_name, token in special_tokens.items():
+                setattr(self, token_name, token)
                 if (
                     self.tokenizer.piece_to_id(token) == self.tokenizer.unk_id()
                     and token not in self.special_token_to_id
@@ -269,9 +195,7 @@ class SentencePieceTokenizer:
                     self.vocab_size += 1
 
     @property
-    def pad_id(
-        self,
-    ):
+    def pad_id(self):
         if self.legacy:
             pad_id = self.tokens_to_ids([self.pad_token])[0]
         else:
@@ -279,9 +203,7 @@ class SentencePieceTokenizer:
         return pad_id
 
     @property
-    def bos_token_id(
-        self,
-    ):
+    def bos_token_id(self):
         if self.legacy:
             bos_id = self.tokens_to_ids([self.bos_token])[0]
         else:
@@ -289,9 +211,7 @@ class SentencePieceTokenizer:
         return bos_id
 
     @property
-    def eos_token_id(
-        self,
-    ):
+    def eos_token_id(self):
         if self.legacy:
             eos_id = self.tokens_to_ids([self.eos_token])[0]
         else:
@@ -299,59 +219,40 @@ class SentencePieceTokenizer:
         return eos_id
 
     @property
-    def sep_id(
-        self,
-    ):
+    def sep_id(self):
         if self.legacy:
             return self.tokens_to_ids([self.sep_token])[0]
         else:
             raise NameError("Use function token_to_id to retrieve special tokens other than unk, pad, bos, and eos.")
 
     @property
-    def cls_id(
-        self,
-    ):
+    def cls_id(self):
         if self.legacy:
             return self.tokens_to_ids([self.cls_token])[0]
         else:
             raise NameError("Use function token_to_id to retrieve special tokens other than unk, pad, bos, and eos.")
 
     @property
-    def mask_id(
-        self,
-    ):
+    def mask_id(self):
         if self.legacy:
             return self.tokens_to_ids([self.mask_token])[0]
         else:
             raise NameError("Use function token_to_id to retrieve special tokens other than unk, pad, bos, and eos.")
 
     @property
-    def unk_id(
-        self,
-    ):
+    def unk_id(self):
         return self.tokenizer.unk_id()
 
     @property
-    def additional_special_tokens_ids(
-        self,
-    ):
+    def additional_special_tokens_ids(self):
         """Returns a list of the additional special tokens (excluding bos, eos, pad, unk). Used to return sentinel tokens for e.g. T5."""
         special_tokens = set(
-            [
-                self.bos_token,
-                self.eos_token,
-                self.pad_token,
-                self.mask_token,
-                self.cls_token,
-                self.sep_token,
-            ]
+            [self.bos_token, self.eos_token, self.pad_token, self.mask_token, self.cls_token, self.sep_token]
         )
         return [v for k, v in self.special_token_to_id.items() if k not in special_tokens]
 
     @property
-    def vocab(
-        self,
-    ):
+    def vocab(self):
         main_vocab = [self.tokenizer.id_to_piece(id) for id in range(self.tokenizer.get_piece_size())]
         special_tokens = [
             self.id_to_special_token[self.original_vocab_size + i]
@@ -361,31 +262,18 @@ class SentencePieceTokenizer:
 
     # Below are a few methods that mimic transformers.PreTrainedTokenizer for vLLM
 
-    def convert_ids_to_tokens(
-        self,
-        ids,
-        skip_special_tokens: bool = False,
-    ):
+    def convert_ids_to_tokens(self, ids, skip_special_tokens: bool = False):
         return self.ids_to_tokens(ids)  # TODO: support skip_special_tokens
 
-    def convert_tokens_to_string(
-        self,
-        tokens: List[str],
-    ):
+    def convert_tokens_to_string(self, tokens: List[str]):
         return self.tokens_to_text(tokens)
 
-    def __len__(
-        self,
-    ):
+    def __len__(self):
         return self.vocab_size
 
     @property
-    def is_fast(
-        self,
-    ):
+    def is_fast(self):
         return True
 
-    def get_added_vocab(
-        self,
-    ):
+    def get_added_vocab(self):
         return None

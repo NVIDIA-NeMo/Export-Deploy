@@ -15,19 +15,11 @@
 import logging
 import os
 
-from omegaconf import (
-    OmegaConf,
-)
-from transformers import (
-    AutoTokenizer,
-)
+from omegaconf import OmegaConf
+from transformers import AutoTokenizer
 
-from nemo_export.sentencepiece_tokenizer import (
-    SentencePieceTokenizer,
-)
-from nemo_export.tiktoken_tokenizer import (
-    TiktokenTokenizer,
-)
+from nemo_export.sentencepiece_tokenizer import SentencePieceTokenizer
+from nemo_export.tiktoken_tokenizer import TiktokenTokenizer
 
 # TODO: use get_nmt_tokenizer helper below to instantiate tokenizer once environment / dependencies get stable
 # from nemo.collections.nlp.modules.common.tokenizer_utils import get_nmt_tokenizer
@@ -37,50 +29,25 @@ TOKENIZER_DIR = "tokenizer"
 LOGGER = logging.getLogger("NeMo")
 
 
-def get_nmt_tokenizer(
-    nemo_checkpoint_path: str,
-):
+def get_nmt_tokenizer(nemo_checkpoint_path: str):
     """Build tokenizer from Nemo tokenizer config."""
     LOGGER.info(f"Initializing tokenizer from {TOKENIZER_CONFIG_FILE}")
-    tokenizer_cfg = OmegaConf.load(
-        os.path.join(
-            nemo_checkpoint_path,
-            TOKENIZER_CONFIG_FILE,
-        )
-    )
+    tokenizer_cfg = OmegaConf.load(os.path.join(nemo_checkpoint_path, TOKENIZER_CONFIG_FILE))
 
     library = tokenizer_cfg.library
-    legacy = tokenizer_cfg.get(
-        "sentencepiece_legacy",
-        library == "sentencepiece",
-    )
+    legacy = tokenizer_cfg.get("sentencepiece_legacy", library == "sentencepiece")
 
     if library == "huggingface":
         LOGGER.info(f"Getting HuggingFace AutoTokenizer with pretrained_model_name: {tokenizer_cfg.type}")
-        tokenizer = AutoTokenizer.from_pretrained(
-            tokenizer_cfg["type"],
-            use_fast=tokenizer_cfg.get(
-                "use_fast",
-                False,
-            ),
-        )
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_cfg["type"], use_fast=tokenizer_cfg.get("use_fast", False))
     elif library == "sentencepiece":
         LOGGER.info(f"Getting SentencePieceTokenizer with model: {tokenizer_cfg.model}")
         tokenizer = SentencePieceTokenizer(
-            model_path=os.path.join(
-                nemo_checkpoint_path,
-                tokenizer_cfg.model,
-            ),
-            legacy=legacy,
+            model_path=os.path.join(nemo_checkpoint_path, tokenizer_cfg.model), legacy=legacy
         )
     elif library == "tiktoken":
         print(f"Getting TiktokenTokenizer with file: {tokenizer_cfg.vocab_file}")
-        tokenizer = TiktokenTokenizer(
-            vocab_file=os.path.join(
-                nemo_checkpoint_path,
-                tokenizer_cfg.vocab_file,
-            )
-        )
+        tokenizer = TiktokenTokenizer(vocab_file=os.path.join(nemo_checkpoint_path, tokenizer_cfg.vocab_file))
     else:
         raise NotImplementedError("Currently we only support 'huggingface' and 'sentencepiece' tokenizer libraries.")
 

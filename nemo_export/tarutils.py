@@ -16,17 +16,12 @@ import fnmatch
 import logging
 import os
 import tarfile
-from typing import (
-    IO,
-    Union,
-)
+from typing import IO, Union
 
 LOGGER = logging.getLogger("NeMo")
 
 try:
-    from zarr.storage import (
-        BaseStore,
-    )
+    from zarr.storage import BaseStore
 
     HAVE_ZARR = True
 except Exception as e:
@@ -50,98 +45,51 @@ class TarPath:
     Only read and enumeration operations are supported.
     """
 
-    def __init__(
-        self,
-        tar: Union[
-            str,
-            tarfile.TarFile,
-            "TarPath",
-        ],
-        *parts,
-    ):
+    def __init__(self, tar: Union[str, tarfile.TarFile, "TarPath"], *parts):
         self._needs_to_close = False
         self._relpath = ""
-        if isinstance(
-            tar,
-            TarPath,
-        ):
+        if isinstance(tar, TarPath):
             self._tar = tar._tar
-            self._relpath = os.path.join(
-                tar._relpath,
-                *parts,
-            )
-        elif isinstance(
-            tar,
-            tarfile.TarFile,
-        ):
+            self._relpath = os.path.join(tar._relpath, *parts)
+        elif isinstance(tar, tarfile.TarFile):
             self._tar = tar
             if parts:
                 self._relpath = os.path.join(*parts)
-        elif isinstance(
-            tar,
-            str,
-        ):
+        elif isinstance(tar, str):
             self._needs_to_close = True
-            self._tar = tarfile.open(
-                tar,
-                "r",
-            )
+            self._tar = tarfile.open(tar, "r")
             if parts:
                 self._relpath = os.path.join(*parts)
         else:
             raise ValueError(f"Unexpected argument type for TarPath: {type(tar).__name__}")
 
-    def __del__(
-        self,
-    ):
+    def __del__(self):
         if self._needs_to_close:
             self._tar.close()
 
-    def __truediv__(
-        self,
-        key,
-    ) -> "TarPath":
-        return TarPath(
-            self._tar,
-            os.path.join(
-                self._relpath,
-                key,
-            ),
-        )
+    def __truediv__(self, key) -> "TarPath":
+        return TarPath(self._tar, os.path.join(self._relpath, key))
 
-    def __str__(
-        self,
-    ) -> str:
-        return os.path.join(
-            self._tar.name,
-            self._relpath,
-        )
+    def __str__(self) -> str:
+        return os.path.join(self._tar.name, self._relpath)
 
     @property
-    def tarobject(
-        self,
-    ):
+    def tarobject(self):
         """Returns the wrapped tar object."""
         return self._tar
 
     @property
-    def relpath(
-        self,
-    ):
+    def relpath(self):
         """Returns the relative path of the path."""
         return self._relpath
 
     @property
-    def name(
-        self,
-    ):
+    def name(self):
         """Returns the name of the path."""
         return os.path.split(self._relpath)[1]
 
     @property
-    def suffix(
-        self,
-    ):
+    def suffix(self):
         """Returns the suffix of the path."""
         name = self.name
         i = name.rfind(".")
@@ -150,79 +98,50 @@ class TarPath:
         else:
             return ""
 
-    def __enter__(
-        self,
-    ):
+    def __enter__(self):
         self._tar.__enter__()
         return self
 
-    def __exit__(
-        self,
-        *args,
-    ):
+    def __exit__(self, *args):
         return self._tar.__exit__(*args)
 
-    def exists(
-        self,
-    ):
+    def exists(self):
         """Checks if the path exists."""
         try:
             self._tar.getmember(self._relpath)
             return True
         except KeyError:
             try:
-                self._tar.getmember(
-                    os.path.join(
-                        ".",
-                        self._relpath,
-                    )
-                )
+                self._tar.getmember(os.path.join(".", self._relpath))
                 return True
             except KeyError:
                 return False
 
-    def is_file(
-        self,
-    ):
+    def is_file(self):
         """Checks if the path is a file."""
         try:
             self._tar.getmember(self._relpath).isreg()
             return True
         except KeyError:
             try:
-                self._tar.getmember(
-                    os.path.join(
-                        ".",
-                        self._relpath,
-                    )
-                ).isreg()
+                self._tar.getmember(os.path.join(".", self._relpath)).isreg()
                 return True
             except KeyError:
                 return False
 
-    def is_dir(
-        self,
-    ):
+    def is_dir(self):
         """Checks if the path is a directory."""
         try:
             self._tar.getmember(self._relpath).isdir()
             return True
         except KeyError:
             try:
-                self._tar.getmember(
-                    os.path.join(
-                        ".",
-                        self._relpath,
-                    )
-                ).isdir()
+                self._tar.getmember(os.path.join(".", self._relpath)).isdir()
                 return True
             except KeyError:
                 return False
 
-    def open(
-        self,
-        mode: str,
-    ) -> IO[bytes]:
+    def open(self, mode: str) -> IO[bytes]:
         """Opens a file in the archive."""
         if mode != "r" and mode != "rb":
             raise NotImplementedError()
@@ -234,12 +153,7 @@ class TarPath:
         except KeyError:
             try:
                 # Try the relative path with "./" prefix
-                file = self._tar.extractfile(
-                    os.path.join(
-                        ".",
-                        self._relpath,
-                    )
-                )
+                file = self._tar.extractfile(os.path.join(".", self._relpath))
             except KeyError:
                 raise FileNotFoundError()
 
@@ -248,10 +162,7 @@ class TarPath:
 
         return file
 
-    def glob(
-        self,
-        pattern,
-    ):
+    def glob(self, pattern):
         """Returns an iterator over the files in the directory, matching the pattern."""
         for member in self._tar.getmembers():
             # Remove the "./" prefix, if any
@@ -264,22 +175,10 @@ class TarPath:
                 name = name[len(self._relpath) + 1 :]
 
             # See if the name matches the pattern
-            if fnmatch.fnmatch(
-                name,
-                pattern,
-            ):
-                yield TarPath(
-                    self._tar,
-                    os.path.join(
-                        self._relpath,
-                        name,
-                    ),
-                )
+            if fnmatch.fnmatch(name, pattern):
+                yield TarPath(self._tar, os.path.join(self._relpath, name))
 
-    def rglob(
-        self,
-        pattern,
-    ):
+    def rglob(self, pattern):
         """Returns an iterator over the files in the directory, including subdirectories."""
         for member in self._tar.getmembers():
             # Remove the "./" prefix, if any
@@ -295,22 +194,11 @@ class TarPath:
             parts = name.split("/")
             for i in range(len(parts)):
                 subname = "/".join(parts[i:])
-                if fnmatch.fnmatch(
-                    subname,
-                    pattern,
-                ):
-                    yield TarPath(
-                        self._tar,
-                        os.path.join(
-                            self._relpath,
-                            name,
-                        ),
-                    )
+                if fnmatch.fnmatch(subname, pattern):
+                    yield TarPath(self._tar, os.path.join(self._relpath, name))
                     break
 
-    def iterdir(
-        self,
-    ):
+    def iterdir(self):
         """Returns an iterator over the files in the directory."""
         return self.glob("*")
 
@@ -318,70 +206,42 @@ class TarPath:
 class ZarrPathStore(BaseStore):
     """An implementation of read-only Store for zarr library that works with pathlib.Path or TarPath objects."""
 
-    def __init__(
-        self,
-        tarpath: TarPath,
-    ):
+    def __init__(self, tarpath: TarPath):
         assert HAVE_ZARR, "Package zarr>=2.18.2,<3.0.0 is required to use ZarrPathStore"
         self._path = tarpath
         self._writable = False
         self._erasable = False
 
-    def __getitem__(
-        self,
-        key,
-    ):
+    def __getitem__(self, key):
         with (self._path / key).open("rb") as file:
             return file.read()
 
-    def __contains__(
-        self,
-        key,
-    ):
+    def __contains__(self, key):
         return (self._path / key).is_file()
 
-    def __iter__(
-        self,
-    ):
+    def __iter__(self):
         return self.keys()
 
-    def __len__(
-        self,
-    ):
+    def __len__(self):
         return sum(1 for _ in self.keys())
 
-    def __setitem__(
-        self,
-        key,
-        value,
-    ):
+    def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def __delitem__(
-        self,
-        key,
-    ):
+    def __delitem__(self, key):
         raise NotImplementedError()
 
-    def keys(
-        self,
-    ):
+    def keys(self):
         """Returns an iterator over the keys in the store."""
         return self._path.iterdir()
 
 
-def unpack_tarball(
-    archive: str,
-    dest_dir: str,
-):
+def unpack_tarball(archive: str, dest_dir: str):
     """Unpacks a tarball into a destination directory.
 
     Args:
         archive (str): The path to the tarball.
         dest_dir (str): The path to the destination directory.
     """
-    with tarfile.open(
-        archive,
-        mode="r",
-    ) as tar:
+    with tarfile.open(archive, mode="r") as tar:
         tar.extractall(path=dest_dir)

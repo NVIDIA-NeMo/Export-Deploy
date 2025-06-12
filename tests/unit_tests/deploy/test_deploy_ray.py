@@ -14,153 +14,72 @@
 
 
 import unittest
-from unittest.mock import (
-    MagicMock,
-    patch,
-)
-from nemo_deploy.deploy_ray import (
-    DeployRay,
-)
+from unittest.mock import MagicMock, patch
+from nemo_deploy.deploy_ray import DeployRay
 
 
 class TestDeployRay(unittest.TestCase):
     @patch("nemo_deploy.deploy_ray.ray")
-    def test_init_with_existing_cluster(
-        self,
-        mock_ray,
-    ):
+    def test_init_with_existing_cluster(self, mock_ray):
         # Test initialization connecting to existing cluster
-        DeployRay(
-            address="auto",
-            num_cpus=2,
-            num_gpus=1,
-        )
-        mock_ray.init.assert_called_once_with(
-            address="auto",
-            ignore_reinit_error=True,
-            runtime_env=None,
-        )
+        DeployRay(address="auto", num_cpus=2, num_gpus=1)
+        mock_ray.init.assert_called_once_with(address="auto", ignore_reinit_error=True, runtime_env=None)
 
     @patch("nemo_deploy.deploy_ray.ray")
-    def test_init_with_runtime_env(
-        self,
-        mock_ray,
-    ):
+    def test_init_with_runtime_env(self, mock_ray):
         # Test initialization with custom runtime environment
-        runtime_env = {
-            "pip": [
-                "numpy",
-                "pandas",
-            ]
-        }
+        runtime_env = {"pip": ["numpy", "pandas"]}
         DeployRay(runtime_env=runtime_env)
-        mock_ray.init.assert_called_once_with(
-            address="auto",
-            ignore_reinit_error=True,
-            runtime_env=runtime_env,
-        )
+        mock_ray.init.assert_called_once_with(address="auto", ignore_reinit_error=True, runtime_env=runtime_env)
 
     @patch("nemo_deploy.deploy_ray.ray")
-    def test_init_with_new_cluster(
-        self,
-        mock_ray,
-    ):
+    def test_init_with_new_cluster(self, mock_ray):
         # Test initialization creating a new cluster when connection fails
-        mock_ray.init.side_effect = [
-            ConnectionError,
-            None,
-        ]
+        mock_ray.init.side_effect = [ConnectionError, None]
 
-        DeployRay(
-            num_cpus=4,
-            num_gpus=2,
-            include_dashboard=True,
-        )
+        DeployRay(num_cpus=4, num_gpus=2, include_dashboard=True)
 
         assert mock_ray.init.call_count == 2
         mock_ray.init.assert_called_with(
-            num_cpus=4,
-            num_gpus=2,
-            include_dashboard=True,
-            ignore_reinit_error=True,
-            runtime_env=None,
+            num_cpus=4, num_gpus=2, include_dashboard=True, ignore_reinit_error=True, runtime_env=None
         )
 
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
-    def test_start_with_port(
-        self,
-        mock_serve,
-        mock_ray,
-    ):
+    def test_start_with_port(self, mock_serve, mock_ray):
         # Test starting Ray Serve with specified port
         deploy = DeployRay()
-        deploy.start(
-            host="localhost",
-            port=8080,
-        )
+        deploy.start(host="localhost", port=8080)
 
-        mock_serve.start.assert_called_once_with(
-            http_options={
-                "host": "localhost",
-                "port": 8080,
-            }
-        )
+        mock_serve.start.assert_called_once_with(http_options={"host": "localhost", "port": 8080})
 
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
     @patch("nemo_deploy.deploy_ray.find_available_port")
-    def test_start_without_port(
-        self,
-        mock_find_port,
-        mock_serve,
-        mock_ray,
-    ):
+    def test_start_without_port(self, mock_find_port, mock_serve, mock_ray):
         # Test starting Ray Serve with auto-detected port
         mock_find_port.return_value = 9090
 
         deploy = DeployRay()
         deploy.start(host="0.0.0.0")
 
-        mock_find_port.assert_called_once_with(
-            8000,
-            "0.0.0.0",
-        )
-        mock_serve.start.assert_called_once_with(
-            http_options={
-                "host": "0.0.0.0",
-                "port": 9090,
-            }
-        )
+        mock_find_port.assert_called_once_with(8000, "0.0.0.0")
+        mock_serve.start.assert_called_once_with(http_options={"host": "0.0.0.0", "port": 9090})
 
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
-    def test_run(
-        self,
-        mock_serve,
-        mock_ray,
-    ):
+    def test_run(self, mock_serve, mock_ray):
         # Test running a model
         deploy = DeployRay()
         mock_app = MagicMock()
 
-        deploy.run(
-            mock_app,
-            "test_model",
-        )
+        deploy.run(mock_app, "test_model")
 
-        mock_serve.run.assert_called_once_with(
-            mock_app,
-            name="test_model",
-        )
+        mock_serve.run.assert_called_once_with(mock_app, name="test_model")
 
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
-    def test_stop(
-        self,
-        mock_serve,
-        mock_ray,
-    ):
+    def test_stop(self, mock_serve, mock_ray):
         # Test stopping Ray Serve and Ray
         deploy = DeployRay()
         deploy.stop()
@@ -171,12 +90,7 @@ class TestDeployRay(unittest.TestCase):
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
     @patch("nemo_deploy.deploy_ray.LOGGER")
-    def test_stop_with_errors(
-        self,
-        mock_logger,
-        mock_serve,
-        mock_ray,
-    ):
+    def test_stop_with_errors(self, mock_logger, mock_serve, mock_ray):
         # Test handling errors during stop
         mock_serve.shutdown.side_effect = Exception("Serve shutdown error")
         mock_ray.shutdown.side_effect = Exception("Ray shutdown error")

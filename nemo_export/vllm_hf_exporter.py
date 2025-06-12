@@ -13,33 +13,16 @@
 # limitations under the License.
 
 
-from typing import (
-    List,
-)
+from typing import List
 
 import numpy as np
-from pytriton.decorators import (
-    batch,
-    first_value,
-)
-from pytriton.model_config import (
-    Tensor,
-)
-from vllm import (
-    LLM,
-    SamplingParams,
-)
-from vllm.lora.request import (
-    LoRARequest,
-)
+from pytriton.decorators import batch, first_value
+from pytriton.model_config import Tensor
+from vllm import LLM, SamplingParams
+from vllm.lora.request import LoRARequest
 
-from nemo_deploy import (
-    ITritonDeployable,
-)
-from nemo_deploy.utils import (
-    cast_output,
-    str_ndarray2list,
-)
+from nemo_deploy import ITritonDeployable
+from nemo_deploy.utils import cast_output, str_ndarray2list
 
 
 class vLLMHFExporter(ITritonDeployable):
@@ -62,97 +45,42 @@ class vLLMHFExporter(ITritonDeployable):
         server.stop()
     """
 
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         self.model = None
         self.lora_models = None
 
-    def export(
-        self,
-        model,
-        enable_lora: bool = False,
-    ):
+    def export(self, model, enable_lora: bool = False):
         """Exports the HF checkpoint to vLLM and initializes the engine.
 
         Args:
             model (str): model name or the path
         """
-        self.model = LLM(
-            model=model,
-            enable_lora=enable_lora,
-        )
+        self.model = LLM(model=model, enable_lora=enable_lora)
 
-    def add_lora_models(
-        self,
-        lora_model_name,
-        lora_model,
-    ):
+    def add_lora_models(self, lora_model_name, lora_model):
         if self.lora_models is None:
             self.lora_models = {}
         self.lora_models[lora_model_name] = lora_model
 
     @property
-    def get_triton_input(
-        self,
-    ):
+    def get_triton_input(self):
         inputs = (
-            Tensor(
-                name="prompts",
-                shape=(-1,),
-                dtype=bytes,
-            ),
-            Tensor(
-                name="max_output_len",
-                shape=(-1,),
-                dtype=np.int_,
-                optional=True,
-            ),
-            Tensor(
-                name="top_k",
-                shape=(-1,),
-                dtype=np.int_,
-                optional=True,
-            ),
-            Tensor(
-                name="top_p",
-                shape=(-1,),
-                dtype=np.single,
-                optional=True,
-            ),
-            Tensor(
-                name="temperature",
-                shape=(-1,),
-                dtype=np.single,
-                optional=True,
-            ),
+            Tensor(name="prompts", shape=(-1,), dtype=bytes),
+            Tensor(name="max_output_len", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="top_k", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="top_p", shape=(-1,), dtype=np.single, optional=True),
+            Tensor(name="temperature", shape=(-1,), dtype=np.single, optional=True),
         )
         return inputs
 
     @property
-    def get_triton_output(
-        self,
-    ):
-        outputs = (
-            Tensor(
-                name="outputs",
-                shape=(-1,),
-                dtype=bytes,
-            ),
-        )
+    def get_triton_output(self):
+        outputs = (Tensor(name="outputs", shape=(-1,), dtype=bytes),)
         return outputs
 
     @batch
-    @first_value(
-        "max_output_len",
-        "top_k",
-        "top_p",
-        "temperature",
-    )
-    def triton_infer_fn(
-        self,
-        **inputs: np.ndarray,
-    ):
+    @first_value("max_output_len", "top_k", "top_p", "temperature")
+    def triton_infer_fn(self, **inputs: np.ndarray):
         try:
             infer_input = {"input_texts": str_ndarray2list(inputs.pop("prompts"))}
             if "max_output_len" in inputs:
@@ -165,16 +93,10 @@ class vLLMHFExporter(ITritonDeployable):
                 infer_input["temperature"] = inputs.pop("temperature")
 
             output_texts = self.forward(**infer_input)
-            output = cast_output(
-                output_texts,
-                np.bytes_,
-            )
+            output = cast_output(output_texts, np.bytes_)
         except Exception as error:
             err_msg = "An error occurred: {0}".format(str(error))
-            output = cast_output(
-                [err_msg],
-                np.bytes_,
-            )
+            output = cast_output([err_msg], np.bytes_)
 
         return {"outputs": output}
 
@@ -194,24 +116,13 @@ class vLLMHFExporter(ITritonDeployable):
             if self.lora_models is None:
                 raise Exception("No lora models are available.")
             assert lora_model_name in self.lora_models.keys(), "Lora model was not added before"
-            lora_request = LoRARequest(
-                lora_model_name,
-                1,
-                self.lora_models[lora_model_name],
-            )
+            lora_request = LoRARequest(lora_model_name, 1, self.lora_models[lora_model_name])
 
         sampling_params = SamplingParams(
-            max_tokens=max_output_len,
-            temperature=temperature,
-            top_k=int(top_k),
-            top_p=top_p,
+            max_tokens=max_output_len, temperature=temperature, top_k=int(top_k), top_p=top_p
         )
 
-        request_output = self.model.generate(
-            input_texts,
-            sampling_params,
-            lora_request=lora_request,
-        )
+        request_output = self.model.generate(input_texts, sampling_params, lora_request=lora_request)
         output = []
         for o in request_output:
             output.append(o.outputs[0].text)

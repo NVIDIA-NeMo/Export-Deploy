@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from nemo_export.utils.lora_converter import (
-    convert_lora_nemo_to_canonical,
-)
+from nemo_export.utils.lora_converter import convert_lora_nemo_to_canonical
 from nemo_export.utils.model_loader import (
     load_model_weights,
     load_sharded_metadata_torch_dist,

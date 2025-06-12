@@ -14,53 +14,26 @@
 
 
 import warnings
-from pathlib import (
-    Path,
-)
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Union,
-)
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import tensorrt as trt
 import torch
 import wrapt
-from nemo.utils import (
-    logging,
-)
-from transformers import (
-    AutoModel,
-    AutoTokenizer,
-)
+from nemo.utils import logging
+from transformers import AutoModel, AutoTokenizer
 
-from nemo_deploy import (
-    ITritonDeployable,
-)
-from nemo_export.utils import (
-    get_example_inputs,
-    get_model_device_type,
-    is_nemo2_checkpoint,
-    validate_fp8_network,
-)
+from nemo_deploy import ITritonDeployable
+from nemo_export.utils import get_example_inputs, get_model_device_type, is_nemo2_checkpoint, validate_fp8_network
 
 
 @wrapt.decorator
-def noop_decorator(
-    func,
-):
+def noop_decorator(func):
     """No op decorator."""
 
-    def wrapper(
-        *args,
-        **kwargs,
-    ):
-        return func(
-            *args,
-            **kwargs,
-        )
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
 
     return wrapper
 
@@ -68,9 +41,7 @@ def noop_decorator(
 use_pytriton = True
 batch = noop_decorator
 try:
-    from pytriton.decorators import (
-        batch,
-    )
+    from pytriton.decorators import batch
 except Exception:
     logging.warning("PyTriton is not available.")
     use_pytriton = False
@@ -148,31 +119,20 @@ class OnnxLLMExporter(ITritonDeployable):
         if load_runtime:
             self._load_runtime()
 
-    def _load_runtime(
-        self,
-    ):
+    def _load_runtime(self):
         if use_onnxruntime:
             if Path(self.onnx_model_path).exists():
                 self.onnx_runtime_session = onnxruntime.InferenceSession(self.onnx_model_path)
                 self.model_input_names = [input.name for input in self.onnx_runtime_session.get_inputs()]
                 self.model_output_names = [output.name for output in self.onnx_runtime_session.get_outputs()]
                 self.tokenizer = AutoTokenizer.from_pretrained(
-                    Path(self.onnx_model_dir) / "tokenizer",
-                    trust_remote_code=True,
+                    Path(self.onnx_model_dir) / "tokenizer", trust_remote_code=True
                 )
 
-    def _load_hf_model(
-        self,
-    ):
-        self.model = AutoModel.from_pretrained(
-            self.model_name_or_path,
-            trust_remote_code=True,
-        ).eval()
+    def _load_hf_model(self):
+        self.model = AutoModel.from_pretrained(self.model_name_or_path, trust_remote_code=True).eval()
 
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.model_name_or_path,
-            trust_remote_code=True,
-        )
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name_or_path, trust_remote_code=True)
 
     def export(
         self,
@@ -217,10 +177,7 @@ class OnnxLLMExporter(ITritonDeployable):
         opset: int = 20,
         dynamic_axes_input: Optional[dict] = None,
         dynamic_axes_output: Optional[dict] = None,
-        export_dtype: Union[
-            torch.dtype,
-            str,
-        ] = "fp32",
+        export_dtype: Union[torch.dtype, str] = "fp32",
         verbose: bool = False,
     ):
         if example_inputs is None:
@@ -229,36 +186,21 @@ class OnnxLLMExporter(ITritonDeployable):
         if "dimensions" in input_names:
             example_inputs["dimensions"] = torch.tensor([1] * example_inputs["input_ids"].shape[0])
 
-        if isinstance(
-            export_dtype,
-            str,
-        ):
-            export_dtype = {
-                "fp16": torch.float16,
-                "fp32": torch.float32,
-            }[export_dtype]
+        if isinstance(export_dtype, str):
+            export_dtype = {"fp16": torch.float16, "fp32": torch.float32}[export_dtype]
 
         self.model.to(export_dtype)
 
-        Path(self.onnx_model_dir).mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        Path(self.onnx_model_dir).mkdir(parents=True, exist_ok=True)
 
-        with torch.autocast(
-            device_type=get_model_device_type(self.model),
-            dtype=export_dtype,
-        ):
+        with torch.autocast(device_type=get_model_device_type(self.model), dtype=export_dtype):
             torch.onnx.export(
                 model=self.model,
                 args=(example_inputs,),
                 f=self.onnx_model_path,
                 input_names=input_names,
                 output_names=output_names,
-                dynamic_axes={
-                    **dynamic_axes_input,
-                    **dynamic_axes_output,
-                },
+                dynamic_axes={**dynamic_axes_input, **dynamic_axes_output},
                 verbose=verbose,
                 opset_version=opset,
             )
@@ -294,10 +236,7 @@ class OnnxLLMExporter(ITritonDeployable):
         builder = trt.Builder(trt_logger)
         network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
         config = builder.create_builder_config()
-        parser = trt.OnnxParser(
-            network,
-            trt_logger,
-        )
+        parser = trt.OnnxParser(network, trt_logger)
 
         # we use parse_from_file() instead of parse() because it can be used for both single
         # file models as well as externally stored models (required when model >2GiB)
@@ -339,10 +278,7 @@ class OnnxLLMExporter(ITritonDeployable):
 
         if override_layers_to_fp32:
             logging.info("Overriding some layers to float32.")
-            self._override_layers_to_fp32(
-                network,
-                override_layers_to_fp32,
-            )
+            self._override_layers_to_fp32(network, override_layers_to_fp32)
 
         try:
             config.profiling_verbosity = {
@@ -359,37 +295,21 @@ class OnnxLLMExporter(ITritonDeployable):
             for flag in trt_builder_flags:
                 config.set_flag(flag)
 
-        engine_string = builder.build_serialized_network(
-            network,
-            config,
-        )
+        engine_string = builder.build_serialized_network(network, config)
         if engine_string is None:
             raise Exception("Failed to serialize the TensorRT Engine. Please check the TensorRT logs for details")
 
         trt_model_path = Path(trt_model_dir)
-        trt_model_path.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        trt_model_path.mkdir(parents=True, exist_ok=True)
         trt_model_path = trt_model_path / "model.plan"
         trt_model_path.write_bytes(engine_string)
         logging.info(f"Successfully exported ONNX model ({self.onnx_model_path}) to TRT engine ({trt_model_path})")
 
-    def _override_layer_precision_to_fp32(
-        self,
-        layer: trt.ILayer,
-    ) -> None:
+    def _override_layer_precision_to_fp32(self, layer: trt.ILayer) -> None:
         layer.precision = trt.float32
-        layer.set_output_type(
-            0,
-            trt.float32,
-        )
+        layer.set_output_type(0, trt.float32)
 
-    def _override_layers_to_fp32(
-        self,
-        network: trt.INetworkDefinition,
-        fp32_layer_patterns: list[str],
-    ) -> None:
+    def _override_layers_to_fp32(self, network: trt.INetworkDefinition, fp32_layer_patterns: list[str]) -> None:
         for i in range(network.num_layers):
             layer = network.get_layer(i)
             layer_name = layer.name
@@ -401,11 +321,7 @@ class OnnxLLMExporter(ITritonDeployable):
                     logging.info(f"Skipping overriding {layer.type} layer {i} {layer_name} dtype")
                     continue
                 if any(
-                    layer.get_input(input_idx).dtype
-                    in {
-                        trt.float32,
-                        trt.float16,
-                    }
+                    layer.get_input(input_idx).dtype in {trt.float32, trt.float16}
                     for input_idx in range(layer.num_inputs)
                 ):
                     # Note: Assigning to layer.precision (even the same value) sets precision_is_set=True,
@@ -413,20 +329,11 @@ class OnnxLLMExporter(ITritonDeployable):
                     layer.precision = trt.float32
                     logging.info(f"Setting layer {i} {layer_name} (type: {layer.type}) precision to FP32")
                 for j in range(layer.num_outputs):
-                    if layer.get_output_type(j) in {
-                        trt.float32,
-                        trt.float16,
-                    }:
-                        layer.set_output_type(
-                            j,
-                            trt.float32,
-                        )
+                    if layer.get_output_type(j) in {trt.float32, trt.float16}:
+                        layer.set_output_type(j, trt.float32)
                         logging.info(f"Setting layer {i} {layer_name} (type: {layer.type}) output type {j} to FP32")
 
-    def _override_layernorm_precision_to_fp32(
-        self,
-        network: trt.INetworkDefinition,
-    ) -> None:
+    def _override_layernorm_precision_to_fp32(self, network: trt.INetworkDefinition) -> None:
         """Set the precision of LayerNorm subgraphs to FP32 to preserve accuracy.
 
         - https://nvbugs/4478448 (Mistral)
@@ -438,10 +345,7 @@ class OnnxLLMExporter(ITritonDeployable):
         # Logic originally from OSS T5 HF export script:
         # https://gitlab-master.nvidia.com/TensorRT/Public/oss/-/blob/77495ec/demo/HuggingFace/T5/export.py
         pow_ops = {}
-        for (
-            layer_index,
-            layer,
-        ) in enumerate(network):
+        for layer_index, layer in enumerate(network):
             if layer.type == trt.LayerType.IDENTITY:
                 all_fp32 = all(
                     [
@@ -454,71 +358,43 @@ class OnnxLLMExporter(ITritonDeployable):
                         layer.precision = trt.float32
 
             if layer.type == trt.LayerType.ELEMENTWISE:
-                layer.__class__ = getattr(
-                    trt,
-                    "IElementWiseLayer",
-                )
+                layer.__class__ = getattr(trt, "IElementWiseLayer")
                 if layer.op == trt.ElementWiseOperation.POW:
                     pow_ops[layer] = layer_index
                     self._override_layer_precision_to_fp32(layer)
 
-        for (
-            _,
-            index,
-        ) in pow_ops.items():
+        for _, index in pow_ops.items():
             # Iterate from few layers before pow to include residual add and cast op.
             # Iterate till 10 layers after pow op to include all
             # operations included in layer norm.
             START_OFFSET = 4
             END_OFFSET = 12
-            for i in range(
-                index - START_OFFSET,
-                index + END_OFFSET,
-            ):
+            for i in range(index - START_OFFSET, index + END_OFFSET):
                 layer = network.get_layer(i)
                 if layer.type == trt.LayerType.REDUCE:
                     self._override_layer_precision_to_fp32(layer)
 
                 if layer.type == trt.LayerType.ELEMENTWISE:
-                    layer.__class__ = getattr(
-                        trt,
-                        "IElementWiseLayer",
-                    )
+                    layer.__class__ = getattr(trt, "IElementWiseLayer")
                     if layer.op == trt.ElementWiseOperation.SUM:
                         self._override_layer_precision_to_fp32(layer)
 
                 if layer.type == trt.LayerType.UNARY:
-                    layer.__class__ = getattr(
-                        trt,
-                        "IUnaryLayer",
-                    )
+                    layer.__class__ = getattr(trt, "IUnaryLayer")
                     if layer.op == trt.UnaryOperation.SQRT:
                         self._override_layer_precision_to_fp32(layer)
 
                 if layer.type == trt.LayerType.ELEMENTWISE:
-                    layer.__class__ = getattr(
-                        trt,
-                        "IElementWiseLayer",
-                    )
+                    layer.__class__ = getattr(trt, "IElementWiseLayer")
                     if layer.op == trt.ElementWiseOperation.DIV:
                         self._override_layer_precision_to_fp32(layer)
 
                 if layer.type == trt.LayerType.ELEMENTWISE:
-                    layer.__class__ = getattr(
-                        trt,
-                        "IElementWiseLayer",
-                    )
+                    layer.__class__ = getattr(trt, "IElementWiseLayer")
                     if layer.op == trt.ElementWiseOperation.PROD:
                         self._override_layer_precision_to_fp32(layer)
 
-    def forward(
-        self,
-        inputs: Union[
-            List,
-            Dict,
-        ],
-        dimensions: Optional[List] = None,
-    ):
+    def forward(self, inputs: Union[List, Dict], dimensions: Optional[List] = None):
         """Run inference for a given input.
 
         Args:
@@ -534,60 +410,41 @@ class OnnxLLMExporter(ITritonDeployable):
             warnings.warn("ONNX Runtime is not available. Please install the onnxruntime-gpu and try again.")
             return None
 
-        if isinstance(
-            inputs,
-            List,
-        ):
+        if isinstance(inputs, List):
             if "dimensions" in self.model_input_names and dimensions is None:
                 raise ValueError("Dimensions should be provided for list input.")
             inputs = dict(self.tokenizer(inputs))
             inputs["dimensions"] = dimensions
 
-        output = self.onnx_runtime_session.run(
-            self.model_output_names,
-            inputs,
-        )
+        output = self.onnx_runtime_session.run(self.model_output_names, inputs)
         return output[0]
 
     @property
-    def get_model(
-        self,
-    ):
+    def get_model(self):
         """Returns the model."""
         return self.model
 
     @property
-    def get_tokenizer(
-        self,
-    ):
+    def get_tokenizer(self):
         """Returns the tokenizer."""
         return self.tokenizer
 
     @property
-    def get_model_input_names(
-        self,
-    ):
+    def get_model_input_names(self):
         """Returns the model input names."""
         return self.model_input_names
 
     @property
-    def get_triton_input(
-        self,
-    ):
+    def get_triton_input(self):
         """Get triton input."""
         raise NotImplementedError("This function will be implemented later.")
 
     @property
-    def get_triton_output(
-        self,
-    ):
+    def get_triton_output(self):
         """Get triton output."""
         raise NotImplementedError("This function will be implemented later.")
 
     @batch
-    def triton_infer_fn(
-        self,
-        **inputs: np.ndarray,
-    ):
+    def triton_infer_fn(self, **inputs: np.ndarray):
         """PyTriton inference function."""
         raise NotImplementedError("This function will be implemented later.")

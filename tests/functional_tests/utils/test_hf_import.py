@@ -13,16 +13,10 @@
 # limitations under the License.
 
 import argparse
-from pathlib import (
-    Path,
-)
+from pathlib import Path
 
-from nemo import (
-    lightning as nl,
-)
-from nemo.collections import (
-    llm,
-)
+from nemo import lightning as nl
+from nemo.collections import llm
 
 """
 Script to import a Hugging Face model checkpoint into NeMo 2.0 format.
@@ -46,51 +40,22 @@ Finally, the output NeMo model is loaded using the Fabric API of pl.Trainer.
 
 def get_args():
     parser = argparse.ArgumentParser(description="Test Llama2 7B model model conversion from HF")
-    parser.add_argument(
-        "--hf_model",
-        type=str,
-        help="Original HF model",
-    )
-    parser.add_argument(
-        "--model",
-        default="LlamaModel",
-        help="Model class from nemo.collections.llm module",
-    )
-    parser.add_argument(
-        "--config",
-        default="Llama2Config7B",
-        help="Config class from nemo.collections.llm module",
-    )
-    parser.add_argument(
-        "--output_path",
-        type=str,
-        help="NeMo 2.0 export path",
-    )
-    parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        help="Overwrite the output model if exists",
-    )
+    parser.add_argument("--hf_model", type=str, help="Original HF model")
+    parser.add_argument("--model", default="LlamaModel", help="Model class from nemo.collections.llm module")
+    parser.add_argument("--config", default="Llama2Config7B", help="Config class from nemo.collections.llm module")
+    parser.add_argument("--output_path", type=str, help="NeMo 2.0 export path")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite the output model if exists")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = get_args()
 
-    ModelClass = getattr(
-        llm,
-        args.model,
-    )
-    ModelConfig = getattr(
-        llm,
-        args.config,
-    )
+    ModelClass = getattr(llm, args.model)
+    ModelConfig = getattr(llm, args.config)
     model = ModelClass(config=ModelConfig)
     nemo2_path = llm.import_ckpt(
-        model=model,
-        source="hf://" + args.hf_model,
-        output_path=Path(args.output_path),
-        overwrite=args.overwrite,
+        model=model, source="hf://" + args.hf_model, output_path=Path(args.output_path), overwrite=args.overwrite
     )
 
     trainer = nl.Trainer(

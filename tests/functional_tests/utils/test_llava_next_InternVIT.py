@@ -18,64 +18,26 @@
 import argparse
 
 import torch
-from megatron.core.optimizer import (
-    OptimizerConfig,
-)
-from nemo import (
-    lightning as nl,
-)
-from nemo.collections import (
-    llm,
-    vlm,
-)
-from nemo.collections.common.tokenizers.huggingface.auto_tokenizer import (
-    AutoTokenizer,
-)
-from nemo.collections.llm.api import (
-    finetune,
-)
-from nemo.collections.vlm.peft import (
-    LoRA,
-)
-from nemo.lightning import (
-    AutoResume,
-    NeMoLogger,
-)
-from nemo.lightning.pytorch.callbacks import (
-    ModelCheckpoint,
-    ParameterDebugger,
-)
-from nemo.lightning.pytorch.optim.megatron import (
-    MegatronOptimizerModule,
-)
-from pytorch_lightning.loggers import (
-    TensorBoardLogger,
-)
-from transformers import (
-    AutoProcessor,
-)
+from megatron.core.optimizer import OptimizerConfig
+from nemo import lightning as nl
+from nemo.collections import llm, vlm
+from nemo.collections.common.tokenizers.huggingface.auto_tokenizer import AutoTokenizer
+from nemo.collections.llm.api import finetune
+from nemo.collections.vlm.peft import LoRA
+from nemo.lightning import AutoResume, NeMoLogger
+from nemo.lightning.pytorch.callbacks import ModelCheckpoint, ParameterDebugger
+from nemo.lightning.pytorch.optim.megatron import MegatronOptimizerModule
+from pytorch_lightning.loggers import TensorBoardLogger
+from transformers import AutoProcessor
 
 
 def get_args():
     # pylint: disable=C0115,C0116
     parser = argparse.ArgumentParser(description="Train a small Llava Next model using NeMo 2.0")
+    parser.add_argument("--devices", type=int, default=1, help="Number of devices to use for training")
+    parser.add_argument("--max-steps", type=int, default=5, help="Number of steps to train for")
     parser.add_argument(
-        "--devices",
-        type=int,
-        default=1,
-        help="Number of devices to use for training",
-    )
-    parser.add_argument(
-        "--max-steps",
-        type=int,
-        default=5,
-        help="Number of steps to train for",
-    )
-    parser.add_argument(
-        "--experiment-dir",
-        type=str,
-        default=None,
-        help="directory to write results and checkpoints to",
+        "--experiment-dir", type=str, default=None, help="directory to write results and checkpoints to"
     )
 
     return parser.parse_args()
@@ -100,22 +62,11 @@ if __name__ == "__main__":
     )
 
     # Transformer configurations
-    language_transformer_config = llm.Llama2Config7B(
-        seq_length=decoder_seq_length,
-        num_layers=2,
-    )
+    language_transformer_config = llm.Llama2Config7B(seq_length=decoder_seq_length, num_layers=2)
 
-    vision_transformer_config = vlm.InternViT_6B_448px_Config(
-        img_h=336,
-        img_w=336,
-        patch_dim=14,
-        num_layers=2,
-    )
+    vision_transformer_config = vlm.InternViT_6B_448px_Config(img_h=336, img_w=336, patch_dim=14, num_layers=2)
     vision_projection_config = vlm.MultimodalProjectorConfig(
-        projector_type="mcore_mlp",
-        input_size=3200,
-        hidden_size=4096,
-        ffn_hidden_size=4096,
+        projector_type="mcore_mlp", input_size=3200, hidden_size=4096, ffn_hidden_size=4096
     )
 
     # Llava Next model configuration
@@ -127,10 +78,7 @@ if __name__ == "__main__":
         freeze_vision_model=True,
     )
 
-    model = vlm.LlavaNextModel(
-        neva_config,
-        tokenizer=data.tokenizer,
-    )
+    model = vlm.LlavaNextModel(neva_config, tokenizer=data.tokenizer)
 
     strategy = nl.MegatronStrategy(
         tensor_model_parallel_size=1,
@@ -138,17 +86,10 @@ if __name__ == "__main__":
         encoder_pipeline_model_parallel_size=0,
         pipeline_dtype=torch.bfloat16,
     )
-    checkpoint_callback = ModelCheckpoint(
-        every_n_train_steps=5000,
-        save_optim_on_train_end=True,
-    )
+    checkpoint_callback = ModelCheckpoint(every_n_train_steps=5000, save_optim_on_train_end=True)
 
-    def create_verify_precision(
-        precision: torch.dtype,
-    ):
-        def verify_precision(
-            tensor: torch.Tensor,
-        ) -> None:
+    def create_verify_precision(precision: torch.dtype):
+        def verify_precision(tensor: torch.Tensor) -> None:
             assert tensor.dtype == precision
 
         return verify_precision
@@ -156,29 +97,17 @@ if __name__ == "__main__":
     debugger = ParameterDebugger(
         param_fn=create_verify_precision(torch.bfloat16),
         grad_fn=create_verify_precision(torch.float32),
-        log_on_hooks=[
-            "on_train_start",
-            "on_train_end",
-        ],
+        log_on_hooks=["on_train_start", "on_train_end"],
     )
-    callbacks = [
-        checkpoint_callback,
-        debugger,
-    ]
+    callbacks = [checkpoint_callback, debugger]
 
     loggers = []
     tensorboard_logger = TensorBoardLogger(
-        save_dir="dummy",  ## NOTE: this gets overwritten by default
+        save_dir="dummy"  ## NOTE: this gets overwritten by default
     )
     loggers.append(tensorboard_logger)
 
-    opt_config = OptimizerConfig(
-        optimizer="adam",
-        lr=6e-4,
-        min_lr=6e-5,
-        use_distributed_optimizer=False,
-        bf16=True,
-    )
+    opt_config = OptimizerConfig(optimizer="adam", lr=6e-4, min_lr=6e-5, use_distributed_optimizer=False, bf16=True)
     opt = MegatronOptimizerModule(config=opt_config)
 
     trainer = nl.Trainer(
@@ -193,14 +122,9 @@ if __name__ == "__main__":
         plugins=nl.MegatronMixedPrecision(precision="bf16-mixed"),
     )
 
-    nemo_logger = NeMoLogger(
-        log_dir=args.experiment_dir,
-    )
+    nemo_logger = NeMoLogger(log_dir=args.experiment_dir)
 
-    resume = AutoResume(
-        resume_if_exists=True,
-        resume_ignore_no_checkpoint=True,
-    )
+    resume = AutoResume(resume_if_exists=True, resume_ignore_no_checkpoint=True)
 
     finetune(
         model=model,
@@ -209,8 +133,5 @@ if __name__ == "__main__":
         log=nemo_logger,
         resume=resume,
         optim=opt,
-        peft=LoRA(
-            target_modules=["*.language_model.*.linear_qkv"],
-            dim=32,
-        ),
+        peft=LoRA(target_modules=["*.language_model.*.linear_qkv"], dim=32),
     )

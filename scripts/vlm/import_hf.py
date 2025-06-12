@@ -13,16 +13,10 @@
 # limitations under the License.
 
 import argparse
-from pathlib import (
-    Path,
-)
+from pathlib import Path
 
-from nemo.collections import (
-    vlm,
-)
-from nemo.collections.llm import (
-    import_ckpt,
-)
+from nemo.collections import vlm
+from nemo.collections.llm import import_ckpt
 
 HF_MODEL_ID_TO_NEMO_CLASS = {
     "llava-hf/llava-1.5-7b-hf": vlm.LlavaModel,
@@ -70,8 +64,4 @@ if __name__ == "__main__":
     else:
         model_class = HF_MODEL_ID_TO_NEMO_CLASS[model_name_or_path]
 
-    import_ckpt(
-        model_class(),
-        f"hf://{model_name_or_path}",
-        output_path=args.output_path,
-    )
+    import_ckpt(model_class(), f"hf://{model_name_or_path}", output_path=args.output_path)

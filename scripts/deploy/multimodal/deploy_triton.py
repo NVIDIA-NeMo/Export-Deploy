@@ -16,32 +16,23 @@ import argparse
 import logging
 import os
 import sys
-from pathlib import (
-    Path,
-)
+from pathlib import Path
 
-from nemo_deploy import (
-    DeployPyTriton,
-)
+from nemo_deploy import DeployPyTriton
 
 LOGGER = logging.getLogger("NeMo")
 
 multimodal_supported = True
 try:
-    from nemo_export.tensorrt_mm_exporter import (
-        TensorRTMMExporter,
-    )
+    from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 except Exception as e:
     LOGGER.warning(f"Cannot import the TensorRTMMExporter exporter, it will not be available. {type(e).__name__}: {e}")
     multimodal_supported = False
 
 
-def get_args(
-    argv,
-):
+def get_args(argv):
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Deploy nemo models to Triton",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Deploy nemo models to Triton"
     )
     # default modality is vision, can be changed to audio
     parser.add_argument(
@@ -50,39 +41,17 @@ def get_args(
         type=str,
         required=False,
         default="vision",
-        choices=[
-            "vision",
-            "audio",
-        ],
+        choices=["vision", "audio"],
         help="Modality of the model",
     )
-    parser.add_argument(
-        "-vc",
-        "--visual_checkpoint",
-        type=str,
-        help="Source .nemo file for visual model",
-    )
-    parser.add_argument(
-        "-lc",
-        "--llm_checkpoint",
-        type=str,
-        required=False,
-        help="Source .nemo file for llm",
-    )
+    parser.add_argument("-vc", "--visual_checkpoint", type=str, help="Source .nemo file for visual model")
+    parser.add_argument("-lc", "--llm_checkpoint", type=str, required=False, help="Source .nemo file for llm")
     parser.add_argument(
         "-mt",
         "--model_type",
         type=str,
         required=True,
-        choices=[
-            "neva",
-            "video-neva",
-            "lita",
-            "vila",
-            "vita",
-            "salm",
-            "mllama",
-        ],
+        choices=["neva", "video-neva", "lita", "vila", "vita", "salm", "mllama"],
         help="Type of the model that is supported.",
     )
     parser.add_argument(
@@ -90,100 +59,34 @@ def get_args(
         "--llm_model_type",
         type=str,
         required=True,
-        choices=[
-            "gptnext",
-            "gpt",
-            "llama",
-            "falcon",
-            "starcoder",
-            "mixtral",
-            "gemma",
-            "mllama",
-        ],
+        choices=["gptnext", "gpt", "llama", "falcon", "starcoder", "mixtral", "gemma", "mllama"],
         help="Type of LLM. gptnext, gpt, llama, falcon, and starcoder are only supported."
         " gptnext and gpt are the same and keeping it for backward compatibility",
     )
+    parser.add_argument("-tmn", "--triton_model_name", required=True, type=str, help="Name for the service")
+    parser.add_argument("-tmv", "--triton_model_version", default=1, type=int, help="Version for the service")
     parser.add_argument(
-        "-tmn",
-        "--triton_model_name",
-        required=True,
-        type=str,
-        help="Name for the service",
+        "-trp", "--triton_port", default=8000, type=int, help="Port for the Triton server to listen for requests"
     )
     parser.add_argument(
-        "-tmv",
-        "--triton_model_version",
-        default=1,
-        type=int,
-        help="Version for the service",
+        "-tha", "--triton_http_address", default="0.0.0.0", type=str, help="HTTP address for the Triton server"
     )
     parser.add_argument(
-        "-trp",
-        "--triton_port",
-        default=8000,
-        type=int,
-        help="Port for the Triton server to listen for requests",
+        "-tmr", "--triton_model_repository", default=None, type=str, help="Folder for the trt-llm conversion"
     )
-    parser.add_argument(
-        "-tha",
-        "--triton_http_address",
-        default="0.0.0.0",
-        type=str,
-        help="HTTP address for the Triton server",
-    )
-    parser.add_argument(
-        "-tmr",
-        "--triton_model_repository",
-        default=None,
-        type=str,
-        help="Folder for the trt-llm conversion",
-    )
-    parser.add_argument(
-        "-ng",
-        "--num_gpus",
-        default=1,
-        type=int,
-        help="Number of GPUs for the deployment",
-    )
+    parser.add_argument("-ng", "--num_gpus", default=1, type=int, help="Number of GPUs for the deployment")
     parser.add_argument(
         "-dt",
         "--dtype",
-        choices=[
-            "bfloat16",
-            "float16",
-        ],
+        choices=["bfloat16", "float16"],
         default="bfloat16",
         type=str,
         help="dtype of the model on TensorRT",
     )
-    parser.add_argument(
-        "-mil",
-        "--max_input_len",
-        default=4096,
-        type=int,
-        help="Max input length of the model",
-    )
-    parser.add_argument(
-        "-mol",
-        "--max_output_len",
-        default=256,
-        type=int,
-        help="Max output length of the model",
-    )
-    parser.add_argument(
-        "-mbs",
-        "--max_batch_size",
-        default=1,
-        type=int,
-        help="Max batch size of the llm model",
-    )
-    parser.add_argument(
-        "-mml",
-        "--max_multimodal_len",
-        default=3072,
-        type=int,
-        help="Max length of multimodal input",
-    )
+    parser.add_argument("-mil", "--max_input_len", default=4096, type=int, help="Max input length of the model")
+    parser.add_argument("-mol", "--max_output_len", default=256, type=int, help="Max output length of the model")
+    parser.add_argument("-mbs", "--max_batch_size", default=1, type=int, help="Max batch size of the llm model")
+    parser.add_argument("-mml", "--max_multimodal_len", default=3072, type=int, help="Max length of multimodal input")
     parser.add_argument(
         "-vmb",
         "--vision_max_batch_size",
@@ -195,27 +98,14 @@ def get_args(
         "--use_lora_plugin",
         nargs="?",
         const=None,
-        choices=[
-            "float16",
-            "float32",
-            "bfloat16",
-        ],
+        choices=["float16", "float32", "bfloat16"],
         help="Activates the lora plugin which enables embedding sharing.",
     )
     parser.add_argument(
         "--lora_target_modules",
         nargs="+",
         default=None,
-        choices=[
-            "attn_qkv",
-            "attn_q",
-            "attn_k",
-            "attn_v",
-            "attn_dense",
-            "mlp_h_to_4h",
-            "mlp_gate",
-            "mlp_4h_to_h",
-        ],
+        choices=["attn_qkv", "attn_q", "attn_k", "attn_v", "attn_dense", "mlp_h_to_4h", "mlp_gate", "mlp_4h_to_h"],
         help="Add lora in which modules. Only be activated when use_lora_plugin is enabled.",
     )
     parser.add_argument(
@@ -224,19 +114,12 @@ def get_args(
         default=64,
         help="maximum lora rank for different lora modules. It is used to compute the workspace size of lora plugin.",
     )
-    parser.add_argument(
-        "--lora_checkpoint_path",
-        default=None,
-        type=str,
-        help="The checkpoint path of LoRA weights",
-    )
+    parser.add_argument("--lora_checkpoint_path", default=None, type=str, help="The checkpoint path of LoRA weights")
     args = parser.parse_args(argv)
     return args
 
 
-def get_trt_deployable(
-    args,
-):
+def get_trt_deployable(args):
     if args.triton_model_repository is None:
         trt_path = "/tmp/trt_model_dir/"
         LOGGER.info(
@@ -244,10 +127,7 @@ def get_trt_deployable(
             "Please set the --triton_model_repository parameter if you'd like to use a path that already "
             "includes the TensorRT model files."
         )
-        Path(trt_path).mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        Path(trt_path).mkdir(parents=True, exist_ok=True)
     else:
         trt_path = args.triton_model_repository
 
@@ -267,9 +147,7 @@ def get_trt_deployable(
         raise ValueError("Model type is required to be defined if a nemo checkpoint is provided.")
 
     exporter = TensorRTMMExporter(
-        model_dir=trt_path,
-        load_model=(args.visual_checkpoint is None),
-        modality=args.modality,
+        model_dir=trt_path, load_model=(args.visual_checkpoint is None), modality=args.modality
     )
 
     if args.visual_checkpoint is not None:
@@ -298,9 +176,7 @@ def get_trt_deployable(
     return exporter
 
 
-def nemo_deploy(
-    argv,
-):
+def nemo_deploy(argv):
     args = get_args(argv)
 
     loglevel = logging.INFO

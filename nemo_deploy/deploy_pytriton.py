@@ -13,16 +13,9 @@
 # limitations under the License.
 
 
-from pytriton.model_config import (
-    ModelConfig,
-)
-from pytriton.triton import (
-    Triton,
-    TritonConfig,
-)
-from nemo_deploy.deploy_base import (
-    DeployBase,
-)
+from pytriton.model_config import ModelConfig
+from pytriton.triton import Triton, TritonConfig
+from nemo_deploy.deploy_base import DeployBase
 import logging
 
 LOGGER = logging.getLogger("NeMo")
@@ -102,9 +95,7 @@ class DeployPyTriton(DeployBase):
         )
         self.pytriton_log_verbose = pytriton_log_verbose
 
-    def deploy(
-        self,
-    ):
+    def deploy(self):
         """Deploys any models to Triton Inference Server."""
         try:
             if self.streaming:
@@ -145,9 +136,7 @@ class DeployPyTriton(DeployBase):
             self.triton = None
             LOGGER.error(e)
 
-    def serve(
-        self,
-    ):
+    def serve(self):
         """Starts serving the model and waits for the requests."""
         if self.triton is None:
             raise Exception("deploy should be called first.")
@@ -158,18 +147,14 @@ class DeployPyTriton(DeployBase):
             self.triton = None
             LOGGER.error(e)
 
-    def run(
-        self,
-    ):
+    def run(self):
         """Starts serving the model asynchronously."""
         if self.triton is None:
             raise Exception("deploy should be called first.")
 
         self.triton.run()
 
-    def stop(
-        self,
-    ):
+    def stop(self):
         """Stops serving the model."""
         if self.triton is None:
             raise Exception("deploy should be called first.")
