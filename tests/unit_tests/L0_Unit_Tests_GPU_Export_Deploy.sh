@@ -14,4 +14,4 @@
 CUDA_VISIBLE_DEVICES=0,1 NEMO_NUMBA_MINVER=0.53 coverage run -a \
     --data-file=/workspace/.coverage \
     --source=/workspace/ \
-    -m pytest tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme" --with_downloads
+    -m pytest tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme"
