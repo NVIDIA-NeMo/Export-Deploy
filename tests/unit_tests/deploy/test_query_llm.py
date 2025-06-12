@@ -22,6 +22,7 @@ from nemo_deploy.nlp.query_llm import (
     NemoQueryLLMBase,
     NemoQueryLLMHF,
     NemoQueryLLMPyTorch,
+    NemoQueryTRTLLMAPI,
 )
 
 
@@ -237,3 +238,63 @@ class TestNemoQueryLLM:
 
         assert isinstance(response[0], str)
         assert response[0] == "test response"
+
+
+class TestNemoQueryTRTLLMAPI:
+    @pytest.fixture
+    def query(self):
+        return NemoQueryTRTLLMAPI(url="localhost:8000", model_name="test-model")
+
+    def test_initialization(self, query):
+        assert isinstance(query, NemoQueryLLMBase)
+        assert query.url == "localhost:8000"
+        assert query.model_name == "test-model"
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_basic(self, mock_client, query):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"test response"])
+        }
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test basic query
+        response = query.query_llm(
+            prompts=["test prompt"], max_length=100, temperature=0.7, top_k=1, top_p=0.9
+        )
+
+        assert isinstance(response[0], str)
+        assert response[0] == "test response"
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_with_defaults(self, mock_client, query):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"default response"])
+        }
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test query with default parameters
+        response = query.query_llm(prompts=["test prompt"])
+
+        assert isinstance(response[0], str)
+        assert response[0] == "default response"
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_non_bytes_output(self, mock_client, query):
+        # Setup mock for non-bytes output
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {
+            "sentences": ["non-bytes response"]
+        }
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.float32)]
+
+        # Test query with non-bytes output
+        response = query.query_llm(prompts=["test prompt"])
+
+        assert response == ["non-bytes response"]
