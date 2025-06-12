@@ -28,15 +28,13 @@ class ListAdd(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(
-        self, x: List[torch.Tensor], y: torch.Tensor, z: torch.Tensor, bs: float = 0.1
-    ):
+    def forward(self, x: List[torch.Tensor], y: torch.Tensor, z: torch.Tensor, bs: float = 0.1):
         y1 = y.clone()
         x1 = x.copy()
         z1 = z + y
         for xi in x:
             y1 = y1 + xi + bs
-        return x1, [y1, z1], y1 + z1
+        return (x1, [y1, z1], y1 + z1)
 
 
 # ruff: noqa: F821
@@ -60,17 +58,10 @@ class TestTRTCompile(unittest.TestCase):
         x = torch.randn(1, 16).to("cuda")
 
         with tempfile.TemporaryDirectory() as tempdir:
-            args = {
-                "method": "torch_trt",
-                "dynamic_batchsize": [1, 4, 8],
-            }
+            args = {"method": "torch_trt", "dynamic_batchsize": [1, 4, 8]}
             input_example = (x,)
             output_example = model(*input_example)
-            trt_compile(
-                model,
-                f"{tempdir}/test_lists",
-                args=args,
-            )
+            trt_compile(model, f"{tempdir}/test_lists", args=args)
             self.assertIsNone(model._trt_compiler.engine)
             trt_output = model(*input_example)
             # Check that lazy TRT build succeeded
@@ -82,9 +73,7 @@ class TestTRTCompile(unittest.TestCase):
 
         with torch.no_grad(), tempfile.TemporaryDirectory() as tmpdir:
             args = {
-                "export_args": {
-                    "dynamo": False,
-                },
+                "export_args": {"dynamo": False},
                 "input_profiles": [
                     {
                         "x_0": [[1, 8], [2, 16], [2, 32]],
@@ -101,11 +90,7 @@ class TestTRTCompile(unittest.TestCase):
             z = torch.randn(1, 16).to("cuda")
             input_example = ([x, y, z], y.clone(), z.clone())
             output_example = model(*input_example)
-            trt_compile(
-                model,
-                f"{tmpdir}/test_dynamo_trt",
-                args=args,
-            )
+            trt_compile(model, f"{tmpdir}/test_dynamo_trt", args=args)
             self.assertIsNone(model._trt_compiler.engine)
             trt_output = model(*input_example)
             # Check that lazy TRT build succeeded
@@ -116,22 +101,13 @@ class TestTRTCompile(unittest.TestCase):
         model = ListAdd().cuda()
 
         with torch.no_grad(), tempfile.TemporaryDirectory() as tmpdir:
-            args = {
-                "export_args": {
-                    "dynamo": True,
-                },
-                "output_lists": [[-1], [2], []],
-            }
+            args = {"export_args": {"dynamo": True}, "output_lists": [[-1], [2], []]}
             x = torch.randn(1, 16).to("cuda")
             y = torch.randn(1, 16).to("cuda")
             z = torch.randn(1, 16).to("cuda")
             input_example = ([x, y, z], y.clone(), z.clone())
             output_example = model(*input_example)
-            trt_compile(
-                model,
-                f"{tmpdir}/test_lists",
-                args=args,
-            )
+            trt_compile(model, f"{tmpdir}/test_lists", args=args)
             self.assertIsNone(model._trt_compiler.engine)
             trt_output = model(*input_example)
             # Check that lazy TRT build succeeded

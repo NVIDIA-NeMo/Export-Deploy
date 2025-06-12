@@ -59,10 +59,7 @@ class TestTensorRTMMExporter:
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         exporter.export(
-            visual_checkpoint_path="dummy/path",
-            model_type="mllama",
-            tensor_parallel_size=1,
-            load_model=False,
+            visual_checkpoint_path="dummy/path", model_type="mllama", tensor_parallel_size=1, load_model=False
         )
         mock_build.assert_called_once()
 
@@ -74,10 +71,7 @@ class TestTensorRTMMExporter:
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
         exporter.export(
-            visual_checkpoint_path="dummy/path",
-            model_type="neva",
-            tensor_parallel_size=1,
-            load_model=False,
+            visual_checkpoint_path="dummy/path", model_type="neva", tensor_parallel_size=1, load_model=False
         )
         mock_trtllm.assert_called_once()
         mock_visual.assert_called_once()
@@ -99,10 +93,7 @@ class TestTensorRTMMExporter:
         exporter.runner = mock_runner
 
         result = exporter.forward(
-            input_text="What's in this image?",
-            input_media="test_image.jpg",
-            batch_size=1,
-            max_output_len=30,
+            input_text="What's in this image?", input_media="test_image.jpg", batch_size=1, max_output_len=30
         )
 
         assert result == "Test response"

@@ -16,11 +16,7 @@
 import pytest
 import torch
 
-from nemo_export.multimodal.converter import (
-    split_gate_weight,
-    split_kv_weight,
-    split_qkv_weight,
-)
+from nemo_export.multimodal.converter import split_gate_weight, split_kv_weight, split_qkv_weight
 
 
 class TestMultimodalConverter:
@@ -28,26 +24,15 @@ class TestMultimodalConverter:
     def model_config(self):
         # Create a simple test config
         config = type(
-            "TestConfig",
-            (),
-            {
-                "hidden_size": 128,
-                "num_attention_heads": 4,
-                "num_query_groups": 2,
-                "kv_channels": None,
-            },
+            "TestConfig", (), {"hidden_size": 128, "num_attention_heads": 4, "num_query_groups": 2, "kv_channels": None}
         )()
         return config
 
     def test_split_qkv_weight(self, model_config):
         # Create a test QKV weight tensor
-        batch_size = (
-            model_config.num_attention_heads + 2 * model_config.num_query_groups
-        )
+        batch_size = model_config.num_attention_heads + 2 * model_config.num_query_groups
         qkv_weight = torch.randn(
-            batch_size,
-            model_config.hidden_size // model_config.num_attention_heads,
-            model_config.hidden_size,
+            batch_size, model_config.hidden_size // model_config.num_attention_heads, model_config.hidden_size
         )
 
         result = split_qkv_weight(qkv_weight, model_config)
@@ -78,9 +63,7 @@ class TestMultimodalConverter:
         # Create a test KV weight tensor
         batch_size = 2 * model_config.num_query_groups
         kv_weight = torch.randn(
-            batch_size,
-            model_config.hidden_size // model_config.num_attention_heads,
-            model_config.hidden_size,
+            batch_size, model_config.hidden_size // model_config.num_attention_heads, model_config.hidden_size
         )
 
         result = split_kv_weight(kv_weight, model_config)

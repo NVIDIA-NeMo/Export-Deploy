@@ -31,23 +31,14 @@ from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Export multimodal model to TensorRT")
-    parser.add_argument(
-        "--output_dir", required=True, help="Directory to save the exported model"
-    )
+    parser.add_argument("--output_dir", required=True, help="Directory to save the exported model")
     parser.add_argument(
         "--visual_checkpoint_path",
         required=True,
         help="Path to the visual model checkpoint or perception model checkpoint",
     )
-    parser.add_argument(
-        "--llm_checkpoint_path", required=True, help="Source .nemo file for llm"
-    )
-    parser.add_argument(
-        "--modality",
-        default="vision",
-        choices=["vision", "audio"],
-        help="Modality of the model",
-    )
+    parser.add_argument("--llm_checkpoint_path", required=True, help="Source .nemo file for llm")
+    parser.add_argument("--modality", default="vision", choices=["vision", "audio"], help="Modality of the model")
     parser.add_argument(
         "--model_type",
         type=str,
@@ -65,63 +56,32 @@ def parse_args():
         " gptnext and gpt are the same and keeping it for backward compatibility",
     )
 
-    parser.add_argument(
-        "--tensor_parallel_size", type=int, default=1, help="tensor parallelism size"
-    )
-    parser.add_argument(
-        "--max_input_len", type=int, default=4096, help="Maximum input length"
-    )
-    parser.add_argument(
-        "--max_output_len", type=int, default=256, help="Maximum output length"
-    )
-    parser.add_argument(
-        "--max_batch_size", type=int, default=1, help="Maximum batch size"
-    )
+    parser.add_argument("--tensor_parallel_size", type=int, default=1, help="tensor parallelism size")
+    parser.add_argument("--max_input_len", type=int, default=4096, help="Maximum input length")
+    parser.add_argument("--max_output_len", type=int, default=256, help="Maximum output length")
+    parser.add_argument("--max_batch_size", type=int, default=1, help="Maximum batch size")
     parser.add_argument(
         "--vision_max_batch_size",
         type=int,
         default=1,
         help="Max batch size of the visual inputs, for lita/vita model with video inference, this should be set to 256",
     )
+    parser.add_argument("--max_multimodal_len", type=int, default=3072, help="Maximum multimodal length")
     parser.add_argument(
-        "--max_multimodal_len", type=int, default=3072, help="Maximum multimodal length"
+        "--dtype", choices=["bfloat16", "float16"], default="bfloat16", type=str, help="dtype of the model on TensorRT"
     )
     parser.add_argument(
-        "--dtype",
-        choices=["bfloat16", "float16"],
-        default="bfloat16",
-        type=str,
-        help="dtype of the model on TensorRT",
+        "--delete_existing_files", action="store_true", help="Delete existing files in the output directory"
     )
-    parser.add_argument(
-        "--delete_existing_files",
-        action="store_true",
-        help="Delete existing files in the output directory",
-    )
-    parser.add_argument(
-        "--test_export_only",
-        action="store_true",
-        help="Only test the export without saving the model",
-    )
+    parser.add_argument("--test_export_only", action="store_true", help="Only test the export without saving the model")
     parser.add_argument("--input_text", help="Input text for inference")
-    parser.add_argument(
-        "--input_media", default=None, help="Input media file for inference"
-    )
-    parser.add_argument(
-        "--batch_size", type=int, default=1, help="Batch size for inference"
-    )
-    parser.add_argument(
-        "--max_output",
-        type=int,
-        default=128,
-        help="Maximum output length for inference",
-    )
+    parser.add_argument("--input_media", default=None, help="Input media file for inference")
+    parser.add_argument("--batch_size", type=int, default=1, help="Batch size for inference")
+    parser.add_argument("--max_output", type=int, default=128, help="Maximum output length for inference")
     parser.add_argument("--top_k", type=int, default=1, help="Top k for sampling")
     parser.add_argument("--top_p", type=float, default=0.0, help="Top p for sampling")
     parser.add_argument("--temperature", default=1.0, type=float, help="temperature")
-    parser.add_argument(
-        "--repetition_penalty", default=1.0, type=float, help="repetition_penalty"
-    )
+    parser.add_argument("--repetition_penalty", default=1.0, type=float, help="repetition_penalty")
     parser.add_argument("--num_beams", default=1, type=int, help="num_beams")
 
     args = parser.parse_args()
@@ -129,9 +89,7 @@ def parse_args():
 
 
 def main(args):
-    exporter = TensorRTMMExporter(
-        model_dir=args.output_dir, load_model=False, modality=args.modality
-    )
+    exporter = TensorRTMMExporter(model_dir=args.output_dir, load_model=False, modality=args.modality)
     exporter.export(
         visual_checkpoint_path=args.visual_checkpoint_path,
         llm_checkpoint_path=args.llm_checkpoint_path,
@@ -149,12 +107,8 @@ def main(args):
     )
     test_inference = not args.test_export_only
     if test_inference:
-        assert args.input_media is not None, (
-            "Input media file is required for inference"
-        )
-        assert os.path.exists(args.input_media), (
-            f"Input media file {args.input_media} does not exist"
-        )
+        assert args.input_media is not None, "Input media file is required for inference"
+        assert os.path.exists(args.input_media), f"Input media file {args.input_media} does not exist"
         output = exporter.forward(
             input_text=args.input_text,
             input_media=args.input_media,

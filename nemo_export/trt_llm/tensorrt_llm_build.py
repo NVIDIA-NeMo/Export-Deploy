@@ -58,11 +58,7 @@ def build_and_save_engine(
     gather_context_logits: bool = False,
     gather_generation_logits: bool = False,
 ):
-    architecture = (
-        "LLaMAForCausalLM"
-        if model_config.architecture == "LlamaForCausalLM"
-        else model_config.architecture
-    )
+    architecture = "LLaMAForCausalLM" if model_config.architecture == "LlamaForCausalLM" else model_config.architecture
     try:
         model_cls = getattr(tensorrt_llm.models, architecture)
     except Exception:
@@ -81,7 +77,7 @@ def build_and_save_engine(
     plugin_config.multiple_profiles = multiple_profiles
     plugin_config.reduce_fusion = reduce_fusion
 
-    max_num_tokens, opt_num_tokens = check_max_num_tokens(
+    (max_num_tokens, opt_num_tokens) = check_max_num_tokens(
         max_num_tokens=max_num_tokens,
         opt_num_tokens=opt_num_tokens,
         max_seq_len=max_seq_len,
@@ -115,11 +111,7 @@ def build_and_save_engine(
     if use_lora_plugin is not None:
         # build_config.plugin_config.set_lora_plugin(use_lora_plugin)
         build_config.plugin_config._lora_plugin = use_lora_plugin
-        lora_config = LoraConfig(
-            lora_dir=lora_ckpt_list,
-            lora_ckpt_source="nemo",
-            max_lora_rank=max_lora_rank,
-        )
+        lora_config = LoraConfig(lora_dir=lora_ckpt_list, lora_ckpt_source="nemo", max_lora_rank=max_lora_rank)
         if lora_target_modules is not None:
             lora_config.lora_target_modules = lora_target_modules
         build_config.lora_config = lora_config

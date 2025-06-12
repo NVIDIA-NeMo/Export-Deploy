@@ -39,10 +39,7 @@ from vllm.v1.engine.llm_engine import LLMEngine
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output
-from nemo_export.utils import (
-    convert_lora_nemo_to_canonical,
-    prepare_directory_for_export,
-)
+from nemo_export.utils import convert_lora_nemo_to_canonical, prepare_directory_for_export
 from nemo_export.vllm.model_config import NemoModelConfig
 from nemo_export.vllm.model_loader import NemoModelLoader
 
@@ -147,9 +144,7 @@ class vLLMExporter(ITritonDeployable):
                 Possible choices are None (weights not quantized, default) and "fp8".
             delete_existing_files (bool): if True, deletes all the files in model_dir.
         """
-        prepare_directory_for_export(
-            model_dir, delete_existing_files=delete_existing_files
-        )
+        prepare_directory_for_export(model_dir, delete_existing_files=delete_existing_files)
 
         # Pouplate the basic configuration structures
         device_config = DeviceConfig(device)
@@ -178,14 +173,11 @@ class vLLMExporter(ITritonDeployable):
             )
 
         parallel_config = ParallelConfig(
-            pipeline_parallel_size=pipeline_parallel_size,
-            tensor_parallel_size=tensor_parallel_size,
+            pipeline_parallel_size=pipeline_parallel_size, tensor_parallel_size=tensor_parallel_size
         )
 
         # vllm/huggingface doesn't like the absense of config file. Place config in load dir.
-        if model_config.model and not os.path.exists(
-            os.path.join(model_config.model, "config.json")
-        ):
+        if model_config.model and not os.path.exists(os.path.join(model_config.model, "config.json")):
             with open(os.path.join(model_config.model, "config.json"), "w") as f:
                 json.dump(model_config.hf_text_config.to_dict(), f, indent=2)
 
@@ -222,15 +214,11 @@ class vLLMExporter(ITritonDeployable):
             inmemory_weight_conversion = True
 
         else:
-            raise ValueError(
-                f'Unsupported value for weight_storage: "{weight_storage}"'
-            )
+            raise ValueError(f'Unsupported value for weight_storage: "{weight_storage}"')
 
         # Convert the weights ahead-of-time, if needed
         if save_weights:
-            NemoModelLoader.convert_and_store_nemo_weights(
-                model_config, safetensors_file
-            )
+            NemoModelLoader.convert_and_store_nemo_weights(model_config, safetensors_file)
         elif not inmemory_weight_conversion:
             LOGGER.info(f"Using cached weights in {safetensors_file}")
 
@@ -256,18 +244,14 @@ class vLLMExporter(ITritonDeployable):
         )
 
         load_config = LoadConfig(
-            load_format=NemoModelLoader
-            if inmemory_weight_conversion
-            else LoadFormat.SAFETENSORS,
+            load_format=NemoModelLoader if inmemory_weight_conversion else LoadFormat.SAFETENSORS,
             download_dir=None,
             model_loader_extra_config=None,
         )
 
         # Convert the LoRA checkpoints to vLLM compatible format and derive the configuration structure
         lora_config = self._prepare_lora_checkpoints(
-            model_dir=model_dir,
-            lora_checkpoints=lora_checkpoints,
-            dtype=model_config.dtype,
+            model_dir=model_dir, lora_checkpoints=lora_checkpoints, dtype=model_config.dtype
         )
 
         # Initialize the cluster and specify the executor class.
@@ -283,10 +267,7 @@ class vLLMExporter(ITritonDeployable):
             executor_class = MultiprocExecutor
 
         else:
-            assert (
-                parallel_config.distributed_executor_backend == "uni"
-                or parallel_config.world_size == 1
-            )
+            assert parallel_config.distributed_executor_backend == "uni" or parallel_config.world_size == 1
 
             from vllm.v1.executor.abstract import UniProcExecutor
 
@@ -320,19 +301,13 @@ class vLLMExporter(ITritonDeployable):
         max_lora_rank = 0
         for nemo_file in lora_checkpoints:
             if not os.path.isfile(nemo_file):
-                raise FileNotFoundError(
-                    f"LoRA checkpoint file '{nemo_file} does not exist'"
-                )
+                raise FileNotFoundError(f"LoRA checkpoint file '{nemo_file} does not exist'")
 
             hf_lora_dir = os.path.join(model_dir, f"lora_{index}")
 
-            LOGGER.info(
-                f"Converting LoRA checkpoint '{nemo_file}' into '{hf_lora_dir}'..."
-            )
+            LOGGER.info(f"Converting LoRA checkpoint '{nemo_file}' into '{hf_lora_dir}'...")
 
-            _, lora_config = convert_lora_nemo_to_canonical(
-                nemo_file, hf_lora_dir, hf_format=True
-            )
+            (_, lora_config) = convert_lora_nemo_to_canonical(nemo_file, hf_lora_dir, hf_format=True)
             self.lora_checkpoints.append(hf_lora_dir)
 
             rank = lora_config["peft"]["lora_tuning"]["adapter_dim"]
@@ -340,11 +315,7 @@ class vLLMExporter(ITritonDeployable):
 
             index += 1
 
-        return LoRAConfig(
-            max_lora_rank=max_lora_rank,
-            max_loras=len(self.lora_checkpoints),
-            lora_dtype=dtype,
-        )
+        return LoRAConfig(max_lora_rank=max_lora_rank, max_loras=len(self.lora_checkpoints), lora_dtype=dtype)
 
     def _add_request_to_engine(
         self,
@@ -359,21 +330,12 @@ class vLLMExporter(ITritonDeployable):
             top_p = 1.0
 
         sampling_params = SamplingParams(
-            max_tokens=max_output_len,
-            temperature=temperature,
-            top_k=int(top_k),
-            top_p=top_p,
+            max_tokens=max_output_len, temperature=temperature, top_k=int(top_k), top_p=top_p
         )
 
-        if (
-            lora_uid is not None
-            and lora_uid >= 0
-            and lora_uid < len(self.lora_checkpoints)
-        ):
+        if lora_uid is not None and lora_uid >= 0 and lora_uid < len(self.lora_checkpoints):
             lora_request = LoRARequest(
-                lora_name=f"LoRA_{lora_uid}",
-                lora_int_id=lora_uid + 1,
-                lora_local_path=self.lora_checkpoints[lora_uid],
+                lora_name=f"LoRA_{lora_uid}", lora_int_id=lora_uid + 1, lora_local_path=self.lora_checkpoints[lora_uid]
             )
         else:
             lora_request = None
@@ -381,9 +343,7 @@ class vLLMExporter(ITritonDeployable):
         request_id = str(self.request_id)
         self.request_id += 1
 
-        self.engine.add_request(
-            request_id, prompt, sampling_params, lora_request=lora_request
-        )
+        self.engine.add_request(request_id, prompt, sampling_params, lora_request=lora_request)
 
         return request_id
 
@@ -430,9 +390,7 @@ class vLLMExporter(ITritonDeployable):
 
     def _add_triton_request_to_engine(self, inputs: numpy.ndarray, index: int) -> str:
         if "lora_uids" in inputs:
-            lora_uid = int(
-                numpy.char.decode(inputs["lora_uids"][index][0], encoding="utf-8")
-            )
+            lora_uid = int(numpy.char.decode(inputs["lora_uids"][index][0], encoding="utf-8"))
         else:
             lora_uid = None
 
@@ -454,18 +412,8 @@ class vLLMExporter(ITritonDeployable):
             Tensor(name="top_p", shape=(-1,), dtype=numpy.single, optional=True),
             Tensor(name="temperature", shape=(-1,), dtype=numpy.single, optional=True),
             Tensor(name="lora_uids", shape=(-1,), dtype=bytes, optional=True),
-            Tensor(
-                name="output_generation_logits",
-                shape=(-1,),
-                dtype=numpy.bool_,
-                optional=True,
-            ),
-            Tensor(
-                name="output_context_logits",
-                shape=(-1,),
-                dtype=numpy.bool_,
-                optional=True,
-            ),
+            Tensor(name="output_generation_logits", shape=(-1,), dtype=numpy.bool_, optional=True),
+            Tensor(name="output_context_logits", shape=(-1,), dtype=numpy.bool_, optional=True),
         )
         return inputs
 
@@ -545,9 +493,7 @@ class vLLMExporter(ITritonDeployable):
             raise NotImplementedError("prompt_embeddings_table is not supported")
 
         if prompt_embeddings_checkpoint_path is not None:
-            raise NotImplementedError(
-                "prompt_embeddings_checkpoint_path is not supported"
-            )
+            raise NotImplementedError("prompt_embeddings_checkpoint_path is not supported")
 
         if output_log_probs:
             raise NotImplementedError("output_log_probs is not supported")

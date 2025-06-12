@@ -36,30 +36,23 @@ megatron_llm_supported = True
 try:
     from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployable
 except Exception as e:
-    LOGGER.warning(
-        f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}"
-    )
+    LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False
 
 trt_llm_supported = True
 try:
     from nemo_export.tensorrt_llm import TensorRTLLM
 except Exception as e:
-    LOGGER.warning(
-        f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}"
-    )
+    LOGGER.warning(f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}")
     trt_llm_supported = False
 
 
 def get_args(argv):
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Deploy nemo models to Triton",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Deploy nemo models to Triton"
     )
     parser.add_argument("-nc", "--nemo_checkpoint", type=str, help="Source .nemo file")
-    parser.add_argument(
-        "-hfp", "--hf_model_id_path", type=str, help="Huggingface model path or id"
-    )
+    parser.add_argument("-hfp", "--hf_model_id_path", type=str, help="Huggingface model path or id")
     parser.add_argument(
         "-mt",
         "--model_type",
@@ -68,69 +61,23 @@ def get_args(argv):
         help="Type of the model. gptnext, gpt, llama, falcon, and starcoder are only supported."
         " gptnext and gpt are the same and keeping it for backward compatibility",
     )
+    parser.add_argument("-tmn", "--triton_model_name", required=True, type=str, help="Name for the service")
+    parser.add_argument("-tmv", "--triton_model_version", default=1, type=int, help="Version for the service")
     parser.add_argument(
-        "-tmn",
-        "--triton_model_name",
-        required=True,
-        type=str,
-        help="Name for the service",
+        "-trp", "--triton_port", default=8000, type=int, help="Port for the Triton server to listen for requests"
     )
     parser.add_argument(
-        "-tmv",
-        "--triton_model_version",
-        default=1,
-        type=int,
-        help="Version for the service",
+        "-tha", "--triton_http_address", default="0.0.0.0", type=str, help="HTTP address for the Triton server"
     )
     parser.add_argument(
-        "-trp",
-        "--triton_port",
-        default=8000,
-        type=int,
-        help="Port for the Triton server to listen for requests",
+        "-trt", "--triton_request_timeout", default=60, type=int, help="Timeout in seconds for Triton server"
     )
     parser.add_argument(
-        "-tha",
-        "--triton_http_address",
-        default="0.0.0.0",
-        type=str,
-        help="HTTP address for the Triton server",
+        "-tmr", "--triton_model_repository", default=None, type=str, help="Folder for the trt-llm conversion"
     )
-    parser.add_argument(
-        "-trt",
-        "--triton_request_timeout",
-        default=60,
-        type=int,
-        help="Timeout in seconds for Triton server",
-    )
-    parser.add_argument(
-        "-tmr",
-        "--triton_model_repository",
-        default=None,
-        type=str,
-        help="Folder for the trt-llm conversion",
-    )
-    parser.add_argument(
-        "-ng",
-        "--num_gpus",
-        default=None,
-        type=int,
-        help="Number of GPUs for the deployment",
-    )
-    parser.add_argument(
-        "-tps",
-        "--tensor_parallelism_size",
-        default=1,
-        type=int,
-        help="Tensor parallelism size",
-    )
-    parser.add_argument(
-        "-pps",
-        "--pipeline_parallelism_size",
-        default=1,
-        type=int,
-        help="Pipeline parallelism size",
-    )
+    parser.add_argument("-ng", "--num_gpus", default=None, type=int, help="Number of GPUs for the deployment")
+    parser.add_argument("-tps", "--tensor_parallelism_size", default=1, type=int, help="Tensor parallelism size")
+    parser.add_argument("-pps", "--pipeline_parallelism_size", default=1, type=int, help="Pipeline parallelism size")
     parser.add_argument(
         "-dt",
         "--dtype",
@@ -139,67 +86,19 @@ def get_args(argv):
         type=str,
         help="dtype of the model on TensorRT-LLM",
     )
+    parser.add_argument("-mil", "--max_input_len", default=256, type=int, help="Max input length of the model")
+    parser.add_argument("-mol", "--max_output_len", default=256, type=int, help="Max output length of the model")
+    parser.add_argument("-mbs", "--max_batch_size", default=8, type=int, help="Max batch size of the model")
+    parser.add_argument("-mnt", "--max_num_tokens", default=None, type=int, help="Max number of tokens")
+    parser.add_argument("-msl", "--max_seq_len", default=None, type=int, help="Maximum number of sequence length")
+    parser.add_argument("-mp", "--multiple_profiles", default=False, action="store_true", help="Multiple profiles")
+    parser.add_argument("-ont", "--opt_num_tokens", default=None, type=int, help="Optimum number of tokens")
     parser.add_argument(
-        "-mil",
-        "--max_input_len",
-        default=256,
-        type=int,
-        help="Max input length of the model",
+        "-gap", "--gpt_attention_plugin", default="auto", type=str, help="dtype of gpt attention plugin"
     )
+    parser.add_argument("-gp", "--gemm_plugin", default="auto", type=str, help="dtype of gpt plugin")
     parser.add_argument(
-        "-mol",
-        "--max_output_len",
-        default=256,
-        type=int,
-        help="Max output length of the model",
-    )
-    parser.add_argument(
-        "-mbs",
-        "--max_batch_size",
-        default=8,
-        type=int,
-        help="Max batch size of the model",
-    )
-    parser.add_argument(
-        "-mnt", "--max_num_tokens", default=None, type=int, help="Max number of tokens"
-    )
-    parser.add_argument(
-        "-msl",
-        "--max_seq_len",
-        default=None,
-        type=int,
-        help="Maximum number of sequence length",
-    )
-    parser.add_argument(
-        "-mp",
-        "--multiple_profiles",
-        default=False,
-        action="store_true",
-        help="Multiple profiles",
-    )
-    parser.add_argument(
-        "-ont",
-        "--opt_num_tokens",
-        default=None,
-        type=int,
-        help="Optimum number of tokens",
-    )
-    parser.add_argument(
-        "-gap",
-        "--gpt_attention_plugin",
-        default="auto",
-        type=str,
-        help="dtype of gpt attention plugin",
-    )
-    parser.add_argument(
-        "-gp", "--gemm_plugin", default="auto", type=str, help="dtype of gpt plugin"
-    )
-    parser.add_argument(
-        "-npkc",
-        "--no_paged_kv_cache",
-        default=False,
-        action="store_true",
-        help="Enable paged kv cache.",
+        "-npkc", "--no_paged_kv_cache", default=False, action="store_true", help="Enable paged kv cache."
     )
     parser.add_argument(
         "-drip",
@@ -225,11 +124,7 @@ def get_args(argv):
                         Only available when using c++ runtime.",
     )
     parser.add_argument(
-        "-es",
-        "--enable_streaming",
-        default=False,
-        action="store_true",
-        help="Enables streaming sentences.",
+        "-es", "--enable_streaming", default=False, action="store_true", help="Enables streaming sentences."
     )
     parser.add_argument(
         "--use_lora_plugin",
@@ -242,39 +137,20 @@ def get_args(argv):
         "--lora_target_modules",
         nargs="+",
         default=None,
-        choices=[
-            "attn_qkv",
-            "attn_q",
-            "attn_k",
-            "attn_v",
-            "attn_dense",
-            "mlp_h_to_4h",
-            "mlp_gate",
-            "mlp_4h_to_h",
-        ],
+        choices=["attn_qkv", "attn_q", "attn_k", "attn_v", "attn_dense", "mlp_h_to_4h", "mlp_gate", "mlp_4h_to_h"],
         help="Add lora in which modules. Only be activated when use_lora_plugin is enabled.",
     )
     parser.add_argument(
         "--max_lora_rank",
         type=int,
         default=64,
-        help="maximum lora rank for different lora modules. "
-        "It is used to compute the workspace size of lora plugin.",
+        help="maximum lora rank for different lora modules. It is used to compute the workspace size of lora plugin.",
     )
     parser.add_argument(
-        "-lc",
-        "--lora_ckpt",
-        default=None,
-        type=str,
-        nargs="+",
-        help="The checkpoint list of LoRA weights",
+        "-lc", "--lora_ckpt", default=None, type=str, nargs="+", help="The checkpoint list of LoRA weights"
     )
     parser.add_argument(
-        "-ucr",
-        "--use_cpp_runtime",
-        default=False,
-        action="store_true",
-        help="Use TensorRT LLM C++ runtime",
+        "-ucr", "--use_cpp_runtime", default=False, action="store_true", help="Use TensorRT LLM C++ runtime"
     )
     parser.add_argument(
         "-b",
@@ -286,26 +162,12 @@ def get_args(argv):
         help="Different options to deploy nemo model.",
     )
     parser.add_argument(
-        "-srs",
-        "--start_rest_service",
-        default=False,
-        type=bool,
-        help="Starts the REST service for OpenAI API support",
+        "-srs", "--start_rest_service", default=False, type=bool, help="Starts the REST service for OpenAI API support"
     )
     parser.add_argument(
-        "-sha",
-        "--service_http_address",
-        default="0.0.0.0",
-        type=str,
-        help="HTTP address for the REST Service",
+        "-sha", "--service_http_address", default="0.0.0.0", type=str, help="HTTP address for the REST Service"
     )
-    parser.add_argument(
-        "-sp",
-        "--service_port",
-        default=8080,
-        type=int,
-        help="Port for the REST Service",
-    )
+    parser.add_argument("-sp", "--service_port", default=8080, type=int, help="Port for the REST Service")
     parser.add_argument(
         "-ofr",
         "--openai_format_response",
@@ -313,13 +175,7 @@ def get_args(argv):
         type=bool,
         help="Return the response from PyTriton server in OpenAI compatible format",
     )
-    parser.add_argument(
-        "-dm",
-        "--debug_mode",
-        default=False,
-        action="store_true",
-        help="Enable debug mode",
-    )
+    parser.add_argument("-dm", "--debug_mode", default=False, action="store_true", help="Enable debug mode")
     parser.add_argument(
         "-fp8",
         "--export_fp8_quantized",
@@ -348,12 +204,8 @@ def get_args(argv):
             return None
         raise UsageError(f"Invalid boolean value for argument --{name}: '{s}'")
 
-    args.export_fp8_quantized = str_to_bool(
-        "export_fp8_quantized", args.export_fp8_quantized, optional=True
-    )
-    args.use_fp8_kv_cache = str_to_bool(
-        "use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True
-    )
+    args.export_fp8_quantized = str_to_bool("export_fp8_quantized", args.export_fp8_quantized, optional=True)
+    args.use_fp8_kv_cache = str_to_bool("use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True)
     return args
 
 
@@ -386,9 +238,7 @@ def get_trtllm_deployable(args):
 
     if args.hf_model_id_path:
         # Check if the path is an existing hf checkpoint
-        LOGGER.info(
-            f"Checking if the model is available in the local cache: {args.hf_model_id_path}"
-        )
+        LOGGER.info(f"Checking if the model is available in the local cache: {args.hf_model_id_path}")
         local_path = Path(args.hf_model_id_path)
         model_available = local_path.exists() and (local_path / "config.json").exists()
         if not model_available:
@@ -404,18 +254,11 @@ def get_trtllm_deployable(args):
 
                 # Download model weights in safetensor format
                 model = AutoModelForCausalLM.from_pretrained(
-                    args.hf_model_id_path,
-                    cache_dir=hf_model_path,
-                    torch_dtype="auto",
-                    use_safetensors=True,
+                    args.hf_model_id_path, cache_dir=hf_model_path, torch_dtype="auto", use_safetensors=True
                 )
                 # Download tokenizer files and config
-                tokenizer = AutoTokenizer.from_pretrained(
-                    args.hf_model_id_path, cache_dir=hf_model_path
-                )
-                config = AutoConfig.from_pretrained(
-                    args.hf_model_id_path, cache_dir=hf_model_path
-                )
+                tokenizer = AutoTokenizer.from_pretrained(args.hf_model_id_path, cache_dir=hf_model_path)
+                config = AutoConfig.from_pretrained(args.hf_model_id_path, cache_dir=hf_model_path)
 
                 # Save model weights to model directory
                 model.save_pretrained(hf_model_path, safe_serialization=True)
@@ -425,9 +268,7 @@ def get_trtllm_deployable(args):
                 config.save_pretrained(hf_model_path)
                 args.hf_model_id_path = hf_model_path
 
-                LOGGER.info(
-                    f"Downloaded model, tokenizer and config to {args.hf_model_id_path}"
-                )
+                LOGGER.info(f"Downloaded model, tokenizer and config to {args.hf_model_id_path}")
             except Exception as e:
                 raise RuntimeError(f"Error downloading from HuggingFace: {str(e)}")
 
@@ -445,9 +286,7 @@ def get_trtllm_deployable(args):
         )
 
     if not checkpoint_missing and args.model_type is None:
-        raise ValueError(
-            "Model type is required to be defined if a nemo checkpoint is provided."
-        )
+        raise ValueError("Model type is required to be defined if a nemo checkpoint is provided.")
 
     trt_llm_exporter = TensorRTLLM(
         model_dir=trt_llm_path,
@@ -459,9 +298,7 @@ def get_trtllm_deployable(args):
 
     if args.nemo_checkpoint is not None:
         try:
-            LOGGER.info(
-                "Export operation will be started to export the nemo checkpoint to TensorRT-LLM."
-            )
+            LOGGER.info("Export operation will be started to export the nemo checkpoint to TensorRT-LLM.")
             trt_llm_exporter.export(
                 nemo_checkpoint_path=args.nemo_checkpoint,
                 model_type=args.model_type,
@@ -487,14 +324,9 @@ def get_trtllm_deployable(args):
                 fp8_kvcache=args.use_fp8_kv_cache,
             )
         except Exception as error:
-            raise RuntimeError(
-                "An error has occurred during the model export. Error message: "
-                + str(error)
-            )
+            raise RuntimeError("An error has occurred during the model export. Error message: " + str(error))
     elif args.hf_model_id_path is not None:
-        LOGGER.info(
-            "Export operation will be started to export the hugging face checkpoint to TensorRT-LLM."
-        )
+        LOGGER.info("Export operation will be started to export the hugging face checkpoint to TensorRT-LLM.")
         try:
             trt_llm_exporter.export_hf_model(
                 hf_model_path=args.hf_model_id_path,
@@ -506,10 +338,7 @@ def get_trtllm_deployable(args):
                 model_type=args.model_type,
             )
         except Exception as error:
-            raise RuntimeError(
-                "An error has occurred during the model export. Error message: "
-                + str(error)
-            )
+            raise RuntimeError("An error has occurred during the model export. Error message: " + str(error))
 
     return trt_llm_exporter
 
@@ -535,9 +364,7 @@ def nemo_deploy(argv):
 
     if args.start_rest_service:
         if args.service_port == args.triton_port:
-            logging.error(
-                "REST service port and Triton server port cannot use the same port."
-            )
+            logging.error("REST service port and Triton server port cannot use the same port.")
             return
         # Store triton ip, port and other args relevant for REST API in config.json to be accessible by rest_model_api.py
         store_args_to_json(args)
@@ -545,15 +372,11 @@ def nemo_deploy(argv):
     backend = args.backend.lower()
     if backend == "tensorrt-llm":
         if not trt_llm_supported:
-            raise ValueError(
-                "TensorRT-LLM engine is not supported in this environment."
-            )
+            raise ValueError("TensorRT-LLM engine is not supported in this environment.")
         triton_deployable = get_trtllm_deployable(args)
     elif backend == "in-framework":
         if not megatron_llm_supported:
-            raise ValueError(
-                "MegatronLLMDeployable is not supported in this environment."
-            )
+            raise ValueError("MegatronLLMDeployable is not supported in this environment.")
         triton_deployable = get_nemo_deployable(args)
     else:
         raise ValueError("Backend: {0} is not supported.".format(backend))
@@ -573,10 +396,7 @@ def nemo_deploy(argv):
         nm.deploy()
         nm.run()
     except Exception as error:
-        LOGGER.error(
-            "Error message has occurred during deploy function. Error message: "
-            + str(error)
-        )
+        LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
         return
 
     try:
@@ -591,16 +411,10 @@ def nemo_deploy(argv):
                     reload=True,
                 )
             except Exception as error:
-                logging.error(
-                    "Error message has occurred during REST service start. Error message: "
-                    + str(error)
-                )
+                logging.error("Error message has occurred during REST service start. Error message: " + str(error))
         nm.serve()
     except Exception as error:
-        LOGGER.error(
-            "Error message has occurred during deploy function. Error message: "
-            + str(error)
-        )
+        LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
         return
     LOGGER.info("Model serving will be stopped.")
     nm.stop()

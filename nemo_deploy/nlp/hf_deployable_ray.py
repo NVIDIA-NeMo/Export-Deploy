@@ -88,14 +88,10 @@ class HFRayDeployable:
             self._setup_unique_distributed_parameters(device_map)
             if device_map == "balanced":
                 if not max_memory:
-                    raise ValueError(
-                        "max_memory must be provided when device_map is 'balanced'"
-                    )
+                    raise ValueError("max_memory must be provided when device_map is 'balanced'")
                 num_gpus = torch.cuda.device_count()
                 if num_gpus > 1:
-                    print(
-                        f"Using tensor parallel across {num_gpus} GPUs for large model"
-                    )
+                    print(f"Using tensor parallel across {num_gpus} GPUs for large model")
                     max_memory_dict = {i: "75GiB" for i in range(num_gpus)}
             self.model = HuggingFaceLLMDeploy(
                 hf_model_id_path=hf_model_id_path,
@@ -111,8 +107,7 @@ class HFRayDeployable:
             # Dynamically apply the serve.batch decorator with the user-configured parameters
             # This allows the batch size and timeout to be configured when instantiating the class
             self.batched_inference = serve.batch(
-                max_batch_size=self.max_batch_size,
-                batch_wait_timeout_s=self.batch_wait_timeout_s,
+                max_batch_size=self.max_batch_size, batch_wait_timeout_s=self.batch_wait_timeout_s
             )(self._batched_inference)
 
         except Exception as e:
@@ -182,9 +177,7 @@ class HFRayDeployable:
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")
             LOGGER.error(f"Request: {request}")
-            raise HTTPException(
-                status_code=500, detail=f"Error during inference: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Error during inference: {str(e)}")
 
     @app.post("/v1/chat/completions/")
     async def chat_completions(self, request: Dict[Any, Any]):
@@ -219,12 +212,7 @@ class HFRayDeployable:
             messages = request.get("messages", [])
 
             # Convert messages to a single prompt
-            prompt = "\n".join(
-                [
-                    f"{msg.get('role', 'user')}: {msg.get('content', '')}"
-                    for msg in messages
-                ]
-            )
+            prompt = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages])
             prompt += "\nassistant:"
 
             # Create a modified request with the prompt
@@ -235,21 +223,15 @@ class HFRayDeployable:
             results = await self.batched_inference(chat_request, "chat")
 
             if not results or len(results) == 0:
-                raise HTTPException(
-                    status_code=500, detail="No results returned from model"
-                )
+                raise HTTPException(status_code=500, detail="No results returned from model")
 
             return results
 
         except Exception as e:
             LOGGER.error(f"Error during chat completion: {str(e)}")
-            raise HTTPException(
-                status_code=500, detail=f"Error during chat completion: {str(e)}"
-            )
+            raise HTTPException(status_code=500, detail=f"Error during chat completion: {str(e)}")
 
-    async def _batched_inference(
-        self, requests: List[Dict[Any, Any]], request_type: str = "completion"
-    ):
+    async def _batched_inference(self, requests: List[Dict[Any, Any]], request_type: str = "completion"):
         """Internal method for processing batched inference requests.
 
         This method is decorated with serve.batch in the constructor with the configured
@@ -288,16 +270,13 @@ class HFRayDeployable:
                 "temperature": temperature,
                 "top_k": top_k,
                 "top_p": 0.0,
-                "compute_logprob": request_type
-                == "completion",  # Only compute logprobs for text completions
+                "compute_logprob": request_type == "completion",  # Only compute logprobs for text completions
                 "apply_chat_template": False,
             }
 
             # Run model inference once with all prompts
             loop = asyncio.get_event_loop()
-            combined_result = await loop.run_in_executor(
-                None, self.model.ray_infer_fn, inference_inputs
-            )
+            combined_result = await loop.run_in_executor(None, self.model.ray_infer_fn, inference_inputs)
 
             # Distribute results back to individual responses
             results = []
@@ -314,9 +293,7 @@ class HFRayDeployable:
 
                     # Get log probs if available
                     log_probs = None
-                    if "log_probs" in combined_result and i < len(
-                        combined_result["log_probs"]
-                    ):
+                    if "log_probs" in combined_result and i < len(combined_result["log_probs"]):
                         log_probs = combined_result["log_probs"][i]
 
                     # Format response based on request type
@@ -328,16 +305,9 @@ class HFRayDeployable:
                             "model": model_name,
                             "choices": [
                                 {
-                                    "message": {
-                                        "role": "assistant",
-                                        "content": request_sentence,
-                                    },
+                                    "message": {"role": "assistant", "content": request_sentence},
                                     "index": 0,
-                                    "finish_reason": (
-                                        "length"
-                                        if len(request_sentence) >= max_length
-                                        else "stop"
-                                    ),
+                                    "finish_reason": ("length" if len(request_sentence) >= max_length else "stop"),
                                 }
                             ],
                             "usage": {
@@ -357,11 +327,7 @@ class HFRayDeployable:
                                     "text": request_sentence,
                                     "index": 0,
                                     "logprobs": log_probs,
-                                    "finish_reason": (
-                                        "length"
-                                        if len(request_sentence) >= max_length
-                                        else "stop"
-                                    ),
+                                    "finish_reason": ("length" if len(request_sentence) >= max_length else "stop"),
                                 }
                             ],
                             "usage": {
@@ -374,9 +340,7 @@ class HFRayDeployable:
                     results.append(output)
 
                 except Exception as e:
-                    LOGGER.error(
-                        f"Error processing {request_type} result for request {i}: {str(e)}"
-                    )
+                    LOGGER.error(f"Error processing {request_type} result for request {i}: {str(e)}")
                     results.append({"error": str(e)})
 
         except Exception as e:
@@ -397,12 +361,7 @@ class HFRayDeployable:
                 - object: Response type ("list")
                 - data: List of model information
         """
-        return {
-            "object": "list",
-            "data": [
-                {"id": self.model_id, "object": "model", "created": int(time.time())}
-            ],
-        }
+        return {"object": "list", "data": [{"id": self.model_id, "object": "model", "created": int(time.time())}]}
 
     @app.get("/v1/health")
     async def health_check(self):

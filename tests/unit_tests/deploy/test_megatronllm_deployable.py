@@ -32,13 +32,13 @@ def mock_engine_and_tokenizer():
     mock_tokenizer.tokenizer.tokenizer.bos_token = "<bos>"
     mock_tokenizer.tokenizer.tokenizer.eos_token = "<eos>"
 
-    return mock_engine, mock_model, mock_tokenizer
+    return (mock_engine, mock_model, mock_tokenizer)
 
 
 @pytest.fixture
 def deployable(mock_engine_and_tokenizer):
     """Fixture to create a deployable instance with mocked dependencies."""
-    mock_engine, mock_model, mock_tokenizer = mock_engine_and_tokenizer
+    (mock_engine, mock_model, mock_tokenizer) = mock_engine_and_tokenizer
 
     # Patch the __init__ method to avoid file loading
     with patch.object(MegatronLLMDeployableNemo2, "__init__", return_value=None):
@@ -71,11 +71,7 @@ def test_generate_without_cuda_graphs(deployable):
 
     prompts = ["Hello", "World"]
     inference_params = CommonInferenceParams(
-        temperature=1.0,
-        top_k=1,
-        top_p=0.0,
-        num_tokens_to_generate=256,
-        return_log_probs=False,
+        temperature=1.0, top_k=1, top_p=0.0, num_tokens_to_generate=256, return_log_probs=False
     )
 
     # Mock the generate method
@@ -86,9 +82,7 @@ def test_generate_without_cuda_graphs(deployable):
 
         results = deployable.generate(prompts, inference_params)
         assert len(results) == 2
-        mock_generate.assert_called_once_with(
-            prompts=prompts, add_BOS=False, common_inference_params=inference_params
-        )
+        mock_generate.assert_called_once_with(prompts=prompts, add_BOS=False, common_inference_params=inference_params)
 
 
 @pytest.mark.run_only_on("GPU")
@@ -100,11 +94,7 @@ def test_generate_with_cuda_graphs(deployable):
 
     prompts = ["Hello", "World"]
     inference_params = CommonInferenceParams(
-        temperature=1.0,
-        top_k=1,
-        top_p=0.0,
-        num_tokens_to_generate=256,
-        return_log_probs=False,
+        temperature=1.0, top_k=1, top_p=0.0, num_tokens_to_generate=256, return_log_probs=False
     )
 
     # Mock the generate method
@@ -115,12 +105,7 @@ def test_generate_with_cuda_graphs(deployable):
         mock_result2.generated_text = "Generated text 2"
         mock_result_pad = MagicMock()
         mock_result_pad.generated_text = "Padding text"
-        mock_generate.return_value = [
-            mock_result1,
-            mock_result2,
-            mock_result_pad,
-            mock_result_pad,
-        ]
+        mock_generate.return_value = [mock_result1, mock_result2, mock_result_pad, mock_result_pad]
 
         results = deployable.generate(prompts, inference_params)
 
@@ -145,9 +130,7 @@ def test_apply_chat_template(deployable):
     template_mock = MagicMock()
     template_mock.render.return_value = "Rendered template with Hello"
 
-    with patch(
-        "nemo_deploy.nlp.megatronllm_deployable.Template", return_value=template_mock
-    ):
+    with patch("nemo_deploy.nlp.megatronllm_deployable.Template", return_value=template_mock):
         template = deployable.apply_chat_template(messages)
         assert template == "Rendered template with Hello"
         template_mock.render.assert_called_once()
@@ -230,7 +213,7 @@ def test_infer_fn_basic(deployable):
         mock_remove_eos.return_value = ["Generated text 1", "Generated text 2"]
 
         # Test without log probabilities
-        output_texts, output_log_probs = deployable._infer_fn(
+        (output_texts, output_log_probs) = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
             top_k=1,
@@ -277,13 +260,11 @@ def test_infer_fn_with_log_probs(deployable):
 
         # Mock torch.tensor to return a mock tensor with cpu().detach().numpy()
         mock_tensor_instance = MagicMock()
-        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = (
-            np.array([0.1, 0.2, 0.3])
-        )
+        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = np.array([0.1, 0.2, 0.3])
         mock_tensor.return_value = mock_tensor_instance
 
         # Test with log probabilities
-        output_texts, output_log_probs = deployable._infer_fn(
+        (output_texts, output_log_probs) = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
             top_k=1,
@@ -319,7 +300,7 @@ def test_infer_fn_with_chat_template(deployable):
         mock_remove_eos.return_value = ["Generated response"]
 
         # Test with chat template
-        output_texts, output_log_probs = deployable._infer_fn(
+        (output_texts, output_log_probs) = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
             top_k=1,
@@ -333,9 +314,7 @@ def test_infer_fn_with_chat_template(deployable):
         assert output_log_probs is None
 
         # Verify chat template was applied
-        mock_apply_template.assert_called_once_with(
-            {"role": "user", "content": "Hello"}
-        )
+        mock_apply_template.assert_called_once_with({"role": "user", "content": "Hello"})
 
         # Verify generate was called with templated prompt
         call_args = mock_generate.call_args[0]
@@ -353,9 +332,7 @@ def test_infer_fn_with_distributed(deployable):
         patch("torch.distributed.is_initialized", return_value=True),
         patch("torch.distributed.get_world_size", return_value=2),
         patch("torch.distributed.broadcast") as mock_broadcast,
-        patch(
-            "nemo_deploy.nlp.megatronllm_deployable.broadcast_list"
-        ) as mock_broadcast_list,
+        patch("nemo_deploy.nlp.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
     ):
         # Set up mock results
         mock_result = MagicMock()
@@ -364,7 +341,7 @@ def test_infer_fn_with_distributed(deployable):
         mock_remove_eos.return_value = ["Generated text", "Generated text"]
 
         # Test with distributed setup
-        output_texts, output_log_probs = deployable._infer_fn(
+        (output_texts, output_log_probs) = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
             top_k=1,
@@ -379,9 +356,7 @@ def test_infer_fn_with_distributed(deployable):
 
         # Verify distributed operations were called
         mock_broadcast.assert_called_once()
-        assert (
-            mock_broadcast_list.call_count == 2
-        )  # One for prompts, one for parameters
+        assert mock_broadcast_list.call_count == 2  # One for prompts, one for parameters
 
 
 @pytest.mark.run_only_on("GPU")
@@ -404,13 +379,11 @@ def test_infer_fn_empty_log_probs(deployable):
 
         # Mock torch.tensor to return empty array
         mock_tensor_instance = MagicMock()
-        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = (
-            np.array([])
-        )
+        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = np.array([])
         mock_tensor.return_value = mock_tensor_instance
 
         # Test with log probabilities but empty results
-        output_texts, output_log_probs = deployable._infer_fn(
+        (output_texts, output_log_probs) = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
             top_k=1,
@@ -507,10 +480,7 @@ def test_ray_infer_fn_with_log_probs(deployable):
 @pytest.mark.run_only_on("GPU")
 def test_ray_infer_fn_with_chat_template(deployable):
     """Test ray_infer_fn method with chat template enabled."""
-    inputs = {
-        "prompts": [{"role": "user", "content": "Hello"}],
-        "apply_chat_template": True,
-    }
+    inputs = {"prompts": [{"role": "user", "content": "Hello"}], "apply_chat_template": True}
 
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
@@ -566,10 +536,7 @@ def test_ray_infer_fn_all_parameters(deployable):
 
         result = deployable.ray_infer_fn(inputs)
 
-        assert result == {
-            "sentences": ["Generated response"],
-            "log_probs": mock_log_probs,
-        }
+        assert result == {"sentences": ["Generated response"], "log_probs": mock_log_probs}
 
         # Verify _infer_fn was called with all specified parameters
         mock_infer_fn.assert_called_once_with(

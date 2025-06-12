@@ -24,17 +24,10 @@ def test_rename_key():
     assert rename_key("self_attention.weight") == "attention.weight"
 
     # Test layernorm replacements
-    assert (
-        rename_key("attention.linear_qkv.layer_norm_weight") == "input_layernorm.weight"
-    )
+    assert rename_key("attention.linear_qkv.layer_norm_weight") == "input_layernorm.weight"
     assert rename_key("attention.linear_qkv.layer_norm_bias") == "input_layernorm.bias"
-    assert (
-        rename_key("mlp.linear_fc1.layer_norm_weight")
-        == "post_attention_layernorm.weight"
-    )
-    assert (
-        rename_key("mlp.linear_fc1.layer_norm_bias") == "post_attention_layernorm.bias"
-    )
+    assert rename_key("mlp.linear_fc1.layer_norm_weight") == "post_attention_layernorm.weight"
+    assert rename_key("mlp.linear_fc1.layer_norm_bias") == "post_attention_layernorm.bias"
 
     # Test key with no replacements needed
     assert rename_key("some_other_key") == "some_other_key"
@@ -45,14 +38,8 @@ def test_rename_key_dist_ckpt():
     # Test key with layers
     from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import rename_key_dist_ckpt
 
-    assert (
-        rename_key_dist_ckpt("layers.linear_qkv.weight", 0)
-        == "layers.0.linear_qkv.weight"
-    )
-    assert (
-        rename_key_dist_ckpt("layers.self_attention.weight", 1)
-        == "layers.1.attention.weight"
-    )
+    assert rename_key_dist_ckpt("layers.linear_qkv.weight", 0) == "layers.0.linear_qkv.weight"
+    assert rename_key_dist_ckpt("layers.self_attention.weight", 1) == "layers.1.attention.weight"
 
     # Test key without layers
     assert rename_key_dist_ckpt("embedding.weight", 0) == "embedding.weight"
@@ -68,9 +55,7 @@ def test_get_layer_prefix():
         "optimizer.state",
         "model.decoder.layers.1.self_attention.bias",
     ]
-    model_prefix, transformer_prefix = get_layer_prefix(
-        layer_names_mcore, is_mcore=True
-    )
+    (model_prefix, transformer_prefix) = get_layer_prefix(layer_names_mcore, is_mcore=True)
     assert model_prefix == "model."
     assert transformer_prefix == "model.decoder."
 
@@ -80,9 +65,7 @@ def test_get_layer_prefix():
         "optimizer.state",
         "model.encoder.layers.1.self_attention.bias",
     ]
-    model_prefix, transformer_prefix = get_layer_prefix(
-        layer_names_non_mcore, is_mcore=False
-    )
+    (model_prefix, transformer_prefix) = get_layer_prefix(layer_names_non_mcore, is_mcore=False)
     assert model_prefix == "model."
     assert transformer_prefix == "model.encoder."
 
@@ -92,20 +75,11 @@ def test_rename_layer_num():
     # Test basic layer number replacement
     from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import rename_layer_num
 
-    assert (
-        rename_layer_num("model.layers.0.attention.weight", 1)
-        == "model.layers.1.attention.weight"
-    )
-    assert (
-        rename_layer_num("decoder.layers.5.mlp.weight", 2)
-        == "decoder.layers.2.mlp.weight"
-    )
+    assert rename_layer_num("model.layers.0.attention.weight", 1) == "model.layers.1.attention.weight"
+    assert rename_layer_num("decoder.layers.5.mlp.weight", 2) == "decoder.layers.2.mlp.weight"
 
     # Test with multiple numeric components
-    assert (
-        rename_layer_num("model.layers.0.attention.head.8.weight", 3)
-        == "model.layers.3.attention.head.8.weight"
-    )
+    assert rename_layer_num("model.layers.0.attention.head.8.weight", 3) == "model.layers.3.attention.head.8.weight"
 
 
 @pytest.mark.run_only_on("GPU")

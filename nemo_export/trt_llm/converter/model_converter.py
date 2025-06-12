@@ -40,11 +40,7 @@ def get_config(decoder_type, config):
         "falcon": tensorrt_llm.models.falcon.config.FalconConfig,
         "gemma": tensorrt_llm.models.GemmaConfig,
     }
-    config_cls = (
-        DECODER_CONFIG[decoder_type]
-        if decoder_type in DECODER_CONFIG
-        else PretrainedConfig
-    )
+    config_cls = DECODER_CONFIG[decoder_type] if decoder_type in DECODER_CONFIG else PretrainedConfig
 
     return config_cls(**config)
 
@@ -84,9 +80,7 @@ def prompt_convert(prompt_config, prompt_weights):
 
 
 def determine_quantization_settings(
-    nemo_model_config: Dict[str, Any],
-    fp8_quantized: Optional[bool] = None,
-    fp8_kvcache: Optional[bool] = None,
+    nemo_model_config: Dict[str, Any], fp8_quantized: Optional[bool] = None, fp8_kvcache: Optional[bool] = None
 ) -> Tuple[bool, bool]:
     """Determines the exported models quantization settings.
 
@@ -107,7 +101,7 @@ def determine_quantization_settings(
     if fp8_kvcache is None:
         fp8_kvcache = is_nemo_quantized
 
-    return fp8_quantized, fp8_kvcache
+    return (fp8_quantized, fp8_kvcache)
 
 
 def model_to_trtllm_ckpt(
@@ -127,18 +121,13 @@ def model_to_trtllm_ckpt(
     fp8_quantized: Optional[bool] = None,
     fp8_kvcache: Optional[bool] = None,
 ) -> Tuple[List[Dict], List[PretrainedConfig]]:
-    if (
-        nemo_model_config.get("share_embeddings_and_output_weights", False)
-        and not use_embedding_sharing
-    ):
+    if nemo_model_config.get("share_embeddings_and_output_weights", False) and not use_embedding_sharing:
         LOGGER.info(
             "Found share_embeddings_and_output_weights is True in NeMo config, set use_embedding_sharing = True"
         )
         use_embedding_sharing = True
 
-    fp8_quantized, fp8_kvcache = determine_quantization_settings(
-        nemo_model_config, fp8_quantized, fp8_kvcache
-    )
+    (fp8_quantized, fp8_kvcache) = determine_quantization_settings(nemo_model_config, fp8_quantized, fp8_kvcache)
     # If the model has been sharded with model parallelism, convert the model in a gpu-distributed manner
     if use_distributed_convert:
         weights_dict = dist_model_to_trt_llm_ckpt(
@@ -170,24 +159,16 @@ def model_to_trtllm_ckpt(
             lm_head_weight = weights_dict["lm_head.weight"]
         if vocab_size is None:
             vocab_size = weights_dict["transformer.vocab_embedding.weight"].shape[0]
-        vocab_size_padded = (
-            pad_vocab_size(vocab_size, tensor_parallel_size)
-            if has_lm_head
-            else vocab_size
-        )
+        vocab_size_padded = pad_vocab_size(vocab_size, tensor_parallel_size) if has_lm_head else vocab_size
 
         if has_lm_head and vocab_size_padded != vocab_size:
             pad_width = vocab_size_padded - vocab_size
-            lm_head_weight = np.pad(
-                lm_head_weight, ((0, pad_width), (0, 0)), "constant", constant_values=0
-            )
+            lm_head_weight = np.pad(lm_head_weight, ((0, pad_width), (0, 0)), "constant", constant_values=0)
 
     world_size = tensor_parallel_size * pipeline_parallel_size
     hidden_act = nemo_model_config.get("activation")
     hidden_act = (
-        hidden_act.split("-")[-1]
-        if nemo_model_config.get("num_moe_experts", 0)
-        else non_gated_version(hidden_act)
+        hidden_act.split("-")[-1] if nemo_model_config.get("num_moe_experts", 0) else non_gated_version(hidden_act)
     )
 
     config = {
@@ -195,18 +176,14 @@ def model_to_trtllm_ckpt(
         "dtype": dtype,
         "num_hidden_layers": nemo_model_config.get("num_layers"),
         "num_attention_heads": nemo_model_config.get("num_attention_heads"),
-        "num_key_value_heads": nemo_model_config.get(
-            "num_query_groups", nemo_model_config["num_attention_heads"]
-        ),
+        "num_key_value_heads": nemo_model_config.get("num_query_groups", nemo_model_config["num_attention_heads"]),
         "head_size": nemo_model_config.get("kv_channels"),
         "hidden_size": nemo_model_config.get("hidden_size"),
         "intermediate_size": nemo_model_config.get("ffn_hidden_size"),
         "norm_epsilon": nemo_model_config.get("layernorm_epsilon"),
         "vocab_size": vocab_size_padded,
         "position_embedding_type": (
-            "rope_gpt_neox"
-            if nemo_model_config.get("position_embedding_type") == "rope"
-            else "learned_absolute"
+            "rope_gpt_neox" if nemo_model_config.get("position_embedding_type") == "rope" else "learned_absolute"
         ),
         "max_position_embeddings": nemo_model_config.get("max_position_embeddings"),
         "hidden_act": hidden_act,
@@ -226,9 +203,7 @@ def model_to_trtllm_ckpt(
         "moe_normalization_mode": nemo_model_config.get(
             "moe_renorm_mode", MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE
         ),
-        "moe_tp_mode": nemo_model_config.get(
-            "moe_tp_mode", 2
-        ),  # change MoeConfig.ParallelismMode.TENSOR_PARALLEL to 2
+        "moe_tp_mode": nemo_model_config.get("moe_tp_mode", 2),  # change MoeConfig.ParallelismMode.TENSOR_PARALLEL to 2
         "logits_dtype": "float32",
         "world_size": world_size,
         "tp_size": tensor_parallel_size,
@@ -255,7 +230,7 @@ def model_to_trtllm_ckpt(
             pp_size=pipeline_parallel_size,
         )
         weights_dicts.append(weights_dict)
-        return weights_dicts, model_configs
+        return (weights_dicts, model_configs)
 
     pp_key = {
         "transformer.vocab_embedding.weight",
@@ -267,10 +242,7 @@ def model_to_trtllm_ckpt(
 
     for i in range(world_size):
         mapping = tensorrt_llm.Mapping(
-            world_size=world_size,
-            rank=i,
-            tp_size=tensor_parallel_size,
-            pp_size=pipeline_parallel_size,
+            world_size=world_size, rank=i, tp_size=tensor_parallel_size, pp_size=pipeline_parallel_size
         )
         layers_range = mapping.pp_layers(num_layers)
 
@@ -287,51 +259,34 @@ def model_to_trtllm_ckpt(
             if "layers" in new_key:  # PP
                 layer_num = int(new_key.split(".")[2])
                 if layer_num in layers_range:
-                    new_key = new_key.replace(
-                        f"layers.{layer_num}", f"layers.{layer_num - layers_range[0]}"
-                    )
+                    new_key = new_key.replace(f"layers.{layer_num}", f"layers.{layer_num - layers_range[0]}")
                 else:
                     continue
-            if (
-                config.get("new_decoder_architecture", False)
-                and "post_layernorm" in new_key
-            ):
+            if config.get("new_decoder_architecture", False) and "post_layernorm" in new_key:
                 new_key = new_key.replace("post_layernorm", "mlp_layernorm")
             weights_dict_local[new_key] = v
 
         if mapping.is_first_pp_rank():
             embedding_weight = (
-                split(
-                    weights_dict["transformer.vocab_embedding.weight"],
-                    mapping.tp_size,
-                    mapping.tp_rank,
-                )
+                split(weights_dict["transformer.vocab_embedding.weight"], mapping.tp_size, mapping.tp_rank)
                 if use_parallel_embedding
                 else weights_dict["transformer.vocab_embedding.weight"]
             )
 
             weights_dict_local["transformer.vocab_embedding.weight"] = embedding_weight
 
-            pos_embedding_weight = weights_dict.get(
-                "transformer.position_embedding.weight"
-            )
+            pos_embedding_weight = weights_dict.get("transformer.position_embedding.weight")
             if pos_embedding_weight is not None:
                 if use_parallel_embedding:
-                    pos_embedding_weight = split(
-                        pos_embedding_weight, mapping.tp_size, mapping.tp_rank
-                    )
-                weights_dict_local["transformer.position_embedding.weight"] = (
-                    pos_embedding_weight
-                )
+                    pos_embedding_weight = split(pos_embedding_weight, mapping.tp_size, mapping.tp_rank)
+                weights_dict_local["transformer.position_embedding.weight"] = pos_embedding_weight
 
         if mapping.is_last_pp_rank():
             if has_lm_head:
                 weights_dict_local["lm_head.weight"] = split(
                     lm_head_weight, mapping.tp_size, mapping.tp_rank
                 ).contiguous()
-            weights_dict_local["transformer.ln_f.weight"] = weights_dict[
-                "transformer.ln_f.weight"
-            ]
+            weights_dict_local["transformer.ln_f.weight"] = weights_dict["transformer.ln_f.weight"]
 
             ln_f_bias = weights_dict.get("transformer.ln_f.bias")
             if ln_f_bias is not None:
@@ -343,4 +298,4 @@ def model_to_trtllm_ckpt(
         model_configs.append(model_config)
         weights_dicts.append(weights_dict_local)
 
-    return weights_dicts, model_configs
+    return (weights_dicts, model_configs)

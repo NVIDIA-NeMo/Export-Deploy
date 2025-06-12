@@ -27,10 +27,7 @@ SPECIAL_TOKENS = ["<unk>", "<s>", "</s>"]
 SPECIAL_TOKEN_TEMPLATE = "<SPECIAL_{id}>"
 
 
-def reload_mergeable_ranks(
-    path: str,
-    max_vocab: Optional[int] = None,
-) -> Dict[bytes, int]:
+def reload_mergeable_ranks(path: str, max_vocab: Optional[int] = None) -> Dict[bytes, int]:
     """Reload the tokenizer JSON file and convert it to Tiktoken format."""
     assert path.endswith(".json")
 

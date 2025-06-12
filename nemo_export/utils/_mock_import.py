@@ -54,13 +54,11 @@ def _mock_import(module: str):
     try:
         importlib.import_module(module)
     except ModuleNotFoundError:
-        LOGGER.warning(
-            f"Module '{module}' is not available, mocking with a dummy module."
-        )
+        LOGGER.warning(f"Module '{module}' is not available, mocking with a dummy module.")
         sys_modules_backup = sys.modules.copy()
 
         dummy_module = DummyModule("dummy")
-        module_name, *submodules = module.split(".")
+        (module_name, *submodules) = module.split(".")
         sys.modules[module_name] = dummy_module
         modules_mocked = [module_name]
         for submodule in submodules:

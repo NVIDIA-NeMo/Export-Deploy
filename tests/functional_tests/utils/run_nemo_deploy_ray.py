@@ -33,10 +33,7 @@ except Exception as e:
     run_ray_tests = False
 
 LOGGER = logging.getLogger("NeMo")
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 
 def get_available_cpus():
@@ -45,11 +42,7 @@ def get_available_cpus():
 
 
 def test_deployment_handle_direct(
-    deployment_handle,
-    model_id,
-    endpoint_type="completions",
-    max_retries=10,
-    retry_delay=2,
+    deployment_handle, model_id, endpoint_type="completions", max_retries=10, retry_delay=2
 ):
     """Test deployment handle directly without HTTP requests."""
     print(f"Testing {endpoint_type} endpoint via deployment handle...")
@@ -83,33 +76,23 @@ def test_deployment_handle_direct(
             else:
                 raise ValueError(f"Unknown endpoint type: {endpoint_type}")
 
-            if response and (
-                isinstance(response, dict) or hasattr(response, "__dict__")
-            ):
+            if response and (isinstance(response, dict) or hasattr(response, "__dict__")):
                 print(f"✓ {endpoint_type.capitalize()} endpoint is responsive")
-                return True, response
+                return (True, response)
             else:
-                print(
-                    f"✗ {endpoint_type.capitalize()} endpoint returned invalid response: {response}"
-                )
+                print(f"✗ {endpoint_type.capitalize()} endpoint returned invalid response: {response}")
                 if attempt < max_retries - 1:
-                    print(
-                        f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})"
-                    )
+                    print(f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})")
                     time.sleep(retry_delay)
 
         except Exception as e:
             print(f"✗ Error calling {endpoint_type} endpoint: {e}")
             if attempt < max_retries - 1:
-                print(
-                    f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})"
-                )
+                print(f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})")
                 time.sleep(retry_delay)
 
-    print(
-        f"✗ {endpoint_type.capitalize()} endpoint failed after {max_retries} attempts"
-    )
-    return False, None
+    print(f"✗ {endpoint_type.capitalize()} endpoint failed after {max_retries} attempts")
+    return (False, None)
 
 
 def run_comprehensive_deployment_tests(deployment_handle, model_id):
@@ -123,18 +106,14 @@ def run_comprehensive_deployment_tests(deployment_handle, model_id):
 
     for endpoint in endpoints:
         print(f"\n--- Testing {endpoint} endpoint ---")
-        success, response = test_deployment_handle_direct(
-            deployment_handle, model_id, endpoint
-        )
+        (success, response) = test_deployment_handle_direct(deployment_handle, model_id, endpoint)
         test_results[endpoint] = {"success": success, "response": response}
 
         if success and response:
             print(f"✓ {endpoint.capitalize()} endpoint test PASSED")
             if endpoint in ["completions", "chat"]:
                 if isinstance(response, dict) and "choices" in response:
-                    choice_content = response["choices"][0].get(
-                        "text", response["choices"][0].get("message", {})
-                    )
+                    choice_content = response["choices"][0].get("text", response["choices"][0].get("message", {}))
                     print(f"  Sample response: {choice_content}")
                 else:
                     print(f"  Response type: {type(response)}")
@@ -204,33 +183,22 @@ def run_ray_inference(
     total_gpus = num_gpus * num_nodes
     gpus_per_replica = total_gpus // num_replicas
 
-    parallelism_per_replica = (
-        tensor_model_parallel_size
-        * pipeline_model_parallel_size
-        * context_parallel_size
-    )
+    parallelism_per_replica = tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size
 
     if parallelism_per_replica != gpus_per_replica:
         raise Exception(
-            f"Parallelism per replica ({parallelism_per_replica}) must equal "
-            f"GPUs per replica ({gpus_per_replica})"
+            f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
         )
 
     if debug:
-        print(
-            f"Configuration: {num_replicas} replicas, {gpus_per_replica} GPUs per replica"
-        )
+        print(f"Configuration: {num_replicas} replicas, {gpus_per_replica} GPUs per replica")
 
     # Initialize Ray deployment
     ray_deployer = DeployRay(
         num_cpus=num_cpus,
         num_gpus=total_gpus,
         include_dashboard=include_dashboard,
-        runtime_env={
-            "env_vars": {
-                "CUDA_VISIBLE_DEVICES": cuda_visible_devices,
-            }
-        },
+        runtime_env={"env_vars": {"CUDA_VISIBLE_DEVICES": cuda_visible_devices}},
     )
 
     deployment_success = False
@@ -247,8 +215,7 @@ def run_ray_inference(
         if debug:
             print("Creating Megatron Ray deployable...")
         app = MegatronRayDeployable.options(
-            num_replicas=num_replicas,
-            ray_actor_options={"num_cpus": num_cpus_per_replica},
+            num_replicas=num_replicas, ray_actor_options={"num_cpus": num_cpus_per_replica}
         ).bind(
             nemo_checkpoint_filepath=checkpoint_path,
             num_gpus=gpus_per_replica,
@@ -285,9 +252,7 @@ def run_ray_inference(
 
         # Test endpoints if requested using deployment handle
         if test_endpoints:
-            test_results = run_comprehensive_deployment_tests(
-                deployment_handle, model_name
-            )
+            test_results = run_comprehensive_deployment_tests(deployment_handle, model_name)
 
         return test_results
 
@@ -306,127 +271,46 @@ def get_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Deploy NeMo models to Ray cluster and test endpoints",
     )
+    parser.add_argument("--model_name", type=str, required=True, help="Name of the model to deploy")
+    parser.add_argument("--checkpoint_path", type=str, required=True, help="Path to the .nemo checkpoint file")
+    parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs to use per node")
+    parser.add_argument("--num_nodes", type=int, default=1, help="Number of nodes to use for deployment")
+    parser.add_argument("--num_replicas", type=int, default=1, help="Number of replicas for the deployment")
     parser.add_argument(
-        "--model_name",
-        type=str,
-        required=True,
-        help="Name of the model to deploy",
+        "--tensor_model_parallel_size", type=int, default=1, help="Size of the tensor model parallelism"
     )
     parser.add_argument(
-        "--checkpoint_path",
-        type=str,
-        required=True,
-        help="Path to the .nemo checkpoint file",
+        "--pipeline_model_parallel_size", type=int, default=1, help="Size of the pipeline model parallelism"
     )
     parser.add_argument(
-        "--num_gpus",
-        type=int,
-        default=1,
-        help="Number of GPUs to use per node",
+        "--expert_model_parallel_size", type=int, default=1, help="Size of the expert model parallelism"
     )
-    parser.add_argument(
-        "--num_nodes",
-        type=int,
-        default=1,
-        help="Number of nodes to use for deployment",
-    )
-    parser.add_argument(
-        "--num_replicas",
-        type=int,
-        default=1,
-        help="Number of replicas for the deployment",
-    )
-    parser.add_argument(
-        "--tensor_model_parallel_size",
-        type=int,
-        default=1,
-        help="Size of the tensor model parallelism",
-    )
-    parser.add_argument(
-        "--pipeline_model_parallel_size",
-        type=int,
-        default=1,
-        help="Size of the pipeline model parallelism",
-    )
-    parser.add_argument(
-        "--expert_model_parallel_size",
-        type=int,
-        default=1,
-        help="Size of the expert model parallelism",
-    )
-    parser.add_argument(
-        "--context_parallel_size",
-        type=int,
-        default=1,
-        help="Size of the context parallelism",
-    )
-    parser.add_argument(
-        "--host",
-        type=str,
-        default="0.0.0.0",
-        help="Host address to bind the Ray Serve server to",
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=8000,
-        help="Port number to use for the Ray Serve server",
-    )
+    parser.add_argument("--context_parallel_size", type=int, default=1, help="Size of the context parallelism")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address to bind the Ray Serve server to")
+    parser.add_argument("--port", type=int, default=8000, help="Port number to use for the Ray Serve server")
     parser.add_argument(
         "--num_cpus",
         type=int,
         default=None,
         help="Number of CPUs to allocate for the Ray cluster. If None, will use all available CPUs.",
     )
+    parser.add_argument("--num_cpus_per_replica", type=float, default=8, help="Number of CPUs per model replica")
+    parser.add_argument("--include_dashboard", action="store_true", help="Whether to include the Ray dashboard")
     parser.add_argument(
-        "--num_cpus_per_replica",
-        type=float,
-        default=8,
-        help="Number of CPUs per model replica",
+        "--cuda_visible_devices", type=str, default="0,1", help="Comma-separated list of CUDA visible devices"
     )
     parser.add_argument(
-        "--include_dashboard",
-        action="store_true",
-        help="Whether to include the Ray dashboard",
+        "--enable_cuda_graphs", action="store_true", help="Whether to enable CUDA graphs for faster inference"
+    )
+    parser.add_argument("--enable_flash_decode", action="store_true", help="Whether to enable Flash Attention decode")
+    parser.add_argument("--legacy_ckpt", action="store_true", help="Whether to use legacy checkpoint format")
+    parser.add_argument(
+        "--test_endpoints", type=str, default="True", help="Whether to test all endpoints after deployment (True/False)"
     )
     parser.add_argument(
-        "--cuda_visible_devices",
-        type=str,
-        default="0,1",
-        help="Comma-separated list of CUDA visible devices",
+        "--deployment_timeout", type=int, default=300, help="Timeout in seconds for deployment readiness"
     )
-    parser.add_argument(
-        "--enable_cuda_graphs",
-        action="store_true",
-        help="Whether to enable CUDA graphs for faster inference",
-    )
-    parser.add_argument(
-        "--enable_flash_decode",
-        action="store_true",
-        help="Whether to enable Flash Attention decode",
-    )
-    parser.add_argument(
-        "--legacy_ckpt",
-        action="store_true",
-        help="Whether to use legacy checkpoint format",
-    )
-    parser.add_argument(
-        "--test_endpoints",
-        type=str,
-        default="True",
-        help="Whether to test all endpoints after deployment (True/False)",
-    )
-    parser.add_argument(
-        "--deployment_timeout",
-        type=int,
-        default=300,
-        help="Timeout in seconds for deployment readiness",
-    )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Enable debug output",
-    )
+    parser.add_argument("--debug", action="store_true", help="Enable debug output")
 
     return parser.parse_args()
 
@@ -485,9 +369,7 @@ def run_ray_deployment_tests(args):
             print("✓ DEPLOYMENT SUCCESSFUL (endpoint testing skipped)")
             test_result = "PASS"
         else:
-            passed_endpoints = sum(
-                1 for result in test_results.values() if result["success"]
-            )
+            passed_endpoints = sum(1 for result in test_results.values() if result["success"])
             total_endpoints = len(test_results)
 
             print(f"Endpoint Tests: {passed_endpoints}/{total_endpoints} passed")

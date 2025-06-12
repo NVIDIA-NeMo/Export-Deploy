@@ -23,67 +23,27 @@ from nemo.collections.llm.api import deploy
 
 def get_parser():
     parser = argparse.ArgumentParser(description="NeMo2.0 Deployment")
+    (parser.add_argument("--nemo_checkpoint", type=str, help="NeMo 2.0 checkpoint to be evaluated"),)
+    (parser.add_argument("--ngpus", type=int, default=1, help="Num of gpus per node"),)
+    (parser.add_argument("--nnodes", type=int, default=1, help="Num of nodes"),)
     (
         parser.add_argument(
-            "--nemo_checkpoint",
-            type=str,
-            help="NeMo 2.0 checkpoint to be evaluated",
-        ),
-    )
-    (
-        parser.add_argument(
-            "--ngpus",
-            type=int,
-            default=1,
-            help="Num of gpus per node",
-        ),
-    )
-    (
-        parser.add_argument(
-            "--nnodes",
-            type=int,
-            default=1,
-            help="Num of nodes",
-        ),
-    )
-    (
-        parser.add_argument(
-            "--tensor_parallelism_size",
-            type=int,
-            default=1,
-            help="Tensor parallelism size to deploy the model",
+            "--tensor_parallelism_size", type=int, default=1, help="Tensor parallelism size to deploy the model"
         ),
     )
     parser.add_argument(
-        "--pipeline_parallelism_size",
-        type=int,
-        default=1,
-        help="Pipeline parallelism size to deploy the model",
+        "--pipeline_parallelism_size", type=int, default=1, help="Pipeline parallelism size to deploy the model"
     )
     parser.add_argument(
-        "--context_parallel_size",
-        type=int,
-        default=1,
-        help="context parallelism size to deploy the model",
+        "--context_parallel_size", type=int, default=1, help="context parallelism size to deploy the model"
     )
     parser.add_argument(
-        "--expert_model_parallel_size",
-        type=int,
-        default=1,
-        help="Expert model parallelism size to deploy the model",
+        "--expert_model_parallel_size", type=int, default=1, help="Expert model parallelism size to deploy the model"
     )
     parser.add_argument(
-        "--expert_tensor_parallel_size",
-        type=int,
-        default=1,
-        help="Expert tensor parallelism size to deploy the model",
+        "--expert_tensor_parallel_size", type=int, default=1, help="Expert tensor parallelism size to deploy the model"
     )
-    parser.add_argument(
-        "--max_batch_size",
-        type=int,
-        default=8,
-        help="Max batch size for the underlying Triton server",
-    )
+    parser.add_argument("--max_batch_size", type=int, default=8, help="Max batch size for the underlying Triton server")
     return parser
 
 

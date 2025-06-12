@@ -35,35 +35,14 @@ from omegaconf import OmegaConf
 
 def get_args():
     parser = ArgumentParser()
+    parser.add_argument("--input_path", type=str, required=True, help="Path to nemo 2.0 checkpoint")
+    parser.add_argument("--output_path", type=str, required=True, help="Output path")
+    parser.add_argument("--tokenizer_type", type=str, default="huggingface", help="Type of tokenizer")
     parser.add_argument(
-        "--input_path",
-        type=str,
-        required=True,
-        help="Path to nemo 2.0 checkpoint",
+        "--tokenizer_name", type=str, default="meta-llama/Meta-Llama-3.1-8B", help="Name or path of tokenizer"
     )
     parser.add_argument(
-        "--output_path",
-        type=str,
-        required=True,
-        help="Output path",
-    )
-    parser.add_argument(
-        "--tokenizer_type",
-        type=str,
-        default="huggingface",
-        help="Type of tokenizer",
-    )
-    parser.add_argument(
-        "--tokenizer_name",
-        type=str,
-        default="meta-llama/Meta-Llama-3.1-8B",
-        help="Name or path of tokenizer",
-    )
-    parser.add_argument(
-        "--symbolic_link",
-        type=bool,
-        default=True,
-        help="Whether to use symbiloc link for model weights",
+        "--symbolic_link", type=bool, default=True, help="Whether to use symbiloc link for model weights"
     )
 
     args = parser.parse_args()
@@ -98,11 +77,7 @@ def main(args):
 
     config_dict["mcore_gpt"] = True
     config_dict["max_position_embeddings"] = config_dict.get("seq_length")
-    config_dict["tokenizer"] = {
-        "library": args.tokenizer_type,
-        "type": args.tokenizer_name,
-        "use_fast": True,
-    }
+    config_dict["tokenizer"] = {"library": args.tokenizer_type, "type": args.tokenizer_name, "use_fast": True}
 
     yaml_config = OmegaConf.create(config_dict)
     OmegaConf.save(config=yaml_config, f=os.path.join(output_path, "model_config.yaml"))

@@ -81,9 +81,7 @@ def mock_ray():
 @pytest.fixture
 def mock_hfray_class():
     # Use our custom mock class for testing
-    with patch(
-        "nemo_deploy.nlp.hf_deployable_ray.HFRayDeployable", MockHFRayDeployable
-    ):
+    with patch("nemo_deploy.nlp.hf_deployable_ray.HFRayDeployable", MockHFRayDeployable):
         yield MockHFRayDeployable
 
 
@@ -134,14 +132,7 @@ def mock_ray_instance(mock_hf_model, mock_hfray_class):
         "object": "text_completion",
         "created": int(time.time()),
         "model": "test-model",
-        "choices": [
-            {
-                "text": "Generated text",
-                "index": 0,
-                "logprobs": None,
-                "finish_reason": "stop",
-            }
-        ],
+        "choices": [{"text": "Generated text", "index": 0, "logprobs": None, "finish_reason": "stop"}],
         "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
     }
 
@@ -152,11 +143,7 @@ def mock_ray_instance(mock_hf_model, mock_hfray_class):
         "created": int(time.time()),
         "model": "test-model",
         "choices": [
-            {
-                "message": {"role": "assistant", "content": "Generated response"},
-                "index": 0,
-                "finish_reason": "stop",
-            }
+            {"message": {"role": "assistant", "content": "Generated response"}, "index": 0, "finish_reason": "stop"}
         ],
         "usage": {"prompt_tokens": 15, "completion_tokens": 25, "total_tokens": 40},
     }
@@ -201,9 +188,7 @@ class TestHFRayDeployable:
                 # Simulate the behavior for balanced device map
                 if self.device_map == "balanced":
                     if not self.max_memory:
-                        raise ValueError(
-                            "max_memory must be provided when device_map is 'balanced'"
-                        )
+                        raise ValueError("max_memory must be provided when device_map is 'balanced'")
                     num_gpus = 2  # Mocked from torch.cuda.device_count()
                     max_memory_dict = {i: "75GiB" for i in range(num_gpus)}
                     self.model = mock_hf_model(
@@ -215,15 +200,11 @@ class TestHFRayDeployable:
                     )
 
             with patch.object(MockHFRayDeployable, "__init__", mock_init):
-                mock_hfray_class(
-                    hf_model_id_path="test/model",
-                    device_map="auto",
-                    max_memory="75GiB",
-                )
+                mock_hfray_class(hf_model_id_path="test/model", device_map="auto", max_memory="75GiB")
 
                 # Verify max_memory_dict was created
                 mock_hf_model.assert_called_once()
-                args, kwargs = mock_hf_model.call_args
+                (args, kwargs) = mock_hf_model.call_args
                 assert kwargs["device_map"] == "balanced"
                 assert kwargs["max_memory"] == {0: "75GiB", 1: "75GiB"}
 
@@ -233,9 +214,7 @@ class TestHFRayDeployable:
         # Custom initialization to test the error case
         def mock_init(self, *args, **kwargs):
             if kwargs.get("device_map") == "balanced" and not kwargs.get("max_memory"):
-                raise ValueError(
-                    "max_memory must be provided when device_map is 'balanced'"
-                )
+                raise ValueError("max_memory must be provided when device_map is 'balanced'")
 
         with patch.object(MockHFRayDeployable, "__init__", mock_init):
             with pytest.raises(ValueError, match="max_memory must be provided"):
@@ -278,9 +257,7 @@ class TestHFRayDeployable:
     def test_completions_error(self, mock_ray_instance):
         """Test error handling in completions endpoint."""
         # Set up the mock to return an error
-        mock_ray_instance.completions.side_effect = HTTPException(
-            status_code=500, detail="Test error"
-        )
+        mock_ray_instance.completions.side_effect = HTTPException(status_code=500, detail="Test error")
 
         # Create a request
         request = {"prompt": "Test prompt"}
@@ -327,18 +304,9 @@ class TestHFRayDeployable:
                 "created": int(time.time()),
                 "model": "test-model",
                 "choices": [
-                    {
-                        "text": "Generated response 1",
-                        "index": 0,
-                        "logprobs": [0.1, 0.2],
-                        "finish_reason": "stop",
-                    }
+                    {"text": "Generated response 1", "index": 0, "logprobs": [0.1, 0.2], "finish_reason": "stop"}
                 ],
-                "usage": {
-                    "prompt_tokens": 3,
-                    "completion_tokens": 3,
-                    "total_tokens": 6,
-                },
+                "usage": {"prompt_tokens": 3, "completion_tokens": 3, "total_tokens": 6},
             },
             {
                 "id": f"cmpl-{int(time.time())}",
@@ -346,18 +314,9 @@ class TestHFRayDeployable:
                 "created": int(time.time()),
                 "model": "test-model",
                 "choices": [
-                    {
-                        "text": "Generated response 2",
-                        "index": 0,
-                        "logprobs": [0.3, 0.4],
-                        "finish_reason": "stop",
-                    }
+                    {"text": "Generated response 2", "index": 0, "logprobs": [0.3, 0.4], "finish_reason": "stop"}
                 ],
-                "usage": {
-                    "prompt_tokens": 3,
-                    "completion_tokens": 3,
-                    "total_tokens": 6,
-                },
+                "usage": {"prompt_tokens": 3, "completion_tokens": 3, "total_tokens": 6},
             },
         ]
 
@@ -380,9 +339,7 @@ class TestHFRayDeployable:
         """Test the list_models endpoint."""
         expected_result = {
             "object": "list",
-            "data": [
-                {"id": "test-model", "object": "model", "created": int(time.time())}
-            ],
+            "data": [{"id": "test-model", "object": "model", "created": int(time.time())}],
         }
 
         # Set up the mock to return the expected result

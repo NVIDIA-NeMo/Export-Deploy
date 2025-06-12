@@ -64,9 +64,7 @@ def get_args(argv):
         "-hp",
         "--hf_model_id_path",
         type=str,
-        help="Path to local HuggingFace "
-        "model directory or model ID from HuggingFace "
-        "Hub",
+        help="Path to local HuggingFace model directory or model ID from HuggingFace Hub",
     )
     parser.add_argument(
         "-t",
@@ -84,9 +82,7 @@ def get_args(argv):
         choices=["auto", "balanced", "balanced_low_0", "sequential"],
         default=None,
         type=str,
-        help="Device mapping "
-        "strategy for model placement "
-        "(e.g. 'auto', 'sequential', etc)",
+        help="Device mapping strategy for model placement (e.g. 'auto', 'sequential', etc)",
     )
     parser.add_argument(
         "-tpp",
@@ -105,25 +101,13 @@ def get_args(argv):
         help="Allow loading remote code from HuggingFace Hub",
     )
     parser.add_argument(
-        "-tmn",
-        "--triton_model_name",
-        required=True,
-        type=str,
-        help="Name to identify the model in Triton",
+        "-tmn", "--triton_model_name", required=True, type=str, help="Name to identify the model in Triton"
     )
     parser.add_argument(
-        "-tmv",
-        "--triton_model_version",
-        default=1,
-        type=int,
-        help="Version number for the model in Triton",
+        "-tmv", "--triton_model_version", default=1, type=int, help="Version number for the model in Triton"
     )
     parser.add_argument(
-        "-trp",
-        "--triton_port",
-        default=8000,
-        type=int,
-        help="Port number for Triton server HTTP endpoint",
+        "-trp", "--triton_port", default=8000, type=int, help="Port number for Triton server HTTP endpoint"
     )
     parser.add_argument(
         "-tha",
@@ -132,20 +116,8 @@ def get_args(argv):
         type=str,
         help="Network interface address for Triton HTTP endpoint",
     )
-    parser.add_argument(
-        "-mbs",
-        "--max_batch_size",
-        default=8,
-        type=int,
-        help="Maximum batch size for model inference",
-    )
-    parser.add_argument(
-        "-dm",
-        "--debug_mode",
-        default=False,
-        action="store_true",
-        help="Enable verbose debug logging",
-    )
+    parser.add_argument("-mbs", "--max_batch_size", default=8, type=int, help="Maximum batch size for model inference")
+    parser.add_argument("-dm", "--debug_mode", default=False, action="store_true", help="Enable verbose debug logging")
     args = parser.parse_args(argv)
     return args
 
@@ -177,9 +149,7 @@ def hf_deploy(argv):
     LOGGER.info(args)
 
     if args.hf_model_id_path is None:
-        raise ValueError(
-            "In-Framework deployment requires a Hugging Face model ID or path."
-        )
+        raise ValueError("In-Framework deployment requires a Hugging Face model ID or path.")
 
     if "RANK" in os.environ:
         rank = int(os.environ["RANK"])
@@ -224,10 +194,7 @@ def hf_deploy(argv):
             LOGGER.info("Triton deploy function will be called.")
             nm.deploy()
         except Exception as error:
-            LOGGER.error(
-                "Error message has occurred during deploy function. Error message: "
-                + str(error)
-            )
+            LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
             if dist.is_initialized():
                 dist.barrier()
             return
@@ -236,16 +203,11 @@ def hf_deploy(argv):
             LOGGER.info("Model serving on Triton will be started.")
             nm.serve()
         except Exception as error:
-            LOGGER.error(
-                "Error message has occurred during deploy function. Error message: "
-                + str(error)
-            )
+            LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
 
         if dist.is_initialized():
             if dist.get_world_size() > 1:
-                torch.distributed.broadcast(
-                    torch.tensor([1], dtype=torch.long, device="cuda"), src=0
-                )
+                torch.distributed.broadcast(torch.tensor([1], dtype=torch.long, device="cuda"), src=0)
 
         LOGGER.info("Model serving will be stopped.")
         nm.stop()

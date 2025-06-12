@@ -27,91 +27,29 @@ def get_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Exports NeMo checkpoint to TensorRT-LLM engine",
     )
+    parser.add_argument("-nc", "--nemo_checkpoint", required=True, type=str, help="Source model path")
+    parser.add_argument("-mt", "--model_type", type=str, help="Type of the TensorRT-LLM model.")
     parser.add_argument(
-        "-nc", "--nemo_checkpoint", required=True, type=str, help="Source model path"
+        "-mr", "--model_repository", required=True, default=None, type=str, help="Folder for the trt-llm model files"
+    )
+    parser.add_argument("-tps", "--tensor_parallelism_size", default=1, type=int, help="Tensor parallelism size")
+    parser.add_argument("-pps", "--pipeline_parallelism_size", default=1, type=int, help="Pipeline parallelism size")
+    parser.add_argument(
+        "-dt", "--dtype", choices=["bfloat16", "float16"], help="Data type of the model on TensorRT-LLM"
+    )
+    parser.add_argument("-mil", "--max_input_len", default=256, type=int, help="Max input length of the model")
+    parser.add_argument("-mol", "--max_output_len", default=256, type=int, help="Max output length of the model")
+    parser.add_argument("-mbs", "--max_batch_size", default=8, type=int, help="Max batch size of the model")
+    parser.add_argument("-mnt", "--max_num_tokens", default=None, type=int, help="Max number of tokens")
+    parser.add_argument("-ont", "--opt_num_tokens", default=None, type=int, help="Optimum number of tokens")
+    parser.add_argument(
+        "-mpet", "--max_prompt_embedding_table_size", default=None, type=int, help="Max prompt embedding table size"
     )
     parser.add_argument(
-        "-mt", "--model_type", type=str, help="Type of the TensorRT-LLM model."
+        "-upe", "--use_parallel_embedding", default=False, action="store_true", help="Use parallel embedding."
     )
     parser.add_argument(
-        "-mr",
-        "--model_repository",
-        required=True,
-        default=None,
-        type=str,
-        help="Folder for the trt-llm model files",
-    )
-    parser.add_argument(
-        "-tps",
-        "--tensor_parallelism_size",
-        default=1,
-        type=int,
-        help="Tensor parallelism size",
-    )
-    parser.add_argument(
-        "-pps",
-        "--pipeline_parallelism_size",
-        default=1,
-        type=int,
-        help="Pipeline parallelism size",
-    )
-    parser.add_argument(
-        "-dt",
-        "--dtype",
-        choices=["bfloat16", "float16"],
-        help="Data type of the model on TensorRT-LLM",
-    )
-    parser.add_argument(
-        "-mil",
-        "--max_input_len",
-        default=256,
-        type=int,
-        help="Max input length of the model",
-    )
-    parser.add_argument(
-        "-mol",
-        "--max_output_len",
-        default=256,
-        type=int,
-        help="Max output length of the model",
-    )
-    parser.add_argument(
-        "-mbs",
-        "--max_batch_size",
-        default=8,
-        type=int,
-        help="Max batch size of the model",
-    )
-    parser.add_argument(
-        "-mnt", "--max_num_tokens", default=None, type=int, help="Max number of tokens"
-    )
-    parser.add_argument(
-        "-ont",
-        "--opt_num_tokens",
-        default=None,
-        type=int,
-        help="Optimum number of tokens",
-    )
-    parser.add_argument(
-        "-mpet",
-        "--max_prompt_embedding_table_size",
-        default=None,
-        type=int,
-        help="Max prompt embedding table size",
-    )
-    parser.add_argument(
-        "-upe",
-        "--use_parallel_embedding",
-        default=False,
-        action="store_true",
-        help="Use parallel embedding.",
-    )
-    parser.add_argument(
-        "-npkc",
-        "--no_paged_kv_cache",
-        default=False,
-        action="store_true",
-        help="Disable paged kv cache.",
+        "-npkc", "--no_paged_kv_cache", default=False, action="store_true", help="Disable paged kv cache."
     )
     parser.add_argument(
         "-drip",
@@ -140,32 +78,16 @@ def get_args():
         "--lora_target_modules",
         nargs="+",
         default=None,
-        choices=[
-            "attn_qkv",
-            "attn_q",
-            "attn_k",
-            "attn_v",
-            "attn_dense",
-            "mlp_h_to_4h",
-            "mlp_gate",
-            "mlp_4h_to_h",
-        ],
+        choices=["attn_qkv", "attn_q", "attn_k", "attn_v", "attn_dense", "mlp_h_to_4h", "mlp_gate", "mlp_4h_to_h"],
         help="Add lora in which modules. Only be activated when use_lora_plugin is enabled.",
     )
     parser.add_argument(
         "--max_lora_rank",
         type=int,
         default=64,
-        help="maximum lora rank for different lora modules. "
-        "It is used to compute the workspace size of lora plugin.",
+        help="maximum lora rank for different lora modules. It is used to compute the workspace size of lora plugin.",
     )
-    parser.add_argument(
-        "-dm",
-        "--debug_mode",
-        default=False,
-        action="store_true",
-        help="Enable debug mode",
-    )
+    parser.add_argument("-dm", "--debug_mode", default=False, action="store_true", help="Enable debug mode")
     parser.add_argument(
         "--use_mcore_path",
         action="store_true",
@@ -197,16 +119,10 @@ def get_args():
             return False
         if optional and s == "auto":
             return None
-        raise argparse.ArgumentTypeError(
-            f"Invalid boolean value for argument --{name}: '{s}'"
-        )
+        raise argparse.ArgumentTypeError(f"Invalid boolean value for argument --{name}: '{s}'")
 
-    args.export_fp8_quantized = str_to_bool(
-        "export_fp8_quantized", args.export_fp8_quantized, optional=True
-    )
-    args.use_fp8_kv_cache = str_to_bool(
-        "use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True
-    )
+    args.export_fp8_quantized = str_to_bool("export_fp8_quantized", args.export_fp8_quantized, optional=True)
+    args.use_fp8_kv_cache = str_to_bool("use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True)
     return args
 
 
@@ -219,9 +135,7 @@ def nemo_export_trt_llm():
     LOGGER.info(pprint.pformat(vars(args)))
 
     trt_llm_exporter = TensorRTLLM(
-        model_dir=args.model_repository,
-        load_model=False,
-        multi_block_mode=args.multi_block_mode,
+        model_dir=args.model_repository, load_model=False, multi_block_mode=args.multi_block_mode
     )
 
     LOGGER.info("Export to TensorRT-LLM function is called.")

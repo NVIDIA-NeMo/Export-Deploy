@@ -22,9 +22,7 @@ def get_args():
     """Parse PTQ arguments."""
     parser = argparse.ArgumentParser(description="Create sample PTQ checkpoint")
     parser.add_argument("--nemo_checkpoint", help="Source NeMo 2.0 checkpoint")
-    parser.add_argument(
-        "--calibration_tp", type=int, default=1, help="TP size for calibration"
-    )
+    parser.add_argument("--calibration_tp", type=int, default=1, help="TP size for calibration")
     parser.add_argument(
         "--inference_tp",
         type=int,
@@ -33,38 +31,20 @@ def get_args():
     )
     parser.add_argument("--export_path", help="Path for the exported engine")
     parser.add_argument(
-        "--export_format",
-        default="trtllm",
-        choices=["trtllm", "nemo", "hf"],
-        help="Model format to export as",
+        "--export_format", default="trtllm", choices=["trtllm", "nemo", "hf"], help="Model format to export as"
     )
-    parser.add_argument(
-        "--algorithm",
-        default="fp8",
-        help="TensorRT-Model-Optimizer quantization algorithm",
-    )
-    parser.add_argument(
-        "--calibration_batch_size", type=int, default=64, help="Calibration batch size"
-    )
-    parser.add_argument(
-        "--calibration_dataset_size",
-        type=int,
-        default=512,
-        help="Size of calibration dataset",
-    )
+    parser.add_argument("--algorithm", default="fp8", help="TensorRT-Model-Optimizer quantization algorithm")
+    parser.add_argument("--calibration_batch_size", type=int, default=64, help="Calibration batch size")
+    parser.add_argument("--calibration_dataset_size", type=int, default=512, help="Size of calibration dataset")
     parser.add_argument(
         "--calibration_dataset",
         default="cnn_dailymail",
         help='Calibration dataset to be used. Should be "wikitext", "cnn_dailymail" or path to a local .json file',
     )
     parser.add_argument(
-        "--generate_sample",
-        help="Generate sample model output after performing PTQ",
-        action="store_true",
+        "--generate_sample", help="Generate sample model output after performing PTQ", action="store_true"
     )
-    parser.add_argument(
-        "--legacy_ckpt", help="Load ckpt saved with TE < 1.14", action="store_true"
-    )
+    parser.add_argument("--legacy_ckpt", help="Load ckpt saved with TE < 1.14", action="store_true")
     args = parser.parse_args()
 
     return args

@@ -41,9 +41,7 @@ def pytest_addoption(parser):
         --use_local_test_data: use local test data/skip downloading from URL/GitHub (DEFAULT: False)
     """
     parser.addoption(
-        "--cpu",
-        action="store_true",
-        help="pass that argument to use CPU during testing (DEFAULT: False = GPU)",
+        "--cpu", action="store_true", help="pass that argument to use CPU during testing (DEFAULT: False = GPU)"
     )
     parser.addoption(
         "--use_local_test_data",
@@ -161,10 +159,7 @@ def extract_data_from_tar(test_dir, test_data_archive, url=None, local_data=Fals
                 rmtree(test_dir)
                 mkdir(test_dir)
                 print("Restoring local tarfile to test dir")
-                shutil.copy2(
-                    os.path.join(temp_dir, os.path.basename(test_data_archive)),
-                    test_data_archive,
-                )
+                shutil.copy2(os.path.join(temp_dir, os.path.basename(test_data_archive)), test_data_archive)
 
     # Create one .data folder.
     if not exists(test_dir):
@@ -184,10 +179,10 @@ def extract_data_from_tar(test_dir, test_data_archive, url=None, local_data=Fals
 @pytest.fixture(scope="session")
 def k2_is_appropriate() -> Tuple[bool, str]:
     try:
-        return True, "k2 is appropriate."
+        return (True, "k2 is appropriate.")
     except Exception as e:
         logging.exception(e, exc_info=True)
-        return False, "k2 is not available or does not meet the requirements."
+        return (False, "k2 is not available or does not meet the requirements.")
 
 
 @pytest.fixture(scope="session")
@@ -199,14 +194,11 @@ def k2_cuda_is_enabled(k2_is_appropriate) -> Tuple[bool, str]:
     from nemo.core.utils.k2_guard import k2  # noqa: E402
 
     if torch.cuda.is_available() and k2.with_cuda:
-        return True, "k2 supports CUDA."
+        return (True, "k2 supports CUDA.")
     elif torch.cuda.is_available():
-        return (
-            False,
-            "k2 does not support CUDA. Consider using a k2 build with CUDA support.",
-        )
+        return (False, "k2 does not support CUDA. Consider using a k2 build with CUDA support.")
     else:
-        return False, "k2 needs CUDA to be available in torch."
+        return (False, "k2 needs CUDA to be available in torch.")
 
 
 def pytest_configure(config):
@@ -216,23 +208,12 @@ def pytest_configure(config):
     If so, compares its size with github's test_data.tar.gz.
     If file absent or sizes not equal, function downloads the archive from github and unpacks it.
     """
-    config.addinivalue_line(
-        "markers",
-        "run_only_on(device): runs the test only on a given device [CPU | GPU]",
-    )
-    config.addinivalue_line(
-        "markers",
-        "with_downloads: runs the test using data present in tests/.data",
-    )
-    config.addinivalue_line(
-        "markers",
-        "nightly: runs the nightly test for QA.",
-    )
+    config.addinivalue_line("markers", "run_only_on(device): runs the test only on a given device [CPU | GPU]")
+    config.addinivalue_line("markers", "with_downloads: runs the test using data present in tests/.data")
+    config.addinivalue_line("markers", "nightly: runs the nightly test for QA.")
     # Test dir and archive filepath.
     test_dir = join(dirname(__file__), __TEST_DATA_SUBDIR)
-    test_data_archive = join(
-        dirname(__file__), __TEST_DATA_SUBDIR, __TEST_DATA_FILENAME
-    )
+    test_data_archive = join(dirname(__file__), __TEST_DATA_SUBDIR, __TEST_DATA_FILENAME)
 
     # Get size of local test_data archive.
     try:
@@ -243,9 +224,7 @@ def pytest_configure(config):
 
     if config.option.use_local_test_data:
         if test_data_local_size == -1:
-            pytest.exit(
-                "Test data `{}` is not present in the system".format(test_data_archive)
-            )
+            pytest.exit("Test data `{}` is not present in the system".format(test_data_archive))
         else:
             print(
                 "Using the local `{}` test archive ({}B) found in the `{}` folder.".format(
@@ -262,11 +241,7 @@ def pytest_configure(config):
         except:
             # Couldn't access remote archive.
             if test_data_local_size == -1:
-                pytest.exit(
-                    "Test data not present in the system and cannot access the '{}' URL".format(
-                        url
-                    )
-                )
+                pytest.exit("Test data not present in the system and cannot access the '{}' URL".format(url))
             else:
                 print(
                     "Cannot access the '{}' URL, using the test data ({}B) found in the `{}` folder.".format(
@@ -287,12 +262,7 @@ def pytest_configure(config):
                 )
             )
 
-            extract_data_from_tar(
-                test_dir,
-                test_data_archive,
-                url=url,
-                local_data=config.option.use_local_test_data,
-            )
+            extract_data_from_tar(test_dir, test_data_archive, url=url, local_data=config.option.use_local_test_data)
 
         else:
             print(
@@ -303,9 +273,7 @@ def pytest_configure(config):
 
     else:
         # untar local test data
-        extract_data_from_tar(
-            test_dir, test_data_archive, local_data=config.option.use_local_test_data
-        )
+        extract_data_from_tar(test_dir, test_data_archive, local_data=config.option.use_local_test_data)
 
     if config.option.relax_numba_compat is not None:
         from nemo.core.utils import numba_utils

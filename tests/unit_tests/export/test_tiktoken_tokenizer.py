@@ -27,26 +27,14 @@ from nemo_export.tiktoken_tokenizer import TiktokenTokenizer, reload_mergeable_r
 def sample_vocab_file():
     # Create a temporary vocab file for testing
     vocab_data = [
-        {
-            "rank": i,
-            "token_bytes": base64.b64encode(bytes([i])).decode("utf-8"),
-            "token_str": f"token_{i}",
-        }
+        {"rank": i, "token_bytes": base64.b64encode(bytes([i])).decode("utf-8"), "token_str": f"token_{i}"}
         for i in range(256)
     ]
     # Add a few merged tokens
     vocab_data.extend(
         [
-            {
-                "rank": 256,
-                "token_bytes": base64.b64encode(b"Hello").decode("utf-8"),
-                "token_str": "Hello",
-            },
-            {
-                "rank": 257,
-                "token_bytes": base64.b64encode(b"World").decode("utf-8"),
-                "token_str": "World",
-            },
+            {"rank": 256, "token_bytes": base64.b64encode(b"Hello").decode("utf-8"), "token_str": "Hello"},
+            {"rank": 257, "token_bytes": base64.b64encode(b"World").decode("utf-8"), "token_str": "World"},
         ]
     )
 

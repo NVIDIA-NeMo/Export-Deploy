@@ -18,10 +18,4 @@ from nemo_deploy.deploy_base import DeployBase
 from nemo_deploy.deploy_pytriton import DeployPyTriton
 from nemo_deploy.triton_deployable import ITritonDeployable
 
-__all__ = [
-    "DeployBase",
-    "DeployPyTriton",
-    "ITritonDeployable",
-    "__version__",
-    "__package_name__",
-]
+__all__ = ["DeployBase", "DeployPyTriton", "ITritonDeployable", "__version__", "__package_name__"]

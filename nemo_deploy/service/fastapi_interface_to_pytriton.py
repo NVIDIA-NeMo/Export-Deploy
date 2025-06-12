@@ -33,10 +33,7 @@ class TritonSettings(BaseSettings):
             self._triton_service_port = int(os.environ.get("TRITON_PORT", 8000))
             self._triton_service_ip = os.environ.get("TRITON_HTTP_ADDRESS", "0.0.0.0")
         except Exception as error:
-            logging.error(
-                "An exception occurred trying to retrieve set args in TritonSettings class. Error:",
-                error,
-            )
+            logging.error("An exception occurred trying to retrieve set args in TritonSettings class. Error:", error)
             return
 
     @property
@@ -81,9 +78,7 @@ class CompletionRequest(BaseModel):
     def set_greedy_params(self):
         """Validate parameters for greedy decoding."""
         if self.temperature == 0 and self.top_p == 0:
-            logging.warning(
-                "Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling."
-            )
+            logging.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
             self.top_k = 1
         return self
 
@@ -105,7 +100,9 @@ async def check_triton_health():
     Verify by running: curl http://service_http_address:service_port/v1/triton_health and the returned status should
     inform if the server is accessible.
     """
-    triton_url = f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
+    triton_url = (
+        f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
+    )
     logging.info(f"Attempting to connect to Triton server at: {triton_url}")
     try:
         response = requests.get(triton_url, timeout=5)
@@ -114,9 +111,7 @@ async def check_triton_health():
         else:
             raise HTTPException(status_code=503, detail="Triton server is not ready")
     except requests.RequestException as e:
-        raise HTTPException(
-            status_code=503, detail=f"Cannot reach Triton server: {str(e)}"
-        )
+        raise HTTPException(status_code=503, detail=f"Cannot reach Triton server: {str(e)}")
 
 
 def convert_numpy(obj):
@@ -131,17 +126,7 @@ def convert_numpy(obj):
         return obj
 
 
-def _helper_fun(
-    url,
-    model,
-    prompts,
-    temperature,
-    top_k,
-    top_p,
-    compute_logprob,
-    max_length,
-    apply_chat_template,
-):
+def _helper_fun(url, model, prompts, temperature, top_k, top_p, compute_logprob, max_length, apply_chat_template):
     """run_in_executor doesn't allow to pass kwargs, so we have this helper function to pass args as a list."""
     nq = NemoQueryLLMPyTorch(url=url, model_name=model)
     output = nq.query_llm(
@@ -158,16 +143,7 @@ def _helper_fun(
 
 
 async def query_llm_async(
-    *,
-    url,
-    model,
-    prompts,
-    temperature,
-    top_k,
-    top_p,
-    compute_logprob,
-    max_length,
-    apply_chat_template,
+    *, url, model, prompts, temperature, top_k, top_p, compute_logprob, max_length, apply_chat_template
 ):
     """query_llm_async.
 
@@ -217,16 +193,14 @@ async def completions_v1(request: CompletionRequest):
     )
 
     output_serializable = convert_numpy(output)
-    output_serializable["choices"][0]["text"] = output_serializable["choices"][0][
-        "text"
-    ][0][0]
+    output_serializable["choices"][0]["text"] = output_serializable["choices"][0]["text"][0][0]
     if request.logprobs == 1:
-        output_serializable["choices"][0]["logprobs"]["token_logprobs"] = (
-            output_serializable["choices"][0]["logprobs"]["token_logprobs"][0]
-        )
-        output_serializable["choices"][0]["logprobs"]["top_logprobs"] = (
-            output_serializable["choices"][0]["logprobs"]["top_logprobs"][0]
-        )
+        output_serializable["choices"][0]["logprobs"]["token_logprobs"] = output_serializable["choices"][0]["logprobs"][
+            "token_logprobs"
+        ][0]
+        output_serializable["choices"][0]["logprobs"]["top_logprobs"] = output_serializable["choices"][0]["logprobs"][
+            "top_logprobs"
+        ][0]
     logging.info(f"Output: {output_serializable}")
     return output_serializable
 
@@ -260,17 +234,14 @@ async def chat_completions_v1(request: CompletionRequest):
         apply_chat_template=True,
     )
     # Add 'role' as 'assistant' key to the output dict
-    output["choices"][0]["message"] = {
-        "role": "assistant",
-        "content": output["choices"][0]["text"],
-    }
+    output["choices"][0]["message"] = {"role": "assistant", "content": output["choices"][0]["text"]}
     output["object"] = "chat.completion"
 
     del output["choices"][0]["text"]
 
     output_serializable = convert_numpy(output)
-    output_serializable["choices"][0]["message"]["content"] = output_serializable[
-        "choices"
-    ][0]["message"]["content"][0][0]
+    output_serializable["choices"][0]["message"]["content"] = output_serializable["choices"][0]["message"]["content"][
+        0
+    ][0]
     logging.info(f"Output: {output_serializable}")
     return output_serializable
