@@ -19,8 +19,10 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
+import requests
 
 from nemo_deploy.service.fastapi_interface_to_pytriton import (
+    ChatCompletionRequest,
     CompletionRequest,
     TritonSettings,
     _helper_fun,
@@ -86,21 +88,54 @@ class TestTritonSettings:
             assert settings.triton_service_port == 9000
             assert settings.triton_service_ip == "127.0.0.1"
 
+    def test_triton_settings_exception_handling(self):
+        """Test TritonSettings initialization when environment variables cause exceptions"""
+        with patch.dict(os.environ, {"TRITON_PORT": "invalid_port"}, clear=True):
+            with patch('nemo.utils.logging.error') as mock_logging:
+                settings = TritonSettings()
+
+                # The attributes won't be set due to the early return, so accessing properties will fail
+                with pytest.raises(AttributeError):
+                    _ = settings.triton_service_port
+
+                with pytest.raises(AttributeError):
+                    _ = settings.triton_service_ip
+
+                # Verify that the error was logged
+                mock_logging.assert_called_once()
+                # Check that the error message contains the expected content
+                args, kwargs = mock_logging.call_args
+                assert "An exception occurred trying to retrieve set args in TritonSettings class" in args[0]
+
 
 class TestCompletionRequest:
-    def test_default_values(self):
-        request = CompletionRequest(model="test_model")
+    def test_default_completions_values(self):
+        request = CompletionRequest(model="test_model", prompt="test prompt")
         assert request.model == "test_model"
-        assert request.prompt == "hello"
-        assert request.messages == [{}]
+        assert request.prompt == "test prompt"
+        # assert request.messages == [{}]
         assert request.max_tokens == 512
         assert request.temperature == 1.0
         assert request.top_p == 0.0
         assert request.top_k == 0
         assert request.logprobs is None
+        assert request.echo is False
+
+    def test_default_chat_values(self):
+        request = ChatCompletionRequest(
+            model="test_model", messages=[{"role": "user", "content": "test message"}]
+        )
+        assert request.model == "test_model"
+        assert request.messages == [{"role": "user", "content": "test message"}]
+        assert request.max_tokens == 512
+        assert request.temperature == 1.0
+        assert request.top_p == 0.0
+        assert request.top_k == 0
 
     def test_greedy_params(self):
-        request = CompletionRequest(model="test_model", temperature=0.0, top_p=0.0)
+        request = CompletionRequest(
+            model="test_model", prompt="test prompt", temperature=0.0, top_p=0.0
+        )
         assert request.top_k == 1
 
 
@@ -109,6 +144,24 @@ class TestHealthEndpoints:
         response = client.get("/v1/health")
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
+
+    def test_triton_health_check_not_ready(self, client):
+        """Test triton health check when server returns non-200 status"""
+        with patch("requests.get") as mock_get:
+            mock_response = MagicMock()
+            mock_response.status_code = 503
+            mock_get.return_value = mock_response
+
+            response = client.get("/v1/triton_health")
+            assert response.status_code == 503
+            assert "Triton server is not ready" in response.json()["detail"]
+
+    def test_triton_health_check_request_exception(self, client):
+        """Test triton health check when request fails"""
+        with patch("requests.get", side_effect=requests.RequestException("Connection failed")):
+            response = client.get("/v1/triton_health")
+            assert response.status_code == 503
+            assert "Cannot reach Triton server" in response.json()["detail"]
 
 
 class TestUtilityFunctions:
@@ -151,6 +204,8 @@ class TestLLMQueryFunctions:
                 compute_logprob=True,
                 max_length=100,
                 apply_chat_template=False,
+                echo=False,
+                n_top_logprobs=0,
             )
             assert result == {"test": "response"}
             mock_nq.query_llm.assert_called_once()
@@ -176,6 +231,8 @@ class TestLLMQueryFunctions:
                     compute_logprob=True,
                     max_length=100,
                     apply_chat_template=False,
+                    echo=False,
+                    n_top_logprobs=0,
                 )
             )
             assert result == mock_result
