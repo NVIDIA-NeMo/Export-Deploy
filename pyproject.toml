@@ -67,7 +67,7 @@ vllm = [
     { index = "pytorch-cu128", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
-megatron-hub = { git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git", rev = "main" }
+megatron-hub = { git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git", rev = "ko3n1g/ci/uv" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
