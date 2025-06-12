@@ -136,7 +136,9 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                     # for a single prompt (batch size = 1) and stripping prefix if needed:
                     deployed_output = deployed_output["choices"][0]["text"][0][0][0:].strip().lower()
                 else:
-                    deployed_output = nq.query_llm(prompts=[prompt], max_length=1, top_k=1, top_p=0, temperature=0.1)
+                    deployed_output = nq.query_llm(
+                        prompts=[prompt], max_output_len=1, top_k=1, top_p=0, temperature=0.1
+                    )
                     deployed_output = deployed_output[0][0].strip().lower()
 
                 if expected_output == deployed_output:

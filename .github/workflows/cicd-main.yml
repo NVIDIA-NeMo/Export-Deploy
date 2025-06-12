@@ -229,8 +229,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - script: L2_NeMo_2_VLLM_EXPORT
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_VLLM_VISION
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_vLLM_Export_Mixtral
