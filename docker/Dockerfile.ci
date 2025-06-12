@@ -36,7 +36,12 @@ RUN --mount=type=bind,source=pyproject.toml,target=/workspace/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=nemo_export/__init__.py,target=/workspace/nemo_export/__init__.py \
     --mount=type=bind,source=nemo_deploy/__init__.py,target=/workspace/nemo_deploy/__init__.py \
-    --mount=type=bind,source=nemo_export_deploy_common/package_info.py,target=/workspace/nemo_export_deploy_common/package_info.py bash -exu <<"EOF"
+    --mount=type=bind,source=nemo_export_deploy_common/package_info.py,target=/workspace/nemo_export_deploy_common/package_info.py \
+    --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
+    PAT=$(cat /run/secrets/GH_TOKEN)
+    echo -e "machine github.com\n  login token\n  password $PAT" > ~/.netrc
+    chmod 600 ~/.netrc 
+    
     uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
     uv sync --link-mode symlink --locked 
     if [ -n "$INFERENCE_FRAMEWORK" ]; then
