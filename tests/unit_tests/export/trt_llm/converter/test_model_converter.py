@@ -23,18 +23,18 @@ def test_determine_quantization_settings():
     from nemo_export.trt_llm.converter.model_converter import determine_quantization_settings
 
     nemo_config = {"fp8": False}
-    (fp8_quant, fp8_kv) = determine_quantization_settings(nemo_config)
+    fp8_quant, fp8_kv = determine_quantization_settings(nemo_config)
     assert not fp8_quant
     assert not fp8_kv
 
     # Test with NeMo config having fp8=True
     nemo_config = {"fp8": True}
-    (fp8_quant, fp8_kv) = determine_quantization_settings(nemo_config)
+    fp8_quant, fp8_kv = determine_quantization_settings(nemo_config)
     assert fp8_quant
     assert fp8_kv
 
     # Test with override parameters
-    (fp8_quant, fp8_kv) = determine_quantization_settings(nemo_config, fp8_quantized=False, fp8_kvcache=True)
+    fp8_quant, fp8_kv = determine_quantization_settings(nemo_config, fp8_quantized=False, fp8_kvcache=True)
     assert not fp8_quant
     assert fp8_kv
 

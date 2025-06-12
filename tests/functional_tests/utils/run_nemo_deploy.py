@@ -132,7 +132,7 @@ def run_in_framework_inference(
 
     nm.stop()
 
-    return (None, None, None, None, None)
+    return None, None, None, None, None
 
 
 def run_trt_llm_inference(
@@ -171,7 +171,7 @@ def run_trt_llm_inference(
                     checkpoint_path, model_name, n_gpu, torch.cuda.device_count()
                 )
             )
-            return (None, None, None, None, None)
+            return None, None, None, None, None
 
         Path(trt_llm_model_dir).mkdir(parents=True, exist_ok=True)
 
@@ -198,7 +198,7 @@ def run_trt_llm_inference(
                     print("---- PTuning enabled.")
             else:
                 print("---- PTuning could not be enabled and skipping the test.")
-                return (None, None, None, None, None)
+                return None, None, None, None, None
 
         lora_ckpt_list = None
         lora_uids = None
@@ -215,7 +215,7 @@ def run_trt_llm_inference(
                     print("---- LoRA enabled.")
             else:
                 print("---- LoRA could not be enabled and skipping the test.")
-                return (None, None, None, None, None)
+                return None, None, None, None, None
 
         trt_llm_exporter = TensorRTLLM(trt_llm_model_dir, lora_ckpt_list, load_model=False)
 
@@ -294,7 +294,7 @@ def run_trt_llm_inference(
         if not save_engine:
             shutil.rmtree(trt_llm_model_dir)
 
-        return (None, None, None, None, None)
+        return None, None, None, None, None
     else:
         raise Exception("Checkpoint {0} could not be found.".format(checkpoint_path))
 

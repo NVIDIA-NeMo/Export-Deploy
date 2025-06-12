@@ -55,7 +55,7 @@ def test_get_layer_prefix():
         "optimizer.state",
         "model.decoder.layers.1.self_attention.bias",
     ]
-    (model_prefix, transformer_prefix) = get_layer_prefix(layer_names_mcore, is_mcore=True)
+    model_prefix, transformer_prefix = get_layer_prefix(layer_names_mcore, is_mcore=True)
     assert model_prefix == "model."
     assert transformer_prefix == "model.decoder."
 
@@ -65,7 +65,7 @@ def test_get_layer_prefix():
         "optimizer.state",
         "model.encoder.layers.1.self_attention.bias",
     ]
-    (model_prefix, transformer_prefix) = get_layer_prefix(layer_names_non_mcore, is_mcore=False)
+    model_prefix, transformer_prefix = get_layer_prefix(layer_names_non_mcore, is_mcore=False)
     assert model_prefix == "model."
     assert transformer_prefix == "model.encoder."
 

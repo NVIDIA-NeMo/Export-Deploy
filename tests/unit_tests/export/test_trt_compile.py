@@ -34,7 +34,7 @@ class ListAdd(torch.nn.Module):
         z1 = z + y
         for xi in x:
             y1 = y1 + xi + bs
-        return (x1, [y1, z1], y1 + z1)
+        return x1, [y1, z1], y1 + z1
 
 
 # ruff: noqa: F821

@@ -121,13 +121,9 @@ class NemoQueryLLMPyTorch(NemoQueryLLMBase):
         if max_length is not None:
             inputs["max_length"] = np.full(prompts.shape, max_length, dtype=np.int_)
         if apply_chat_template is not None:
-            inputs["apply_chat_template"] = np.full(
-                prompts.shape, apply_chat_template, dtype=np.bool_
-            )
+            inputs["apply_chat_template"] = np.full(prompts.shape, apply_chat_template, dtype=np.bool_)
         if n_top_logprobs is not None:
-            inputs["n_top_logprobs"] = np.full(
-                prompts.shape, n_top_logprobs, dtype=np.int_
-            )
+            inputs["n_top_logprobs"] = np.full(prompts.shape, n_top_logprobs, dtype=np.int_)
         if echo is not None:
             inputs["echo"] = np.full(prompts.shape, echo, dtype=np.bool_)
 
@@ -164,13 +160,8 @@ class NemoQueryLLMPyTorch(NemoQueryLLMBase):
                     # TODO athitten: get top_n_logprobs from mcore once available
                     # we take 1st element because cast_output adds an extra dimension
                     if top_log_probs_output is not None:
-                        n_log_probs_output = [
-                            json.loads(top_log_prob[0])
-                            for top_log_prob in top_log_probs_output
-                        ]
-                        openai_response["choices"][0]["logprobs"]["top_logprobs"] = (
-                            n_log_probs_output
-                        )
+                        n_log_probs_output = [json.loads(top_log_prob[0]) for top_log_prob in top_log_probs_output]
+                        openai_response["choices"][0]["logprobs"]["top_logprobs"] = n_log_probs_output
                 return openai_response
             else:
                 return result_dict["sentences"]

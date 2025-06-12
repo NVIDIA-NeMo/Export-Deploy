@@ -77,13 +77,8 @@ from transformers import AutoConfig, PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
 from nemo_export.tarutils import unpack_tarball
-from nemo_export.trt_llm.converter.model_converter import (
-    determine_quantization_settings,
-    model_to_trtllm_ckpt,
-)
-from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import (
-    get_layer_prefix,
-)
+from nemo_export.trt_llm.converter.model_converter import determine_quantization_settings, model_to_trtllm_ckpt
+from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import get_layer_prefix
 from nemo_export.trt_llm.converter.utils import init_model_parallel_from_nemo
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
     build_tokenizer,
@@ -109,9 +104,7 @@ from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
 from megatron.core.export.data_type import DataType
 from megatron.core.export.export_config import ExportConfig
 from megatron.core.export.model_type import ModelType
-from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
-    DEFAULT_CONVERSION_DICT,
-)
+from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import DEFAULT_CONVERSION_DICT
 from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
 from tensorrt_llm.layers import MoeConfig
 from pytriton.decorators import batch, first_value
@@ -263,9 +256,7 @@ class TensorRTLLM(ITritonDeployable):
             ValueError: If model_type is not supported or dtype cannot be determined.
             Exception: If files cannot be deleted or other export errors occur.
         """
-        gpus_per_node = (
-            tensor_parallelism_size if gpus_per_node is None else gpus_per_node
-        )
+        gpus_per_node = tensor_parallelism_size if gpus_per_node is None else gpus_per_node
         prepare_directory_for_export(
             self.model_dir, delete_existing_files=delete_existing_files, subdir=TRTLLM_ENGINE_DIR
         )
@@ -366,16 +357,10 @@ class TensorRTLLM(ITritonDeployable):
                         "Please specify it explicitely."
                     )
 
-                model, model_config, self.tokenizer = load_nemo_model(
-                    nemo_checkpoint_path, nemo_export_dir
-                )
+                model, model_config, self.tokenizer = load_nemo_model(nemo_checkpoint_path, nemo_export_dir)
 
-                share_embeddings_and_output_weights = model_config.get(
-                    "share_embeddings_and_output_weights", False
-                )
-                fp8_quantized, fp8_kvcache = determine_quantization_settings(
-                    model_config, fp8_quantized, fp8_kvcache
-                )
+                share_embeddings_and_output_weights = model_config.get("share_embeddings_and_output_weights", False)
+                fp8_quantized, fp8_kvcache = determine_quantization_settings(model_config, fp8_quantized, fp8_kvcache)
 
                 # We build the transformer config using the nemo model config.
                 transformer_config = self.get_transformer_config(model_config)
@@ -386,11 +371,9 @@ class TensorRTLLM(ITritonDeployable):
 
                 # All Mcore conversion dicts start with "decoder.layers.4.blah.blah" , while nemo models start with "model.decoder.layers.4.blahblah". so we append model. to the keys
                 nemo_model_conversion_dict = {
-                    f"model.{key}": value
-                    for key, value in mcore_model_conversion_dict.items()
+                    f"model.{key}": value for key, value in mcore_model_conversion_dict.items()
                 } | {  # Mapping for NeMo 2.0
-                    f"module.{key}": value
-                    for key, value in mcore_model_conversion_dict.items()
+                    f"module.{key}": value for key, value in mcore_model_conversion_dict.items()
                 }
 
                 # TODO: Workaround: Gemma uses gated activation, while mcore does not handle openai-gelu
@@ -410,12 +393,9 @@ class TensorRTLLM(ITritonDeployable):
                     moe_tp_mode=model_config.get("moe_tp_mode", 2),
                     multi_query_mode=model_config.get("multi_query_mode", False),
                     activation=activation,
-                    seq_len_interpolation_factor=model_config.get(
-                        "seq_len_interpolation_factor"
-                    ),
+                    seq_len_interpolation_factor=model_config.get("seq_len_interpolation_factor"),
                     moe_renorm_mode=model_config.get(
-                        "moe_renorm_mode",
-                        MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE,
+                        "moe_renorm_mode", MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE
                     ),
                     share_embeddings_and_output_weights=share_embeddings_and_output_weights,
                 )
@@ -589,7 +569,7 @@ class TensorRTLLM(ITritonDeployable):
         plugin_config.multiple_profiles = multiple_profiles
         plugin_config.reduce_fusion = reduce_fusion
         max_seq_len = max_input_len + max_output_len
-        (max_num_tokens, opt_num_tokens) = check_max_num_tokens(
+        max_num_tokens, opt_num_tokens = check_max_num_tokens(
             max_num_tokens=max_num_tokens,
             opt_num_tokens=opt_num_tokens,
             max_seq_len=max_seq_len,
@@ -803,8 +783,8 @@ class TensorRTLLM(ITritonDeployable):
             tmp_dir = tempfile.TemporaryDirectory()
             nemo_export_dir = Path(tmp_dir.name)
 
-            (model, model_config, self.tokenizer) = load_nemo_model(nemo_checkpoint_path, nemo_export_dir)
-            (weights_dicts, model_configs) = model_to_trtllm_ckpt(
+            model, model_config, self.tokenizer = load_nemo_model(nemo_checkpoint_path, nemo_export_dir)
+            weights_dicts, model_configs = model_to_trtllm_ckpt(
                 model=model,
                 nemo_model_config=model_config,
                 nemo_export_dir=nemo_export_dir,
@@ -994,7 +974,7 @@ class TensorRTLLM(ITritonDeployable):
         """
         from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import DEFAULT_CONVERSION_DICT
 
-        (model_prefix, _) = get_layer_prefix(layer_names=model_state_dict.keys(), is_mcore=True)
+        model_prefix, _ = get_layer_prefix(layer_names=model_state_dict.keys(), is_mcore=True)
 
         nemo_model_conversion_dict = {}
         for key, value in DEFAULT_CONVERSION_DICT.items():
@@ -1019,8 +999,8 @@ class TensorRTLLM(ITritonDeployable):
     ):
         """Convert a model parallel nemo model to TensorRT-LLM."""
         assert tensorrt_llm.mpi_rank() == torch.distributed.get_rank()
-        (self.use_refit, self.model_type, self.gpus_per_node) = (use_refit, model_type, gpus_per_node)
-        (self.mp_rank, self.dp_rank, self.tp_size, self.pp_size, self.dp_size) = init_model_parallel_from_nemo(
+        self.use_refit, self.model_type, self.gpus_per_node = (use_refit, model_type, gpus_per_node)
+        self.mp_rank, self.dp_rank, self.tp_size, self.pp_size, self.dp_size = init_model_parallel_from_nemo(
             reshard_model
         )
         self.tokenizer = build_tokenizer(tokenizer)
@@ -1033,16 +1013,12 @@ class TensorRTLLM(ITritonDeployable):
         from tensorrt_llm.layers import MoeConfig
 
         storage_dtype = torch_dtype_from_precision(model_config.precision)
-        model_state_dict = self.gather_and_reshard_model(
-            model_config, model, storage_dtype
-        )
+        model_state_dict = self.gather_and_reshard_model(model_config, model, storage_dtype)
         # We build the transformer config using the nemo model config.
         transformer_config = self.get_transformer_config(model_config)
         input_model_type = getattr(ModelType, model_type)
 
-        nemo_model_conversion_dict = self.get_nemo_to_trtllm_conversion_dict(
-            model_state_dict
-        )
+        nemo_model_conversion_dict = self.get_nemo_to_trtllm_conversion_dict(model_state_dict)
         self.trtllm_helper = TRTLLMHelper(
             transformer_config=transformer_config,
             model_type=input_model_type,
@@ -1054,16 +1030,9 @@ class TensorRTLLM(ITritonDeployable):
             moe_tp_mode=model_config.get("moe_tp_mode", 2),
             multi_query_mode=model_config.get("multi_query_mode", False),
             activation=model_config.get("activation", "gelu"),
-            seq_len_interpolation_factor=model_config.get(
-                "seq_len_interpolation_factor"
-            ),
-            moe_renorm_mode=model_config.get(
-                "moe_renorm_mode",
-                MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE,
-            ),
-            share_embeddings_and_output_weights=model_config.get(
-                "share_embeddings_and_output_weights", False
-            ),
+            seq_len_interpolation_factor=model_config.get("seq_len_interpolation_factor"),
+            moe_renorm_mode=model_config.get("moe_renorm_mode", MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE),
+            share_embeddings_and_output_weights=model_config.get("share_embeddings_and_output_weights", False),
         )
 
         input_dtype = self.get_input_dtype(storage_dtype)
@@ -1089,10 +1058,7 @@ class TensorRTLLM(ITritonDeployable):
             trtllm_model_config.pp_size = self.pp_size
             trtllm_model_config.world_size = world_size
             trtllm_model_config.mapping = tensorrt_llm.Mapping(
-                world_size=world_size,
-                rank=self.mp_rank,
-                tp_size=self.tp_size,
-                pp_size=self.pp_size,
+                world_size=world_size, rank=self.mp_rank, tp_size=self.tp_size, pp_size=self.pp_size
             )
 
         engine = self.trtllm_helper.build_and_save_engine(
@@ -1121,13 +1087,9 @@ class TensorRTLLM(ITritonDeployable):
         """
         storage_dtype = torch_dtype_from_precision(model_config.precision)
 
-        model_state_dict = self.gather_and_reshard_model(
-            model_config, model, storage_dtype
-        )
+        model_state_dict = self.gather_and_reshard_model(model_config, model, storage_dtype)
 
-        nemo_model_conversion_dict = self.get_nemo_to_trtllm_conversion_dict(
-            model_state_dict
-        )
+        nemo_model_conversion_dict = self.get_nemo_to_trtllm_conversion_dict(model_state_dict)
         self.trtllm_helper.weights_converter.convert(
             model_state_dict=model_state_dict,
             tokenizer_vocab_size=self.tokenizer.vocab_size,
@@ -1396,7 +1358,7 @@ class TensorRTLLM(ITritonDeployable):
 
             if generation_logits_available:
                 # generation_logits is a 4d torch tensor of dim [BS,1,#generated_tokens,vocab_size]
-                (output_texts, generation_logits) = self.forward(**infer_input)
+                output_texts, generation_logits = self.forward(**infer_input)
                 # convert generation_logits to numpy array. Note: from my understanding since generation_logits is
                 # returned as a torch tensor it won't have varying number of tokens across multiple sequences,
                 # likely due to TRTLLM taking care of padding hence no addtnl padding is needed.
@@ -1405,7 +1367,7 @@ class TensorRTLLM(ITritonDeployable):
                 )
 
             elif context_logits_available:
-                (output_texts, context_logits) = self.forward(**infer_input)
+                output_texts, context_logits = self.forward(**infer_input)
                 # context_logits is a list of tensors shaped [#tokens, vocab_size] and the len of the list  is BS
                 # In case of batched inputs (i.e multiple prompts sent as a list) context_logits returned can have
                 # different seq_len. Following code pads them as it can otherwise error while converting to numpy array

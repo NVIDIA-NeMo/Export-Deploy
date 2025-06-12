@@ -32,13 +32,13 @@ def mock_engine_and_tokenizer():
     mock_tokenizer.tokenizer.tokenizer.bos_token = "<bos>"
     mock_tokenizer.tokenizer.tokenizer.eos_token = "<eos>"
 
-    return (mock_engine, mock_model, mock_tokenizer)
+    return mock_engine, mock_model, mock_tokenizer
 
 
 @pytest.fixture
 def deployable(mock_engine_and_tokenizer):
     """Fixture to create a deployable instance with mocked dependencies."""
-    (mock_engine, mock_model, mock_tokenizer) = mock_engine_and_tokenizer
+    mock_engine, mock_model, mock_tokenizer = mock_engine_and_tokenizer
 
     # Patch the __init__ method to avoid file loading
     with patch.object(MegatronLLMDeployableNemo2, "__init__", return_value=None):

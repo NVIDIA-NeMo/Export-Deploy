@@ -104,7 +104,7 @@ def build_mllama_trtllm_engine(
     plugin_config.use_paged_context_fmha = True
 
     max_seq_len = max_input_len + max_output_len
-    (max_num_tokens, opt_num_tokens) = check_max_num_tokens(
+    max_num_tokens, opt_num_tokens = check_max_num_tokens(
         max_num_tokens=None,
         opt_num_tokens=None,
         max_seq_len=max_seq_len,
@@ -249,7 +249,7 @@ def build_trt_engine(
         inputT.shape = [nBS, *input_sizes]
         min_size = opt_size = max_size = input_sizes
     elif len(input_sizes) == 3 and isinstance(input_sizes[0], list):
-        (min_size, opt_size, max_size) = input_sizes
+        min_size, opt_size, max_size = input_sizes
         logger.log(trt.Logger.INFO, f"Processed min/opt/max input sizes {min_size}/{opt_size}/{max_size}")
     elif len(input_sizes) == 3 and isinstance(input_sizes[0], dict):
         logger.log(trt.Logger.INFO, f"Processed min/opt/max input sizes {input_sizes}")
@@ -302,7 +302,7 @@ def build_neva_engine(model_type: str, model_dir: str, visual_checkpoint_path: s
         # extract NeMo checkpoint
         with tempfile.TemporaryDirectory() as temp:
             temp_path = Path(temp)
-            (mp0_weights, nemo_config, _) = load_nemo_model(visual_checkpoint_path, temp_path)
+            mp0_weights, nemo_config, _ = load_nemo_model(visual_checkpoint_path, temp_path)
 
     vision_config = nemo_config["mm_cfg"]["vision_encoder"]
 
@@ -317,13 +317,13 @@ def build_neva_engine(model_type: str, model_dir: str, visual_checkpoint_path: s
             return vit_embeds
 
         def flat_square(self, x):
-            (n, w, h, c) = x.size()
+            n, w, h, c = x.size()
             if w % 2 == 1:
                 x = torch.cat([x, torch.zeros((n, 1, h, c), dtype=x.dtype).to(x.device)], dim=1).contiguous()
-                (n, w, h, c) = x.size()
+                n, w, h, c = x.size()
             if h % 2 == 1:
                 x = torch.cat([x, torch.zeros((n, w, 1, c), dtype=x.dtype).to(x.device)], dim=2).contiguous()
-                (n, w, h, c) = x.size()
+                n, w, h, c = x.size()
             x = x.view(n, w, int(h / 2), int(c * 2))
             x = x.permute(0, 2, 1, 3).contiguous()
             x = x.view(n, int(h / 2), int(w / 2), int(c * 4))
@@ -448,7 +448,7 @@ def build_video_neva_engine(model_dir: str, visual_checkpoint_path: str, vision_
             self.connector = connector
 
         def forward(self, images):
-            (b, num_frames, c, h, w) = images.shape
+            b, num_frames, c, h, w = images.shape
             images = images.view(b * num_frames, c, h, w)
             vision_x = self.encoder(pixel_values=images, output_hidden_states=True)  # [(B num_frames), C, H, W]
             vision_x = vision_x.hidden_states[-2]
@@ -600,7 +600,7 @@ def build_mllama_engine(
     lora_ckpt_list: List[str] = None,
 ):
     """Build mllama engine."""
-    (new_state_dict, config) = convert_mllama_nemo_to_hf(checkpoint_path, processor_name)
+    new_state_dict, config = convert_mllama_nemo_to_hf(checkpoint_path, processor_name)
 
     hf_model = MllamaForConditionalGeneration(config)
     hf_model = hf_model.to(torch.bfloat16)
@@ -609,7 +609,7 @@ def build_mllama_engine(
     with tempfile.TemporaryDirectory() as tmp_dir:
         hf_model_path = os.path.join(tmp_dir, "hf_checkpoint")
         hf_model.save_pretrained(hf_model_path)
-        del (hf_model, new_state_dict)
+        del hf_model, new_state_dict
 
         build_mllama_visual_engine(
             os.path.join(model_dir, "visual_engine"), hf_model_path, vision_max_batch_size=vision_max_batch_size

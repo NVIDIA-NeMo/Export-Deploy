@@ -78,7 +78,7 @@ def test_deployment_handle_direct(
 
             if response and (isinstance(response, dict) or hasattr(response, "__dict__")):
                 print(f"✓ {endpoint_type.capitalize()} endpoint is responsive")
-                return (True, response)
+                return True, response
             else:
                 print(f"✗ {endpoint_type.capitalize()} endpoint returned invalid response: {response}")
                 if attempt < max_retries - 1:
@@ -92,7 +92,7 @@ def test_deployment_handle_direct(
                 time.sleep(retry_delay)
 
     print(f"✗ {endpoint_type.capitalize()} endpoint failed after {max_retries} attempts")
-    return (False, None)
+    return False, None
 
 
 def run_comprehensive_deployment_tests(deployment_handle, model_id):
@@ -106,7 +106,7 @@ def run_comprehensive_deployment_tests(deployment_handle, model_id):
 
     for endpoint in endpoints:
         print(f"\n--- Testing {endpoint} endpoint ---")
-        (success, response) = test_deployment_handle_direct(deployment_handle, model_id, endpoint)
+        success, response = test_deployment_handle_direct(deployment_handle, model_id, endpoint)
         test_results[endpoint] = {"success": success, "response": response}
 
         if success and response:

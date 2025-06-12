@@ -25,7 +25,7 @@ import torch
 from nemo.utils.export_utils import add_casts_around_norms, replace_for_export
 from nemo.utils.import_utils import safe_import
 
-(polygraphy, polygraphy_imported) = safe_import("polygraphy")
+polygraphy, polygraphy_imported = safe_import("polygraphy")
 if polygraphy_imported:
     from polygraphy.backend.common import bytes_from_path
     from polygraphy.backend.trt import (
@@ -36,9 +36,9 @@ if polygraphy_imported:
         network_from_onnx_path,
     )
 
-(trt, trt_imported) = safe_import("tensorrt")
-(torch_tensorrt, _) = safe_import("torch_tensorrt")
-(cudart, _) = safe_import("cuda.cudart")
+trt, trt_imported = safe_import("tensorrt")
+torch_tensorrt, _ = safe_import("torch_tensorrt")
+cudart, _ = safe_import("cuda.cudart")
 
 lock_sm = threading.Lock()
 
@@ -71,7 +71,7 @@ def get_profile_shapes(input_shape: Sequence[int], dynamic_batchsize: Sequence[i
         max_input_shape = scale_batch_size(input_shape, dynamic_batchsize[2])
     else:
         min_input_shape = opt_input_shape = max_input_shape = input_shape
-    return (min_input_shape, opt_input_shape, max_input_shape)
+    return min_input_shape, opt_input_shape, max_input_shape
 
 
 def get_dynamic_axes(profiles):
@@ -538,7 +538,7 @@ class TrtCompiler:
             inputs = list(input_example.values())
 
             def get_torch_trt_input(input_shape, dynamic_batchsize):
-                (min_input_shape, opt_input_shape, max_input_shape) = get_profile_shapes(input_shape, dynamic_batchsize)
+                min_input_shape, opt_input_shape, max_input_shape = get_profile_shapes(input_shape, dynamic_batchsize)
                 return torch_tensorrt.Input(
                     min_shape=min_input_shape, opt_shape=opt_input_shape, max_shape=max_input_shape
                 )
@@ -671,13 +671,13 @@ def trt_compile(
                 parent = getattr(parent, parent_name)
                 submodule = submodule[idx + 1 :]
                 return find_sub(parent, submodule)
-            return (parent, submodule)
+            return parent, submodule
 
         if submodule is not None:
             if isinstance(submodule, str):
                 submodule = [submodule]
             for s in submodule:
-                (parent, sub) = find_sub(model, s)
+                parent, sub = find_sub(model, s)
                 wrap(getattr(parent, sub), base_path + "." + s)
         else:
             wrap(model, base_path)

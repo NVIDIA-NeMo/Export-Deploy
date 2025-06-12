@@ -195,7 +195,7 @@ def convert_lora_nemo_to_canonical(lora_nemo, save_path, hf_format=False, donor_
             lora_state_dict = convert_lora_weights_to_canonical(lora_config, lora_state_dict)
 
         if hf_format:
-            (lora_state_dict, target_modules) = reformat_module_names_to_hf(lora_state_dict)
+            lora_state_dict, target_modules = reformat_module_names_to_hf(lora_state_dict)
             Path(save_path).mkdir(parents=True, exist_ok=True)
             torch.save(lora_state_dict, f"{save_path}/adapter_model.bin")
             if donor_hf_config is not None:
@@ -220,4 +220,4 @@ def convert_lora_nemo_to_canonical(lora_nemo, save_path, hf_format=False, donor_
                 with tarfile.open(save_path, "w:") as tar:
                     tar.add(tmpdir, arcname=".")
 
-    return (lora_state_dict, lora_config)
+    return lora_state_dict, lora_config

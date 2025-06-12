@@ -101,7 +101,7 @@ def determine_quantization_settings(
     if fp8_kvcache is None:
         fp8_kvcache = is_nemo_quantized
 
-    return (fp8_quantized, fp8_kvcache)
+    return fp8_quantized, fp8_kvcache
 
 
 def model_to_trtllm_ckpt(
@@ -127,7 +127,7 @@ def model_to_trtllm_ckpt(
         )
         use_embedding_sharing = True
 
-    (fp8_quantized, fp8_kvcache) = determine_quantization_settings(nemo_model_config, fp8_quantized, fp8_kvcache)
+    fp8_quantized, fp8_kvcache = determine_quantization_settings(nemo_model_config, fp8_quantized, fp8_kvcache)
     # If the model has been sharded with model parallelism, convert the model in a gpu-distributed manner
     if use_distributed_convert:
         weights_dict = dist_model_to_trt_llm_ckpt(
@@ -230,7 +230,7 @@ def model_to_trtllm_ckpt(
             pp_size=pipeline_parallel_size,
         )
         weights_dicts.append(weights_dict)
-        return (weights_dicts, model_configs)
+        return weights_dicts, model_configs
 
     pp_key = {
         "transformer.vocab_embedding.weight",
@@ -298,4 +298,4 @@ def model_to_trtllm_ckpt(
         model_configs.append(model_config)
         weights_dicts.append(weights_dict_local)
 
-    return (weights_dicts, model_configs)
+    return weights_dicts, model_configs

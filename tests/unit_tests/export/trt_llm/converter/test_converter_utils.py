@@ -56,7 +56,7 @@ def test_get_scaling_factor_keys():
     from nemo_export.trt_llm.converter.utils import get_scaling_factor_keys
 
     key = "layers.1.mlp.dense_h_to_4h.scale_fwd"
-    (keys, gate_keys) = get_scaling_factor_keys(key)
+    keys, gate_keys = get_scaling_factor_keys(key)
 
     # Check main keys
     assert keys[0].endswith(".weights_scaling_factor")

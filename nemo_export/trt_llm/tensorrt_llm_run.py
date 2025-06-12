@@ -758,9 +758,9 @@ def generate(
     ]
 
     if output_generation_logits:
-        return (output_lines_list, outputs["generation_logits"])
+        return output_lines_list, outputs["generation_logits"]
     elif output_context_logits:
-        return (output_lines_list, outputs["context_logits"])
+        return output_lines_list, outputs["context_logits"]
     return output_lines_list
 
 

@@ -276,7 +276,7 @@ def get_scaling_factor_keys(key: str) -> Tuple[Tuple[str, str], Tuple[str, str]]
     gate_weight = mapped_key + weight_scaling_suffix
     gate_keys = (gate_activation, gate_weight)
 
-    return (keys, gate_keys)
+    return keys, gate_keys
 
 
 def save_scaling_factor(scaling_factors: dict, key: str, val: torch.Tensor, config: dict):
@@ -286,7 +286,7 @@ def save_scaling_factor(scaling_factors: dict, key: str, val: torch.Tensor, conf
     activation_factor = 1 / val[0].view(1)
     weights_factor = 1 / val[1].view(1)
 
-    ((weights_key, activation_key), gate_keys) = get_scaling_factor_keys(key)
+    (weights_key, activation_key), gate_keys = get_scaling_factor_keys(key)
     scaling_factors[activation_key] = activation_factor
     scaling_factors[weights_key] = weights_factor
 
@@ -388,7 +388,7 @@ def split_and_save_weight(
 
     elif any_word_in_key(key, mlp_fc_keys):
         if split_gated_activation:
-            (vals, gates) = split_val_gate(vals, convert_on_device)
+            vals, gates = split_val_gate(vals, convert_on_device)
 
         if convert_on_device:
             save_val(vals[0], saved_dir, trt_llm_key)
@@ -539,7 +539,7 @@ def split_and_save_weight(
     elif any_word_in_key(key, mlp_fc_expert_keys):
         cat_dim = -1
         val = np.concatenate(vals, axis=cat_dim)
-        (w1, w3) = np.split(val, 2, axis=1)
+        w1, w3 = np.split(val, 2, axis=1)
         # w1 splits
         split_w1s = np.split(w1, split_factor, axis=1)
         # w3 splits
@@ -598,4 +598,4 @@ def init_model_parallel_from_nemo(reshard_model):
 
     MPI.COMM_WORLD = new_comm
 
-    return (mp_rank, dp_rank, tp_size, pp_size, dp_size)
+    return mp_rank, dp_rank, tp_size, pp_size, dp_size

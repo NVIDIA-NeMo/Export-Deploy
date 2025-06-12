@@ -271,7 +271,7 @@ def setup_model_and_tokenizer_for_inference(
     tokenizer = model_context.tokenizer
     tokenizer_wrapper = MCoreTokenizerWrappper(tokenizer)
 
-    return (model, tokenizer_wrapper)
+    return model, tokenizer_wrapper
 
 
 class MCoreEngineWithCleanup:
@@ -388,7 +388,7 @@ def create_mcore_engine(
             f"({num_nodes} nodes × {num_devices} devices)."
         )
 
-    (modelList, tokenizer) = setup_model_and_tokenizer_for_inference(
+    modelList, tokenizer = setup_model_and_tokenizer_for_inference(
         checkpoint_path=path,
         tensor_model_parallel_size=tensor_model_parallel_size,
         pipeline_model_parallel_size=pipeline_model_parallel_size,
@@ -428,4 +428,4 @@ def create_mcore_engine(
     # Wrap the engine to ensure cleanup
     wrapped_engine = MCoreEngineWithCleanup(mcore_engine, model_inference_wrapper, tokenizer)
 
-    return (wrapped_engine, model_inference_wrapper, tokenizer)
+    return wrapped_engine, model_inference_wrapper, tokenizer

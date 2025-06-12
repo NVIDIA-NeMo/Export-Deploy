@@ -64,7 +64,7 @@ def get_layer_prefix(layer_names, is_mcore):
         model_prefix = transformer_layer_prefix.split("encoder")[0]
     assert model_prefix is not None, "Cannot extract model prefix from {layer_name}"
 
-    return (model_prefix, transformer_layer_prefix)
+    return model_prefix, transformer_layer_prefix
 
 
 def rename_key(new_key: str):
@@ -131,7 +131,7 @@ def convert_model_to_trt_llm_ckpt(
     # load position_embedding from rank 0
     model_state_dict = model.get("state_dict", model)
 
-    (prefix, transformer_layer_prefix) = get_layer_prefix(model_state_dict.keys(), is_mcore)
+    prefix, transformer_layer_prefix = get_layer_prefix(model_state_dict.keys(), is_mcore)
 
     has_position_embedding = get_layer_name("position_embedding", prefix) in model_state_dict
     has_lm_head = get_layer_name("output_layer", prefix) in model_state_dict
@@ -326,7 +326,7 @@ def dist_model_to_trt_llm_ckpt(
     is_mcore = nemo_model_config.get("mcore_gpt", False)
     storage_type = torch_dtype_from_precision(nemo_model_config.precision)
     sample_state_dict = model[0].state_dict() if vp_size > 1 else model.state_dict()
-    (prefix, transformer_layer_prefix) = get_layer_prefix(sample_state_dict, is_mcore)
+    prefix, transformer_layer_prefix = get_layer_prefix(sample_state_dict, is_mcore)
     assert is_mcore, "Only megatron-core inflight model conversion is supported"
 
     export_config = {
@@ -453,7 +453,7 @@ def dist_model_to_trt_llm_ckpt(
 
         if tp_size > 1:  # Gather padded tensor chunks
             vocab_size_padded = tensor.shape[0] * tp_size
-            (vocab_start_index, vocab_end_index) = VocabUtility.vocab_range_from_global_vocab_size(
+            vocab_start_index, vocab_end_index = VocabUtility.vocab_range_from_global_vocab_size(
                 vocab_size_padded, tp_rank, tp_size
             )
             dim_size = list(tensor.size())
@@ -464,7 +464,7 @@ def dist_model_to_trt_llm_ckpt(
             tensor = gathered_tensor
         unpadded = tensor[:tokenizer_vocab_size]
         if tp_size > 1:  # Split gathered tensor for tensor parallel embedding
-            (vocab_start_index, vocab_end_index) = VocabUtility.vocab_range_from_global_vocab_size(
+            vocab_start_index, vocab_end_index = VocabUtility.vocab_range_from_global_vocab_size(
                 tokenizer_vocab_size, tp_rank, tp_size
             )
             unpadded = unpadded[vocab_start_index:vocab_end_index]

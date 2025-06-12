@@ -129,7 +129,7 @@ def rename_extra_states(state_dict: Dict[str, Any]) -> Dict[str, Any]:
 
         # Keys with the extra states have the following format:
         # <prefix>.layers.<layer>._extra_state/shard_<layer_number>_<number_of_layers>
-        (key_base, shard_key) = key.split("/")
+        key_base, shard_key = key.split("/")
         if "_" not in shard_key:
             continue
 
@@ -355,9 +355,7 @@ def load_nemo_config(nemo_ckpt: Union[str, Path]) -> Dict[Any, Any]:
     return config
 
 
-def get_model_type(
-    nemo_ckpt: Union[str, Path], use_vllm_type: bool = False
-) -> Optional[str]:
+def get_model_type(nemo_ckpt: Union[str, Path], use_vllm_type: bool = False) -> Optional[str]:
     """Determine the model type from a NeMo checkpoint for TensorRT-LLM engine build or vLLM model converters.
 
     Args:
@@ -376,13 +374,9 @@ def get_model_type(
             "nemo.collections.llm.gpt.model.base.GPTModel": "gpt",
             "nemo.collections.llm.gpt.model.llama.LlamaModel": "llama",
             "nemo.collections.llm.gpt.model.mistral.MistralModel": "llama",
-            "nemo.collections.llm.gpt.model.mixtral.MixtralModel": "mixtral"
-            if use_vllm_type
-            else "llama",
+            "nemo.collections.llm.gpt.model.mixtral.MixtralModel": "mixtral" if use_vllm_type else "llama",
             "nemo.collections.llm.gpt.model.starcoder.StarcoderModel": "gpt",
-            "nemo.collections.llm.gpt.model.starcoder2.Starcoder2Model": "starcoder2"
-            if use_vllm_type
-            else "gpt",
+            "nemo.collections.llm.gpt.model.starcoder2.Starcoder2Model": "starcoder2" if use_vllm_type else "gpt",
             "nemo.collections.llm.gpt.model.nemotron.NemotronModel": "gpt",
             "nemo.collections.llm.gpt.model.gemma.GemmaModel": "gemma",
             "nemo.collections.llm.gpt.model.phi3mini.Phi3Model": "phi3",
@@ -543,7 +537,7 @@ def load_nemo_model(nemo_ckpt: Union[str, Path], nemo_export_dir: Union[str, Pat
         if isinstance(nemo_dir, TarPath):
             nemo_dir.tarobject.close()
 
-    return (model, nemo_model_config, tokenizer)
+    return model, nemo_model_config, tokenizer
 
 
 def cpu_map_location(storage, loc):

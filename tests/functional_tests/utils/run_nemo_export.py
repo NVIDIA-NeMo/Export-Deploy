@@ -650,7 +650,7 @@ def run_inference_tests(args):
     # in-framework tests will only return deployed model accuracy results for tps > 1
     deployed_tests_only = args.in_framework and args.max_tps > 1
     for num_tps, results in result_dic.items():
-        (functional_result, accuracy_result) = results
+        functional_result, accuracy_result = results
 
         if print_separator:
             print("---------------------------------------")

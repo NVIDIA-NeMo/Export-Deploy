@@ -56,14 +56,14 @@ class TestTensorRTLazyCompiler(unittest.TestCase):
         input_shape = [1, 3, 224, 224]
         dynamic_batchsize = [1, 4, 8]
 
-        (min_shape, opt_shape, max_shape) = get_profile_shapes(input_shape, dynamic_batchsize)
+        min_shape, opt_shape, max_shape = get_profile_shapes(input_shape, dynamic_batchsize)
 
         self.assertEqual(min_shape, [1, 3, 224, 224])
         self.assertEqual(opt_shape, [4, 3, 224, 224])
         self.assertEqual(max_shape, [8, 3, 224, 224])
 
         # Test with None dynamic_batchsize
-        (min_shape, opt_shape, max_shape) = get_profile_shapes(input_shape, None)
+        min_shape, opt_shape, max_shape = get_profile_shapes(input_shape, None)
         self.assertEqual(min_shape, input_shape)
         self.assertEqual(opt_shape, input_shape)
         self.assertEqual(max_shape, input_shape)

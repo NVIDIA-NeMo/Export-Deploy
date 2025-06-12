@@ -42,7 +42,7 @@ def get_args():
 
 def export_onnx_trt(args):
     # Base Llama model needs to be adapted to turn it into an embedding model.
-    (model, tokenizer) = get_llama_bidirectional_hf_model(
+    model, tokenizer = get_llama_bidirectional_hf_model(
         model_name_or_path=args.hf_model_path,
         normalize=args.normalize,
         pooling_mode=args.pooling_strategy,

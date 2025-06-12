@@ -48,19 +48,9 @@ def parse_args():
     parser.add_argument(
         "--max_memory", type=str, default=None, help="Maximum memory allocation when using balanced device map"
     )
-    parser.add_argument("--max_batch_size", type=int, default=8, help="Maximum number of requests to batch together")
-    parser.add_argument(
-        "--batch_wait_timeout_s", type=float, default=0.3, help="Maximum time to wait for batching requests in seconds"
-    )
-    parser.add_argument("--device_map", type=str, default="auto", help="Device mapping strategy for model placement")
-    parser.add_argument(
-        "--max_memory", type=str, default=None, help="Maximum memory allocation when using balanced device map"
-    )
     parser.add_argument(
         "--model_id", type=str, default="nemo-model", help="Identifier for the model in the API responses"
     )
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address to bind the Ray Serve server to")
-    parser.add_argument("--port", type=int, default=1024, help="Port number to use for the Ray Serve server")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address to bind the Ray Serve server to")
     parser.add_argument("--port", type=int, default=1024, help="Port number to use for the Ray Serve server")
     parser.add_argument(

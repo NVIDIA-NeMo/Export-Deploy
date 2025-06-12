@@ -64,7 +64,7 @@ def test_reformat_module_names_to_hf():
         "up_adapter.linear_in.weight": torch.randn(10, 10),
     }
 
-    (new_tensors, module_names) = reformat_module_names_to_hf(tensors)
+    new_tensors, module_names = reformat_module_names_to_hf(tensors)
 
     # Check that all tensors were converted
     assert len(new_tensors) == len(tensors)

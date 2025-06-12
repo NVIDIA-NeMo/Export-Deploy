@@ -179,10 +179,10 @@ def extract_data_from_tar(test_dir, test_data_archive, url=None, local_data=Fals
 @pytest.fixture(scope="session")
 def k2_is_appropriate() -> Tuple[bool, str]:
     try:
-        return (True, "k2 is appropriate.")
+        return True, "k2 is appropriate."
     except Exception as e:
         logging.exception(e, exc_info=True)
-        return (False, "k2 is not available or does not meet the requirements.")
+        return False, "k2 is not available or does not meet the requirements."
 
 
 @pytest.fixture(scope="session")
@@ -194,11 +194,11 @@ def k2_cuda_is_enabled(k2_is_appropriate) -> Tuple[bool, str]:
     from nemo.core.utils.k2_guard import k2  # noqa: E402
 
     if torch.cuda.is_available() and k2.with_cuda:
-        return (True, "k2 supports CUDA.")
+        return True, "k2 supports CUDA."
     elif torch.cuda.is_available():
         return (False, "k2 does not support CUDA. Consider using a k2 build with CUDA support.")
     else:
-        return (False, "k2 needs CUDA to be available in torch.")
+        return False, "k2 needs CUDA to be available in torch."
 
 
 def pytest_configure(config):

@@ -313,7 +313,7 @@ class vLLMExporter(ITritonDeployable):
 
             LOGGER.info(f"Converting LoRA checkpoint '{nemo_file}' into '{hf_lora_dir}'...")
 
-            (_, lora_config) = convert_lora_nemo_to_canonical(nemo_file, hf_lora_dir, hf_format=True)
+            _, lora_config = convert_lora_nemo_to_canonical(nemo_file, hf_lora_dir, hf_format=True)
             self.lora_checkpoints.append(hf_lora_dir)
 
             rank = lora_config["peft"]["lora_tuning"]["adapter_dim"]

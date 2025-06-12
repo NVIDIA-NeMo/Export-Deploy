@@ -250,7 +250,7 @@ class MultimodalModelRunner:
             profiler.stop(self.modality.capitalize())
 
         if self.model_type == "vila":
-            (visual_features, visual_atts) = self.get_visual_features(image, attention_mask)
+            visual_features, visual_atts = self.get_visual_features(image, attention_mask)
             input_ids = self.tokenizer_image_token(batch_size, pre_prompt[0] + post_prompt[0], self.tokenizer)
             batch_split_prompts = self.split_prompt_by_images(input_ids)
             first_batch_split_prompts = batch_split_prompts[0]
@@ -264,17 +264,17 @@ class MultimodalModelRunner:
                 length += visual_atts.shape[1]
 
             input_lengths = torch.IntTensor([length] * batch_size).to(torch.int32)
-            (input_ids, ptuning_args) = self.setup_fake_prompts_vila(
+            input_ids, ptuning_args = self.setup_fake_prompts_vila(
                 batch_size, visual_features, first_batch_split_prompts, input_lengths
             )
-            return (input_ids, input_lengths, ptuning_args, visual_features)
+            return input_ids, input_lengths, ptuning_args, visual_features
 
         elif self.model_type == "lita" or self.model_type == "vita":
             visual_input = []
             for i, img in enumerate(image):
-                (visual_features, visual_atts) = self.get_visual_features(img, attention_mask)
+                visual_features, visual_atts = self.get_visual_features(img, attention_mask)
             visual_features = visual_features.unsqueeze(0)
-            (im_tokens, vid_tokens, num_sample_frames) = self.preprocess_lita_visual(visual_features, self.nemo_config)
+            im_tokens, vid_tokens, num_sample_frames = self.preprocess_lita_visual(visual_features, self.nemo_config)
             visual_input.extend([im_tokens, vid_tokens])
 
             input_ids = self.tokenizer_image_token(batch_size, pre_prompt[0] + post_prompt[0], self.tokenizer)
@@ -294,12 +294,12 @@ class MultimodalModelRunner:
                 raise ValueError("Batch size greater than 1 is not supported for LITA and VITA models")
 
             input_lengths = torch.IntTensor([length] * batch_size).to(torch.int32)
-            (input_ids, ptuning_args) = self.setup_fake_prompts_vila(
+            input_ids, ptuning_args = self.setup_fake_prompts_vila(
                 batch_size, visual_input, first_batch_split_prompts, input_lengths
             )
-            return (input_ids, input_lengths, ptuning_args, visual_features)
+            return input_ids, input_lengths, ptuning_args, visual_features
         else:
-            (visual_features, visual_atts) = self.get_visual_features(image, attention_mask)
+            visual_features, visual_atts = self.get_visual_features(image, attention_mask)
             pre_input_ids = self.tokenizer(pre_prompt, return_tensors="pt", padding=True).input_ids
             if post_prompt[0] is not None:
                 post_input_ids = self.tokenizer(post_prompt, return_tensors="pt", padding=True).input_ids
@@ -315,11 +315,9 @@ class MultimodalModelRunner:
 
         input_lengths = torch.IntTensor([length] * batch_size).to(torch.int32)
 
-        (input_ids, ptuning_args) = self.setup_fake_prompts(
-            visual_features, pre_input_ids, post_input_ids, input_lengths
-        )
+        input_ids, ptuning_args = self.setup_fake_prompts(visual_features, pre_input_ids, post_input_ids, input_lengths)
 
-        return (input_ids, input_lengths, ptuning_args, visual_features)
+        return input_ids, input_lengths, ptuning_args, visual_features
 
     @staticmethod
     def tokenizer_image_token(batch_size, prompt, tokenizer, image_token_index=-200):
@@ -383,7 +381,7 @@ class MultimodalModelRunner:
         if not warmup:
             profiler.start("Generate")
 
-        (input_ids, input_lengths, ptuning_args, visual_features) = self.preprocess(
+        input_ids, input_lengths, ptuning_args, visual_features = self.preprocess(
             warmup, pre_prompt, post_prompt, image, attention_mask, batch_size
         )
 
@@ -458,7 +456,7 @@ class MultimodalModelRunner:
         image_embeds = visual_outputs["output"]
         image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(image.device)
 
-        return (image_embeds, image_atts)
+        return image_embeds, image_atts
 
     def setup_fake_prompts(self, visual_features, pre_input_ids, post_input_ids, input_lengths):
         # Assemble fake prompts which points to image embedding actually
@@ -479,7 +477,7 @@ class MultimodalModelRunner:
 
         ptuning_args = self.ptuning_setup(visual_features, input_ids, input_lengths)
 
-        return (input_ids, ptuning_args)
+        return input_ids, ptuning_args
 
     def setup_fake_prompts_vila(self, batch_size, visual_features, split_input_ids, input_lengths):
         if self.model_type == "lita" or self.model_type == "vita":
@@ -535,10 +533,10 @@ class MultimodalModelRunner:
         input_ids = torch.cat(input_ids, dim=1).contiguous().to(torch.int32)
         input_ids = input_ids.reshape(batch_size, -1)
         ptuning_args = self.ptuning_setup(visual_features, input_ids, input_lengths)
-        return (input_ids, ptuning_args)
+        return input_ids, ptuning_args
 
     def preprocess_lita_visual(self, visual_features, config):
-        (b, t, s, d) = visual_features.shape
+        b, t, s, d = visual_features.shape
 
         num_frames = t
         if (
@@ -552,7 +550,7 @@ class MultimodalModelRunner:
             im_features = visual_features[:, idx, ...]
 
             vid_features = einops.reduce(visual_features, "b t s d -> b t d", "mean")
-            return (im_features, vid_features, num_image_frames)
+            return im_features, vid_features, num_image_frames
 
         elif (
             "lita_video_arch" in config["mm_cfg"]["lita"]
@@ -567,7 +565,7 @@ class MultimodalModelRunner:
 
             t_tokens = einops.reduce(visual_features, "b t s d -> b t d", "mean")
 
-            return (t_tokens, s_tokens, pool_size**2)
+            return t_tokens, s_tokens, pool_size**2
 
         else:
             raise ValueError(f"Invalid visual token format: {config['mm_cfg']['lita']['visual_token_format']}")
@@ -596,7 +594,7 @@ class MultimodalModelRunner:
         return [prompt_table, tasks, task_vocab_size]
 
     def expand2square_pt(self, images, background_color):
-        (height, width) = images.shape[-2:]
+        height, width = images.shape[-2:]
         b = len(images)
         background_color = torch.Tensor(background_color)
         if width == height:

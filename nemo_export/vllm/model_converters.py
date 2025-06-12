@@ -90,7 +90,7 @@ class LlamaConverter(ModelConverter):
             linear_proj_weight = state_dict["model.decoder.layers.self_attention.linear_proj.weight"][layer]
             yield (f"model.layers.{layer}.self_attn.o_proj.weight", linear_proj_weight)
 
-            (gate_proj_weight, up_proj_weight) = torch.chunk(
+            gate_proj_weight, up_proj_weight = torch.chunk(
                 state_dict["model.decoder.layers.mlp.linear_fc1.weight"][layer], 2, dim=0
             )
             yield (f"model.layers.{layer}.mlp.gate_proj.weight", gate_proj_weight)
@@ -158,7 +158,7 @@ class MixtralConverter(ModelConverter):
                 linear_fc1_weight = state_dict["model.decoder.layers.mlp.experts.experts.linear_fc1.weight"][layer][
                     expert
                 ]
-                (gate_proj_weight, up_proj_weight) = torch.chunk(linear_fc1_weight, 2, dim=0)
+                gate_proj_weight, up_proj_weight = torch.chunk(linear_fc1_weight, 2, dim=0)
                 yield (f"model.layers.{layer}.block_sparse_moe.experts.{expert}.w1.weight", gate_proj_weight)
                 yield (f"model.layers.{layer}.block_sparse_moe.experts.{expert}.w3.weight", up_proj_weight)
 

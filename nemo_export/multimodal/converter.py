@@ -401,4 +401,4 @@ def convert_mllama_nemo_to_hf(checkpoint_path, processor_name):
     new_state_dict.update(convert_gate(state_dict))
     new_state_dict.update(convert_embedding(state_dict))
 
-    return (new_state_dict, convert_mllama_config(vision_model_config, language_model_config))
+    return new_state_dict, convert_mllama_config(vision_model_config, language_model_config)

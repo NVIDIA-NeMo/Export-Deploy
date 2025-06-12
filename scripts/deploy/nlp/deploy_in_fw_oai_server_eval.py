@@ -47,7 +47,6 @@ def get_parser():
         "--max_input_len", type=int, default=4096, help="Max input length for the underlying Triton server"
     )
     parser.add_argument("--max_batch_size", type=int, default=8, help="Max batch size for the underlying Triton server")
-    parser.add_argument("--max_batch_size", type=int, default=8, help="Max batch size for the underlying Triton server")
     return parser
 
 

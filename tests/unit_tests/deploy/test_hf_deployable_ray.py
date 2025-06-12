@@ -204,7 +204,7 @@ class TestHFRayDeployable:
 
                 # Verify max_memory_dict was created
                 mock_hf_model.assert_called_once()
-                (args, kwargs) = mock_hf_model.call_args
+                args, kwargs = mock_hf_model.call_args
                 assert kwargs["device_map"] == "balanced"
                 assert kwargs["max_memory"] == {0: "75GiB", 1: "75GiB"}
 

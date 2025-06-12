@@ -138,7 +138,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         random_seed: Optional[int] = None,
         legacy_ckpt: bool = False,
     ):
-        (self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer) = create_mcore_engine(
+        self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = create_mcore_engine(
             num_devices=num_devices,
             num_nodes=num_nodes,
             path=Path(nemo_checkpoint_filepath),
@@ -205,7 +205,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             torch.distributed.broadcast(message, src=0)
             if message == 0:
                 prompts = broadcast_list(data=[None], src=0)
-                (temperature, top_k, top_p, num_tokens_to_generate, log_probs) = broadcast_list(data=[None], src=0)
+                temperature, top_k, top_p, num_tokens_to_generate, log_probs = broadcast_list(data=[None], src=0)
 
                 inference_params = CommonInferenceParams(
                     temperature=temperature,
