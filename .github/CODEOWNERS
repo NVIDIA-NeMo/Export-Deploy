@@ -3,6 +3,8 @@ docker/ @nvidia-nemo/automation
 pyproject.toml @nvidia-nemo/automation
 uv.lock @nvidia-nemo/automation
 
-nemo_export_deploy @janekl @Laplasjan107 @oyilmaz-nvidia
-scripts @janekl @Laplasjan107 @oyilmaz-nvidia
+nemo_export @janekl @Laplasjan107 @oyilmaz-nvidia @pthombre
+nemo_deploy @janekl @Laplasjan107 @oyilmaz-nvidia @pthombre
+nemo_export_deploy @janekl @Laplasjan107 @oyilmaz-nvidia @pthombre
+scripts @janekl @Laplasjan107 @oyilmaz-nvidia @pthombre
 README.md @janekl @Laplasjan107 @oyilmaz-nvidia
