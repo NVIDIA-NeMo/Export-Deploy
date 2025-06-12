@@ -11,18 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 import os
 import os.path
-import shutil
-import tarfile
-import tempfile
-import urllib.request
-from os import mkdir
-from os.path import dirname, exists, getsize, join
 from pathlib import Path
 from shutil import rmtree
-from typing import Tuple
 
 import pytest
 
