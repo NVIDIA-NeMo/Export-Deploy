@@ -19,10 +19,25 @@ PATCH = 0
 PRE_RELEASE = "rc0"
 
 # Use the following formatting: (major, minor, patch, pre-release)
-VERSION = (MAJOR, MINOR, PATCH, PRE_RELEASE)
+VERSION = (
+    MAJOR,
+    MINOR,
+    PATCH,
+    PRE_RELEASE,
+)
 
-__shortversion__ = ".".join(map(str, VERSION[:3]))
-__version__ = ".".join(map(str, VERSION[:3])) + "".join(VERSION[3:])
+__shortversion__ = ".".join(
+    map(
+        str,
+        VERSION[:3],
+    )
+)
+__version__ = ".".join(
+    map(
+        str,
+        VERSION[:3],
+    )
+) + "".join(VERSION[3:])
 
 __package_name__ = "nemo_export_deploy"
 __contact_names__ = "NVIDIA"

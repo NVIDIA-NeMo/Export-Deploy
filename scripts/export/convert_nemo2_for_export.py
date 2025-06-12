@@ -27,10 +27,16 @@ Example to run this conversion script:
 
 import os
 import shutil
-from argparse import ArgumentParser
+from argparse import (
+    ArgumentParser,
+)
 
-from nemo.lightning import io
-from omegaconf import OmegaConf
+from nemo.lightning import (
+    io,
+)
+from omegaconf import (
+    OmegaConf,
+)
 
 
 def get_args():
@@ -70,22 +76,44 @@ def get_args():
     return args
 
 
-def main(args):
+def main(
+    args,
+):
     input_path = args.input_path
     output_path = args.output_path
-    weight_path = os.path.join(output_path, "model_weights")
+    weight_path = os.path.join(
+        output_path,
+        "model_weights",
+    )
 
     if os.path.exists(output_path):
         shutil.rmtree(output_path)
         print(f"Remove existing {output_path}")
 
-    os.makedirs(output_path, exist_ok=True)
+    os.makedirs(
+        output_path,
+        exist_ok=True,
+    )
 
-    config = io.load_context(input_path, subpath="model.config")
+    config = io.load_context(
+        input_path,
+        subpath="model.config",
+    )
 
     config_dict = {}
-    for k, v in config.__dict__.items():
-        if isinstance(v, (float, int, str, bool)):
+    for (
+        k,
+        v,
+    ) in config.__dict__.items():
+        if isinstance(
+            v,
+            (
+                float,
+                int,
+                str,
+                bool,
+            ),
+        ):
             config_dict[k] = v
         elif k == "activation_func":
             config_dict["activation"] = v.__name__
@@ -105,16 +133,37 @@ def main(args):
     }
 
     yaml_config = OmegaConf.create(config_dict)
-    OmegaConf.save(config=yaml_config, f=os.path.join(output_path, "model_config.yaml"))
+    OmegaConf.save(
+        config=yaml_config,
+        f=os.path.join(
+            output_path,
+            "model_config.yaml",
+        ),
+    )
 
     if args.symbolic_link:
-        os.symlink(input_path, weight_path)
+        os.symlink(
+            input_path,
+            weight_path,
+        )
     else:
-        os.makedirs(weight_path, exist_ok=True)
+        os.makedirs(
+            weight_path,
+            exist_ok=True,
+        )
         for file in os.listdir(input_path):
-            source_path = os.path.join(input_path, file)
-            target_path = os.path.join(weight_path, file)
-            shutil.copy(source_path, target_path)
+            source_path = os.path.join(
+                input_path,
+                file,
+            )
+            target_path = os.path.join(
+                weight_path,
+                file,
+            )
+            shutil.copy(
+                source_path,
+                target_path,
+            )
 
 
 if __name__ == "__main__":

@@ -21,13 +21,20 @@ import sys
 import torch
 import torch.distributed as dist
 
-from nemo_deploy import DeployPyTriton
-from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from nemo_deploy import (
+    DeployPyTriton,
+)
+from nemo_deploy.nlp.hf_deployable import (
+    HuggingFaceLLMDeploy,
+)
 
 LOGGER = logging.getLogger("NeMo")
 
 
-def setup_torch_dist(rank, world_size):
+def setup_torch_dist(
+    rank,
+    world_size,
+):
     """Sets up PyTorch distributed training environment.
 
     Args:
@@ -36,10 +43,16 @@ def setup_torch_dist(rank, world_size):
     """
     torch.cuda.set_device(rank)
     # Initialize the process group
-    dist.init_process_group("nccl", rank=rank, world_size=world_size)
+    dist.init_process_group(
+        "nccl",
+        rank=rank,
+        world_size=world_size,
+    )
 
 
-def get_args(argv):
+def get_args(
+    argv,
+):
     """Get command line arguments for deploying HuggingFace models to Triton.
 
     Returns:
@@ -64,9 +77,7 @@ def get_args(argv):
         "-hp",
         "--hf_model_id_path",
         type=str,
-        help="Path to local HuggingFace "
-        "model directory or model ID from HuggingFace "
-        "Hub",
+        help="Path to local HuggingFace model directory or model ID from HuggingFace Hub",
     )
     parser.add_argument(
         "-t",
@@ -81,12 +92,15 @@ def get_args(argv):
         "-dvm",
         "--device_map",
         nargs="?",
-        choices=["auto", "balanced", "balanced_low_0", "sequential"],
+        choices=[
+            "auto",
+            "balanced",
+            "balanced_low_0",
+            "sequential",
+        ],
         default=None,
         type=str,
-        help="Device mapping "
-        "strategy for model placement "
-        "(e.g. 'auto', 'sequential', etc)",
+        help="Device mapping strategy for model placement (e.g. 'auto', 'sequential', etc)",
     )
     parser.add_argument(
         "-tpp",
@@ -150,7 +164,9 @@ def get_args(argv):
     return args
 
 
-def hf_deploy(argv):
+def hf_deploy(
+    argv,
+):
     """Deploy a HuggingFace model to Triton Inference Server.
 
     This function handles the deployment workflow including:
@@ -177,15 +193,16 @@ def hf_deploy(argv):
     LOGGER.info(args)
 
     if args.hf_model_id_path is None:
-        raise ValueError(
-            "In-Framework deployment requires a Hugging Face model ID or path."
-        )
+        raise ValueError("In-Framework deployment requires a Hugging Face model ID or path.")
 
     if "RANK" in os.environ:
         rank = int(os.environ["RANK"])
         world_size = int(os.environ["WORLD_SIZE"])
         if world_size > 1:
-            setup_torch_dist(rank, world_size)
+            setup_torch_dist(
+                rank,
+                world_size,
+            )
     else:
         if args.device_map == "auto":
             LOGGER.warning(
@@ -224,10 +241,7 @@ def hf_deploy(argv):
             LOGGER.info("Triton deploy function will be called.")
             nm.deploy()
         except Exception as error:
-            LOGGER.error(
-                "Error message has occurred during deploy function. Error message: "
-                + str(error)
-            )
+            LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
             if dist.is_initialized():
                 dist.barrier()
             return
@@ -236,15 +250,17 @@ def hf_deploy(argv):
             LOGGER.info("Model serving on Triton will be started.")
             nm.serve()
         except Exception as error:
-            LOGGER.error(
-                "Error message has occurred during deploy function. Error message: "
-                + str(error)
-            )
+            LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
 
         if dist.is_initialized():
             if dist.get_world_size() > 1:
                 torch.distributed.broadcast(
-                    torch.tensor([1], dtype=torch.long, device="cuda"), src=0
+                    torch.tensor(
+                        [1],
+                        dtype=torch.long,
+                        device="cuda",
+                    ),
+                    src=0,
                 )
 
         LOGGER.info("Model serving will be stopped.")

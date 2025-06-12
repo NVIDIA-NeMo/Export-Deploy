@@ -18,7 +18,9 @@ import os
 import sys
 import tempfile
 
-from nemo_deploy import DeployPyTriton
+from nemo_deploy import (
+    DeployPyTriton,
+)
 
 # Configure the NeMo logger to look the same as vLLM
 logging.basicConfig(
@@ -28,24 +30,39 @@ logging.basicConfig(
 LOGGER = logging.getLogger("NeMo")
 
 try:
-    from nemo_export.vllm_exporter import vLLMExporter
+    from nemo_export.vllm_exporter import (
+        vLLMExporter,
+    )
 except Exception as e:
     LOGGER.error(f"Cannot import the vLLM exporter. {type(e).__name__}: {e}")
     sys.exit(1)
 
 
-def get_args(argv):
+def get_args(
+    argv,
+):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Export NeMo models to vLLM and deploy them on Triton",
     )
-    parser.add_argument("-nc", "--nemo_checkpoint", type=str, help="Source .nemo file")
+    parser.add_argument(
+        "-nc",
+        "--nemo_checkpoint",
+        type=str,
+        help="Source .nemo file",
+    )
     parser.add_argument(
         "-mt",
         "--model_type",
         type=str,
         required=True,
-        choices=["llama", "mistral", "mixtral", "starcoder2", "gemma"],
+        choices=[
+            "llama",
+            "mistral",
+            "mixtral",
+            "starcoder2",
+            "gemma",
+        ],
         help="Type of the model",
     )
     parser.add_argument(
@@ -93,7 +110,12 @@ def get_args(argv):
     parser.add_argument(
         "-dt",
         "--dtype",
-        choices=["bfloat16", "float16", "fp8", "int8"],
+        choices=[
+            "bfloat16",
+            "float16",
+            "fp8",
+            "int8",
+        ],
         default="bfloat16",
         type=str,
         help="dtype of the model on vLLM",
@@ -138,7 +160,12 @@ def get_args(argv):
         "-ws",
         "--weight_storage",
         default="auto",
-        choices=["auto", "cache", "file", "memory"],
+        choices=[
+            "auto",
+            "cache",
+            "file",
+            "memory",
+        ],
         help='Strategy for storing converted weights for vLLM: "file" - always write weights into a file, '
         '"memory" - always do an in-memory conversion, "cache" - reuse existing files if they are '
         'newer than the nemo checkpoint, "auto" - use "cache" for multi-GPU runs and "memory" '
@@ -161,7 +188,10 @@ def get_args(argv):
     return args
 
 
-def get_vllm_deployable(args, model_dir):
+def get_vllm_deployable(
+    args,
+    model_dir,
+):
     exporter = vLLMExporter()
     exporter.export(
         nemo_checkpoint=args.nemo_checkpoint,
@@ -178,7 +208,9 @@ def get_vllm_deployable(args, model_dir):
     return exporter
 
 
-def nemo_deploy(argv):
+def nemo_deploy(
+    argv,
+):
     args = get_args(argv)
 
     if args.debug_mode:
@@ -207,7 +239,10 @@ def nemo_deploy(argv):
         os.makedirs(model_dir)
 
     try:
-        triton_deployable = get_vllm_deployable(args, model_dir=model_dir)
+        triton_deployable = get_vllm_deployable(
+            args,
+            model_dir=model_dir,
+        )
 
         nm = DeployPyTriton(
             model=triton_deployable,
@@ -227,10 +262,7 @@ def nemo_deploy(argv):
         nm.stop()
 
     except Exception as error:
-        LOGGER.error(
-            "An error has occurred while setting up or serving the model. Error message: "
-            + str(error)
-        )
+        LOGGER.error("An error has occurred while setting up or serving the model. Error message: " + str(error))
         return
 
     # Clean up the temporary directory

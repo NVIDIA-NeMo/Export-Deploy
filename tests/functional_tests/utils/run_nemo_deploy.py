@@ -17,22 +17,39 @@ import argparse
 import json
 import shutil
 import time
-from pathlib import Path
+from pathlib import (
+    Path,
+)
 
 import torch
 
-from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployable
+from nemo_deploy.nlp.megatronllm_deployable import (
+    MegatronLLMDeployable,
+)
 
 run_export_tests = True
 try:
-    from nemo_deploy import DeployPyTriton
-    from nemo_deploy.nlp import NemoQueryLLM, NemoQueryLLMPyTorch
-    from nemo_export.tensorrt_llm import TensorRTLLM
+    from nemo_deploy import (
+        DeployPyTriton,
+    )
+    from nemo_deploy.nlp import (
+        NemoQueryLLM,
+        NemoQueryLLMPyTorch,
+    )
+    from nemo_export.tensorrt_llm import (
+        TensorRTLLM,
+    )
 except Exception as e:
     run_export_tests = False
 
 
-def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=None):
+def get_accuracy_with_lambada(
+    model,
+    nq,
+    task_ids,
+    lora_uids,
+    test_data_path=None,
+):
     # lambada dataset based accuracy test, which includes more than 5000 sentences.
     # Use generated last token with original text's last token for accuracy comparison.
     # If the generated last token start with the original token, trtllm_correct make an increment.
@@ -48,7 +65,10 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=Non
     all_expected_outputs = []
     all_trtllm_outputs = []
 
-    with open(test_data_path, "r") as file:
+    with open(
+        test_data_path,
+        "r",
+    ) as file:
         records = json.load(file)
 
         eval_start = time.perf_counter()
@@ -109,9 +129,7 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=Non
     trtllm_accuracy_relaxed = trtllm_correct_relaxed / len(all_expected_outputs)
 
     trtllm_deployed_accuracy = trtllm_deployed_correct / len(all_expected_outputs)
-    trtllm_deployed_accuracy_relaxed = trtllm_deployed_correct_relaxed / len(
-        all_expected_outputs
-    )
+    trtllm_deployed_accuracy_relaxed = trtllm_deployed_correct_relaxed / len(all_expected_outputs)
 
     evaluation_time = eval_end - eval_start
 
@@ -133,7 +151,10 @@ def run_in_framework_inference(
     max_input_len=None,
     max_output_len=None,
 ):
-    model = MegatronLLMDeployable(checkpoint_path, n_gpu)
+    model = MegatronLLMDeployable(
+        checkpoint_path,
+        n_gpu,
+    )
     nm = DeployPyTriton(
         model=model,
         triton_model_name=model_name,
@@ -141,17 +162,29 @@ def run_in_framework_inference(
     )
     nm.deploy()
     nm.run()
-    nq = NemoQueryLLMPyTorch(url="localhost:8000", model_name=model_name)
+    nq = NemoQueryLLMPyTorch(
+        url="localhost:8000",
+        model_name=model_name,
+    )
 
     output_deployed = nq.query_llm(
         prompts=prompt,
     )
 
-    print("Output: ", output_deployed)
+    print(
+        "Output: ",
+        output_deployed,
+    )
 
     nm.stop()
 
-    return None, None, None, None, None
+    return (
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
 
 
 def run_trt_llm_inference(
@@ -187,12 +220,24 @@ def run_trt_llm_inference(
         if n_gpu > torch.cuda.device_count():
             print(
                 "Path: {0} and model: {1} with {2} gpus won't be tested since available # of gpus = {3}".format(
-                    checkpoint_path, model_name, n_gpu, torch.cuda.device_count()
+                    checkpoint_path,
+                    model_name,
+                    n_gpu,
+                    torch.cuda.device_count(),
                 )
             )
-            return None, None, None, None, None
+            return (
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
 
-        Path(trt_llm_model_dir).mkdir(parents=True, exist_ok=True)
+        Path(trt_llm_model_dir).mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
         if debug:
             print("")
@@ -204,7 +249,9 @@ def run_trt_llm_inference(
 
             print(
                 "Path: {0} and model: {1} with {2} gpus will be tested".format(
-                    checkpoint_path, model_name, n_gpu
+                    checkpoint_path,
+                    model_name,
+                    n_gpu,
                 )
             )
 
@@ -221,7 +268,13 @@ def run_trt_llm_inference(
                     print("---- PTuning enabled.")
             else:
                 print("---- PTuning could not be enabled and skipping the test.")
-                return None, None, None, None, None
+                return (
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                )
 
         lora_ckpt_list = None
         lora_uids = None
@@ -231,17 +284,29 @@ def run_trt_llm_inference(
         if lora:
             if Path(lora_checkpoint).exists():
                 lora_ckpt_list = [lora_checkpoint]
-                lora_uids = ["0", "-1", "0"]
+                lora_uids = [
+                    "0",
+                    "-1",
+                    "0",
+                ]
                 use_lora_plugin = "bfloat16"
                 lora_target_modules = ["attn_qkv"]
                 if debug:
                     print("---- LoRA enabled.")
             else:
                 print("---- LoRA could not be enabled and skipping the test.")
-                return None, None, None, None, None
+                return (
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                )
 
         trt_llm_exporter = TensorRTLLM(
-            trt_llm_model_dir, lora_ckpt_list, load_model=False
+            trt_llm_model_dir,
+            lora_ckpt_list,
+            load_model=False,
         )
 
         trt_llm_exporter.export(
@@ -297,7 +362,10 @@ def run_trt_llm_inference(
             )
             nm.deploy()
             nm.run()
-            nq = NemoQueryLLM(url="localhost:8000", model_name=model_name)
+            nq = NemoQueryLLM(
+                url="localhost:8000",
+                model_name=model_name,
+            )
 
             output_deployed = nq.query_llm(
                 prompts=prompt,
@@ -310,18 +378,31 @@ def run_trt_llm_inference(
 
         if debug:
             print("")
-            print("--- Prompt: ", prompt)
+            print(
+                "--- Prompt: ",
+                prompt,
+            )
             print("")
-            print("--- Output: ", output)
+            print(
+                "--- Output: ",
+                output,
+            )
             print("")
             print("")
-            print("--- Output deployed: ", output_deployed)
+            print(
+                "--- Output deployed: ",
+                output_deployed,
+            )
             print("")
 
         if run_accuracy:
             print("Start model accuracy testing ...")
             result = get_accuracy_with_lambada(
-                trt_llm_exporter, nq, task_ids, lora_uids, test_data_path
+                trt_llm_exporter,
+                nq,
+                task_ids,
+                lora_uids,
+                test_data_path,
             )
             if test_deployment:
                 nm.stop()
@@ -336,7 +417,13 @@ def run_trt_llm_inference(
         if not save_engine:
             shutil.rmtree(trt_llm_model_dir)
 
-        return None, None, None, None, None
+        return (
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
     else:
         raise Exception("Checkpoint {0} could not be found.".format(checkpoint_path))
 
@@ -347,7 +434,10 @@ def test_cpp_runtime(
     max_output_len,
     debug,
 ):
-    trt_llm_exporter = TensorRTLLM(engine_path, load_model=True)
+    trt_llm_exporter = TensorRTLLM(
+        engine_path,
+        load_model=True,
+    )
     output = trt_llm_exporter.forward(
         input_texts=prompt,
         max_output_len=max_output_len,
@@ -358,7 +448,10 @@ def test_cpp_runtime(
 
     if debug:
         print("")
-        print("--- Output deployed with cpp runtime: ", output)
+        print(
+            "--- Output deployed with cpp runtime: ",
+            output,
+        )
         print("")
 
 
@@ -463,7 +556,11 @@ def get_args():
         type=str,
         default="False",
     )
-    parser.add_argument("--streaming", default=False, action="store_true")
+    parser.add_argument(
+        "--streaming",
+        default=False,
+        action="store_true",
+    )
     parser.add_argument(
         "--test_deployment",
         type=str,
@@ -490,7 +587,11 @@ def get_args():
         nargs="?",
         const=None,
         default="TensorRT-LLM",
-        choices=["TensorRT-LLM", "vLLM", "In-Framework"],
+        choices=[
+            "TensorRT-LLM",
+            "vLLM",
+            "In-Framework",
+        ],
         help="Different options to deploy nemo model.",
     )
     parser.add_argument(
@@ -502,7 +603,9 @@ def get_args():
     return parser.parse_args()
 
 
-def run_inference_tests(args):
+def run_inference_tests(
+    args,
+):
     if args.test_deployment == "True":
         args.test_deployment = True
     else:
@@ -524,7 +627,10 @@ def run_inference_tests(args):
 
     result_dic = {}
 
-    prompt_template = ["The capital of France is", "Largest animal in the sea is"]
+    prompt_template = [
+        "The capital of France is",
+        "Largest animal in the sea is",
+    ]
     n_gpus = args.min_gpus
     if args.max_gpus is None:
         args.max_gpus = args.min_gpus
@@ -574,7 +680,10 @@ def run_inference_tests(args):
     test_result = "PASS"
     print_separator = False
     print("============= Test Summary ============")
-    for i, results in result_dic.items():
+    for (
+        i,
+        results,
+    ) in result_dic.items():
         if not results[0] is None and not results[1] is None:
             if print_separator:
                 print("---------------------------------------")
@@ -584,7 +693,10 @@ def run_inference_tests(args):
                 "Relaxed Model Accuracy:          {:.4f}\n"
                 "Deployed Model Accuracy:         {:.4f}\n"
                 "Deployed Relaxed Model Accuracy: {:.4f}\n"
-                "Evaluation Time [s]:             {:.2f}".format(i, *results)
+                "Evaluation Time [s]:             {:.2f}".format(
+                    i,
+                    *results,
+                )
             )
             print_separator = True
             if results[1] < 0.5:

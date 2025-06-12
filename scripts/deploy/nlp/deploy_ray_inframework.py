@@ -18,8 +18,12 @@ import multiprocessing
 import signal
 import sys
 
-from nemo_deploy.deploy_ray import DeployRay
-from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
+from nemo_deploy.deploy_ray import (
+    DeployRay,
+)
+from nemo_deploy.nlp.megatronllm_deployable_ray import (
+    MegatronRayDeployable,
+)
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -139,7 +143,11 @@ def parse_args():
     return parser.parse_args()
 
 
-def signal_handler(signum, frame, deployer):
+def signal_handler(
+    signum,
+    frame,
+    deployer,
+):
     """Handle signal interrupts and gracefully shutdown the deployer."""
     LOGGER.info("Received interrupt signal. Shutting down gracefully...")
     deployer.stop()
@@ -165,19 +173,15 @@ def main():
     # Validate the parallelism configuration
     # Each replica should use: tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size GPUs
     parallelism_per_replica = (
-        args.tensor_model_parallel_size
-        * args.pipeline_model_parallel_size
-        * args.context_parallel_size
+        args.tensor_model_parallel_size * args.pipeline_model_parallel_size * args.context_parallel_size
     )
 
     if parallelism_per_replica != gpus_per_replica:
         LOGGER.error(
-            f"Parallelism per replica ({parallelism_per_replica}) must equal "
-            f"GPUs per replica ({gpus_per_replica})"
+            f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
         )
         LOGGER.error(
-            f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, "
-            f"GPUs per replica: {gpus_per_replica}"
+            f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, GPUs per replica: {gpus_per_replica}"
         )
         LOGGER.error(
             f"Each replica needs: tensor_parallel({args.tensor_model_parallel_size}) * "
@@ -186,9 +190,7 @@ def main():
         )
         sys.exit(1)
 
-    LOGGER.info(
-        f"Configuration: {args.num_replicas} replicas, {gpus_per_replica} GPUs per replica"
-    )
+    LOGGER.info(f"Configuration: {args.num_replicas} replicas, {gpus_per_replica} GPUs per replica")
 
     # Initialize Ray deployment
     ray_deployer = DeployRay(
@@ -204,16 +206,28 @@ def main():
 
     # Set up signal handlers
     signal.signal(
-        signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer)
+        signal.SIGINT,
+        lambda signum, frame: signal_handler(
+            signum,
+            frame,
+            ray_deployer,
+        ),
     )
     signal.signal(
         signal.SIGTERM,
-        lambda signum, frame: signal_handler(signum, frame, ray_deployer),
+        lambda signum, frame: signal_handler(
+            signum,
+            frame,
+            ray_deployer,
+        ),
     )
 
     try:
         # Start Ray Serve
-        ray_deployer.start(host=args.host, port=args.port)
+        ray_deployer.start(
+            host=args.host,
+            port=args.port,
+        )
 
         # Create the Multi-Rank Megatron model deployment
         app = MegatronRayDeployable.options(
@@ -237,7 +251,10 @@ def main():
         )
 
         # Deploy the model
-        ray_deployer.run(app, args.model_id)
+        ray_deployer.run(
+            app,
+            args.model_id,
+        )
 
         LOGGER.info(f"Megatron model deployed successfully at {args.host}:{args.port}")
         LOGGER.info("Press Ctrl+C to stop the deployment")

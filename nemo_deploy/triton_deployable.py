@@ -13,20 +13,30 @@
 # limitations under the License.
 
 
-from abc import ABC, abstractmethod
+from abc import (
+    ABC,
+    abstractmethod,
+)
 
 import numpy as np
 
 
 class ITritonDeployable(ABC):
     @abstractmethod
-    def get_triton_input(self):
+    def get_triton_input(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def get_triton_output(self):
+    def get_triton_output(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def triton_infer_fn(self, **inputs: np.ndarray):
+    def triton_infer_fn(
+        self,
+        **inputs: np.ndarray,
+    ):
         pass

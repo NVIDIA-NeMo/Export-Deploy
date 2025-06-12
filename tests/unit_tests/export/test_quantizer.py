@@ -13,12 +13,20 @@
 # limitations under the License.
 
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import pytest
-from omegaconf import DictConfig
+from omegaconf import (
+    DictConfig,
+)
 
-from nemo_export.quantize.quantizer import QUANT_CFG_CHOICES, Quantizer
+from nemo_export.quantize.quantizer import (
+    QUANT_CFG_CHOICES,
+    Quantizer,
+)
 
 
 @pytest.fixture
@@ -48,32 +56,61 @@ def basic_export_config():
 
 
 class TestQuantizer:
-    def test_init_valid_configs(self, basic_quantization_config, basic_export_config):
-        quantizer = Quantizer(basic_quantization_config, basic_export_config)
+    def test_init_valid_configs(
+        self,
+        basic_quantization_config,
+        basic_export_config,
+    ):
+        quantizer = Quantizer(
+            basic_quantization_config,
+            basic_export_config,
+        )
         assert quantizer.quantization_config == basic_quantization_config
         assert quantizer.export_config == basic_export_config
         assert quantizer.quant_cfg == QUANT_CFG_CHOICES["int8"]
 
     def test_init_invalid_algorithm(
-        self, basic_quantization_config, basic_export_config
+        self,
+        basic_quantization_config,
+        basic_export_config,
     ):
         basic_quantization_config.algorithm = "invalid_algo"
         with pytest.raises(AssertionError):
-            Quantizer(basic_quantization_config, basic_export_config)
+            Quantizer(
+                basic_quantization_config,
+                basic_export_config,
+            )
 
-    def test_init_invalid_dtype(self, basic_quantization_config, basic_export_config):
+    def test_init_invalid_dtype(
+        self,
+        basic_quantization_config,
+        basic_export_config,
+    ):
         basic_export_config.dtype = "32"
         with pytest.raises(AssertionError):
-            Quantizer(basic_quantization_config, basic_export_config)
+            Quantizer(
+                basic_quantization_config,
+                basic_export_config,
+            )
 
-    def test_null_algorithm(self, basic_quantization_config, basic_export_config):
+    def test_null_algorithm(
+        self,
+        basic_quantization_config,
+        basic_export_config,
+    ):
         basic_quantization_config.algorithm = None
-        quantizer = Quantizer(basic_quantization_config, basic_export_config)
+        quantizer = Quantizer(
+            basic_quantization_config,
+            basic_export_config,
+        )
         assert quantizer.quant_cfg is None
 
     @patch("nemo_export.quantize.quantizer.dist")
     def test_quantize_method(
-        self, mock_dist, basic_quantization_config, basic_export_config
+        self,
+        mock_dist,
+        basic_quantization_config,
+        basic_export_config,
     ):
         mock_dist.get_rank.return_value = 0
 
@@ -81,19 +118,30 @@ class TestQuantizer:
         mock_model = MagicMock()
         mock_forward_loop = MagicMock()
 
-        quantizer = Quantizer(basic_quantization_config, basic_export_config)
+        quantizer = Quantizer(
+            basic_quantization_config,
+            basic_export_config,
+        )
 
         with patch("modelopt.torch.quantization.quantize") as mock_quantize:
             with patch("modelopt.torch.quantization.print_quant_summary"):
-                quantizer.quantize(mock_model, mock_forward_loop)
+                quantizer.quantize(
+                    mock_model,
+                    mock_forward_loop,
+                )
 
                 # Verify quantize was called with correct arguments
                 mock_quantize.assert_called_once_with(
-                    mock_model, QUANT_CFG_CHOICES["int8"], mock_forward_loop
+                    mock_model,
+                    QUANT_CFG_CHOICES["int8"],
+                    mock_forward_loop,
                 )
 
     @patch("nemo_export.quantize.quantizer.dist")
-    def test_modify_model_config(self, mock_dist):
+    def test_modify_model_config(
+        self,
+        mock_dist,
+    ):
         mock_config = DictConfig({"sequence_parallel": True})
         modified_config = Quantizer.modify_model_config(mock_config)
 
@@ -104,14 +152,21 @@ class TestQuantizer:
     @patch("nemo_export.quantize.quantizer.dist")
     @patch("nemo_export.quantize.quantizer.export_tensorrt_llm_checkpoint")
     def test_export_method(
-        self, mock_export, mock_dist, basic_quantization_config, basic_export_config
+        self,
+        mock_export,
+        mock_dist,
+        basic_quantization_config,
+        basic_export_config,
     ):
         mock_dist.get_rank.return_value = 0
         mock_model = MagicMock()
         mock_model.cfg.megatron_amp_O2 = False
         mock_model.trainer.num_nodes = 1
 
-        quantizer = Quantizer(basic_quantization_config, basic_export_config)
+        quantizer = Quantizer(
+            basic_quantization_config,
+            basic_export_config,
+        )
 
         with patch("nemo_export.quantize.quantizer.save_artifacts"):
             quantizer.export(mock_model)

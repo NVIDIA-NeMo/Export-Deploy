@@ -20,8 +20,12 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
-from nemo_deploy.utils import broadcast_list
+from nemo_deploy.nlp.hf_deployable import (
+    HuggingFaceLLMDeploy,
+)
+from nemo_deploy.utils import (
+    broadcast_list,
+)
 
 
 @pytest.mark.pleasefixme  # disabled since it required data
@@ -39,22 +43,24 @@ def test_hf_generate():
     )
 
     output = hf_deployable.generate(
-        text_inputs=["What is the color of a banana? ", "Tell me a joke."],
+        text_inputs=[
+            "What is the color of a banana? ",
+            "Tell me a joke.",
+        ],
         max_length=32,
         do_sample=True,
     )
 
     assert len(output) == 2, "Output should have to be a list."
-    assert len(output[0]) > 0, (
-        "First list in the output should have more than 0 elements."
-    )
-    assert len(output[1]) > 0, (
-        "Second list in the output should have more than 0 elements."
-    )
+    assert len(output[0]) > 0, "First list in the output should have more than 0 elements."
+    assert len(output[1]) > 0, "Second list in the output should have more than 0 elements."
 
     # Test output_logits and output_scores
     output = hf_deployable.generate(
-        text_inputs=["What is the color of a banana? ", "Tell me a joke."],
+        text_inputs=[
+            "What is the color of a banana? ",
+            "Tell me a joke.",
+        ],
         max_length=32,
         do_sample=True,
         output_logits=True,
@@ -73,10 +79,15 @@ def test_hf_generate():
 def test_hf_multigpu_generate():
     """Tests HF deployable class's generate function with multiple GPUs."""
 
-    mp.spawn(_run_generate, nprocs=2)
+    mp.spawn(
+        _run_generate,
+        nprocs=2,
+    )
 
 
-def _run_generate(rank):
+def _run_generate(
+    rank,
+):
     """Code to run generate in each rank."""
 
     os.environ["WORLD_SIZE"] = "2"
@@ -85,12 +96,20 @@ def _run_generate(rank):
 
     if rank == 0:
         os.environ["RANK"] = str(rank)
-        dist.init_process_group("nccl", rank=rank, world_size=2)
+        dist.init_process_group(
+            "nccl",
+            rank=rank,
+            world_size=2,
+        )
         _hf_generate_ranks()
         dist.destroy_process_group()
     else:
         os.environ["RANK"] = str(rank)
-        dist.init_process_group("nccl", rank=rank, world_size=2)
+        dist.init_process_group(
+            "nccl",
+            rank=rank,
+            world_size=2,
+        )
         _hf_generate_ranks()
         dist.destroy_process_group()
 
@@ -116,10 +135,23 @@ def _hf_generate_ranks():
         output_logits = False
         output_scores = False
 
-        prompts = ["What is the color of a banana? ", "Tell me a joke."]
+        prompts = [
+            "What is the color of a banana? ",
+            "Tell me a joke.",
+        ]
 
-        dist.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
-        broadcast_list(prompts, src=0)
+        dist.broadcast(
+            torch.tensor(
+                [0],
+                dtype=torch.long,
+                device="cuda",
+            ),
+            src=0,
+        )
+        broadcast_list(
+            prompts,
+            src=0,
+        )
         broadcast_list(
             data=[
                 temperature,
@@ -142,7 +174,14 @@ def _hf_generate_ranks():
             output_logits=output_logits,
             output_scores=output_scores,
         )
-        dist.broadcast(torch.tensor([1], dtype=torch.long, device="cuda"), src=0)
+        dist.broadcast(
+            torch.tensor(
+                [1],
+                dtype=torch.long,
+                device="cuda",
+            ),
+            src=0,
+        )
     else:
         hf_deployable.generate_other_ranks()
 
@@ -150,9 +189,5 @@ def _hf_generate_ranks():
 
     if dist.get_rank() == 0:
         assert len(output) == 2, "Output should have to be a lists."
-        assert len(output[0]) > 0, (
-            "First list in the output should have more than 0 elements."
-        )
-        assert len(output[1]) > 0, (
-            "Second list in the output should have more than 0 elements."
-        )
+        assert len(output[0]) > 0, "First list in the output should have more than 0 elements."
+        assert len(output[1]) > 0, "Second list in the output should have more than 0 elements."

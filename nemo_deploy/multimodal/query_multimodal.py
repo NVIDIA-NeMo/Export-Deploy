@@ -12,17 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from io import BytesIO
+from io import (
+    BytesIO,
+)
 
 import numpy as np
 import requests
-from PIL import Image
+from PIL import (
+    Image,
+)
 
-from nemo_deploy.utils import str_list2numpy
-from pytriton.client import ModelClient
+from nemo_deploy.utils import (
+    str_list2numpy,
+)
+from pytriton.client import (
+    ModelClient,
+)
 
 try:
-    from decord import VideoReader
+    from decord import (
+        VideoReader,
+    )
 except Exception:
     import logging
 
@@ -49,12 +59,20 @@ class NemoQueryMultimodal:
         print("prompts: ", prompts)
     """
 
-    def __init__(self, url, model_name, model_type):
+    def __init__(
+        self,
+        url,
+        model_name,
+        model_type,
+    ):
         self.url = url
         self.model_name = model_name
         self.model_type = model_type
 
-    def setup_media(self, input_media):
+    def setup_media(
+        self,
+        input_media,
+    ):
         """Setup input media."""
         if self.model_type == "video-neva":
             vr = VideoReader(input_media)
@@ -64,19 +82,35 @@ class NemoQueryMultimodal:
             vr = VideoReader(input_media)
             frames = [f.asnumpy() for f in vr]
             subsample_len = self.frame_len(frames)
-            sub_frames = self.get_subsampled_frames(frames, subsample_len)
+            sub_frames = self.get_subsampled_frames(
+                frames,
+                subsample_len,
+            )
             return np.array(sub_frames)
-        elif self.model_type in ["neva", "vila", "mllama"]:
+        elif self.model_type in [
+            "neva",
+            "vila",
+            "mllama",
+        ]:
             if input_media.startswith("http") or input_media.startswith("https"):
-                response = requests.get(input_media, timeout=5)
+                response = requests.get(
+                    input_media,
+                    timeout=5,
+                )
                 media = Image.open(BytesIO(response.content)).convert("RGB")
             else:
                 media = Image.open(input_media).convert("RGB")
-            return np.expand_dims(np.array(media), axis=0)
+            return np.expand_dims(
+                np.array(media),
+                axis=0,
+            )
         else:
             raise RuntimeError(f"Invalid model type {self.model_type}")
 
-    def frame_len(self, frames):
+    def frame_len(
+        self,
+        frames,
+    ):
         """Get frame len."""
         max_frames = 256
         if len(frames) <= max_frames:
@@ -85,9 +119,19 @@ class NemoQueryMultimodal:
             subsample = int(np.ceil(float(len(frames)) / max_frames))
             return int(np.round(float(len(frames)) / subsample))
 
-    def get_subsampled_frames(self, frames, subsample_len):
+    def get_subsampled_frames(
+        self,
+        frames,
+        subsample_len,
+    ):
         """Get subsampled frames."""
-        idx = np.round(np.linspace(0, len(frames) - 1, subsample_len)).astype(int)
+        idx = np.round(
+            np.linspace(
+                0,
+                len(frames) - 1,
+                subsample_len,
+            )
+        ).astype(int)
         sub_frames = [frames[i] for i in idx]
         return sub_frames
 
@@ -110,51 +154,98 @@ class NemoQueryMultimodal:
         inputs = {"input_text": prompts}
 
         media = self.setup_media(input_media)
-        if isinstance(media, dict):
+        if isinstance(
+            media,
+            dict,
+        ):
             inputs.update(media)
         else:
             inputs["input_media"] = np.repeat(
-                media[np.newaxis, :, :, :, :], prompts.shape[0], axis=0
+                media[
+                    np.newaxis,
+                    :,
+                    :,
+                    :,
+                    :,
+                ],
+                prompts.shape[0],
+                axis=0,
             )
 
         if batch_size is not None:
-            inputs["batch_size"] = np.full(prompts.shape, batch_size, dtype=np.int_)
+            inputs["batch_size"] = np.full(
+                prompts.shape,
+                batch_size,
+                dtype=np.int_,
+            )
 
         if max_output_len is not None:
             inputs["max_output_len"] = np.full(
-                prompts.shape, max_output_len, dtype=np.int_
+                prompts.shape,
+                max_output_len,
+                dtype=np.int_,
             )
 
         if top_k is not None:
-            inputs["top_k"] = np.full(prompts.shape, top_k, dtype=np.int_)
+            inputs["top_k"] = np.full(
+                prompts.shape,
+                top_k,
+                dtype=np.int_,
+            )
 
         if top_p is not None:
-            inputs["top_p"] = np.full(prompts.shape, top_p, dtype=np.single)
+            inputs["top_p"] = np.full(
+                prompts.shape,
+                top_p,
+                dtype=np.single,
+            )
 
         if temperature is not None:
-            inputs["temperature"] = np.full(prompts.shape, temperature, dtype=np.single)
+            inputs["temperature"] = np.full(
+                prompts.shape,
+                temperature,
+                dtype=np.single,
+            )
 
         if repetition_penalty is not None:
             inputs["repetition_penalty"] = np.full(
-                prompts.shape, repetition_penalty, dtype=np.single
+                prompts.shape,
+                repetition_penalty,
+                dtype=np.single,
             )
 
         if num_beams is not None:
-            inputs["num_beams"] = np.full(prompts.shape, num_beams, dtype=np.int_)
+            inputs["num_beams"] = np.full(
+                prompts.shape,
+                num_beams,
+                dtype=np.int_,
+            )
 
         if lora_uids is not None:
-            lora_uids = np.char.encode(lora_uids, "utf-8")
-            inputs["lora_uids"] = np.full((prompts.shape[0], len(lora_uids)), lora_uids)
+            lora_uids = np.char.encode(
+                lora_uids,
+                "utf-8",
+            )
+            inputs["lora_uids"] = np.full(
+                (
+                    prompts.shape[0],
+                    len(lora_uids),
+                ),
+                lora_uids,
+            )
 
         with ModelClient(
-            self.url, self.model_name, init_timeout_s=init_timeout
+            self.url,
+            self.model_name,
+            init_timeout_s=init_timeout,
         ) as client:
             result_dict = client.infer_batch(**inputs)
             output_type = client.model_config.outputs[0].dtype
 
             if output_type == np.bytes_:
                 sentences = np.char.decode(
-                    result_dict["outputs"].astype("bytes"), "utf-8"
+                    result_dict["outputs"].astype("bytes"),
+                    "utf-8",
                 )
                 return sentences
             else:

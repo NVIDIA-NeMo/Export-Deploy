@@ -16,7 +16,10 @@
 import os
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import pytest
 import torch.nn as nn
@@ -25,70 +28,192 @@ import torch.nn as nn
 @pytest.mark.run_only_on("GPU")
 class SimpleModel(nn.Module):
     @pytest.mark.run_only_on("GPU")
-    def __init__(self):
+    def __init__(
+        self,
+    ):
         super().__init__()
-        self.conv = nn.Conv2d(3, 64, kernel_size=3, padding=1)
+        self.conv = nn.Conv2d(
+            3,
+            64,
+            kernel_size=3,
+            padding=1,
+        )
         self.relu = nn.ReLU()
 
     @pytest.mark.run_only_on("GPU")
-    def forward(self, x):
+    def forward(
+        self,
+        x,
+    ):
         return self.relu(self.conv(x))
 
 
 @pytest.mark.run_only_on("GPU")
 class TestTensorRTLazyCompiler(unittest.TestCase):
     @pytest.mark.run_only_on("GPU")
-    def setUp(self):
+    def setUp(
+        self,
+    ):
         self.model = SimpleModel()
         self.temp_dir = tempfile.mkdtemp()
-        self.plan_path = os.path.join(self.temp_dir, "test_model.plan")
+        self.plan_path = os.path.join(
+            self.temp_dir,
+            "test_model.plan",
+        )
 
     @pytest.mark.run_only_on("GPU")
-    def tearDown(self):
+    def tearDown(
+        self,
+    ):
         if os.path.exists(self.plan_path):
             os.remove(self.plan_path)
         os.rmdir(self.temp_dir)
 
     @pytest.mark.run_only_on("GPU")
-    def test_get_profile_shapes(self):
-        from nemo_export.tensorrt_lazy_compiler import get_profile_shapes
-
-        input_shape = [1, 3, 224, 224]
-        dynamic_batchsize = [1, 4, 8]
-
-        min_shape, opt_shape, max_shape = get_profile_shapes(
-            input_shape, dynamic_batchsize
+    def test_get_profile_shapes(
+        self,
+    ):
+        from nemo_export.tensorrt_lazy_compiler import (
+            get_profile_shapes,
         )
 
-        self.assertEqual(min_shape, [1, 3, 224, 224])
-        self.assertEqual(opt_shape, [4, 3, 224, 224])
-        self.assertEqual(max_shape, [8, 3, 224, 224])
+        input_shape = [
+            1,
+            3,
+            224,
+            224,
+        ]
+        dynamic_batchsize = [
+            1,
+            4,
+            8,
+        ]
+
+        (
+            min_shape,
+            opt_shape,
+            max_shape,
+        ) = get_profile_shapes(
+            input_shape,
+            dynamic_batchsize,
+        )
+
+        self.assertEqual(
+            min_shape,
+            [
+                1,
+                3,
+                224,
+                224,
+            ],
+        )
+        self.assertEqual(
+            opt_shape,
+            [
+                4,
+                3,
+                224,
+                224,
+            ],
+        )
+        self.assertEqual(
+            max_shape,
+            [
+                8,
+                3,
+                224,
+                224,
+            ],
+        )
 
         # Test with None dynamic_batchsize
-        min_shape, opt_shape, max_shape = get_profile_shapes(input_shape, None)
-        self.assertEqual(min_shape, input_shape)
-        self.assertEqual(opt_shape, input_shape)
-        self.assertEqual(max_shape, input_shape)
+        (
+            min_shape,
+            opt_shape,
+            max_shape,
+        ) = get_profile_shapes(
+            input_shape,
+            None,
+        )
+        self.assertEqual(
+            min_shape,
+            input_shape,
+        )
+        self.assertEqual(
+            opt_shape,
+            input_shape,
+        )
+        self.assertEqual(
+            max_shape,
+            input_shape,
+        )
 
     @pytest.mark.run_only_on("GPU")
-    def test_get_dynamic_axes(self):
-        from nemo_export.tensorrt_lazy_compiler import get_dynamic_axes
+    def test_get_dynamic_axes(
+        self,
+    ):
+        from nemo_export.tensorrt_lazy_compiler import (
+            get_dynamic_axes,
+        )
 
-        profiles = [{"input": [[1, 3, 224, 224], [4, 3, 224, 224], [8, 3, 224, 224]]}]
+        profiles = [
+            {
+                "input": [
+                    [
+                        1,
+                        3,
+                        224,
+                        224,
+                    ],
+                    [
+                        4,
+                        3,
+                        224,
+                        224,
+                    ],
+                    [
+                        8,
+                        3,
+                        224,
+                        224,
+                    ],
+                ]
+            }
+        ]
 
         dynamic_axes = get_dynamic_axes(profiles)
-        self.assertEqual(dynamic_axes, {"input": [0]})
+        self.assertEqual(
+            dynamic_axes,
+            {"input": [0]},
+        )
 
         # Test with empty profiles
         dynamic_axes = get_dynamic_axes([])
-        self.assertEqual(dynamic_axes, {})
+        self.assertEqual(
+            dynamic_axes,
+            {},
+        )
 
     @pytest.mark.run_only_on("GPU")
-    @patch("nemo_export.tensorrt_lazy_compiler.trt_imported", True)
-    @patch("nemo_export.tensorrt_lazy_compiler.polygraphy_imported", True)
-    @patch("torch.cuda.is_available", return_value=True)
-    def test_trt_compile_basic(self, mock_cuda_available):
-        from nemo_export.tensorrt_lazy_compiler import trt_compile
+    @patch(
+        "nemo_export.tensorrt_lazy_compiler.trt_imported",
+        True,
+    )
+    @patch(
+        "nemo_export.tensorrt_lazy_compiler.polygraphy_imported",
+        True,
+    )
+    @patch(
+        "torch.cuda.is_available",
+        return_value=True,
+    )
+    def test_trt_compile_basic(
+        self,
+        mock_cuda_available,
+    ):
+        from nemo_export.tensorrt_lazy_compiler import (
+            trt_compile,
+        )
 
         # Test basic compilation
         compiled_model = trt_compile(
@@ -101,22 +226,52 @@ class TestTensorRTLazyCompiler(unittest.TestCase):
             },
         )
 
-        self.assertEqual(compiled_model, self.model)
-        self.assertTrue(hasattr(compiled_model, "_trt_compiler"))
+        self.assertEqual(
+            compiled_model,
+            self.model,
+        )
+        self.assertTrue(
+            hasattr(
+                compiled_model,
+                "_trt_compiler",
+            )
+        )
 
     @pytest.mark.run_only_on("GPU")
-    @patch("nemo_export.tensorrt_lazy_compiler.trt_imported", False)
-    def test_trt_compile_no_tensorrt(self):
-        from nemo_export.tensorrt_lazy_compiler import trt_compile
+    @patch(
+        "nemo_export.tensorrt_lazy_compiler.trt_imported",
+        False,
+    )
+    def test_trt_compile_no_tensorrt(
+        self,
+    ):
+        from nemo_export.tensorrt_lazy_compiler import (
+            trt_compile,
+        )
 
         # Test when TensorRT is not available
-        compiled_model = trt_compile(self.model, self.plan_path)
-        self.assertEqual(compiled_model, self.model)
-        self.assertFalse(hasattr(compiled_model, "_trt_compiler"))
+        compiled_model = trt_compile(
+            self.model,
+            self.plan_path,
+        )
+        self.assertEqual(
+            compiled_model,
+            self.model,
+        )
+        self.assertFalse(
+            hasattr(
+                compiled_model,
+                "_trt_compiler",
+            )
+        )
 
     @pytest.mark.run_only_on("GPU")
-    def test_trt_compiler_initialization(self):
-        from nemo_export.tensorrt_lazy_compiler import TrtCompiler
+    def test_trt_compiler_initialization(
+        self,
+    ):
+        from nemo_export.tensorrt_lazy_compiler import (
+            TrtCompiler,
+        )
 
         compiler = TrtCompiler(
             self.model,
@@ -128,43 +283,102 @@ class TestTensorRTLazyCompiler(unittest.TestCase):
             logger=MagicMock(),
         )
 
-        self.assertEqual(compiler.plan_path, self.plan_path)
-        self.assertEqual(compiler.precision, "fp16")
-        self.assertEqual(compiler.method, "onnx")
-        self.assertEqual(compiler.input_names, ["x"])
-        self.assertEqual(compiler.output_names, ["output"])
+        self.assertEqual(
+            compiler.plan_path,
+            self.plan_path,
+        )
+        self.assertEqual(
+            compiler.precision,
+            "fp16",
+        )
+        self.assertEqual(
+            compiler.method,
+            "onnx",
+        )
+        self.assertEqual(
+            compiler.input_names,
+            ["x"],
+        )
+        self.assertEqual(
+            compiler.output_names,
+            ["output"],
+        )
 
     @pytest.mark.run_only_on("GPU")
-    def test_trt_compiler_invalid_precision(self):
-        from nemo_export.tensorrt_lazy_compiler import TrtCompiler
+    def test_trt_compiler_invalid_precision(
+        self,
+    ):
+        from nemo_export.tensorrt_lazy_compiler import (
+            TrtCompiler,
+        )
 
         with self.assertRaises(ValueError):
-            TrtCompiler(self.model, self.plan_path, precision="invalid_precision")
+            TrtCompiler(
+                self.model,
+                self.plan_path,
+                precision="invalid_precision",
+            )
 
     @pytest.mark.run_only_on("GPU")
-    def test_trt_compiler_invalid_method(self):
-        from nemo_export.tensorrt_lazy_compiler import TrtCompiler
+    def test_trt_compiler_invalid_method(
+        self,
+    ):
+        from nemo_export.tensorrt_lazy_compiler import (
+            TrtCompiler,
+        )
 
         with self.assertRaises(ValueError):
-            TrtCompiler(self.model, self.plan_path, method="invalid_method")
+            TrtCompiler(
+                self.model,
+                self.plan_path,
+                method="invalid_method",
+            )
 
     @pytest.mark.run_only_on("GPU")
-    @patch("nemo_export.tensorrt_lazy_compiler.trt_imported", True)
-    @patch("nemo_export.tensorrt_lazy_compiler.polygraphy_imported", True)
-    @patch("torch.cuda.is_available", return_value=True)
-    def test_trt_compile_with_submodule(self, mock_cuda_available):
-        from nemo_export.tensorrt_lazy_compiler import trt_compile
+    @patch(
+        "nemo_export.tensorrt_lazy_compiler.trt_imported",
+        True,
+    )
+    @patch(
+        "nemo_export.tensorrt_lazy_compiler.polygraphy_imported",
+        True,
+    )
+    @patch(
+        "torch.cuda.is_available",
+        return_value=True,
+    )
+    def test_trt_compile_with_submodule(
+        self,
+        mock_cuda_available,
+    ):
+        from nemo_export.tensorrt_lazy_compiler import (
+            trt_compile,
+        )
 
         class NestedModel(nn.Module):
-            def __init__(self):
+            def __init__(
+                self,
+            ):
                 super().__init__()
                 self.submodule = SimpleModel()
 
         model = NestedModel()
-        compiled_model = trt_compile(model, self.plan_path, submodule=["submodule"])
+        compiled_model = trt_compile(
+            model,
+            self.plan_path,
+            submodule=["submodule"],
+        )
 
-        self.assertEqual(compiled_model, model)
-        self.assertTrue(hasattr(model.submodule, "_trt_compiler"))
+        self.assertEqual(
+            compiled_model,
+            model,
+        )
+        self.assertTrue(
+            hasattr(
+                model.submodule,
+                "_trt_compiler",
+            )
+        )
 
 
 if __name__ == "__main__":

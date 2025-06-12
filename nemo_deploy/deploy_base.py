@@ -13,8 +13,13 @@
 # limitations under the License.
 
 import logging
-from abc import ABC, abstractmethod
-from nemo_deploy.triton_deployable import ITritonDeployable
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from nemo_deploy.triton_deployable import (
+    ITritonDeployable,
+)
 
 
 LOGGER = logging.getLogger("NeMo")
@@ -47,26 +52,38 @@ class DeployBase(ABC):
         self.streaming = streaming
 
     @abstractmethod
-    def deploy(self):
+    def deploy(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def serve(self):
+    def serve(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def run(self):
+    def run(
+        self,
+    ):
         pass
 
     @abstractmethod
-    def stop(self):
+    def stop(
+        self,
+    ):
         pass
 
-    def _is_model_deployable(self):
-        if not issubclass(type(self.model), ITritonDeployable):
+    def _is_model_deployable(
+        self,
+    ):
+        if not issubclass(
+            type(self.model),
+            ITritonDeployable,
+        ):
             raise Exception(
-                "This model is not deployable to Triton."
-                "nemo_deploy.ITritonDeployable class should be inherited"
+                "This model is not deployable to Triton.nemo_deploy.ITritonDeployable class should be inherited"
             )
         else:
             return True

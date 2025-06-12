@@ -41,7 +41,11 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+]
 
 # -- Options for MyST Parser (Markdown) --------------------------------------
 # MyST Parser settings
@@ -56,7 +60,10 @@ myst_enable_extensions = [
 myst_heading_anchors = 5  # Generates anchor links for headings up to level 5
 
 # -- Options for Autodoc2 ---------------------------------------------------
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(
+    0,
+    os.path.abspath(".."),
+)
 
 autodoc2_packages = [
     "../nemo_export",  # Path to your package relative to conf.py
@@ -68,7 +75,10 @@ autodoc2_output_dir = "apidocs"  # Output directory for autodoc2 (relative to do
 # render google style docstrings.
 # Related Issue: https://github.com/sphinx-extensions2/sphinx-autodoc2/issues/33
 autodoc2_docstring_parser_regexes = [
-    (r".*", "docs.autodoc2_docstrings_parser"),
+    (
+        r".*",
+        "docs.autodoc2_docstrings_parser",
+    ),
 ]
 
 # -- Options for HTML output -------------------------------------------------
@@ -91,4 +101,7 @@ html_theme_options = {
     """
     },
 }
-html_extra_path = ["project.json", "versions1.json"]
+html_extra_path = [
+    "project.json",
+    "versions1.json",
+]

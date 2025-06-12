@@ -18,26 +18,35 @@ import sys
 
 import torch
 
-from nemo_deploy import DeployPyTriton
+from nemo_deploy import (
+    DeployPyTriton,
+)
 
 LOGGER = logging.getLogger("NeMo")
 
 megatron_llm_supported = True
 try:
-    from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
-except Exception as e:
-    LOGGER.warning(
-        f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}"
+    from nemo_deploy.nlp.megatronllm_deployable import (
+        MegatronLLMDeployableNemo2,
     )
+except Exception as e:
+    LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False
 
 
-def get_args(argv):
+def get_args(
+    argv,
+):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Deploy nemo models to Triton",
     )
-    parser.add_argument("-nc", "--nemo_checkpoint", type=str, help="Source .nemo file")
+    parser.add_argument(
+        "-nc",
+        "--nemo_checkpoint",
+        type=str,
+        help="Source .nemo file",
+    )
     parser.add_argument(
         "-tmn",
         "--triton_model_name",
@@ -146,7 +155,9 @@ def get_args(argv):
     return args
 
 
-def nemo_deploy(argv):
+def nemo_deploy(
+    argv,
+):
     args = get_args(argv)
 
     if args.debug_mode:
@@ -191,24 +202,23 @@ def nemo_deploy(argv):
                 LOGGER.info("Triton deploy function will be called.")
                 nm.deploy()
             except Exception as error:
-                LOGGER.error(
-                    "Error message has occurred during deploy function. Error message: "
-                    + str(error)
-                )
+                LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
                 return
 
             try:
                 LOGGER.info("Model serving on Triton will be started.")
                 nm.serve()
             except Exception as error:
-                LOGGER.error(
-                    "Error message has occurred during deploy function. Error message: "
-                    + str(error)
-                )
+                LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
                 return
 
             torch.distributed.broadcast(
-                torch.tensor([1], dtype=torch.long, device="cuda"), src=0
+                torch.tensor(
+                    [1],
+                    dtype=torch.long,
+                    device="cuda",
+                ),
+                src=0,
             )
 
             LOGGER.info("Model serving will be stopped.")

@@ -18,8 +18,12 @@ import multiprocessing
 import signal
 import sys
 
-from nemo_deploy.deploy_ray import DeployRay
-from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
+from nemo_deploy.deploy_ray import (
+    DeployRay,
+)
+from nemo_deploy.nlp.hf_deployable_ray import (
+    HFRayDeployable,
+)
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -135,7 +139,11 @@ def parse_args():
     return parser.parse_args()
 
 
-def signal_handler(signum, frame, deployer):
+def signal_handler(
+    signum,
+    frame,
+    deployer,
+):
     """Handle interrupt signals."""
     LOGGER.info("Received interrupt signal. Shutting down gracefully...")
     deployer.stop()
@@ -164,16 +172,28 @@ def main():
 
     # Set up signal handlers
     signal.signal(
-        signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer)
+        signal.SIGINT,
+        lambda signum, frame: signal_handler(
+            signum,
+            frame,
+            ray_deployer,
+        ),
     )
     signal.signal(
         signal.SIGTERM,
-        lambda signum, frame: signal_handler(signum, frame, ray_deployer),
+        lambda signum, frame: signal_handler(
+            signum,
+            frame,
+            ray_deployer,
+        ),
     )
 
     try:
         # Start Ray Serve
-        ray_deployer.start(host=args.host, port=args.port)
+        ray_deployer.start(
+            host=args.host,
+            port=args.port,
+        )
 
         # Create the HuggingFace model deployment
         app = HFRayDeployable.options(
@@ -194,7 +214,10 @@ def main():
         )
 
         # Deploy the model
-        ray_deployer.run(app, args.model_id)
+        ray_deployer.run(
+            app,
+            args.model_id,
+        )
 
         LOGGER.info(f"Model deployed successfully at {args.host}:{args.port}")
         LOGGER.info("Press Ctrl+C to stop the deployment")

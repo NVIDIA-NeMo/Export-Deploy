@@ -14,7 +14,9 @@
 
 import argparse
 
-from nemo.collections.llm.api import deploy
+from nemo.collections.llm.api import (
+    deploy,
+)
 
 # NOTE: This script is an example script to deploy a nemo2 model in-framework (i.e wo converting the model to any
 # other model) on PyTriton server by exposing the OpenAI API endpoints (v1/completions and v1/chat/completions).

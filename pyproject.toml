@@ -100,17 +100,6 @@ override-dependencies = [
     "urllib3>1.27.0",
 ]
 
-[tool.black]
-line-length = 120
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.venv
-  | build
-)/
-'''
-
 [tool.pytest.ini_options]
 addopts = "--durations=15 -s -rA -x"
 testpaths = ["tests"]
@@ -132,7 +121,7 @@ source = [
 ]
 
 [tool.ruff]
-line-length = 119
+line-length = 120
 
 [tool.ruff.lint]
 # Enable all `pydocstyle` rules, limiting to those that adhere to the

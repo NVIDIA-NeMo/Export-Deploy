@@ -16,11 +16,19 @@ import glob
 import os
 import subprocess
 import warnings
-from typing import List, Optional
+from typing import (
+    List,
+    Optional,
+)
 
-from tensorrt_llm.models import PretrainedConfig
+from tensorrt_llm.models import (
+    PretrainedConfig,
+)
 
-from nemo_export.trt_llm.qnemo.utils import CONFIG_NAME, WEIGHTS_NAME
+from nemo_export.trt_llm.qnemo.utils import (
+    CONFIG_NAME,
+    WEIGHTS_NAME,
+)
 
 
 def qnemo_to_tensorrt_llm(
@@ -46,9 +54,7 @@ def qnemo_to_tensorrt_llm(
     reduce_fusion: bool = True,
 ):
     """Build TensorRT-LLM engine with trtllm-build command in a subprocess."""
-    assert not lora_target_modules, (
-        f"LoRA is not supported for quantized checkpoints, got {lora_target_modules}"
-    )
+    assert not lora_target_modules, f"LoRA is not supported for quantized checkpoints, got {lora_target_modules}"
 
     warnings.warn(
         "Note that setting tensor_parallel_size, pipeline_parallel_size and use_parallel_embedding "
@@ -59,14 +65,20 @@ def qnemo_to_tensorrt_llm(
     )
 
     num_build_workers = len(
-        glob.glob(os.path.join(nemo_checkpoint_path, WEIGHTS_NAME.format("*")))
+        glob.glob(
+            os.path.join(
+                nemo_checkpoint_path,
+                WEIGHTS_NAME.format("*"),
+            )
+        )
     )
-    assert num_build_workers, (
-        f"No TensorRT-LLM weight files found in {nemo_checkpoint_path}"
-    )
+    assert num_build_workers, f"No TensorRT-LLM weight files found in {nemo_checkpoint_path}"
 
     config = PretrainedConfig.from_json_file(
-        os.path.join(nemo_checkpoint_path, CONFIG_NAME)
+        os.path.join(
+            nemo_checkpoint_path,
+            CONFIG_NAME,
+        )
     )
 
     log_level = "warning"
@@ -82,7 +94,10 @@ def qnemo_to_tensorrt_llm(
                 use_fused_mlp = False
     use_fused_mlp = use_fused_mlp and "RecurrentGemma" not in config.architecture
 
-    use_qdq = quant_algo in ["FP8", "W8A8_SQ_PER_CHANNEL"]
+    use_qdq = quant_algo in [
+        "FP8",
+        "W8A8_SQ_PER_CHANNEL",
+    ]
 
     speculative_decoding_mode = "medusa" if "Medusa" in config.architecture else None
 
@@ -96,12 +111,8 @@ def qnemo_to_tensorrt_llm(
     build_cmd += f"--max_beam_width {max_beam_width} "
     build_cmd += f"--max_prompt_embedding_table_size {max_prompt_embedding_table_size} "
     build_cmd += f"--paged_kv_cache {'enable' if paged_kv_cache else 'disable'} "
-    build_cmd += (
-        f"--use_paged_context_fmha {'enable' if paged_context_fmha else 'disable'} "
-    )
-    build_cmd += (
-        f"--remove_input_padding {'enable' if remove_input_padding else 'disable'} "
-    )
+    build_cmd += f"--use_paged_context_fmha {'enable' if paged_context_fmha else 'disable'} "
+    build_cmd += f"--remove_input_padding {'enable' if remove_input_padding else 'disable'} "
     build_cmd += f"--multiple_profiles {'enable' if multiple_profiles else 'disable'} "
     build_cmd += f"--reduce_fusion {'enable' if reduce_fusion else 'disable'} "
     build_cmd += f"--use_fused_mlp {'enable' if use_fused_mlp else 'disable'} "
@@ -123,9 +134,16 @@ def qnemo_to_tensorrt_llm(
     if speculative_decoding_mode:
         build_cmd += f"--speculative_decoding_mode {speculative_decoding_mode} "
 
-    build_cmd = build_cmd.replace("--", "\\\n  --")  # Separate parameters line by line
+    build_cmd = build_cmd.replace(
+        "--",
+        "\\\n  --",
+    )  # Separate parameters line by line
 
     print("trtllm-build command:")
     print(build_cmd)
 
-    subprocess.run(build_cmd, shell=True, check=True)
+    subprocess.run(
+        build_cmd,
+        shell=True,
+        check=True,
+    )

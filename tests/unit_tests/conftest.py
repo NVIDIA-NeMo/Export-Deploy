@@ -18,14 +18,29 @@ import shutil
 import tarfile
 import tempfile
 import urllib.request
-from os import mkdir
-from os.path import dirname, exists, getsize, join
-from pathlib import Path
-from shutil import rmtree
-from typing import Tuple
+from os import (
+    mkdir,
+)
+from os.path import (
+    dirname,
+    exists,
+    getsize,
+    join,
+)
+from pathlib import (
+    Path,
+)
+from shutil import (
+    rmtree,
+)
+from typing import (
+    Tuple,
+)
 
 import pytest
-from nemo.utils.metaclasses import Singleton
+from nemo.utils.metaclasses import (
+    Singleton,
+)
 
 # Those variables probably should go to main NeMo configuration file (config.yaml).
 __TEST_DATA_FILENAME = "test_data.tar.gz"
@@ -33,7 +48,9 @@ __TEST_DATA_URL = "https://github.com/NVIDIA/NeMo/releases/download/v1.0.0rc1/"
 __TEST_DATA_SUBDIR = ".data"
 
 
-def pytest_addoption(parser):
+def pytest_addoption(
+    parser,
+):
     """
     Additional command-line arguments passed to pytest.
     For now:
@@ -69,7 +86,9 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture
-def device(request):
+def device(
+    request,
+):
     """Simple fixture returning string denoting the device [CPU | GPU]"""
     if request.config.getoption("--cpu"):
         return "CPU"
@@ -78,14 +97,20 @@ def device(request):
 
 
 @pytest.fixture(autouse=True)
-def run_only_on_device_fixture(request, device):
+def run_only_on_device_fixture(
+    request,
+    device,
+):
     if request.node.get_closest_marker("run_only_on"):
         if request.node.get_closest_marker("run_only_on").args[0] != device:
             pytest.skip("skipped on this device: {}".format(device))
 
 
 @pytest.fixture(autouse=True)
-def downloads_weights(request, device):
+def downloads_weights(
+    request,
+    device,
+):
     if request.node.get_closest_marker("with_downloads"):
         if not request.config.getoption("--with_downloads"):
             pytest.skip(
@@ -94,7 +119,10 @@ def downloads_weights(request, device):
 
 
 @pytest.fixture(autouse=True)
-def run_nightly_test_for_qa(request, device):
+def run_nightly_test_for_qa(
+    request,
+    device,
+):
     if request.node.get_closest_marker("nightly"):
         if not request.config.getoption("--nightly"):
             pytest.skip(
@@ -112,11 +140,20 @@ def cleanup_local_folder():
     yield
 
     if Path("./lightning_logs").exists():
-        rmtree("./lightning_logs", ignore_errors=True)
+        rmtree(
+            "./lightning_logs",
+            ignore_errors=True,
+        )
     if Path("./NeMo_experiments").exists():
-        rmtree("./NeMo_experiments", ignore_errors=True)
+        rmtree(
+            "./NeMo_experiments",
+            ignore_errors=True,
+        )
     if Path("./nemo_experiments").exists():
-        rmtree("./nemo_experiments", ignore_errors=True)
+        rmtree(
+            "./nemo_experiments",
+            ignore_errors=True,
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -144,11 +181,19 @@ def test_data_dir():
     Use the highest fixture scope `session` to allow other fixtures with any other scope to use it.
     """
     # Test dir.
-    test_data_dir_ = join(dirname(__file__), __TEST_DATA_SUBDIR)
+    test_data_dir_ = join(
+        dirname(__file__),
+        __TEST_DATA_SUBDIR,
+    )
     return test_data_dir_
 
 
-def extract_data_from_tar(test_dir, test_data_archive, url=None, local_data=False):
+def extract_data_from_tar(
+    test_dir,
+    test_data_archive,
+    url=None,
+    local_data=False,
+):
     # Remove .data folder.
     if exists(test_dir):
         if not local_data:
@@ -156,13 +201,19 @@ def extract_data_from_tar(test_dir, test_data_archive, url=None, local_data=Fals
         else:
             with tempfile.TemporaryDirectory() as temp_dir:
                 print("Copying local tarfile to temporary storage..")
-                shutil.copy2(test_data_archive, temp_dir)
+                shutil.copy2(
+                    test_data_archive,
+                    temp_dir,
+                )
                 print("Deleting test dir to cleanup old data")
                 rmtree(test_dir)
                 mkdir(test_dir)
                 print("Restoring local tarfile to test dir")
                 shutil.copy2(
-                    os.path.join(temp_dir, os.path.basename(test_data_archive)),
+                    os.path.join(
+                        temp_dir,
+                        os.path.basename(test_data_archive),
+                    ),
                     test_data_archive,
                 )
 
@@ -172,7 +223,10 @@ def extract_data_from_tar(test_dir, test_data_archive, url=None, local_data=Fals
 
     # Download (if required)
     if url is not None and not local_data:
-        urllib.request.urlretrieve(url, test_data_archive)
+        urllib.request.urlretrieve(
+            url,
+            test_data_archive,
+        )
 
     # Extract tar
     print("Extracting the `{}` test archive, please wait...".format(test_data_archive))
@@ -182,34 +236,61 @@ def extract_data_from_tar(test_dir, test_data_archive, url=None, local_data=Fals
 
 
 @pytest.fixture(scope="session")
-def k2_is_appropriate() -> Tuple[bool, str]:
+def k2_is_appropriate() -> Tuple[
+    bool,
+    str,
+]:
     try:
-        return True, "k2 is appropriate."
+        return (
+            True,
+            "k2 is appropriate.",
+        )
     except Exception as e:
-        logging.exception(e, exc_info=True)
-        return False, "k2 is not available or does not meet the requirements."
+        logging.exception(
+            e,
+            exc_info=True,
+        )
+        return (
+            False,
+            "k2 is not available or does not meet the requirements.",
+        )
 
 
 @pytest.fixture(scope="session")
-def k2_cuda_is_enabled(k2_is_appropriate) -> Tuple[bool, str]:
+def k2_cuda_is_enabled(
+    k2_is_appropriate,
+) -> Tuple[
+    bool,
+    str,
+]:
     if not k2_is_appropriate[0]:
         return k2_is_appropriate
 
     import torch  # noqa: E402
-    from nemo.core.utils.k2_guard import k2  # noqa: E402
+    from nemo.core.utils.k2_guard import (
+        k2,
+    )  # noqa: E402
 
     if torch.cuda.is_available() and k2.with_cuda:
-        return True, "k2 supports CUDA."
+        return (
+            True,
+            "k2 supports CUDA.",
+        )
     elif torch.cuda.is_available():
         return (
             False,
             "k2 does not support CUDA. Consider using a k2 build with CUDA support.",
         )
     else:
-        return False, "k2 needs CUDA to be available in torch."
+        return (
+            False,
+            "k2 needs CUDA to be available in torch.",
+        )
 
 
-def pytest_configure(config):
+def pytest_configure(
+    config,
+):
     """
     Initial configuration of conftest.
     The function checks if test_data.tar.gz is present in tests/.data.
@@ -229,9 +310,14 @@ def pytest_configure(config):
         "nightly: runs the nightly test for QA.",
     )
     # Test dir and archive filepath.
-    test_dir = join(dirname(__file__), __TEST_DATA_SUBDIR)
+    test_dir = join(
+        dirname(__file__),
+        __TEST_DATA_SUBDIR,
+    )
     test_data_archive = join(
-        dirname(__file__), __TEST_DATA_SUBDIR, __TEST_DATA_FILENAME
+        dirname(__file__),
+        __TEST_DATA_SUBDIR,
+        __TEST_DATA_FILENAME,
     )
 
     # Get size of local test_data archive.
@@ -243,13 +329,13 @@ def pytest_configure(config):
 
     if config.option.use_local_test_data:
         if test_data_local_size == -1:
-            pytest.exit(
-                "Test data `{}` is not present in the system".format(test_data_archive)
-            )
+            pytest.exit("Test data `{}` is not present in the system".format(test_data_archive))
         else:
             print(
                 "Using the local `{}` test archive ({}B) found in the `{}` folder.".format(
-                    __TEST_DATA_FILENAME, test_data_local_size, test_dir
+                    __TEST_DATA_FILENAME,
+                    test_data_local_size,
+                    test_dir,
                 )
             )
 
@@ -262,15 +348,13 @@ def pytest_configure(config):
         except:
             # Couldn't access remote archive.
             if test_data_local_size == -1:
-                pytest.exit(
-                    "Test data not present in the system and cannot access the '{}' URL".format(
-                        url
-                    )
-                )
+                pytest.exit("Test data not present in the system and cannot access the '{}' URL".format(url))
             else:
                 print(
                     "Cannot access the '{}' URL, using the test data ({}B) found in the `{}` folder.".format(
-                        url, test_data_local_size, test_dir
+                        url,
+                        test_data_local_size,
+                        test_dir,
                     )
                 )
                 return
@@ -283,7 +367,8 @@ def pytest_configure(config):
         if test_data_local_size != test_data_remote_size:
             print(
                 "Downloading the `{}` test archive from `{}`, please wait...".format(
-                    __TEST_DATA_FILENAME, __TEST_DATA_URL
+                    __TEST_DATA_FILENAME,
+                    __TEST_DATA_URL,
                 )
             )
 
@@ -297,18 +382,27 @@ def pytest_configure(config):
         else:
             print(
                 "A valid `{}` test archive ({}B) found in the `{}` folder.".format(
-                    __TEST_DATA_FILENAME, test_data_local_size, test_dir
+                    __TEST_DATA_FILENAME,
+                    test_data_local_size,
+                    test_dir,
                 )
             )
 
     else:
         # untar local test data
         extract_data_from_tar(
-            test_dir, test_data_archive, local_data=config.option.use_local_test_data
+            test_dir,
+            test_data_archive,
+            local_data=config.option.use_local_test_data,
         )
 
     if config.option.relax_numba_compat is not None:
-        from nemo.core.utils import numba_utils
+        from nemo.core.utils import (
+            numba_utils,
+        )
 
-        print("Setting numba compat :", config.option.relax_numba_compat)
+        print(
+            "Setting numba compat :",
+            config.option.relax_numba_compat,
+        )
         numba_utils.set_numba_compat_strictness(strict=config.option.relax_numba_compat)

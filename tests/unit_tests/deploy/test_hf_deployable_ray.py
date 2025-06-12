@@ -14,12 +14,20 @@
 
 
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import pytest
-from fastapi import FastAPI, HTTPException
+from fastapi import (
+    FastAPI,
+    HTTPException,
+)
 
-from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from nemo_deploy.nlp.hf_deployable import (
+    HuggingFaceLLMDeploy,
+)
 
 
 # Create a mock of the HFRayDeployable class without decorators for testing
@@ -45,7 +53,10 @@ class MockHFRayDeployable:
         self.batch_wait_timeout_s = batch_wait_timeout_s
         self.model = None
 
-    def _setup_unique_distributed_parameters(self, device_map):
+    def _setup_unique_distributed_parameters(
+        self,
+        device_map,
+    ):
         import os
 
         os.environ["MASTER_ADDR"] = "127.0.0.1"
@@ -59,8 +70,20 @@ def mock_hf_model():
         mock_instance = MagicMock(spec=HuggingFaceLLMDeploy)
         mock_instance.ray_infer_fn = MagicMock()
         mock_instance.ray_infer_fn.return_value = {
-            "sentences": ["Generated response 1", "Generated response 2"],
-            "log_probs": [[0.1, 0.2], [0.3, 0.4]],
+            "sentences": [
+                "Generated response 1",
+                "Generated response 2",
+            ],
+            "log_probs": [
+                [
+                    0.1,
+                    0.2,
+                ],
+                [
+                    0.3,
+                    0.4,
+                ],
+            ],
         }
         mock.return_value = mock_instance
         yield mock
@@ -82,7 +105,8 @@ def mock_ray():
 def mock_hfray_class():
     # Use our custom mock class for testing
     with patch(
-        "nemo_deploy.nlp.hf_deployable_ray.HFRayDeployable", MockHFRayDeployable
+        "nemo_deploy.nlp.hf_deployable_ray.HFRayDeployable",
+        MockHFRayDeployable,
     ):
         yield MockHFRayDeployable
 
@@ -103,7 +127,10 @@ def mock_torch_distributed():
 
 @pytest.fixture
 def mock_os_env():
-    with patch("os.environ", {}):
+    with patch(
+        "os.environ",
+        {},
+    ):
         yield
 
 
@@ -115,7 +142,10 @@ def mock_find_port():
 
 
 @pytest.fixture
-def mock_ray_instance(mock_hf_model, mock_hfray_class):
+def mock_ray_instance(
+    mock_hf_model,
+    mock_hfray_class,
+):
     instance = mock_hfray_class(
         hf_model_id_path="test/model",
         task="text-generation",
@@ -142,7 +172,11 @@ def mock_ray_instance(mock_hf_model, mock_hfray_class):
                 "finish_reason": "stop",
             }
         ],
-        "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
+        "usage": {
+            "prompt_tokens": 10,
+            "completion_tokens": 20,
+            "total_tokens": 30,
+        },
     }
 
     instance.chat_completions = MagicMock()
@@ -153,12 +187,19 @@ def mock_ray_instance(mock_hf_model, mock_hfray_class):
         "model": "test-model",
         "choices": [
             {
-                "message": {"role": "assistant", "content": "Generated response"},
+                "message": {
+                    "role": "assistant",
+                    "content": "Generated response",
+                },
                 "index": 0,
                 "finish_reason": "stop",
             }
         ],
-        "usage": {"prompt_tokens": 15, "completion_tokens": 25, "total_tokens": 40},
+        "usage": {
+            "prompt_tokens": 15,
+            "completion_tokens": 25,
+            "total_tokens": 40,
+        },
     }
 
     instance.batched_inference = MagicMock()
@@ -169,7 +210,9 @@ def mock_ray_instance(mock_hf_model, mock_hfray_class):
 
 
 # Helper function to run coroutines synchronously
-def run_coroutine(coro):
+def run_coroutine(
+    coro,
+):
     import asyncio
 
     try:
@@ -183,27 +226,54 @@ def run_coroutine(coro):
 class TestHFRayDeployable:
     @pytest.mark.skip
     def test_init_with_balanced_device_map(
-        self, mock_hf_model, mock_hfray_class, mock_torch_distributed, mock_find_port
+        self,
+        mock_hf_model,
+        mock_hfray_class,
+        mock_torch_distributed,
+        mock_find_port,
     ):
         """Test initialization with balanced device map."""
-        with patch("torch.cuda.device_count", return_value=2):
+        with patch(
+            "torch.cuda.device_count",
+            return_value=2,
+        ):
             # Custom initialization for the balanced device map test
-            def mock_init(self, *args, **kwargs):
+            def mock_init(
+                self,
+                *args,
+                **kwargs,
+            ):
                 self.hf_model_id_path = kwargs.get("hf_model_id_path")
-                self.task = kwargs.get("task", "text-generation")
-                self.trust_remote_code = kwargs.get("trust_remote_code", True)
-                self.model_id = kwargs.get("model_id", "nemo-model")
-                self.device_map = kwargs.get("device_map", "auto")
+                self.task = kwargs.get(
+                    "task",
+                    "text-generation",
+                )
+                self.trust_remote_code = kwargs.get(
+                    "trust_remote_code",
+                    True,
+                )
+                self.model_id = kwargs.get(
+                    "model_id",
+                    "nemo-model",
+                )
+                self.device_map = kwargs.get(
+                    "device_map",
+                    "auto",
+                )
                 self.max_memory = kwargs.get("max_memory")
-                self.max_batch_size = kwargs.get("max_batch_size", 8)
-                self.batch_wait_timeout_s = kwargs.get("batch_wait_timeout_s", 0.3)
+                self.max_batch_size = kwargs.get(
+                    "max_batch_size",
+                    8,
+                )
+                self.batch_wait_timeout_s = kwargs.get(
+                    "batch_wait_timeout_s",
+                    0.3,
+                )
 
                 # Simulate the behavior for balanced device map
                 if self.device_map == "balanced":
                     if not self.max_memory:
-                        raise ValueError(
-                            "max_memory must be provided when device_map is 'balanced'"
-                        )
+                        raise ValueError("max_memory must be provided when device_map is 'balanced'")
                     num_gpus = 2  # Mocked from torch.cuda.device_count()
                     max_memory_dict = {i: "75GiB" for i in range(num_gpus)}
                     self.model = mock_hf_model(
@@ -214,7 +284,11 @@ class TestHFRayDeployable:
                         max_memory=max_memory_dict,
                     )
 
-            with patch.object(MockHFRayDeployable, "__init__", mock_init):
+            with patch.object(
+                MockHFRayDeployable,
+                "__init__",
+                mock_init,
+            ):
                 mock_hfray_class(
                     hf_model_id_path="test/model",
                     device_map="auto",
@@ -223,38 +297,80 @@ class TestHFRayDeployable:
 
                 # Verify max_memory_dict was created
                 mock_hf_model.assert_called_once()
-                args, kwargs = mock_hf_model.call_args
+                (
+                    args,
+                    kwargs,
+                ) = mock_hf_model.call_args
                 assert kwargs["device_map"] == "balanced"
-                assert kwargs["max_memory"] == {0: "75GiB", 1: "75GiB"}
+                assert kwargs["max_memory"] == {
+                    0: "75GiB",
+                    1: "75GiB",
+                }
 
-    def test_init_with_balanced_device_map_no_memory(self, mock_hfray_class):
+    def test_init_with_balanced_device_map_no_memory(
+        self,
+        mock_hfray_class,
+    ):
         """Test initialization with balanced device map but missing max_memory."""
 
         # Custom initialization to test the error case
-        def mock_init(self, *args, **kwargs):
+        def mock_init(
+            self,
+            *args,
+            **kwargs,
+        ):
             if kwargs.get("device_map") == "balanced" and not kwargs.get("max_memory"):
-                raise ValueError(
-                    "max_memory must be provided when device_map is 'balanced'"
+                raise ValueError("max_memory must be provided when device_map is 'balanced'")
+
+        with patch.object(
+            MockHFRayDeployable,
+            "__init__",
+            mock_init,
+        ):
+            with pytest.raises(
+                ValueError,
+                match="max_memory must be provided",
+            ):
+                mock_hfray_class(
+                    hf_model_id_path="test/model",
+                    device_map="balanced",
                 )
 
-        with patch.object(MockHFRayDeployable, "__init__", mock_init):
-            with pytest.raises(ValueError, match="max_memory must be provided"):
-                mock_hfray_class(hf_model_id_path="test/model", device_map="balanced")
-
-    def test_init_exception_handling(self, mock_hfray_class):
+    def test_init_exception_handling(
+        self,
+        mock_hfray_class,
+    ):
         """Test exception handling during initialization."""
 
         # Custom init to simulate the error
-        def mock_init(self, *args, **kwargs):
+        def mock_init(
+            self,
+            *args,
+            **kwargs,
+        ):
             raise Exception("Test error")
 
-        with patch.object(MockHFRayDeployable, "__init__", mock_init):
-            with pytest.raises(Exception, match="Test error"):
+        with patch.object(
+            MockHFRayDeployable,
+            "__init__",
+            mock_init,
+        ):
+            with pytest.raises(
+                Exception,
+                match="Test error",
+            ):
                 mock_hfray_class(hf_model_id_path="test/model")
 
-    def test_setup_unique_distributed_parameters(self, mock_hfray_class, mock_os_env):
+    def test_setup_unique_distributed_parameters(
+        self,
+        mock_hfray_class,
+        mock_os_env,
+    ):
         """Test setting up unique distributed parameters."""
-        instance = mock_hfray_class(hf_model_id_path="test/model", device_map="auto")
+        instance = mock_hfray_class(
+            hf_model_id_path="test/model",
+            device_map="auto",
+        )
         instance._setup_unique_distributed_parameters("auto")
 
         # Check if environment variables were set
@@ -263,10 +379,17 @@ class TestHFRayDeployable:
         assert os.environ["MASTER_ADDR"] == "127.0.0.1"
         assert os.environ["MASTER_PORT"] == "29501"
 
-    def test_completions(self, mock_ray_instance):
+    def test_completions(
+        self,
+        mock_ray_instance,
+    ):
         """Test the completions endpoint."""
         # Create a request
-        request = {"prompt": "Test prompt", "max_tokens": 100, "temperature": 0.7}
+        request = {
+            "prompt": "Test prompt",
+            "max_tokens": 100,
+            "temperature": 0.7,
+        }
 
         # Get the result directly from the mock
         result = mock_ray_instance.completions(request)
@@ -275,11 +398,15 @@ class TestHFRayDeployable:
         assert result["id"] == "cmpl-123"
         assert result["object"] == "text_completion"
 
-    def test_completions_error(self, mock_ray_instance):
+    def test_completions_error(
+        self,
+        mock_ray_instance,
+    ):
         """Test error handling in completions endpoint."""
         # Set up the mock to return an error
         mock_ray_instance.completions.side_effect = HTTPException(
-            status_code=500, detail="Test error"
+            status_code=500,
+            detail="Test error",
         )
 
         # Create a request
@@ -292,13 +419,22 @@ class TestHFRayDeployable:
         assert excinfo.value.status_code == 500
         assert "Test error" in str(excinfo.value.detail)
 
-    def test_chat_completions(self, mock_ray_instance):
+    def test_chat_completions(
+        self,
+        mock_ray_instance,
+    ):
         """Test the chat completions endpoint."""
         # Create a request
         request = {
             "messages": [
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Hello, how are you?"},
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant.",
+                },
+                {
+                    "role": "user",
+                    "content": "Hello, how are you?",
+                },
             ],
             "max_tokens": 100,
             "temperature": 0.7,
@@ -311,12 +447,23 @@ class TestHFRayDeployable:
         assert result["id"] == "chatcmpl-123"
         assert result["object"] == "chat.completion"
 
-    def test_batched_inference(self, mock_ray_instance):
+    def test_batched_inference(
+        self,
+        mock_ray_instance,
+    ):
         """Test batched inference method."""
         # Create test requests
         requests = [
-            {"prompt": "Test prompt 1", "max_tokens": 100, "temperature": 0.7},
-            {"prompt": "Test prompt 2", "max_tokens": 50, "temperature": 0.9},
+            {
+                "prompt": "Test prompt 1",
+                "max_tokens": 100,
+                "temperature": 0.7,
+            },
+            {
+                "prompt": "Test prompt 2",
+                "max_tokens": 50,
+                "temperature": 0.9,
+            },
         ]
 
         # Setup expected results
@@ -330,7 +477,10 @@ class TestHFRayDeployable:
                     {
                         "text": "Generated response 1",
                         "index": 0,
-                        "logprobs": [0.1, 0.2],
+                        "logprobs": [
+                            0.1,
+                            0.2,
+                        ],
                         "finish_reason": "stop",
                     }
                 ],
@@ -349,7 +499,10 @@ class TestHFRayDeployable:
                     {
                         "text": "Generated response 2",
                         "index": 0,
-                        "logprobs": [0.3, 0.4],
+                        "logprobs": [
+                            0.3,
+                            0.4,
+                        ],
                         "finish_reason": "stop",
                     }
                 ],
@@ -365,7 +518,10 @@ class TestHFRayDeployable:
         mock_ray_instance.batched_inference.return_value = expected_results
 
         # Call the method
-        results = mock_ray_instance.batched_inference(requests, "completion")
+        results = mock_ray_instance.batched_inference(
+            requests,
+            "completion",
+        )
 
         # Verify results have the expected format
         assert len(results) == 2
@@ -376,12 +532,19 @@ class TestHFRayDeployable:
             assert "choices" in result
             assert "usage" in result
 
-    def test_list_models(self, mock_ray_instance):
+    def test_list_models(
+        self,
+        mock_ray_instance,
+    ):
         """Test the list_models endpoint."""
         expected_result = {
             "object": "list",
             "data": [
-                {"id": "test-model", "object": "model", "created": int(time.time())}
+                {
+                    "id": "test-model",
+                    "object": "model",
+                    "created": int(time.time()),
+                }
             ],
         }
 
@@ -398,7 +561,10 @@ class TestHFRayDeployable:
         assert len(result["data"]) == 1
         assert result["data"][0]["id"] == "test-model"
 
-    def test_health_check(self, mock_ray_instance):
+    def test_health_check(
+        self,
+        mock_ray_instance,
+    ):
         """Test the health_check endpoint."""
         expected_result = {"status": "healthy"}
 

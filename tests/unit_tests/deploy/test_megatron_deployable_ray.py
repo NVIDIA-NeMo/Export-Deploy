@@ -15,13 +15,20 @@
 import asyncio
 import os
 import tempfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import pytest
 import ray
-from ray import serve
+from ray import (
+    serve,
+)
 
-from nemo_deploy.deploy_ray import DeployRay
+from nemo_deploy.deploy_ray import (
+    DeployRay,
+)
 from nemo_deploy.nlp.megatronllm_deployable_ray import (
     MegatronRayDeployable,
     ModelWorker,
@@ -37,7 +44,10 @@ def ray_cluster():
     # Initialize Ray for testing
     if not ray.is_initialized():
         ray.init(
-            num_cpus=4, num_gpus=0, include_dashboard=False, ignore_reinit_error=True
+            num_cpus=4,
+            num_gpus=0,
+            include_dashboard=False,
+            ignore_reinit_error=True,
         )
 
     yield
@@ -52,7 +62,9 @@ def ray_cluster():
 
 
 @pytest.fixture
-def deploy_ray_instance(ray_cluster):
+def deploy_ray_instance(
+    ray_cluster,
+):
     """Create a DeployRay instance for testing with real Ray."""
     deploy_ray = DeployRay(
         address="auto",  # Connect to existing cluster
@@ -74,7 +86,10 @@ def deploy_ray_instance(ray_cluster):
 @pytest.fixture
 def mock_nemo_checkpoint():
     """Create a temporary mock .nemo checkpoint file."""
-    with tempfile.NamedTemporaryFile(suffix=".nemo", delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        suffix=".nemo",
+        delete=False,
+    ) as f:
         checkpoint_path = f.name
         f.write(b"mock checkpoint data")
 
@@ -90,17 +105,24 @@ def mock_nemo_checkpoint():
 @pytest.fixture
 def mock_megatron_model():
     """Mock the MegatronLLMDeployableNemo2 model to avoid loading real models."""
-    with patch(
-        "nemo_deploy.nlp.megatronllm_deployable_ray.MegatronLLMDeployableNemo2"
-    ) as mock:
+    with patch("nemo_deploy.nlp.megatronllm_deployable_ray.MegatronLLMDeployableNemo2") as mock:
         mock_instance = MagicMock()
 
         # Mock the ray_infer_fn method
         mock_instance.ray_infer_fn.return_value = {
-            "sentences": ["Generated response 1", "Generated response 2"],
+            "sentences": [
+                "Generated response 1",
+                "Generated response 2",
+            ],
             "log_probs": [
-                [0.1, 0.2],
-                [0.3, 0.4],
+                [
+                    0.1,
+                    0.2,
+                ],
+                [
+                    0.3,
+                    0.4,
+                ],
             ],  # Use regular lists instead of numpy arrays
         }
 
@@ -115,49 +137,70 @@ def mock_megatron_model():
 def mock_environment_setup():
     """Mock environment variables and system calls."""
     with (
-        patch.dict(os.environ, {}, clear=False),
+        patch.dict(
+            os.environ,
+            {},
+            clear=False,
+        ),
         patch("torch.cuda.device_count") as mock_device_count,
         patch("time.sleep") as mock_sleep,
     ):
         mock_device_count.return_value = 1
         mock_sleep.return_value = None
 
-        yield {"device_count": mock_device_count, "sleep": mock_sleep}
+        yield {
+            "device_count": mock_device_count,
+            "sleep": mock_sleep,
+        }
 
 
 @pytest.fixture
-def mock_model_worker(mock_megatron_model):
+def mock_model_worker(
+    mock_megatron_model,
+):
     """Mock ModelWorker class while preserving Ray remote functionality."""
     original_model_worker = ModelWorker
 
     # Create a new class that inherits from the original but mocks the model loading
     @ray.remote(num_gpus=0)  # Use CPU for testing
     class MockModelWorker:
-        def __init__(self, *args, **kwargs):
+        def __init__(
+            self,
+            *args,
+            **kwargs,
+        ):
             # Store the arguments for verification
             self.args = args
             self.kwargs = kwargs
             # Create a mock model instead of loading real one
             self.model = mock_megatron_model.return_value
             # Initialize successfully
-            print(
-                f"MockModelWorker initialized with args: {args[:2] if args else []}"
-            )  # Limit logging
+            print(f"MockModelWorker initialized with args: {args[:2] if args else []}")  # Limit logging
 
-        def infer(self, inputs):
+        def infer(
+            self,
+            inputs,
+        ):
             """Mock inference method that returns consistent results."""
             try:
                 # Ensure we always return a valid response structure
                 result = {
-                    "sentences": ["Generated response 1", "Generated response 2"],
+                    "sentences": [
+                        "Generated response 1",
+                        "Generated response 2",
+                    ],
                     "log_probs": [
-                        [0.1, 0.2],
-                        [0.3, 0.4],
+                        [
+                            0.1,
+                            0.2,
+                        ],
+                        [
+                            0.3,
+                            0.4,
+                        ],
                     ],  # Use regular lists instead of numpy arrays
                 }
-                print(
-                    f"MockModelWorker.infer called with keys: {list(inputs.keys()) if inputs else []}"
-                )
+                print(f"MockModelWorker.infer called with keys: {list(inputs.keys()) if inputs else []}")
                 return result
             except Exception as e:
                 # Log but don't raise exceptions that might cause serialization issues
@@ -169,7 +212,8 @@ def mock_model_worker(mock_megatron_model):
 
     # Patch the original ModelWorker with our mock
     with patch(
-        "nemo_deploy.nlp.megatronllm_deployable_ray.ModelWorker", MockModelWorker
+        "nemo_deploy.nlp.megatronllm_deployable_ray.ModelWorker",
+        MockModelWorker,
     ):
         yield MockModelWorker
 
@@ -186,7 +230,9 @@ def cleanup_serve():
 
 
 # Helper function to run async functions in tests
-def run_async(coro):
+def run_async(
+    coro,
+):
     """Helper function to run async coroutines in tests."""
     try:
         loop = asyncio.get_event_loop()
@@ -199,12 +245,18 @@ def run_async(coro):
 class TestMegatronRayDeployable:
     """Test suite for MegatronRayDeployable class with real Ray integration."""
 
-    def test_deploy_ray_initialization(self, deploy_ray_instance):
+    def test_deploy_ray_initialization(
+        self,
+        deploy_ray_instance,
+    ):
         """Test that DeployRay initializes correctly with real Ray."""
         assert deploy_ray_instance is not None
         assert ray.is_initialized()
 
-    def test_deploy_ray_start_and_stop(self, deploy_ray_instance):
+    def test_deploy_ray_start_and_stop(
+        self,
+        deploy_ray_instance,
+    ):
         """Test starting and stopping Ray Serve."""
         # Start Ray Serve
         deploy_ray_instance.start(port=8000)
@@ -236,7 +288,10 @@ class TestMegatronRayDeployable:
         )
 
         # Deploy the deployment
-        serve.run(deployment_handle, name="test-model-deployment")
+        serve.run(
+            deployment_handle,
+            name="test-model-deployment",
+        )
 
         # Get a handle to interact with the deployment
         deployable = serve.get_app_handle("test-model-deployment")
@@ -270,7 +325,10 @@ class TestMegatronRayDeployable:
         )
 
         # Deploy the deployment
-        serve.run(deployment_handle, name="test-multi-gpu-deployment")
+        serve.run(
+            deployment_handle,
+            name="test-multi-gpu-deployment",
+        )
 
         # Get a handle to interact with the deployment
         deployable = serve.get_app_handle("test-multi-gpu-deployment")
@@ -299,7 +357,10 @@ class TestMegatronRayDeployable:
 
         # This should fail when we try to deploy it
         with pytest.raises(Exception):  # Ray will wrap the ValueError
-            serve.run(deployment_handle, name="test-invalid-parallelism")
+            serve.run(
+                deployment_handle,
+                name="test-invalid-parallelism",
+            )
 
     def test_list_models_endpoint(
         self,
@@ -317,7 +378,10 @@ class TestMegatronRayDeployable:
             model_id="test-list-models",
         )
 
-        serve.run(deployment_handle, name="test-list-models-deployment")
+        serve.run(
+            deployment_handle,
+            name="test-list-models-deployment",
+        )
         deployable = serve.get_app_handle("test-list-models-deployment")
 
         response = deployable.list_models.remote().result()
@@ -344,7 +408,10 @@ class TestMegatronRayDeployable:
             model_id="test-health-model",
         )
 
-        serve.run(deployment_handle, name="test-health-deployment")
+        serve.run(
+            deployment_handle,
+            name="test-health-deployment",
+        )
         deployable = serve.get_app_handle("test-health-deployment")
 
         response = deployable.health_check.remote().result()
@@ -368,7 +435,10 @@ class TestMegatronRayDeployable:
             model_id="test-cuda-graphs-model",
         )
 
-        serve.run(deployment_handle, name="test-cuda-graphs-deployment")
+        serve.run(
+            deployment_handle,
+            name="test-cuda-graphs-deployment",
+        )
         deployable = serve.get_app_handle("test-cuda-graphs-deployment")
 
         # Verify the deployable was created successfully
@@ -392,7 +462,10 @@ class TestMegatronRayDeployable:
             model_id="test-flash-decode-model",
         )
 
-        serve.run(deployment_handle, name="test-flash-decode-deployment")
+        serve.run(
+            deployment_handle,
+            name="test-flash-decode-deployment",
+        )
         deployable = serve.get_app_handle("test-flash-decode-deployment")
 
         # Verify the deployable was created successfully
@@ -416,7 +489,10 @@ class TestMegatronRayDeployable:
             model_id="test-legacy-ckpt-model",
         )
 
-        serve.run(deployment_handle, name="test-legacy-ckpt-deployment")
+        serve.run(
+            deployment_handle,
+            name="test-legacy-ckpt-deployment",
+        )
         deployable = serve.get_app_handle("test-legacy-ckpt-deployment")
 
         # Verify the deployable was created successfully
@@ -442,7 +518,10 @@ class TestMegatronRayDeployable:
             model_id="test-multi-node-model",
         )
 
-        serve.run(deployment_handle, name="test-multi-node-deployment")
+        serve.run(
+            deployment_handle,
+            name="test-multi-node-deployment",
+        )
         deployable = serve.get_app_handle("test-multi-node-deployment")
 
         health_response = deployable.health_check.remote().result()
@@ -467,7 +546,10 @@ class TestMegatronRayDeployable:
             model_id="test-pipeline-parallel-model",
         )
 
-        serve.run(deployment_handle, name="test-pipeline-parallel-deployment")
+        serve.run(
+            deployment_handle,
+            name="test-pipeline-parallel-deployment",
+        )
         deployable = serve.get_app_handle("test-pipeline-parallel-deployment")
 
         health_response = deployable.health_check.remote().result()
@@ -492,7 +574,10 @@ class TestMegatronRayDeployable:
             model_id="test-context-parallel-model",
         )
 
-        serve.run(deployment_handle, name="test-context-parallel-deployment")
+        serve.run(
+            deployment_handle,
+            name="test-context-parallel-deployment",
+        )
         deployable = serve.get_app_handle("test-context-parallel-deployment")
 
         health_response = deployable.health_check.remote().result()

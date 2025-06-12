@@ -14,11 +14,16 @@
 
 import json
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import numpy as np
 import pytest
-from fastapi.testclient import TestClient
+from fastapi.testclient import (
+    TestClient,
+)
 
 from nemo_deploy.service.fastapi_interface_to_pytriton import (
     CompletionRequest,
@@ -32,8 +37,12 @@ from nemo_deploy.service.fastapi_interface_to_pytriton import (
 from nemo_deploy.service.rest_model_api import (
     CompletionRequest as RestCompletionRequest,
 )
-from nemo_deploy.service.rest_model_api import TritonSettings as RestTritonSettings
-from nemo_deploy.service.rest_model_api import app as rest_app
+from nemo_deploy.service.rest_model_api import (
+    TritonSettings as RestTritonSettings,
+)
+from nemo_deploy.service.rest_model_api import (
+    app as rest_app,
+)
 
 
 @pytest.fixture
@@ -43,9 +52,7 @@ def client():
 
 @pytest.fixture
 def mock_triton_settings():
-    with patch(
-        "nemo_deploy.service.fastapi_interface_to_pytriton.TritonSettings"
-    ) as mock:
+    with patch("nemo_deploy.service.fastapi_interface_to_pytriton.TritonSettings") as mock:
         instance = mock.return_value
         instance.triton_service_port = 8000
         instance.triton_service_ip = "localhost"
@@ -70,16 +77,27 @@ def mock_rest_triton_settings():
 
 
 class TestTritonSettings:
-    def test_default_values(self):
-        with patch.dict(os.environ, {}, clear=True):
+    def test_default_values(
+        self,
+    ):
+        with patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        ):
             settings = TritonSettings()
             assert settings.triton_service_port == 8000
             assert settings.triton_service_ip == "0.0.0.0"
 
-    def test_custom_values(self):
+    def test_custom_values(
+        self,
+    ):
         with patch.dict(
             os.environ,
-            {"TRITON_PORT": "9000", "TRITON_HTTP_ADDRESS": "127.0.0.1"},
+            {
+                "TRITON_PORT": "9000",
+                "TRITON_HTTP_ADDRESS": "127.0.0.1",
+            },
             clear=True,
         ):
             settings = TritonSettings()
@@ -88,7 +106,9 @@ class TestTritonSettings:
 
 
 class TestCompletionRequest:
-    def test_default_values(self):
+    def test_default_values(
+        self,
+    ):
         request = CompletionRequest(model="test_model")
         assert request.model == "test_model"
         assert request.prompt == "hello"
@@ -99,41 +119,120 @@ class TestCompletionRequest:
         assert request.top_k == 0
         assert request.logprobs is None
 
-    def test_greedy_params(self):
-        request = CompletionRequest(model="test_model", temperature=0.0, top_p=0.0)
+    def test_greedy_params(
+        self,
+    ):
+        request = CompletionRequest(
+            model="test_model",
+            temperature=0.0,
+            top_p=0.0,
+        )
         assert request.top_k == 1
 
 
 class TestHealthEndpoints:
-    def test_health_check(self, client):
+    def test_health_check(
+        self,
+        client,
+    ):
         response = client.get("/v1/health")
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
 
 
 class TestUtilityFunctions:
-    def test_convert_numpy(self):
+    def test_convert_numpy(
+        self,
+    ):
         # Test with numpy array
-        arr = np.array([1, 2, 3])
-        assert convert_numpy(arr) == [1, 2, 3]
+        arr = np.array(
+            [
+                1,
+                2,
+                3,
+            ]
+        )
+        assert convert_numpy(arr) == [
+            1,
+            2,
+            3,
+        ]
 
         # Test with nested dictionary
-        nested = {"a": np.array([1, 2]), "b": {"c": np.array([3, 4])}}
-        assert convert_numpy(nested) == {"a": [1, 2], "b": {"c": [3, 4]}}
+        nested = {
+            "a": np.array(
+                [
+                    1,
+                    2,
+                ]
+            ),
+            "b": {
+                "c": np.array(
+                    [
+                        3,
+                        4,
+                    ]
+                )
+            },
+        }
+        assert convert_numpy(nested) == {
+            "a": [
+                1,
+                2,
+            ],
+            "b": {
+                "c": [
+                    3,
+                    4,
+                ]
+            },
+        }
 
         # Test with list
-        lst = [np.array([1, 2]), np.array([3, 4])]
-        assert convert_numpy(lst) == [[1, 2], [3, 4]]
+        lst = [
+            np.array(
+                [
+                    1,
+                    2,
+                ]
+            ),
+            np.array(
+                [
+                    3,
+                    4,
+                ]
+            ),
+        ]
+        assert convert_numpy(lst) == [
+            [
+                1,
+                2,
+            ],
+            [
+                3,
+                4,
+            ],
+        ]
 
-    def test_dict_to_str(self):
-        test_dict = {"key": "value", "number": 42}
+    def test_dict_to_str(
+        self,
+    ):
+        test_dict = {
+            "key": "value",
+            "number": 42,
+        }
         result = dict_to_str(test_dict)
-        assert isinstance(result, str)
+        assert isinstance(
+            result,
+            str,
+        )
         assert json.loads(result) == test_dict
 
 
 class TestLLMQueryFunctions:
-    def test_helper_fun(self):
+    def test_helper_fun(
+        self,
+    ):
         mock_nq = MagicMock()
         mock_nq.query_llm.return_value = {"test": "response"}
 
@@ -155,7 +254,9 @@ class TestLLMQueryFunctions:
             assert result == {"test": "response"}
             mock_nq.query_llm.assert_called_once()
 
-    def test_query_llm_async(self):
+    def test_query_llm_async(
+        self,
+    ):
         mock_result = {"test": "response"}
         with patch(
             "nemo_deploy.service.fastapi_interface_to_pytriton._helper_fun",
@@ -182,14 +283,27 @@ class TestLLMQueryFunctions:
 
 
 class TestAPIEndpoints:
-    def test_completions_v1(self, client):
+    def test_completions_v1(
+        self,
+        client,
+    ):
         mock_output = {
             "choices": [
                 {
                     "text": [["test response"]],
                     "logprobs": {
-                        "token_logprobs": [[1.0, 2.0]],
-                        "top_logprobs": [[{"a": 0.5}, {"b": 0.5}]],
+                        "token_logprobs": [
+                            [
+                                1.0,
+                                2.0,
+                            ]
+                        ],
+                        "top_logprobs": [
+                            [
+                                {"a": 0.5},
+                                {"b": 0.5},
+                            ]
+                        ],
                     },
                 }
             ]
@@ -201,14 +315,21 @@ class TestAPIEndpoints:
         ):
             response = client.post(
                 "/v1/completions/",
-                json={"model": "test_model", "prompt": "test prompt", "logprobs": 1},
+                json={
+                    "model": "test_model",
+                    "prompt": "test prompt",
+                    "logprobs": 1,
+                },
             )
             assert response.status_code == 200
             data = response.json()
             assert data["choices"][0]["text"] == "test response"
             assert "logprobs" in data["choices"][0]
 
-    def test_chat_completions_v1(self, client):
+    def test_chat_completions_v1(
+        self,
+        client,
+    ):
         mock_output = {"choices": [{"text": [["test response"]]}]}
 
         with patch(
@@ -219,7 +340,12 @@ class TestAPIEndpoints:
                 "/v1/chat/completions/",
                 json={
                     "model": "test_model",
-                    "messages": [{"role": "user", "content": "test message"}],
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "test message",
+                        }
+                    ],
                 },
             )
             assert response.status_code == 200
@@ -229,8 +355,14 @@ class TestAPIEndpoints:
 
 
 class TestRestTritonSettings:
-    def test_default_values(self):
-        with patch.dict(os.environ, {}, clear=True):
+    def test_default_values(
+        self,
+    ):
+        with patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        ):
             settings = RestTritonSettings()
             assert settings.triton_service_port == 8080
             assert settings.triton_service_ip == "0.0.0.0"
@@ -238,7 +370,9 @@ class TestRestTritonSettings:
             assert settings.openai_format_response is False
             assert settings.output_generation_logits is False
 
-    def test_custom_values(self):
+    def test_custom_values(
+        self,
+    ):
         with patch.dict(
             os.environ,
             {
@@ -259,8 +393,13 @@ class TestRestTritonSettings:
 
 
 class TestRestCompletionRequest:
-    def test_default_values(self):
-        request = RestCompletionRequest(model="test_model", prompt="test prompt")
+    def test_default_values(
+        self,
+    ):
+        request = RestCompletionRequest(
+            model="test_model",
+            prompt="test prompt",
+        )
         assert request.model == "test_model"
         assert request.prompt == "test prompt"
         assert request.max_tokens == 512
@@ -273,12 +412,18 @@ class TestRestCompletionRequest:
 
 
 class TestRestHealthEndpoints:
-    def test_health_check(self, rest_client):
+    def test_health_check(
+        self,
+        rest_client,
+    ):
         response = rest_client.get("/v1/health")
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
 
-    def test_triton_health_success(self, rest_client):
+    def test_triton_health_success(
+        self,
+        rest_client,
+    ):
         with patch("requests.get") as mock_get:
             mock_response = MagicMock()
             mock_response.status_code = 200
@@ -290,7 +435,10 @@ class TestRestHealthEndpoints:
 
 
 class TestRestCompletionsEndpoint:
-    def test_completions_success(self, rest_client):
+    def test_completions_success(
+        self,
+        rest_client,
+    ):
         mock_output = [["test response"]]
         with patch("nemo_deploy.service.rest_model_api.NemoQueryLLM") as mock_llm:
             mock_instance = mock_llm.return_value
@@ -310,7 +458,11 @@ class TestRestCompletionsEndpoint:
             assert response.status_code == 200
             assert response.json() == {"output": "test response"}
 
-    def test_completions_standard_format(self, rest_client, mock_rest_triton_settings):
+    def test_completions_standard_format(
+        self,
+        rest_client,
+        mock_rest_triton_settings,
+    ):
         mock_output = [["test response"]]
         mock_rest_triton_settings.openai_format_response = False
 
@@ -320,19 +472,28 @@ class TestRestCompletionsEndpoint:
 
             response = rest_client.post(
                 "/v1/completions/",
-                json={"model": "test_model", "prompt": "test prompt"},
+                json={
+                    "model": "test_model",
+                    "prompt": "test prompt",
+                },
             )
             assert response.status_code == 200
             assert response.json() == {"output": "test response"}
 
-    def test_completions_error_handling(self, rest_client):
+    def test_completions_error_handling(
+        self,
+        rest_client,
+    ):
         with patch("nemo_deploy.service.rest_model_api.NemoQueryLLM") as mock_llm:
             mock_instance = mock_llm.return_value
             mock_instance.query_llm.side_effect = Exception("Test error")
 
             response = rest_client.post(
                 "/v1/completions/",
-                json={"model": "test_model", "prompt": "test prompt"},
+                json={
+                    "model": "test_model",
+                    "prompt": "test prompt",
+                },
             )
             assert response.status_code == 200
             assert response.json() == {"error": "An exception occurred"}

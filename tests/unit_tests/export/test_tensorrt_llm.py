@@ -23,11 +23,11 @@ import torch
 @pytest.mark.unit
 def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
     try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        from nemo_export.tensorrt_llm import (
+            TensorRTLLM,
         )
+    except ImportError:
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     dummy_state = object()
@@ -35,9 +35,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
         "model.embedding.word_embeddings.weight": dummy_state,
         "model.decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
     }
-    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(
-        model_state_dict
-    )
+    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
 
     # Check that every key starts with 'model.' and not 'model..' by using a regex
     # This pattern ensures:
@@ -57,11 +55,11 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
             DEFAULT_CONVERSION_DICT,
         )
 
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        from nemo_export.tensorrt_llm import (
+            TensorRTLLM,
         )
+    except ImportError:
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     dummy_state = object()
@@ -69,9 +67,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
         "embedding.word_embeddings.weight": dummy_state,
         "decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
     }
-    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(
-        model_state_dict
-    )
+    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
 
     # This is essentially a no-op
     assert nemo_model_conversion_dict == DEFAULT_CONVERSION_DICT
@@ -81,26 +77,37 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
 @pytest.mark.unit
 def test_tensorrt_llm_initialization():
     try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        from nemo_export.tensorrt_llm import (
+            TensorRTLLM,
         )
+    except ImportError:
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     # Test basic initialization
     model_dir = "/tmp/test_model_dir"
-    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+    trt_llm = TensorRTLLM(
+        model_dir=model_dir,
+        load_model=False,
+    )
     assert trt_llm.model_dir == model_dir
-    assert trt_llm.engine_dir == os.path.join(model_dir, "trtllm_engine")
+    assert trt_llm.engine_dir == os.path.join(
+        model_dir,
+        "trtllm_engine",
+    )
     assert trt_llm.model is None
     assert trt_llm.tokenizer is None
     assert trt_llm.config is None
 
     # Test initialization with lora checkpoints
-    lora_ckpt_list = ["/path/to/lora1", "/path/to/lora2"]
+    lora_ckpt_list = [
+        "/path/to/lora1",
+        "/path/to/lora2",
+    ]
     trt_llm = TensorRTLLM(
-        model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False
+        model_dir=model_dir,
+        lora_ckpt_list=lora_ckpt_list,
+        load_model=False,
     )
     assert trt_llm.lora_ckpt_list == lora_ckpt_list
 
@@ -121,25 +128,40 @@ def test_tensorrt_llm_initialization():
 @pytest.mark.unit
 def test_tensorrt_llm_supported_models():
     try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        from nemo_export.tensorrt_llm import (
+            TensorRTLLM,
         )
+    except ImportError:
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
-    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+    trt_llm = TensorRTLLM(
+        model_dir=model_dir,
+        load_model=False,
+    )
 
     # Test supported models list
     supported_models = trt_llm.get_supported_models_list
-    assert isinstance(supported_models, list)
+    assert isinstance(
+        supported_models,
+        list,
+    )
     assert len(supported_models) > 0
-    assert all(isinstance(model, str) for model in supported_models)
+    assert all(
+        isinstance(
+            model,
+            str,
+        )
+        for model in supported_models
+    )
 
     # Test HF model mapping
     hf_mapping = trt_llm.get_supported_hf_model_mapping
-    assert isinstance(hf_mapping, dict)
+    assert isinstance(
+        hf_mapping,
+        dict,
+    )
     assert len(hf_mapping) > 0
 
 
@@ -147,50 +169,71 @@ def test_tensorrt_llm_supported_models():
 @pytest.mark.unit
 def test_tensorrt_llm_input_dtype():
     try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        from nemo_export.tensorrt_llm import (
+            TensorRTLLM,
         )
+    except ImportError:
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
-    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+    trt_llm = TensorRTLLM(
+        model_dir=model_dir,
+        load_model=False,
+    )
 
-    from megatron.core.export.data_type import DataType
+    from megatron.core.export.data_type import (
+        DataType,
+    )
 
     # Test different storage dtypes
     test_cases = [
-        (torch.float32, DataType.float32),
-        (torch.float16, DataType.float16),
-        (torch.bfloat16, DataType.bfloat16),
+        (
+            torch.float32,
+            DataType.float32,
+        ),
+        (
+            torch.float16,
+            DataType.float16,
+        ),
+        (
+            torch.bfloat16,
+            DataType.bfloat16,
+        ),
     ]
 
-    for storage_dtype, expected_dtype in test_cases:
+    for (
+        storage_dtype,
+        expected_dtype,
+    ) in test_cases:
         input_dtype = trt_llm.get_input_dtype(storage_dtype)
-        assert input_dtype == expected_dtype, (
-            f"Expected {expected_dtype} for {storage_dtype}, got {input_dtype}"
-        )
+        assert input_dtype == expected_dtype, f"Expected {expected_dtype} for {storage_dtype}, got {input_dtype}"
 
 
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_tensorrt_llm_hidden_size():
     try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        from nemo_export.tensorrt_llm import (
+            TensorRTLLM,
         )
+    except ImportError:
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
-    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+    trt_llm = TensorRTLLM(
+        model_dir=model_dir,
+        load_model=False,
+    )
 
     # Test hidden size property
     hidden_size = trt_llm.get_hidden_size
     if hidden_size is not None:
-        assert isinstance(hidden_size, int)
+        assert isinstance(
+            hidden_size,
+            int,
+        )
         assert hidden_size > 0
     else:
         assert hidden_size is None
@@ -200,19 +243,25 @@ def test_tensorrt_llm_hidden_size():
 @pytest.mark.unit
 def test_tensorrt_llm_triton_io():
     try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        from nemo_export.tensorrt_llm import (
+            TensorRTLLM,
         )
+    except ImportError:
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
-    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+    trt_llm = TensorRTLLM(
+        model_dir=model_dir,
+        load_model=False,
+    )
 
     # Test Triton input configuration
     triton_input = trt_llm.get_triton_input
-    assert isinstance(triton_input, tuple)
+    assert isinstance(
+        triton_input,
+        tuple,
+    )
     assert triton_input[0].name == "prompts"
     assert triton_input[1].name == "max_output_len"
     assert triton_input[2].name == "top_k"
@@ -225,7 +274,10 @@ def test_tensorrt_llm_triton_io():
 
     # Test Triton output configuration
     triton_output = trt_llm.get_triton_output
-    assert isinstance(triton_output, tuple)
+    assert isinstance(
+        triton_output,
+        tuple,
+    )
     assert triton_output[0].name == "outputs"
     assert triton_output[1].name == "generation_logits"
     assert triton_output[2].name == "context_logits"
@@ -235,25 +287,35 @@ def test_tensorrt_llm_triton_io():
 @pytest.mark.unit
 def test_tensorrt_llm_pad_logits():
     try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        from nemo_export.tensorrt_llm import (
+            TensorRTLLM,
         )
+    except ImportError:
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
-    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+    trt_llm = TensorRTLLM(
+        model_dir=model_dir,
+        load_model=False,
+    )
 
     # Create a sample logits tensor
     batch_size = 2
     seq_len = 3
     vocab_size = 1000
-    logits = torch.randn(batch_size, seq_len, vocab_size)
+    logits = torch.randn(
+        batch_size,
+        seq_len,
+        vocab_size,
+    )
 
     # Test padding logits
     padded_logits = trt_llm._pad_logits(logits)
-    assert isinstance(padded_logits, torch.Tensor)
+    assert isinstance(
+        padded_logits,
+        torch.Tensor,
+    )
     assert padded_logits.shape[0] == batch_size
     assert padded_logits.shape[1] == seq_len
     assert padded_logits.shape[2] >= vocab_size  # Should be padded to a multiple of 8

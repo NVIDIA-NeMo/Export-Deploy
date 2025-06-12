@@ -15,9 +15,13 @@
 import argparse
 import logging
 import pprint
-from typing import Optional
+from typing import (
+    Optional,
+)
 
-from nemo_export.tensorrt_llm import TensorRTLLM
+from nemo_export.tensorrt_llm import (
+    TensorRTLLM,
+)
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -28,10 +32,17 @@ def get_args():
         description="Exports NeMo checkpoint to TensorRT-LLM engine",
     )
     parser.add_argument(
-        "-nc", "--nemo_checkpoint", required=True, type=str, help="Source model path"
+        "-nc",
+        "--nemo_checkpoint",
+        required=True,
+        type=str,
+        help="Source model path",
     )
     parser.add_argument(
-        "-mt", "--model_type", type=str, help="Type of the TensorRT-LLM model."
+        "-mt",
+        "--model_type",
+        type=str,
+        help="Type of the TensorRT-LLM model.",
     )
     parser.add_argument(
         "-mr",
@@ -58,7 +69,10 @@ def get_args():
     parser.add_argument(
         "-dt",
         "--dtype",
-        choices=["bfloat16", "float16"],
+        choices=[
+            "bfloat16",
+            "float16",
+        ],
         help="Data type of the model on TensorRT-LLM",
     )
     parser.add_argument(
@@ -83,7 +97,11 @@ def get_args():
         help="Max batch size of the model",
     )
     parser.add_argument(
-        "-mnt", "--max_num_tokens", default=None, type=int, help="Max number of tokens"
+        "-mnt",
+        "--max_num_tokens",
+        default=None,
+        type=int,
+        help="Max number of tokens",
     )
     parser.add_argument(
         "-ont",
@@ -133,7 +151,11 @@ def get_args():
         "--use_lora_plugin",
         nargs="?",
         const=None,
-        choices=["float16", "float32", "bfloat16"],
+        choices=[
+            "float16",
+            "float32",
+            "bfloat16",
+        ],
         help="Activates the lora plugin which enables embedding sharing.",
     )
     parser.add_argument(
@@ -156,8 +178,7 @@ def get_args():
         "--max_lora_rank",
         type=int,
         default=64,
-        help="maximum lora rank for different lora modules. "
-        "It is used to compute the workspace size of lora plugin.",
+        help="maximum lora rank for different lora modules. It is used to compute the workspace size of lora plugin.",
     )
     parser.add_argument(
         "-dm",
@@ -187,25 +208,37 @@ def get_args():
     )
     args = parser.parse_args()
 
-    def str_to_bool(name: str, s: str, optional: bool = False) -> Optional[bool]:
+    def str_to_bool(
+        name: str,
+        s: str,
+        optional: bool = False,
+    ) -> Optional[bool]:
         s = s.lower()
-        true_strings = ["true", "1"]
-        false_strings = ["false", "0"]
+        true_strings = [
+            "true",
+            "1",
+        ]
+        false_strings = [
+            "false",
+            "0",
+        ]
         if s in true_strings:
             return True
         if s in false_strings:
             return False
         if optional and s == "auto":
             return None
-        raise argparse.ArgumentTypeError(
-            f"Invalid boolean value for argument --{name}: '{s}'"
-        )
+        raise argparse.ArgumentTypeError(f"Invalid boolean value for argument --{name}: '{s}'")
 
     args.export_fp8_quantized = str_to_bool(
-        "export_fp8_quantized", args.export_fp8_quantized, optional=True
+        "export_fp8_quantized",
+        args.export_fp8_quantized,
+        optional=True,
     )
     args.use_fp8_kv_cache = str_to_bool(
-        "use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True
+        "use_fp8_kv_cache",
+        args.use_fp8_kv_cache,
+        optional=True,
     )
     return args
 

@@ -16,21 +16,48 @@
 import numpy as np
 import pytest
 
-from nemo_deploy.triton_deployable import ITritonDeployable
+from nemo_deploy.triton_deployable import (
+    ITritonDeployable,
+)
 
 
 class MockTritonDeployable(ITritonDeployable):
-    def __init__(self):
-        self.input_shape = (1, 10)
-        self.output_shape = (1, 5)
+    def __init__(
+        self,
+    ):
+        self.input_shape = (
+            1,
+            10,
+        )
+        self.output_shape = (
+            1,
+            5,
+        )
 
-    def get_triton_input(self):
-        return {"input": {"shape": self.input_shape, "dtype": np.float32}}
+    def get_triton_input(
+        self,
+    ):
+        return {
+            "input": {
+                "shape": self.input_shape,
+                "dtype": np.float32,
+            }
+        }
 
-    def get_triton_output(self):
-        return {"output": {"shape": self.output_shape, "dtype": np.float32}}
+    def get_triton_output(
+        self,
+    ):
+        return {
+            "output": {
+                "shape": self.output_shape,
+                "dtype": np.float32,
+            }
+        }
 
-    def triton_infer_fn(self, **inputs: np.ndarray):
+    def triton_infer_fn(
+        self,
+        **inputs: np.ndarray,
+    ):
         input_data = inputs["input"]
         return {"output": np.ones(self.output_shape) * np.mean(input_data)}
 
@@ -40,28 +67,43 @@ def mock_deployable():
     return MockTritonDeployable()
 
 
-def test_get_triton_input(mock_deployable):
+def test_get_triton_input(
+    mock_deployable,
+):
     """Test that get_triton_input returns the correct input specification."""
     input_spec = mock_deployable.get_triton_input()
 
     assert "input" in input_spec
-    assert input_spec["input"]["shape"] == (1, 10)
+    assert input_spec["input"]["shape"] == (
+        1,
+        10,
+    )
     assert input_spec["input"]["dtype"] == np.float32
 
 
-def test_get_triton_output(mock_deployable):
+def test_get_triton_output(
+    mock_deployable,
+):
     """Test that get_triton_output returns the correct output specification."""
     output_spec = mock_deployable.get_triton_output()
 
     assert "output" in output_spec
-    assert output_spec["output"]["shape"] == (1, 5)
+    assert output_spec["output"]["shape"] == (
+        1,
+        5,
+    )
     assert output_spec["output"]["dtype"] == np.float32
 
 
-def test_triton_infer_fn(mock_deployable):
+def test_triton_infer_fn(
+    mock_deployable,
+):
     """Test that triton_infer_fn processes inputs correctly."""
     # Create test input
-    test_input = np.random.rand(1, 10).astype(np.float32)
+    test_input = np.random.rand(
+        1,
+        10,
+    ).astype(np.float32)
     input_mean = np.mean(test_input)
 
     # Run inference
@@ -69,8 +111,14 @@ def test_triton_infer_fn(mock_deployable):
 
     # Check output
     assert "output" in result
-    assert result["output"].shape == (1, 5)
-    assert np.allclose(result["output"], input_mean)
+    assert result["output"].shape == (
+        1,
+        5,
+    )
+    assert np.allclose(
+        result["output"],
+        input_mean,
+    )
 
 
 def test_abstract_class_instantiation():

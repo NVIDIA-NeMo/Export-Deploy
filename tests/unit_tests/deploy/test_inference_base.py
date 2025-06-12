@@ -13,17 +13,30 @@
 # limitations under the License.
 
 import unittest
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from pathlib import (
+    Path,
+)
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import torch
-from megatron.core.inference.engines.mcore_engine import MCoreEngine
+from megatron.core.inference.engines.mcore_engine import (
+    MCoreEngine,
+)
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
 )
-from megatron.core.transformer.module import MegatronModule
-from nemo.collections.llm.gpt.model.base import GPTConfig
-from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
+from megatron.core.transformer.module import (
+    MegatronModule,
+)
+from nemo.collections.llm.gpt.model.base import (
+    GPTConfig,
+)
+from nemo.collections.llm.inference.base import (
+    MCoreTokenizerWrappper,
+)
 
 from nemo_deploy.nlp.inference.inference_base import (
     MCoreEngineWithCleanup,
@@ -35,11 +48,16 @@ from nemo_deploy.nlp.inference.inference_base import (
     peel,
     setup_model_and_tokenizer_for_inference,
 )
-from nemo_deploy.nlp.inference.tron_utils import DistributedInitConfig, RNGConfig
+from nemo_deploy.nlp.inference.tron_utils import (
+    DistributedInitConfig,
+    RNGConfig,
+)
 
 
 class TestInferenceBase(unittest.TestCase):
-    def setUp(self):
+    def setUp(
+        self,
+    ):
         # Mock common objects needed for tests
         self.mock_model = MagicMock(spec=MegatronModule)
         self.mock_model_list = [self.mock_model]
@@ -73,14 +91,20 @@ class TestInferenceBase(unittest.TestCase):
     @patch("nemo_deploy.nlp.inference.inference_base.get_default_load_sharded_strategy")
     @patch("megatron.core.transformer.module.MegatronModule.sharded_state_dict")
     def test_load_dist_shards_into_model_single_model(
-        self, mock_sharded_state_dict, mock_get_strategy, mock_load
+        self,
+        mock_sharded_state_dict,
+        mock_get_strategy,
+        mock_load,
     ):
         # Setup mocks
         mock_sharded_state_dict.return_value = {"fake_key": "fake_value"}
         mock_get_strategy.return_value = "fake_strategy"
 
         # Call the function
-        _load_dist_shards_into_model(self.mock_model_list, self.mock_weights_dir)
+        _load_dist_shards_into_model(
+            self.mock_model_list,
+            self.mock_weights_dir,
+        )
 
         # Verify calls
         mock_sharded_state_dict.assert_called_once_with(self.mock_model)
@@ -92,22 +116,34 @@ class TestInferenceBase(unittest.TestCase):
     @patch("nemo_deploy.nlp.inference.inference_base.get_default_load_sharded_strategy")
     @patch("megatron.core.transformer.module.MegatronModule.sharded_state_dict")
     def test_load_dist_shards_into_model_multiple_models(
-        self, mock_sharded_state_dict, mock_get_strategy, mock_load
+        self,
+        mock_sharded_state_dict,
+        mock_get_strategy,
+        mock_load,
     ):
         # Setup multiple models
         mock_model1 = MagicMock(spec=MegatronModule)
         mock_model2 = MagicMock(spec=MegatronModule)
-        mock_model_list = [mock_model1, mock_model2]
+        mock_model_list = [
+            mock_model1,
+            mock_model2,
+        ]
         mock_sharded_state_dict.side_effect = [
             {"fake_key1": "fake_value1"},
             {"fake_key2": "fake_value2"},
         ]
 
         # Call the function
-        _load_dist_shards_into_model(mock_model_list, self.mock_weights_dir)
+        _load_dist_shards_into_model(
+            mock_model_list,
+            self.mock_weights_dir,
+        )
 
         # Verify calls
-        self.assertEqual(mock_sharded_state_dict.call_count, 2)
+        self.assertEqual(
+            mock_sharded_state_dict.call_count,
+            2,
+        )
         mock_get_strategy.assert_called_once_with(str(self.mock_weights_dir))
         mock_load.assert_called_once()
         mock_model1.load_state_dict.assert_called_once()
@@ -115,7 +151,11 @@ class TestInferenceBase(unittest.TestCase):
 
     @patch("torch.distributed.is_initialized")
     @patch("torch.distributed.destroy_process_group")
-    def test_cleanup_distributed_initialized(self, mock_destroy, mock_is_initialized):
+    def test_cleanup_distributed_initialized(
+        self,
+        mock_destroy,
+        mock_is_initialized,
+    ):
         # Setup mock
         mock_is_initialized.return_value = True
 
@@ -129,7 +169,9 @@ class TestInferenceBase(unittest.TestCase):
     @patch("torch.distributed.is_initialized")
     @patch("torch.distributed.destroy_process_group")
     def test_cleanup_distributed_not_initialized(
-        self, mock_destroy, mock_is_initialized
+        self,
+        mock_destroy,
+        mock_is_initialized,
     ):
         # Setup mock
         mock_is_initialized.return_value = False
@@ -145,7 +187,10 @@ class TestInferenceBase(unittest.TestCase):
     @patch("nemo_deploy.nlp.inference.inference_base._set_random_seed")
     @patch("nemo_deploy.nlp.inference.inference_base._initialize_tp_communicators")
     def test_initialize_megatron_for_inference(
-        self, mock_tp_comm, mock_seed, mock_init_dist
+        self,
+        mock_tp_comm,
+        mock_seed,
+        mock_init_dist,
     ):
         # Setup mocks
         self.model_config.tp_comm_overlap = True
@@ -153,27 +198,46 @@ class TestInferenceBase(unittest.TestCase):
 
         # Call the function
         initialize_megatron_for_inference(
-            self.model_config, self.dist_config, self.rng_config, micro_batch_size
+            self.model_config,
+            self.dist_config,
+            self.rng_config,
+            micro_batch_size,
         )
 
         # Verify calls
         mock_init_dist.assert_called_once()
         mock_seed.assert_called_once()
-        mock_tp_comm.assert_called_once_with(self.model_config, micro_batch_size)
+        mock_tp_comm.assert_called_once_with(
+            self.model_config,
+            micro_batch_size,
+        )
 
-    def test_peel_unwrapped_module(self):
+    def test_peel_unwrapped_module(
+        self,
+    ):
         # Setup a simple module
-        module = torch.nn.Linear(10, 10)
+        module = torch.nn.Linear(
+            10,
+            10,
+        )
 
         # Call the function
         result = peel(module)
 
         # Verify the result
-        self.assertEqual(result, module)
+        self.assertEqual(
+            result,
+            module,
+        )
 
-    def test_peel_wrapped_module(self):
+    def test_peel_wrapped_module(
+        self,
+    ):
         # Setup a wrapped module (nested)
-        inner_module = torch.nn.Linear(10, 10)
+        inner_module = torch.nn.Linear(
+            10,
+            10,
+        )
         middle_wrapper = MagicMock()
         middle_wrapper.module = inner_module
         outer_wrapper = MagicMock()
@@ -183,23 +247,36 @@ class TestInferenceBase(unittest.TestCase):
         result = peel(outer_wrapper)
 
         # Verify the result
-        self.assertEqual(result, inner_module)
+        self.assertEqual(
+            result,
+            inner_module,
+        )
 
     @patch("nemo_deploy.nlp.inference.inference_base._load_dist_shards_into_model")
     @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_weights_subdir")
     def test_load_nemo_checkpoint_to_tron_model(
-        self, mock_ckpt_to_weights, mock_load_shards
+        self,
+        mock_ckpt_to_weights,
+        mock_load_shards,
     ):
         # Setup mocks
         mock_ckpt_to_weights.return_value = self.mock_weights_dir
 
         # Call the function
-        load_nemo_checkpoint_to_tron_model(self.mock_model_list, self.mock_path)
+        load_nemo_checkpoint_to_tron_model(
+            self.mock_model_list,
+            self.mock_path,
+        )
 
         # Verify calls
-        mock_ckpt_to_weights.assert_called_once_with(self.mock_path, is_saving=False)
+        mock_ckpt_to_weights.assert_called_once_with(
+            self.mock_path,
+            is_saving=False,
+        )
         mock_load_shards.assert_called_once_with(
-            self.mock_model_list, self.mock_weights_dir, False
+            self.mock_model_list,
+            self.mock_weights_dir,
+            False,
         )
 
     @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
@@ -208,9 +285,7 @@ class TestInferenceBase(unittest.TestCase):
     @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_context_subdir")
     @patch("nemo_deploy.nlp.inference.inference_base.initialize_megatron_for_inference")
     @patch("nemo_deploy.nlp.inference.inference_base.get_model_from_config")
-    @patch(
-        "nemo_deploy.nlp.inference.inference_base.load_nemo_checkpoint_to_tron_model"
-    )
+    @patch("nemo_deploy.nlp.inference.inference_base.load_nemo_checkpoint_to_tron_model")
     @patch("nemo_deploy.nlp.inference.inference_base.peel")
     @patch("nemo_deploy.nlp.inference.inference_base.MCoreTokenizerWrappper")
     def test_setup_model_and_tokenizer_for_inference(
@@ -246,7 +321,10 @@ class TestInferenceBase(unittest.TestCase):
         )
 
         # Verify calls and result
-        self.assertEqual(len(result), 2)
+        self.assertEqual(
+            len(result),
+            2,
+        )
         mock_check_dist.assert_called_once()
         mock_init_megatron.assert_called_once()
         mock_get_model.assert_called_once()
@@ -287,37 +365,52 @@ class TestInferenceBase(unittest.TestCase):
         mock_weights_subdir.assert_called_once()
         mock_check_dist.assert_called_once()
 
-    def test_mcore_engine_with_cleanup(self):
+    def test_mcore_engine_with_cleanup(
+        self,
+    ):
         # Create mocks for the engine and wrapper
         mock_engine = MagicMock(spec=MCoreEngine)
         mock_wrapper = MagicMock(spec=GPTInferenceWrapper)
 
         # Create the wrapper
         engine_wrapper = MCoreEngineWithCleanup(
-            mock_engine, mock_wrapper, self.mock_tokenizer
+            mock_engine,
+            mock_wrapper,
+            self.mock_tokenizer,
         )
 
         # Test attribute delegation - mock the attribute access directly instead of using __getattr__
         # Define the attribute directly on the mock
         mock_engine.some_attribute = "attribute_value"
         attribute_value = engine_wrapper.some_attribute
-        self.assertEqual(attribute_value, "attribute_value")
+        self.assertEqual(
+            attribute_value,
+            "attribute_value",
+        )
 
         # Test method delegation - create a method on the mock
         mock_engine.some_method = MagicMock(return_value="method_result")
         result = engine_wrapper.some_method()
-        self.assertEqual(result, "method_result")
+        self.assertEqual(
+            result,
+            "method_result",
+        )
         mock_engine.some_method.assert_called_once()
 
     @patch("nemo_deploy.nlp.inference.inference_base.cleanup_distributed")
-    def test_mcore_engine_with_cleanup_del(self, mock_cleanup):
+    def test_mcore_engine_with_cleanup_del(
+        self,
+        mock_cleanup,
+    ):
         # Create mocks
         mock_engine = MagicMock(spec=MCoreEngine)
         mock_wrapper = MagicMock(spec=GPTInferenceWrapper)
 
         # Create the wrapper
         engine_wrapper = MCoreEngineWithCleanup(
-            mock_engine, mock_wrapper, self.mock_tokenizer
+            mock_engine,
+            mock_wrapper,
+            self.mock_tokenizer,
         )
 
         # Call __del__
@@ -327,9 +420,7 @@ class TestInferenceBase(unittest.TestCase):
         mock_cleanup.assert_called_once()
 
     @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
-    @patch(
-        "nemo_deploy.nlp.inference.inference_base.setup_model_and_tokenizer_for_inference"
-    )
+    @patch("nemo_deploy.nlp.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_context_subdir")
     @patch("nemo_deploy.nlp.inference.inference_base.GPTInferenceWrapper")
     @patch("nemo_deploy.nlp.inference.inference_base.TextGenerationController")
@@ -348,7 +439,10 @@ class TestInferenceBase(unittest.TestCase):
         # Setup mocks
         mock_world_size.return_value = 4
         mock_model = MagicMock()
-        mock_setup.return_value = ([mock_model], self.mock_tokenizer)
+        mock_setup.return_value = (
+            [mock_model],
+            self.mock_tokenizer,
+        )
         mock_context = MagicMock()
         mock_context.config = self.model_config
         mock_load_context.return_value = mock_context
@@ -363,7 +457,10 @@ class TestInferenceBase(unittest.TestCase):
         )
 
         # Verify calls and result
-        self.assertEqual(len(result), 3)
+        self.assertEqual(
+            len(result),
+            3,
+        )
         mock_setup.assert_called_once()
         mock_wrapper.assert_called_once()
         mock_controller.assert_called_once()
@@ -372,7 +469,9 @@ class TestInferenceBase(unittest.TestCase):
     @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
     @patch("nemo_deploy.nlp.inference.inference_base.get_world_size_safe")
     def test_create_mcore_engine_insufficient_devices(
-        self, mock_world_size, mock_load_context
+        self,
+        mock_world_size,
+        mock_load_context,
     ):
         # Setup mocks
         mock_world_size.return_value = 4

@@ -13,10 +13,16 @@
 # limitations under the License.
 
 import argparse
-from pathlib import Path
+from pathlib import (
+    Path,
+)
 
-from nemo.collections import vlm
-from nemo.collections.llm import import_ckpt
+from nemo.collections import (
+    vlm,
+)
+from nemo.collections.llm import (
+    import_ckpt,
+)
 
 HF_MODEL_ID_TO_NEMO_CLASS = {
     "llava-hf/llava-1.5-7b-hf": vlm.LlavaModel,
@@ -33,9 +39,7 @@ HF_MODEL_ID_TO_NEMO_CLASS = {
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Import NeMo checkpoint from Hugging Face format."
-    )
+    parser = argparse.ArgumentParser(description="Import NeMo checkpoint from Hugging Face format.")
     parser.add_argument(
         "--input_name_or_path",
         type=str,
@@ -62,12 +66,12 @@ if __name__ == "__main__":
         try:
             model_class = eval(args.nemo_class)
         except Exception as e:
-            raise ValueError(
-                f"Could not import the specified NeMo class '{args.nemo_class}': {e}"
-            )
+            raise ValueError(f"Could not import the specified NeMo class '{args.nemo_class}': {e}")
     else:
         model_class = HF_MODEL_ID_TO_NEMO_CLASS[model_name_or_path]
 
     import_ckpt(
-        model_class(), f"hf://{model_name_or_path}", output_path=args.output_path
+        model_class(),
+        f"hf://{model_name_or_path}",
+        output_path=args.output_path,
     )

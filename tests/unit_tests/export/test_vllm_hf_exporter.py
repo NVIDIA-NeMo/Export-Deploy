@@ -13,7 +13,10 @@
 # limitations under the License.
 
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import numpy as np
 import pytest
@@ -21,7 +24,9 @@ import pytest
 
 @pytest.fixture
 def exporter():
-    from nemo_export.vllm_hf_exporter import vLLMHFExporter
+    from nemo_export.vllm_hf_exporter import (
+        vLLMHFExporter,
+    )
 
     return vLLMHFExporter()
 
@@ -36,7 +41,9 @@ def mock_llm():
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_init(exporter):
+def test_init(
+    exporter,
+):
     """Test initialization of vLLMHFExporter"""
     assert exporter.model is None
     assert exporter.lora_models is None
@@ -44,34 +51,54 @@ def test_init(exporter):
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_export(exporter, mock_llm):
+def test_export(
+    exporter,
+    mock_llm,
+):
     """Test export method"""
     model_path = "/path/to/model"
     exporter.export(model=model_path)
 
     assert exporter.model is not None
-    mock_llm.assert_called_once_with(model=model_path, enable_lora=False)
+    mock_llm.assert_called_once_with(
+        model=model_path,
+        enable_lora=False,
+    )
 
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_export_with_lora(exporter, mock_llm):
+def test_export_with_lora(
+    exporter,
+    mock_llm,
+):
     """Test export method with LoRA enabled"""
     model_path = "/path/to/model"
-    exporter.export(model=model_path, enable_lora=True)
+    exporter.export(
+        model=model_path,
+        enable_lora=True,
+    )
 
     assert exporter.model is not None
-    mock_llm.assert_called_once_with(model=model_path, enable_lora=True)
+    mock_llm.assert_called_once_with(
+        model=model_path,
+        enable_lora=True,
+    )
 
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_add_lora_models(exporter):
+def test_add_lora_models(
+    exporter,
+):
     """Test adding LoRA models"""
     lora_name = "test_lora"
     lora_model = "path/to/lora"
 
-    exporter.add_lora_models(lora_name, lora_model)
+    exporter.add_lora_models(
+        lora_name,
+        lora_model,
+    )
 
     assert exporter.lora_models is not None
     assert lora_name in exporter.lora_models
@@ -80,7 +107,9 @@ def test_add_lora_models(exporter):
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_get_triton_input(exporter):
+def test_get_triton_input(
+    exporter,
+):
     """Test triton input configuration"""
     inputs = exporter.get_triton_input
 
@@ -100,13 +129,18 @@ def test_get_triton_input(exporter):
             assert tensor.dtype == np.int_
         elif tensor.name in ["top_k"]:
             assert tensor.dtype == np.int_
-        elif tensor.name in ["top_p", "temperature"]:
+        elif tensor.name in [
+            "top_p",
+            "temperature",
+        ]:
             assert tensor.dtype == np.single
 
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_get_triton_output(exporter):
+def test_get_triton_output(
+    exporter,
+):
     """Test triton output configuration"""
     outputs = exporter.get_triton_output
 
@@ -117,41 +151,68 @@ def test_get_triton_output(exporter):
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_forward_without_model(exporter):
+def test_forward_without_model(
+    exporter,
+):
     """Test forward method without initialized model"""
-    with pytest.raises(AssertionError, match="Model is not initialized"):
+    with pytest.raises(
+        AssertionError,
+        match="Model is not initialized",
+    ):
         exporter.forward(["test prompt"])
 
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_forward_with_lora_not_added(exporter, mock_llm):
+def test_forward_with_lora_not_added(
+    exporter,
+    mock_llm,
+):
     """Test forward method with non-existent LoRA model"""
     exporter.export(model="/path/to/model")
 
-    with pytest.raises(Exception, match="No lora models are available"):
-        exporter.forward(["test prompt"], lora_model_name="non_existent_lora")
+    with pytest.raises(
+        Exception,
+        match="No lora models are available",
+    ):
+        exporter.forward(
+            ["test prompt"],
+            lora_model_name="non_existent_lora",
+        )
 
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_forward_with_invalid_lora(exporter, mock_llm):
+def test_forward_with_invalid_lora(
+    exporter,
+    mock_llm,
+):
     """Test forward method with invalid LoRA model name"""
     exporter.export(model="/path/to/model")
-    exporter.add_lora_models("valid_lora", "path/to/lora")
+    exporter.add_lora_models(
+        "valid_lora",
+        "path/to/lora",
+    )
 
-    with pytest.raises(AssertionError, match="Lora model was not added before"):
-        exporter.forward(["test prompt"], lora_model_name="invalid_lora")
+    with pytest.raises(
+        AssertionError,
+        match="Lora model was not added before",
+    ):
+        exporter.forward(
+            ["test prompt"],
+            lora_model_name="invalid_lora",
+        )
 
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_triton_infer_fn(exporter, mock_llm):
+def test_triton_infer_fn(
+    exporter,
+    mock_llm,
+):
     """Test triton inference function"""
     exporter.export(model="/path/to/model")
-    mock_llm.generate.return_value = [
-        MagicMock(outputs=[MagicMock(text="test output")])
-    ]
+    mock_llm.generate.return_value = [MagicMock(outputs=[MagicMock(text="test output")])]
 
     inputs = {
         "prompts": np.array([b"test prompt"]),
@@ -164,19 +225,27 @@ def test_triton_infer_fn(exporter, mock_llm):
     result = exporter.triton_infer_fn(**inputs)
 
     assert "outputs" in result
-    assert isinstance(result["outputs"], np.ndarray)
+    assert isinstance(
+        result["outputs"],
+        np.ndarray,
+    )
     assert result["outputs"].dtype == np.bytes_
 
 
 @pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
-def test_triton_infer_fn_error_handling(exporter):
+def test_triton_infer_fn_error_handling(
+    exporter,
+):
     """Test triton inference function error handling"""
     inputs = {"prompts": np.array([b"test prompt"])}
 
     result = exporter.triton_infer_fn(**inputs)
 
     assert "outputs" in result
-    assert isinstance(result["outputs"], np.ndarray)
+    assert isinstance(
+        result["outputs"],
+        np.ndarray,
+    )
     assert result["outputs"].dtype == np.bytes_
     assert b"An error occurred" in result["outputs"][0]

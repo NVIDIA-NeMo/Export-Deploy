@@ -13,14 +13,24 @@
 # limitations under the License.
 
 import shutil
-from collections import Counter
-from pathlib import Path
-from typing import Dict, Optional, Union
+from collections import (
+    Counter,
+)
+from pathlib import (
+    Path,
+)
+from typing import (
+    Dict,
+    Optional,
+    Union,
+)
 
 import torch
 
 
-def is_nemo2_checkpoint(checkpoint_path: str) -> bool:
+def is_nemo2_checkpoint(
+    checkpoint_path: str,
+) -> bool:
     """Checks if the checkpoint is in NeMo 2.0 format.
 
     Args:
@@ -34,7 +44,10 @@ def is_nemo2_checkpoint(checkpoint_path: str) -> bool:
 
 
 def prepare_directory_for_export(
-    model_dir: Union[str, Path],
+    model_dir: Union[
+        str,
+        Path,
+    ],
     delete_existing_files: bool,
     subdir: Optional[str] = None,
 ) -> None:
@@ -56,16 +69,19 @@ def prepare_directory_for_export(
         if delete_existing_files:
             shutil.rmtree(model_path)
         elif any(model_path.iterdir()):
-            raise RuntimeError(
-                f"There are files in {model_path} folder: try setting delete_existing_files=True."
-            )
+            raise RuntimeError(f"There are files in {model_path} folder: try setting delete_existing_files=True.")
 
     if subdir is not None:
         model_path /= subdir
-    model_path.mkdir(parents=True, exist_ok=True)
+    model_path.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
 
-def is_nemo_tarfile(path: str) -> bool:
+def is_nemo_tarfile(
+    path: str,
+) -> bool:
     """Checks if the path exists and points to packed NeMo 1 checkpoint.
 
     Args:
@@ -80,7 +96,11 @@ def is_nemo_tarfile(path: str) -> bool:
 
 # Copied from nemo.collections.nlp.parts.utils_funcs to avoid introducing extra NeMo dependencies:
 def torch_dtype_from_precision(
-    precision: Union[int, str], megatron_amp_O2: bool = True
+    precision: Union[
+        int,
+        str,
+    ],
+    megatron_amp_O2: bool = True,
 ) -> torch.dtype:
     """Mapping from PyTorch Lighthing (PTL) precision types to corresponding PyTorch parameter data type.
 
@@ -94,19 +114,30 @@ def torch_dtype_from_precision(
     if not megatron_amp_O2:
         return torch.float32
 
-    if precision in ["bf16", "bf16-mixed"]:
+    if precision in [
+        "bf16",
+        "bf16-mixed",
+    ]:
         return torch.bfloat16
-    elif precision in [16, "16", "16-mixed"]:
+    elif precision in [
+        16,
+        "16",
+        "16-mixed",
+    ]:
         return torch.float16
-    elif precision in [32, "32", "32-true"]:
+    elif precision in [
+        32,
+        "32",
+        "32-true",
+    ]:
         return torch.float32
     else:
-        raise ValueError(
-            f"Could not parse the precision of '{precision}' to a valid torch.dtype"
-        )
+        raise ValueError(f"Could not parse the precision of '{precision}' to a valid torch.dtype")
 
 
-def get_model_device_type(module: torch.nn.Module) -> str:
+def get_model_device_type(
+    module: torch.nn.Module,
+) -> str:
     """Find the device type the model is assigned to and ensure consistency."""
     # Collect device types of all parameters and buffers
     param_device_types = {param.device.type for param in module.parameters()}
@@ -123,7 +154,12 @@ def get_model_device_type(module: torch.nn.Module) -> str:
     return all_device_types.pop() if all_device_types else "cpu"
 
 
-def get_example_inputs(tokenizer) -> Dict[str, torch.Tensor]:
+def get_example_inputs(
+    tokenizer,
+) -> Dict[
+    str,
+    torch.Tensor,
+]:
     """Gets example data to feed to the model during ONNX export.
 
     Returns:
@@ -131,8 +167,14 @@ def get_example_inputs(tokenizer) -> Dict[str, torch.Tensor]:
     """
     example_inputs = dict(
         tokenizer(
-            ["example query one", "example query two"],
-            ["example passage one", "example passage two"],
+            [
+                "example query one",
+                "example query two",
+            ],
+            [
+                "example passage one",
+                "example passage two",
+            ],
             return_tensors="pt",
         )
     )
@@ -140,7 +182,9 @@ def get_example_inputs(tokenizer) -> Dict[str, torch.Tensor]:
     return example_inputs
 
 
-def validate_fp8_network(network) -> None:
+def validate_fp8_network(
+    network,
+) -> None:
     """Checks the network to ensure it's compatible with fp8 precison.
 
     Raises:
@@ -150,14 +194,15 @@ def validate_fp8_network(network) -> None:
 
     quantize_dequantize_layers = []
     for layer in network:
-        if layer.type in {trt.LayerType.QUANTIZE, trt.LayerType.DEQUANTIZE}:
+        if layer.type in {
+            trt.LayerType.QUANTIZE,
+            trt.LayerType.DEQUANTIZE,
+        }:
             quantize_dequantize_layers.append(layer)
     if not quantize_dequantize_layers:
         error_msg = "No Quantize/Dequantize layers found"
         raise ValueError(error_msg)
-    quantize_dequantize_layer_dtypes = Counter(
-        layer.precision for layer in quantize_dequantize_layers
-    )
+    quantize_dequantize_layer_dtypes = Counter(layer.precision for layer in quantize_dequantize_layers)
     if trt.DataType.FP8 not in quantize_dequantize_layer_dtypes:
         error_msg = "Found Quantize/Dequantize layers. But none with FP8 precision."
         raise ValueError(error_msg)

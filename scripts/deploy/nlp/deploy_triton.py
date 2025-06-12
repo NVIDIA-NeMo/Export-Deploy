@@ -17,13 +17,23 @@ import json
 import logging
 import os
 import sys
-from pathlib import Path
-from typing import Optional
+from pathlib import (
+    Path,
+)
+from typing import (
+    Optional,
+)
 
 import uvicorn
-from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+)
 
-from nemo_deploy import DeployPyTriton
+from nemo_deploy import (
+    DeployPyTriton,
+)
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -34,31 +44,41 @@ class UsageError(Exception):
 
 megatron_llm_supported = True
 try:
-    from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployable
-except Exception as e:
-    LOGGER.warning(
-        f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}"
+    from nemo_deploy.nlp.megatronllm_deployable import (
+        MegatronLLMDeployable,
     )
+except Exception as e:
+    LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False
 
 trt_llm_supported = True
 try:
-    from nemo_export.tensorrt_llm import TensorRTLLM
-except Exception as e:
-    LOGGER.warning(
-        f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}"
+    from nemo_export.tensorrt_llm import (
+        TensorRTLLM,
     )
+except Exception as e:
+    LOGGER.warning(f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}")
     trt_llm_supported = False
 
 
-def get_args(argv):
+def get_args(
+    argv,
+):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Deploy nemo models to Triton",
     )
-    parser.add_argument("-nc", "--nemo_checkpoint", type=str, help="Source .nemo file")
     parser.add_argument(
-        "-hfp", "--hf_model_id_path", type=str, help="Huggingface model path or id"
+        "-nc",
+        "--nemo_checkpoint",
+        type=str,
+        help="Source .nemo file",
+    )
+    parser.add_argument(
+        "-hfp",
+        "--hf_model_id_path",
+        type=str,
+        help="Huggingface model path or id",
     )
     parser.add_argument(
         "-mt",
@@ -134,7 +154,12 @@ def get_args(argv):
     parser.add_argument(
         "-dt",
         "--dtype",
-        choices=["bfloat16", "float16", "fp8", "int8"],
+        choices=[
+            "bfloat16",
+            "float16",
+            "fp8",
+            "int8",
+        ],
         default="bfloat16",
         type=str,
         help="dtype of the model on TensorRT-LLM",
@@ -161,7 +186,11 @@ def get_args(argv):
         help="Max batch size of the model",
     )
     parser.add_argument(
-        "-mnt", "--max_num_tokens", default=None, type=int, help="Max number of tokens"
+        "-mnt",
+        "--max_num_tokens",
+        default=None,
+        type=int,
+        help="Max number of tokens",
     )
     parser.add_argument(
         "-msl",
@@ -192,7 +221,11 @@ def get_args(argv):
         help="dtype of gpt attention plugin",
     )
     parser.add_argument(
-        "-gp", "--gemm_plugin", default="auto", type=str, help="dtype of gpt plugin"
+        "-gp",
+        "--gemm_plugin",
+        default="auto",
+        type=str,
+        help="dtype of gpt plugin",
     )
     parser.add_argument(
         "-npkc",
@@ -235,7 +268,11 @@ def get_args(argv):
         "--use_lora_plugin",
         nargs="?",
         const=None,
-        choices=["float16", "float32", "bfloat16"],
+        choices=[
+            "float16",
+            "float32",
+            "bfloat16",
+        ],
         help="Activates the lora plugin which enables embedding sharing.",
     )
     parser.add_argument(
@@ -258,8 +295,7 @@ def get_args(argv):
         "--max_lora_rank",
         type=int,
         default=64,
-        help="maximum lora rank for different lora modules. "
-        "It is used to compute the workspace size of lora plugin.",
+        help="maximum lora rank for different lora modules. It is used to compute the workspace size of lora plugin.",
     )
     parser.add_argument(
         "-lc",
@@ -282,7 +318,10 @@ def get_args(argv):
         nargs="?",
         const=None,
         default="TensorRT-LLM",
-        choices=["TensorRT-LLM", "In-Framework"],
+        choices=[
+            "TensorRT-LLM",
+            "In-Framework",
+        ],
         help="Different options to deploy nemo model.",
     )
     parser.add_argument(
@@ -336,10 +375,20 @@ def get_args(argv):
     )
     args = parser.parse_args(argv)
 
-    def str_to_bool(name: str, s: str, optional: bool = False) -> Optional[bool]:
+    def str_to_bool(
+        name: str,
+        s: str,
+        optional: bool = False,
+    ) -> Optional[bool]:
         s = s.lower()
-        true_strings = ["true", "1"]
-        false_strings = ["false", "0"]
+        true_strings = [
+            "true",
+            "1",
+        ]
+        false_strings = [
+            "false",
+            "0",
+        ]
         if s in true_strings:
             return True
         if s in false_strings:
@@ -349,15 +398,21 @@ def get_args(argv):
         raise UsageError(f"Invalid boolean value for argument --{name}: '{s}'")
 
     args.export_fp8_quantized = str_to_bool(
-        "export_fp8_quantized", args.export_fp8_quantized, optional=True
+        "export_fp8_quantized",
+        args.export_fp8_quantized,
+        optional=True,
     )
     args.use_fp8_kv_cache = str_to_bool(
-        "use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True
+        "use_fp8_kv_cache",
+        args.use_fp8_kv_cache,
+        optional=True,
     )
     return args
 
 
-def store_args_to_json(args):
+def store_args_to_json(
+    args,
+):
     """Stores user defined arg values relevant for REST API in config.json.
 
     Gets called only when args.start_rest_service is True.
@@ -368,11 +423,19 @@ def store_args_to_json(args):
         "triton_request_timeout": args.triton_request_timeout,
         "openai_format_response": args.openai_format_response,
     }
-    with open("nemo/deploy/service/config.json", "w") as f:
-        json.dump(args_dict, f)
+    with open(
+        "nemo/deploy/service/config.json",
+        "w",
+    ) as f:
+        json.dump(
+            args_dict,
+            f,
+        )
 
 
-def get_trtllm_deployable(args):
+def get_trtllm_deployable(
+    args,
+):
     if args.triton_model_repository is None:
         trt_llm_path = "/tmp/trt_llm_model_dir/"
         LOGGER.info(
@@ -380,15 +443,16 @@ def get_trtllm_deployable(args):
             "Please set the --triton_model_repository parameter if you'd like to use a path that already "
             "includes the TensorRT LLM model files."
         )
-        Path(trt_llm_path).mkdir(parents=True, exist_ok=True)
+        Path(trt_llm_path).mkdir(
+            parents=True,
+            exist_ok=True,
+        )
     else:
         trt_llm_path = args.triton_model_repository
 
     if args.hf_model_id_path:
         # Check if the path is an existing hf checkpoint
-        LOGGER.info(
-            f"Checking if the model is available in the local cache: {args.hf_model_id_path}"
-        )
+        LOGGER.info(f"Checking if the model is available in the local cache: {args.hf_model_id_path}")
         local_path = Path(args.hf_model_id_path)
         model_available = local_path.exists() and (local_path / "config.json").exists()
         if not model_available:
@@ -397,10 +461,19 @@ def get_trtllm_deployable(args):
             LOGGER.info(f"Downloading model from HuggingFace: {args.hf_model_id_path}")
             try:
                 hf_model_cache_dir = "/tmp/hf_model_dir/"
-                Path(hf_model_cache_dir).mkdir(parents=True, exist_ok=True)
+                Path(hf_model_cache_dir).mkdir(
+                    parents=True,
+                    exist_ok=True,
+                )
                 # Create model specific directory
-                hf_model_path = os.path.join(hf_model_cache_dir, args.hf_model_id_path)
-                Path(hf_model_path).mkdir(parents=True, exist_ok=True)
+                hf_model_path = os.path.join(
+                    hf_model_cache_dir,
+                    args.hf_model_id_path,
+                )
+                Path(hf_model_path).mkdir(
+                    parents=True,
+                    exist_ok=True,
+                )
 
                 # Download model weights in safetensor format
                 model = AutoModelForCausalLM.from_pretrained(
@@ -411,23 +484,26 @@ def get_trtllm_deployable(args):
                 )
                 # Download tokenizer files and config
                 tokenizer = AutoTokenizer.from_pretrained(
-                    args.hf_model_id_path, cache_dir=hf_model_path
+                    args.hf_model_id_path,
+                    cache_dir=hf_model_path,
                 )
                 config = AutoConfig.from_pretrained(
-                    args.hf_model_id_path, cache_dir=hf_model_path
+                    args.hf_model_id_path,
+                    cache_dir=hf_model_path,
                 )
 
                 # Save model weights to model directory
-                model.save_pretrained(hf_model_path, safe_serialization=True)
+                model.save_pretrained(
+                    hf_model_path,
+                    safe_serialization=True,
+                )
 
                 # Save tokenizer files and config to model directory
                 tokenizer.save_pretrained(hf_model_path)
                 config.save_pretrained(hf_model_path)
                 args.hf_model_id_path = hf_model_path
 
-                LOGGER.info(
-                    f"Downloaded model, tokenizer and config to {args.hf_model_id_path}"
-                )
+                LOGGER.info(f"Downloaded model, tokenizer and config to {args.hf_model_id_path}")
             except Exception as e:
                 raise RuntimeError(f"Error downloading from HuggingFace: {str(e)}")
 
@@ -445,9 +521,7 @@ def get_trtllm_deployable(args):
         )
 
     if not checkpoint_missing and args.model_type is None:
-        raise ValueError(
-            "Model type is required to be defined if a nemo checkpoint is provided."
-        )
+        raise ValueError("Model type is required to be defined if a nemo checkpoint is provided.")
 
     trt_llm_exporter = TensorRTLLM(
         model_dir=trt_llm_path,
@@ -459,9 +533,7 @@ def get_trtllm_deployable(args):
 
     if args.nemo_checkpoint is not None:
         try:
-            LOGGER.info(
-                "Export operation will be started to export the nemo checkpoint to TensorRT-LLM."
-            )
+            LOGGER.info("Export operation will be started to export the nemo checkpoint to TensorRT-LLM.")
             trt_llm_exporter.export(
                 nemo_checkpoint_path=args.nemo_checkpoint,
                 model_type=args.model_type,
@@ -487,14 +559,9 @@ def get_trtllm_deployable(args):
                 fp8_kvcache=args.use_fp8_kv_cache,
             )
         except Exception as error:
-            raise RuntimeError(
-                "An error has occurred during the model export. Error message: "
-                + str(error)
-            )
+            raise RuntimeError("An error has occurred during the model export. Error message: " + str(error))
     elif args.hf_model_id_path is not None:
-        LOGGER.info(
-            "Export operation will be started to export the hugging face checkpoint to TensorRT-LLM."
-        )
+        LOGGER.info("Export operation will be started to export the hugging face checkpoint to TensorRT-LLM.")
         try:
             trt_llm_exporter.export_hf_model(
                 hf_model_path=args.hf_model_id_path,
@@ -506,22 +573,26 @@ def get_trtllm_deployable(args):
                 model_type=args.model_type,
             )
         except Exception as error:
-            raise RuntimeError(
-                "An error has occurred during the model export. Error message: "
-                + str(error)
-            )
+            raise RuntimeError("An error has occurred during the model export. Error message: " + str(error))
 
     return trt_llm_exporter
 
 
-def get_nemo_deployable(args):
+def get_nemo_deployable(
+    args,
+):
     if args.nemo_checkpoint is None:
         raise ValueError("In-Framework deployment requires a .nemo checkpoint")
 
-    return MegatronLLMDeployable(args.nemo_checkpoint, args.num_gpus)
+    return MegatronLLMDeployable(
+        args.nemo_checkpoint,
+        args.num_gpus,
+    )
 
 
-def nemo_deploy(argv):
+def nemo_deploy(
+    argv,
+):
     args = get_args(argv)
 
     if args.debug_mode:
@@ -535,9 +606,7 @@ def nemo_deploy(argv):
 
     if args.start_rest_service:
         if args.service_port == args.triton_port:
-            logging.error(
-                "REST service port and Triton server port cannot use the same port."
-            )
+            logging.error("REST service port and Triton server port cannot use the same port.")
             return
         # Store triton ip, port and other args relevant for REST API in config.json to be accessible by rest_model_api.py
         store_args_to_json(args)
@@ -545,15 +614,11 @@ def nemo_deploy(argv):
     backend = args.backend.lower()
     if backend == "tensorrt-llm":
         if not trt_llm_supported:
-            raise ValueError(
-                "TensorRT-LLM engine is not supported in this environment."
-            )
+            raise ValueError("TensorRT-LLM engine is not supported in this environment.")
         triton_deployable = get_trtllm_deployable(args)
     elif backend == "in-framework":
         if not megatron_llm_supported:
-            raise ValueError(
-                "MegatronLLMDeployable is not supported in this environment."
-            )
+            raise ValueError("MegatronLLMDeployable is not supported in this environment.")
         triton_deployable = get_nemo_deployable(args)
     else:
         raise ValueError("Backend: {0} is not supported.".format(backend))
@@ -573,10 +638,7 @@ def nemo_deploy(argv):
         nm.deploy()
         nm.run()
     except Exception as error:
-        LOGGER.error(
-            "Error message has occurred during deploy function. Error message: "
-            + str(error)
-        )
+        LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
         return
 
     try:
@@ -591,16 +653,10 @@ def nemo_deploy(argv):
                     reload=True,
                 )
             except Exception as error:
-                logging.error(
-                    "Error message has occurred during REST service start. Error message: "
-                    + str(error)
-                )
+                logging.error("Error message has occurred during REST service start. Error message: " + str(error))
         nm.serve()
     except Exception as error:
-        LOGGER.error(
-            "Error message has occurred during deploy function. Error message: "
-            + str(error)
-        )
+        LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
         return
     LOGGER.info("Model serving will be stopped.")
     nm.stop()

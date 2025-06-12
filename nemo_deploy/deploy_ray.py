@@ -14,12 +14,18 @@
 
 
 import ray
-from ray import serve
-from ray.serve import Application
+from ray import (
+    serve,
+)
+from ray.serve import (
+    Application,
+)
 
 import logging
 
-from nemo_deploy.ray_utils import find_available_port
+from nemo_deploy.ray_utils import (
+    find_available_port,
+)
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -72,9 +78,7 @@ class DeployRay:
             )
         except ConnectionError:
             # If no cluster exists, start a local one
-            LOGGER.info(
-                "No existing Ray cluster found. Starting a local Ray cluster..."
-            )
+            LOGGER.info("No existing Ray cluster found. Starting a local Ray cluster...")
             ray.init(
                 num_cpus=num_cpus,
                 num_gpus=num_gpus,
@@ -83,7 +87,11 @@ class DeployRay:
                 runtime_env=runtime_env,
             )
 
-    def start(self, host: str = "0.0.0.0", port: int = None):
+    def start(
+        self,
+        host: str = "0.0.0.0",
+        port: int = None,
+    ):
         """Start Ray Serve with the specified host and port.
 
         Args:
@@ -91,7 +99,10 @@ class DeployRay:
             port (int, optional): Port number to use. If None, an available port will be found.
         """
         if not port:
-            port = find_available_port(8000, host)
+            port = find_available_port(
+                8000,
+                host,
+            )
         serve.start(
             http_options={
                 "host": host,
@@ -99,16 +110,25 @@ class DeployRay:
             }
         )
 
-    def run(self, app: Application, model_name: str):
+    def run(
+        self,
+        app: Application,
+        model_name: str,
+    ):
         """Deploy and start serving a model using Ray Serve.
 
         Args:
             app (Application): The Ray Serve application to deploy.
             model_name (str): Name to give to the deployed model.
         """
-        serve.run(app, name=model_name)
+        serve.run(
+            app,
+            name=model_name,
+        )
 
-    def stop(self):
+    def stop(
+        self,
+    ):
         """Stop the Ray Serve deployment and shutdown the Ray cluster.
 
         This method attempts to gracefully shutdown both Ray Serve and the Ray cluster.

@@ -13,17 +13,30 @@
 # limitations under the License.
 
 
-from ray import serve
+from ray import (
+    serve,
+)
 import asyncio
 import logging
 import time
-from typing import Any, Dict, List
+from typing import (
+    Any,
+    Dict,
+    List,
+)
 
 import torch
-from fastapi import FastAPI, HTTPException
+from fastapi import (
+    FastAPI,
+    HTTPException,
+)
 
-from nemo_deploy.ray_utils import find_available_port
-from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from nemo_deploy.ray_utils import (
+    find_available_port,
+)
+from nemo_deploy.nlp.hf_deployable import (
+    HuggingFaceLLMDeploy,
+)
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -88,14 +101,10 @@ class HFRayDeployable:
             self._setup_unique_distributed_parameters(device_map)
             if device_map == "balanced":
                 if not max_memory:
-                    raise ValueError(
-                        "max_memory must be provided when device_map is 'balanced'"
-                    )
+                    raise ValueError("max_memory must be provided when device_map is 'balanced'")
                 num_gpus = torch.cuda.device_count()
                 if num_gpus > 1:
-                    print(
-                        f"Using tensor parallel across {num_gpus} GPUs for large model"
-                    )
+                    print(f"Using tensor parallel across {num_gpus} GPUs for large model")
                     max_memory_dict = {i: "75GiB" for i in range(num_gpus)}
             self.model = HuggingFaceLLMDeploy(
                 hf_model_id_path=hf_model_id_path,
@@ -119,7 +128,10 @@ class HFRayDeployable:
             LOGGER.error(f"Error initializing HuggingFaceLLMServe replica: {str(e)}")
             raise
 
-    def _setup_unique_distributed_parameters(self, device_map):
+    def _setup_unique_distributed_parameters(
+        self,
+        device_map,
+    ):
         """Configure unique distributed communication parameters for each model replica.
 
         This function sets up unique MASTER_PORT environment variables for each Ray Serve
@@ -138,13 +150,22 @@ class HFRayDeployable:
             if not dist.is_initialized():
                 # Get a unique port based on current process ID to avoid conflicts
 
-                unique_port = find_available_port(29500, "127.0.0.1")
+                unique_port = find_available_port(
+                    29500,
+                    "127.0.0.1",
+                )
                 # Set environment variables for torch.distributed
                 os.environ["MASTER_ADDR"] = "127.0.0.1"
                 os.environ["MASTER_PORT"] = str(unique_port)
 
     @app.post("/v1/completions/")
-    async def completions(self, request: Dict[Any, Any]):
+    async def completions(
+        self,
+        request: Dict[
+            Any,
+            Any,
+        ],
+    ):
         """Handle text completion requests.
 
         This endpoint processes text completion requests in OpenAI API format and returns
@@ -173,21 +194,34 @@ class HFRayDeployable:
         """
         try:
             # Call the batched method
-            result = await self.batched_inference(request, "completion")
+            result = await self.batched_inference(
+                request,
+                "completion",
+            )
 
             if "error" in result:
-                raise HTTPException(status_code=500, detail=result["error"])
+                raise HTTPException(
+                    status_code=500,
+                    detail=result["error"],
+                )
 
             return result
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")
             LOGGER.error(f"Request: {request}")
             raise HTTPException(
-                status_code=500, detail=f"Error during inference: {str(e)}"
+                status_code=500,
+                detail=f"Error during inference: {str(e)}",
             )
 
     @app.post("/v1/chat/completions/")
-    async def chat_completions(self, request: Dict[Any, Any]):
+    async def chat_completions(
+        self,
+        request: Dict[
+            Any,
+            Any,
+        ],
+    ):
         """Handle chat completion requests.
 
         This endpoint processes chat completion requests in OpenAI API format and returns
@@ -216,15 +250,13 @@ class HFRayDeployable:
         """
         try:
             # Extract parameters from the request dictionary
-            messages = request.get("messages", [])
+            messages = request.get(
+                "messages",
+                [],
+            )
 
             # Convert messages to a single prompt
-            prompt = "\n".join(
-                [
-                    f"{msg.get('role', 'user')}: {msg.get('content', '')}"
-                    for msg in messages
-                ]
-            )
+            prompt = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages])
             prompt += "\nassistant:"
 
             # Create a modified request with the prompt
@@ -232,11 +264,15 @@ class HFRayDeployable:
             chat_request["prompt"] = prompt
 
             # Call the batched method with a single request
-            results = await self.batched_inference(chat_request, "chat")
+            results = await self.batched_inference(
+                chat_request,
+                "chat",
+            )
 
             if not results or len(results) == 0:
                 raise HTTPException(
-                    status_code=500, detail="No results returned from model"
+                    status_code=500,
+                    detail="No results returned from model",
                 )
 
             return results
@@ -244,11 +280,19 @@ class HFRayDeployable:
         except Exception as e:
             LOGGER.error(f"Error during chat completion: {str(e)}")
             raise HTTPException(
-                status_code=500, detail=f"Error during chat completion: {str(e)}"
+                status_code=500,
+                detail=f"Error during chat completion: {str(e)}",
             )
 
     async def _batched_inference(
-        self, requests: List[Dict[Any, Any]], request_type: str = "completion"
+        self,
+        requests: List[
+            Dict[
+                Any,
+                Any,
+            ]
+        ],
+        request_type: str = "completion",
     ):
         """Internal method for processing batched inference requests.
 
@@ -271,13 +315,31 @@ class HFRayDeployable:
         try:
             # Extract parameters from the first request
             first_request = requests[0]
-            model_name = first_request.get("model", "nemo-model")
-            max_length = first_request.get("max_tokens", 256)
-            temperature = first_request.get("temperature", 1.0)
-            top_k = first_request.get("top_k", 1)
+            model_name = first_request.get(
+                "model",
+                "nemo-model",
+            )
+            max_length = first_request.get(
+                "max_tokens",
+                256,
+            )
+            temperature = first_request.get(
+                "temperature",
+                1.0,
+            )
+            top_k = first_request.get(
+                "top_k",
+                1,
+            )
 
             # Collect all prompts from all requests
-            all_prompts = [request.get("prompt", "") for request in requests]
+            all_prompts = [
+                request.get(
+                    "prompt",
+                    "",
+                )
+                for request in requests
+            ]
 
             LOGGER.error(f"Combined {len(all_prompts)} prompts")
 
@@ -288,21 +350,25 @@ class HFRayDeployable:
                 "temperature": temperature,
                 "top_k": top_k,
                 "top_p": 0.0,
-                "compute_logprob": request_type
-                == "completion",  # Only compute logprobs for text completions
+                "compute_logprob": request_type == "completion",  # Only compute logprobs for text completions
                 "apply_chat_template": False,
             }
 
             # Run model inference once with all prompts
             loop = asyncio.get_event_loop()
             combined_result = await loop.run_in_executor(
-                None, self.model.ray_infer_fn, inference_inputs
+                None,
+                self.model.ray_infer_fn,
+                inference_inputs,
             )
 
             # Distribute results back to individual responses
             results = []
 
-            for i, request in enumerate(requests):
+            for (
+                i,
+                request,
+            ) in enumerate(requests):
                 try:
                     # Get this request's result
                     request_sentence = combined_result["sentences"][i]
@@ -314,9 +380,7 @@ class HFRayDeployable:
 
                     # Get log probs if available
                     log_probs = None
-                    if "log_probs" in combined_result and i < len(
-                        combined_result["log_probs"]
-                    ):
+                    if "log_probs" in combined_result and i < len(combined_result["log_probs"]):
                         log_probs = combined_result["log_probs"][i]
 
                     # Format response based on request type
@@ -333,11 +397,7 @@ class HFRayDeployable:
                                         "content": request_sentence,
                                     },
                                     "index": 0,
-                                    "finish_reason": (
-                                        "length"
-                                        if len(request_sentence) >= max_length
-                                        else "stop"
-                                    ),
+                                    "finish_reason": ("length" if len(request_sentence) >= max_length else "stop"),
                                 }
                             ],
                             "usage": {
@@ -357,11 +417,7 @@ class HFRayDeployable:
                                     "text": request_sentence,
                                     "index": 0,
                                     "logprobs": log_probs,
-                                    "finish_reason": (
-                                        "length"
-                                        if len(request_sentence) >= max_length
-                                        else "stop"
-                                    ),
+                                    "finish_reason": ("length" if len(request_sentence) >= max_length else "stop"),
                                 }
                             ],
                             "usage": {
@@ -374,9 +430,7 @@ class HFRayDeployable:
                     results.append(output)
 
                 except Exception as e:
-                    LOGGER.error(
-                        f"Error processing {request_type} result for request {i}: {str(e)}"
-                    )
+                    LOGGER.error(f"Error processing {request_type} result for request {i}: {str(e)}")
                     results.append({"error": str(e)})
 
         except Exception as e:
@@ -387,7 +441,9 @@ class HFRayDeployable:
         return results
 
     @app.get("/v1/models")
-    async def list_models(self):
+    async def list_models(
+        self,
+    ):
         """List available models.
 
         This endpoint returns information about the deployed model in OpenAI API format.
@@ -400,12 +456,18 @@ class HFRayDeployable:
         return {
             "object": "list",
             "data": [
-                {"id": self.model_id, "object": "model", "created": int(time.time())}
+                {
+                    "id": self.model_id,
+                    "object": "model",
+                    "created": int(time.time()),
+                }
             ],
         }
 
     @app.get("/v1/health")
-    async def health_check(self):
+    async def health_check(
+        self,
+    ):
         """Check the health status of the service.
 
         This endpoint is used to verify that the service is running and healthy.

@@ -19,15 +19,17 @@ import tensorrt as trt
 from nemo.collections.llm.gpt.model.hf_llama_embedding import (
     get_llama_bidirectional_hf_model,
 )
-from nemo.utils import logging
+from nemo.utils import (
+    logging,
+)
 
-from nemo_export.onnx_llm_exporter import OnnxLLMExporter
+from nemo_export.onnx_llm_exporter import (
+    OnnxLLMExporter,
+)
 
 
 def get_args():
-    parser = argparse.ArgumentParser(
-        description="Test ONNX and TensorRT export for LLM embedding models."
-    )
+    parser = argparse.ArgumentParser(description="Test ONNX and TensorRT export for LLM embedding models.")
     parser.add_argument(
         "--hf_model_path",
         type=str,
@@ -53,7 +55,10 @@ def get_args():
         help="Path to store ONNX model.",
     )
     parser.add_argument(
-        "--onnx_opset", type=int, default=17, help="ONNX version to use for export."
+        "--onnx_opset",
+        type=int,
+        default=17,
+        help="ONNX version to use for export.",
     )
     parser.add_argument(
         "--trt_model_path",
@@ -71,9 +76,14 @@ def get_args():
     return parser.parse_args()
 
 
-def export_onnx_trt(args):
+def export_onnx_trt(
+    args,
+):
     # Base Llama model needs to be adapted to turn it into an embedding model.
-    model, tokenizer = get_llama_bidirectional_hf_model(
+    (
+        model,
+        tokenizer,
+    ) = get_llama_bidirectional_hf_model(
         model_name_or_path=args.hf_model_path,
         normalize=args.normalize,
         pooling_mode=args.pooling_strategy,
@@ -86,13 +96,24 @@ def export_onnx_trt(args):
         "dimensions",
     ]  # ONNX specific arguments, input names in this case.
     dynamic_axes_input = {
-        "input_ids": {0: "batch_size", 1: "seq_length"},
-        "attention_mask": {0: "batch_size", 1: "seq_length"},
+        "input_ids": {
+            0: "batch_size",
+            1: "seq_length",
+        },
+        "attention_mask": {
+            0: "batch_size",
+            1: "seq_length",
+        },
         "dimensions": {0: "batch_size"},
     }
 
     output_names = ["embeddings"]  # ONNX specific arguments, output names in this case.
-    dynamic_axes_output = {"embeddings": {0: "batch_size", 1: "embedding_dim"}}
+    dynamic_axes_output = {
+        "embeddings": {
+            0: "batch_size",
+            1: "embedding_dim",
+        }
+    }
 
     # Initialize ONNX exporter.
     onnx_exporter = OnnxLLMExporter(
@@ -114,9 +135,39 @@ def export_onnx_trt(args):
     # Input profiles for TensorRT.
     input_profiles = [
         {
-            "input_ids": [[1, 3], [16, 128], [64, 256]],
-            "attention_mask": [[1, 3], [16, 128], [64, 256]],
-            "dimensions": [[1], [16], [64]],
+            "input_ids": [
+                [
+                    1,
+                    3,
+                ],
+                [
+                    16,
+                    128,
+                ],
+                [
+                    64,
+                    256,
+                ],
+            ],
+            "attention_mask": [
+                [
+                    1,
+                    3,
+                ],
+                [
+                    16,
+                    128,
+                ],
+                [
+                    64,
+                    256,
+                ],
+            ],
+            "dimensions": [
+                [1],
+                [16],
+                [64],
+            ],
         }
     ]
 
@@ -149,7 +200,10 @@ def export_onnx_trt(args):
     assert os.path.exists(args.trt_model_path)
     assert os.path.exists(args.onnx_export_path)
 
-    prompt = ["hello", "world"]
+    prompt = [
+        "hello",
+        "world",
+    ]
 
     prompt = onnx_exporter.get_tokenizer(prompt)
     prompt["dimensions"] = [[2]]

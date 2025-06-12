@@ -15,10 +15,14 @@
 import argparse
 import sys
 
-from nemo_deploy.nlp import NemoQueryLLMHF
+from nemo_deploy.nlp import (
+    NemoQueryLLMHF,
+)
 
 
-def get_args(argv):
+def get_args(
+    argv,
+):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Query a HuggingFace model deployed on Triton Inference Server",
@@ -135,7 +139,10 @@ def query_llm(
     Returns:
         List[str]: Generated text responses for each input prompt
     """
-    nemo_query = NemoQueryLLMHF(url, model_name)
+    nemo_query = NemoQueryLLMHF(
+        url,
+        model_name,
+    )
     return nemo_query.query_llm(
         prompts=prompts,
         max_length=max_output_len,
@@ -148,7 +155,9 @@ def query_llm(
     )
 
 
-def query(argv):
+def query(
+    argv,
+):
     """Query a HuggingFace language model deployed on Triton Inference Server using command line arguments.
 
     This function parses command line arguments and sends queries to a deployed model. It supports
@@ -174,7 +183,10 @@ def query(argv):
     args = get_args(argv)
 
     if args.prompt_file is not None:
-        with open(args.prompt_file, "r") as f:
+        with open(
+            args.prompt_file,
+            "r",
+        ) as f:
             args.prompt = f.read()
 
     outputs = query_llm(

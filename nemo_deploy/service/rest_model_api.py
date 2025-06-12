@@ -11,12 +11,23 @@
 import os
 
 import requests
-from fastapi import FastAPI, HTTPException
-from nemo.utils import logging
-from pydantic import BaseModel
-from pydantic_settings import BaseSettings
+from fastapi import (
+    FastAPI,
+    HTTPException,
+)
+from nemo.utils import (
+    logging,
+)
+from pydantic import (
+    BaseModel,
+)
+from pydantic_settings import (
+    BaseSettings,
+)
 
-from nemo_deploy.nlp import NemoQueryLLM
+from nemo_deploy.nlp import (
+    NemoQueryLLM,
+)
 
 
 class TritonSettings(BaseSettings):
@@ -24,19 +35,43 @@ class TritonSettings(BaseSettings):
     _triton_service_ip: str
     _triton_request_timeout: str
 
-    def __init__(self):
-        super(TritonSettings, self).__init__()
+    def __init__(
+        self,
+    ):
+        super(
+            TritonSettings,
+            self,
+        ).__init__()
         try:
-            self._triton_service_port = int(os.environ.get("TRITON_PORT", 8080))
-            self._triton_service_ip = os.environ.get("TRITON_HTTP_ADDRESS", "0.0.0.0")
+            self._triton_service_port = int(
+                os.environ.get(
+                    "TRITON_PORT",
+                    8080,
+                )
+            )
+            self._triton_service_ip = os.environ.get(
+                "TRITON_HTTP_ADDRESS",
+                "0.0.0.0",
+            )
             self._triton_request_timeout = int(
-                os.environ.get("TRITON_REQUEST_TIMEOUT", 60)
+                os.environ.get(
+                    "TRITON_REQUEST_TIMEOUT",
+                    60,
+                )
             )
             self._openai_format_response = (
-                os.environ.get("OPENAI_FORMAT_RESPONSE", "False").lower() == "true"
+                os.environ.get(
+                    "OPENAI_FORMAT_RESPONSE",
+                    "False",
+                ).lower()
+                == "true"
             )
             self._output_generation_logits = (
-                os.environ.get("OUTPUT_GENERATION_LOGITS", "False").lower() == "true"
+                os.environ.get(
+                    "OUTPUT_GENERATION_LOGITS",
+                    "False",
+                ).lower()
+                == "true"
             )
         except Exception as error:
             logging.error(
@@ -46,24 +81,34 @@ class TritonSettings(BaseSettings):
             return
 
     @property
-    def triton_service_port(self):
+    def triton_service_port(
+        self,
+    ):
         return self._triton_service_port
 
     @property
-    def triton_service_ip(self):
+    def triton_service_ip(
+        self,
+    ):
         return self._triton_service_ip
 
     @property
-    def triton_request_timeout(self):
+    def triton_request_timeout(
+        self,
+    ):
         return self._triton_request_timeout
 
     @property
-    def openai_format_response(self):
+    def openai_format_response(
+        self,
+    ):
         """Retuns the response from Triton server in OpenAI compatible format if set to True."""
         return self._openai_format_response
 
     @property
-    def output_generation_logits(self):
+    def output_generation_logits(
+        self,
+    ):
         """Retuns the generation logits along with text in Triton server output if set to True."""
         return self._output_generation_logits
 
@@ -96,29 +141,39 @@ async def check_triton_health():
     This method exposes endpoint "/triton_health" which can be used to verify if Triton server is accessible while running the REST or FastAPI application.
     Verify by running: curl http://service_http_address:service_port/v1/triton_health and the returned status should inform if the server is accessible.
     """
-    triton_url = f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
+    triton_url = (
+        f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
+    )
     logging.info(f"Attempting to connect to Triton server at: {triton_url}")
     try:
-        response = requests.get(triton_url, timeout=5)
+        response = requests.get(
+            triton_url,
+            timeout=5,
+        )
         if response.status_code == 200:
             return {"status": "Triton server is reachable and ready"}
         else:
-            raise HTTPException(status_code=503, detail="Triton server is not ready")
+            raise HTTPException(
+                status_code=503,
+                detail="Triton server is not ready",
+            )
     except requests.RequestException as e:
         raise HTTPException(
-            status_code=503, detail=f"Cannot reach Triton server: {str(e)}"
+            status_code=503,
+            detail=f"Cannot reach Triton server: {str(e)}",
         )
 
 
 @app.post("/v1/completions/")
-def completions_v1(request: CompletionRequest):
+def completions_v1(
+    request: CompletionRequest,
+):
     try:
-        url = (
-            triton_settings.triton_service_ip
-            + ":"
-            + str(triton_settings.triton_service_port)
+        url = triton_settings.triton_service_ip + ":" + str(triton_settings.triton_service_port)
+        nq = NemoQueryLLM(
+            url=url,
+            model_name=request.model,
         )
-        nq = NemoQueryLLM(url=url, model_name=request.model)
         output = nq.query_llm(
             prompts=[request.prompt],
             max_output_len=request.max_tokens,

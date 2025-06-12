@@ -16,13 +16,28 @@
 import logging
 
 import tensorrt_llm
-from tensorrt_llm._common import check_max_num_tokens
-from tensorrt_llm.builder import BuildConfig
-from tensorrt_llm.commands.build import build as build_trtllm
-from tensorrt_llm.logger import logger
-from tensorrt_llm.lora_manager import LoraConfig
-from tensorrt_llm.models.modeling_utils import optimize_model, preprocess_weights
-from tensorrt_llm.plugin import PluginConfig
+from tensorrt_llm._common import (
+    check_max_num_tokens,
+)
+from tensorrt_llm.builder import (
+    BuildConfig,
+)
+from tensorrt_llm.commands.build import (
+    build as build_trtllm,
+)
+from tensorrt_llm.logger import (
+    logger,
+)
+from tensorrt_llm.lora_manager import (
+    LoraConfig,
+)
+from tensorrt_llm.models.modeling_utils import (
+    optimize_model,
+    preprocess_weights,
+)
+from tensorrt_llm.plugin import (
+    PluginConfig,
+)
 
 MODEL_NAME = "NeMo"
 
@@ -58,13 +73,12 @@ def build_and_save_engine(
     gather_context_logits: bool = False,
     gather_generation_logits: bool = False,
 ):
-    architecture = (
-        "LLaMAForCausalLM"
-        if model_config.architecture == "LlamaForCausalLM"
-        else model_config.architecture
-    )
+    architecture = "LLaMAForCausalLM" if model_config.architecture == "LlamaForCausalLM" else model_config.architecture
     try:
-        model_cls = getattr(tensorrt_llm.models, architecture)
+        model_cls = getattr(
+            tensorrt_llm.models,
+            architecture,
+        )
     except Exception:
         raise AttributeError(f"Could not find TRTLLM model type: {model_type}!")
 
@@ -81,7 +95,10 @@ def build_and_save_engine(
     plugin_config.multiple_profiles = multiple_profiles
     plugin_config.reduce_fusion = reduce_fusion
 
-    max_num_tokens, opt_num_tokens = check_max_num_tokens(
+    (
+        max_num_tokens,
+        opt_num_tokens,
+    ) = check_max_num_tokens(
         max_num_tokens=max_num_tokens,
         opt_num_tokens=opt_num_tokens,
         max_seq_len=max_seq_len,
@@ -110,7 +127,10 @@ def build_and_save_engine(
         "use_refit": use_refit,
         "multiple_profiles": multiple_profiles,
     }
-    build_config = BuildConfig.from_dict(build_dict, plugin_config=plugin_config)
+    build_config = BuildConfig.from_dict(
+        build_dict,
+        plugin_config=plugin_config,
+    )
 
     if use_lora_plugin is not None:
         # build_config.plugin_config.set_lora_plugin(use_lora_plugin)
@@ -130,9 +150,15 @@ def build_and_save_engine(
         use_parallel_embedding=model_config.use_parallel_embedding,
         share_embedding_table=model_config.share_embedding_table,
     )
-    preprocess_weights(model_weights, model_config)
+    preprocess_weights(
+        model_weights,
+        model_config,
+    )
     model.load(model_weights)
-    engine = build_trtllm(model, build_config)
+    engine = build_trtllm(
+        model,
+        build_config,
+    )
     engine.save(model_dir)
 
     return engine

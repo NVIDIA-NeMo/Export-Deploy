@@ -14,18 +14,31 @@
 
 import json
 import logging
-from pathlib import Path
-from typing import List, Optional
+from pathlib import (
+    Path,
+)
+from typing import (
+    List,
+    Optional,
+)
 
 import numpy as np
 import torch
 import torch.distributed
-from jinja2 import Template
+from jinja2 import (
+    Template,
+)
 
-from megatron.core.inference.common_inference_params import CommonInferenceParams
-from megatron.core.inference.inference_request import InferenceRequest
+from megatron.core.inference.common_inference_params import (
+    CommonInferenceParams,
+)
+from megatron.core.inference.inference_request import (
+    InferenceRequest,
+)
 
-from nemo_deploy import ITritonDeployable
+from nemo_deploy import (
+    ITritonDeployable,
+)
 from nemo_deploy.utils import (
     NEMO2,
     broadcast_list,
@@ -34,9 +47,16 @@ from nemo_deploy.utils import (
     str_ndarray2list,
 )
 
-from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
-from pytriton.decorators import batch, first_value
-from pytriton.model_config import Tensor
+from nemo_deploy.nlp.inference.inference_base import (
+    create_mcore_engine,
+)
+from pytriton.decorators import (
+    batch,
+    first_value,
+)
+from pytriton.model_config import (
+    Tensor,
+)
 
 
 LOGGER = logging.getLogger("NeMo")
@@ -139,24 +159,26 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         random_seed: Optional[int] = None,
         legacy_ckpt: bool = False,
     ):
-        self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = (
-            create_mcore_engine(
-                num_devices=num_devices,
-                num_nodes=num_nodes,
-                path=Path(nemo_checkpoint_filepath),
-                params_dtype=params_dtype,
-                inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
-                inference_max_seq_length=inference_max_seq_length,
-                max_batch_size=max_batch_size,
-                random_seed=random_seed,
-                tensor_model_parallel_size=tensor_model_parallel_size,
-                expert_model_parallel_size=expert_model_parallel_size,
-                pipeline_model_parallel_size=pipeline_model_parallel_size,
-                context_parallel_size=context_parallel_size,
-                enable_flash_decode=enable_flash_decode,
-                enable_cuda_graphs=enable_cuda_graphs,
-                legacy_ckpt=legacy_ckpt,
-            )
+        (
+            self.mcore_engine,
+            self.inference_wrapped_model,
+            self.mcore_tokenizer,
+        ) = create_mcore_engine(
+            num_devices=num_devices,
+            num_nodes=num_nodes,
+            path=Path(nemo_checkpoint_filepath),
+            params_dtype=params_dtype,
+            inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
+            inference_max_seq_length=inference_max_seq_length,
+            max_batch_size=max_batch_size,
+            random_seed=random_seed,
+            tensor_model_parallel_size=tensor_model_parallel_size,
+            expert_model_parallel_size=expert_model_parallel_size,
+            pipeline_model_parallel_size=pipeline_model_parallel_size,
+            context_parallel_size=context_parallel_size,
+            enable_flash_decode=enable_flash_decode,
+            enable_cuda_graphs=enable_cuda_graphs,
+            legacy_ckpt=legacy_ckpt,
         )
         self.enable_cuda_graphs = enable_cuda_graphs
         self.max_batch_size = max_batch_size
@@ -189,9 +211,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             # Add sample prompts to reach max_batch_size
             # We'll duplicate the first prompt for simplicity
             sample_prompt = prompts[0] if prompts else ""
-            padded_prompts.extend(
-                [sample_prompt] * (self.max_batch_size - orig_num_prompts)
-            )
+            padded_prompts.extend([sample_prompt] * (self.max_batch_size - orig_num_prompts))
 
             results = self.mcore_engine.generate(
                 prompts=padded_prompts,
@@ -209,15 +229,34 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             )
             return list(results)
 
-    def generate_other_ranks(self):
+    def generate_other_ranks(
+        self,
+    ):
         """Generate function for ranks other than the rank 0."""
         while True:
-            message = torch.empty(1, dtype=torch.long, device="cuda")
-            torch.distributed.broadcast(message, src=0)
+            message = torch.empty(
+                1,
+                dtype=torch.long,
+                device="cuda",
+            )
+            torch.distributed.broadcast(
+                message,
+                src=0,
+            )
             if message == 0:
-                prompts = broadcast_list(data=[None], src=0)
-                temperature, top_k, top_p, num_tokens_to_generate, log_probs = (
-                    broadcast_list(data=[None], src=0)
+                prompts = broadcast_list(
+                    data=[None],
+                    src=0,
+                )
+                (
+                    temperature,
+                    top_k,
+                    top_p,
+                    num_tokens_to_generate,
+                    log_probs,
+                ) = broadcast_list(
+                    data=[None],
+                    src=0,
                 )
 
                 inference_params = CommonInferenceParams(
@@ -228,19 +267,24 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                     return_log_probs=log_probs,
                 )
 
-                self.generate(prompts, inference_params)
+                self.generate(
+                    prompts,
+                    inference_params,
+                )
             else:
                 return
 
-    def apply_chat_template(self, messages, add_generation_prompt=True):
+    def apply_chat_template(
+        self,
+        messages,
+        add_generation_prompt=True,
+    ):
         """Load the chat template.
 
         Works when model's tokenizer has chat template (typically chat models).
         """
         try:
-            tokenizer_chat_template = (
-                self.mcore_tokenizer.tokenizer.tokenizer.chat_template
-            )
+            tokenizer_chat_template = self.mcore_tokenizer.tokenizer.tokenizer.chat_template
             bos_token = self.mcore_tokenizer.tokenizer.tokenizer.bos_token
 
             # Check if chat_template is None or empty
@@ -266,43 +310,108 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
         return rendered_output
 
-    def remove_eos_token(self, text):
+    def remove_eos_token(
+        self,
+        text,
+    ):
         """Removes eos token if it exists in the output, otherwise does nothing."""
         eos_token = self.mcore_tokenizer.tokenizer.tokenizer.eos_token
         output = []
         for t in text:
             if eos_token in t:
-                output.append(t.rsplit(eos_token, 1)[0])
+                output.append(
+                    t.rsplit(
+                        eos_token,
+                        1,
+                    )[0]
+                )
             else:
                 output.append(t)
         return output
 
-    def str_to_dict(self, json_str):
+    def str_to_dict(
+        self,
+        json_str,
+    ):
         """Convert str to dict."""
         return json.loads(json_str)
 
     @property
-    def get_triton_input(self):
+    def get_triton_input(
+        self,
+    ):
         inputs = (
-            Tensor(name="prompts", shape=(-1,), dtype=bytes),
-            Tensor(name="max_length", shape=(-1,), dtype=np.int_, optional=True),
-            Tensor(name="max_batch_size", shape=(-1,), dtype=np.int_, optional=True),
-            Tensor(name="top_k", shape=(-1,), dtype=np.int_, optional=True),
-            Tensor(name="top_p", shape=(-1,), dtype=np.single, optional=True),
-            Tensor(name="temperature", shape=(-1,), dtype=np.single, optional=True),
-            Tensor(name="random_seed", shape=(-1,), dtype=np.int_, optional=True),
-            Tensor(name="compute_logprob", shape=(-1,), dtype=np.bool_, optional=True),
             Tensor(
-                name="apply_chat_template", shape=(-1,), dtype=np.bool_, optional=True
+                name="prompts",
+                shape=(-1,),
+                dtype=bytes,
+            ),
+            Tensor(
+                name="max_length",
+                shape=(-1,),
+                dtype=np.int_,
+                optional=True,
+            ),
+            Tensor(
+                name="max_batch_size",
+                shape=(-1,),
+                dtype=np.int_,
+                optional=True,
+            ),
+            Tensor(
+                name="top_k",
+                shape=(-1,),
+                dtype=np.int_,
+                optional=True,
+            ),
+            Tensor(
+                name="top_p",
+                shape=(-1,),
+                dtype=np.single,
+                optional=True,
+            ),
+            Tensor(
+                name="temperature",
+                shape=(-1,),
+                dtype=np.single,
+                optional=True,
+            ),
+            Tensor(
+                name="random_seed",
+                shape=(-1,),
+                dtype=np.int_,
+                optional=True,
+            ),
+            Tensor(
+                name="compute_logprob",
+                shape=(-1,),
+                dtype=np.bool_,
+                optional=True,
+            ),
+            Tensor(
+                name="apply_chat_template",
+                shape=(-1,),
+                dtype=np.bool_,
+                optional=True,
             ),
         )
         return inputs
 
     @property
-    def get_triton_output(self):
+    def get_triton_output(
+        self,
+    ):
         return (
-            Tensor(name="sentences", shape=(-1,), dtype=bytes),
-            Tensor(name="log_probs", shape=(-1,), dtype=np.single),
+            Tensor(
+                name="sentences",
+                shape=(-1,),
+                dtype=bytes,
+            ),
+            Tensor(
+                name="log_probs",
+                shape=(-1,),
+                dtype=np.single,
+            ),
         )
 
     @batch
@@ -316,24 +425,53 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         "compute_logprob",
         "apply_chat_template",
     )
-    def triton_infer_fn(self, **inputs: np.ndarray):
+    def triton_infer_fn(
+        self,
+        **inputs: np.ndarray,
+    ):
         # Extract triton-specific inputs
         prompts = str_ndarray2list(inputs.pop("prompts"))
-        temperature = inputs.pop("temperature", 1.0)
-        top_k = inputs.pop("top_k", 1)
-        top_p = inputs.pop("top_p", 0.0)
-        num_tokens_to_generate = inputs.pop("max_length", 256)
-        log_probs = inputs.pop("compute_logprob", False)
-        apply_chat_template = inputs.pop("apply_chat_template", False)
+        temperature = inputs.pop(
+            "temperature",
+            1.0,
+        )
+        top_k = inputs.pop(
+            "top_k",
+            1,
+        )
+        top_p = inputs.pop(
+            "top_p",
+            0.0,
+        )
+        num_tokens_to_generate = inputs.pop(
+            "max_length",
+            256,
+        )
+        log_probs = inputs.pop(
+            "compute_logprob",
+            False,
+        )
+        apply_chat_template = inputs.pop(
+            "apply_chat_template",
+            False,
+        )
         if apply_chat_template:
             prompts = [self.str_to_dict(prompt) for prompt in prompts]
 
         if torch.distributed.is_initialized():
             if torch.distributed.get_world_size() > 1:
                 torch.distributed.broadcast(
-                    torch.tensor([0], dtype=torch.long, device="cuda"), src=0
+                    torch.tensor(
+                        [0],
+                        dtype=torch.long,
+                        device="cuda",
+                    ),
+                    src=0,
                 )
-                broadcast_list(prompts, src=0)
+                broadcast_list(
+                    prompts,
+                    src=0,
+                )
                 broadcast_list(
                     data=[
                         temperature,
@@ -345,7 +483,10 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                     src=0,
                 )
         # Use the shared inference function
-        output_texts, output_log_probs = self._infer_fn(
+        (
+            output_texts,
+            output_log_probs,
+        ) = self._infer_fn(
             prompts=prompts,
             temperature=temperature,
             top_k=top_k,
@@ -355,7 +496,12 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             apply_chat_template=apply_chat_template,
         )
         # Format output for triton
-        output_infer = {"sentences": cast_output(output_texts, np.bytes_)}
+        output_infer = {
+            "sentences": cast_output(
+                output_texts,
+                np.bytes_,
+            )
+        }
         if output_log_probs is not None:
             output_infer["log_probs"] = output_log_probs
 
@@ -395,9 +541,17 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         if torch.distributed.is_initialized():
             if torch.distributed.get_world_size() > 1:
                 torch.distributed.broadcast(
-                    torch.tensor([0], dtype=torch.long, device="cuda"), src=0
+                    torch.tensor(
+                        [0],
+                        dtype=torch.long,
+                        device="cuda",
+                    ),
+                    src=0,
                 )
-                broadcast_list(prompts, src=0)
+                broadcast_list(
+                    prompts,
+                    src=0,
+                )
                 broadcast_list(
                     data=[
                         temperature,
@@ -417,7 +571,10 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             return_log_probs=log_probs,
         )
 
-        results = self.generate(prompts, inference_params)
+        results = self.generate(
+            prompts,
+            inference_params,
+        )
         output_texts = [r.generated_text if text_only else r for r in results]
         output_texts = self.remove_eos_token(output_texts)
 
@@ -432,9 +589,15 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                     output_log_probs.append(lp)
             output_log_probs = np.array(output_log_probs)
 
-        return output_texts, output_log_probs
+        return (
+            output_texts,
+            output_log_probs,
+        )
 
-    def ray_infer_fn(self, inputs: dict):
+    def ray_infer_fn(
+        self,
+        inputs: dict,
+    ):
         """Ray-compatible inference function that takes a dictionary of inputs and returns a dictionary of outputs.
 
         Args:
@@ -454,15 +617,39 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                 - sentences (List[str]): List of generated texts
                 - log_probs (List[float], optional): List of log probabilities if compute_logprob is True
         """
-        prompts = inputs.get("prompts", [])
-        temperature = inputs.get("temperature", 1.0)
-        top_k = inputs.get("top_k", 0.0)
-        top_p = inputs.get("top_p", 0.0)
-        num_tokens_to_generate = inputs.get("max_length", 256)
-        log_probs = inputs.get("compute_logprob", False)
-        apply_chat_template = inputs.get("apply_chat_template", False)
+        prompts = inputs.get(
+            "prompts",
+            [],
+        )
+        temperature = inputs.get(
+            "temperature",
+            1.0,
+        )
+        top_k = inputs.get(
+            "top_k",
+            0.0,
+        )
+        top_p = inputs.get(
+            "top_p",
+            0.0,
+        )
+        num_tokens_to_generate = inputs.get(
+            "max_length",
+            256,
+        )
+        log_probs = inputs.get(
+            "compute_logprob",
+            False,
+        )
+        apply_chat_template = inputs.get(
+            "apply_chat_template",
+            False,
+        )
 
-        output_texts, output_log_probs = self._infer_fn(
+        (
+            output_texts,
+            output_log_probs,
+        ) = self._infer_fn(
             prompts=prompts,
             temperature=temperature,
             top_k=top_k,

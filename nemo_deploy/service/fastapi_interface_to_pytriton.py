@@ -13,12 +13,24 @@ import os
 
 import numpy as np
 import requests
-from fastapi import FastAPI, HTTPException
-from nemo.utils import logging
-from pydantic import BaseModel, model_validator
-from pydantic_settings import BaseSettings
+from fastapi import (
+    FastAPI,
+    HTTPException,
+)
+from nemo.utils import (
+    logging,
+)
+from pydantic import (
+    BaseModel,
+    model_validator,
+)
+from pydantic_settings import (
+    BaseSettings,
+)
 
-from nemo_deploy.nlp import NemoQueryLLMPyTorch
+from nemo_deploy.nlp import (
+    NemoQueryLLMPyTorch,
+)
 
 
 class TritonSettings(BaseSettings):
@@ -27,11 +39,24 @@ class TritonSettings(BaseSettings):
     _triton_service_port: int
     _triton_service_ip: str
 
-    def __init__(self):
-        super(TritonSettings, self).__init__()
+    def __init__(
+        self,
+    ):
+        super(
+            TritonSettings,
+            self,
+        ).__init__()
         try:
-            self._triton_service_port = int(os.environ.get("TRITON_PORT", 8000))
-            self._triton_service_ip = os.environ.get("TRITON_HTTP_ADDRESS", "0.0.0.0")
+            self._triton_service_port = int(
+                os.environ.get(
+                    "TRITON_PORT",
+                    8000,
+                )
+            )
+            self._triton_service_ip = os.environ.get(
+                "TRITON_HTTP_ADDRESS",
+                "0.0.0.0",
+            )
         except Exception as error:
             logging.error(
                 "An exception occurred trying to retrieve set args in TritonSettings class. Error:",
@@ -40,12 +65,16 @@ class TritonSettings(BaseSettings):
             return
 
     @property
-    def triton_service_port(self):
+    def triton_service_port(
+        self,
+    ):
         """Returns the port number for the Triton service."""
         return self._triton_service_port
 
     @property
-    def triton_service_ip(self):
+    def triton_service_ip(
+        self,
+    ):
         """Returns the IP address for the Triton service."""
         return self._triton_service_ip
 
@@ -78,12 +107,12 @@ class CompletionRequest(BaseModel):
     logprobs: int = None
 
     @model_validator(mode="after")
-    def set_greedy_params(self):
+    def set_greedy_params(
+        self,
+    ):
         """Validate parameters for greedy decoding."""
         if self.temperature == 0 and self.top_p == 0:
-            logging.warning(
-                "Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling."
-            )
+            logging.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
             self.top_k = 1
         return self
 
@@ -105,27 +134,47 @@ async def check_triton_health():
     Verify by running: curl http://service_http_address:service_port/v1/triton_health and the returned status should
     inform if the server is accessible.
     """
-    triton_url = f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
+    triton_url = (
+        f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
+    )
     logging.info(f"Attempting to connect to Triton server at: {triton_url}")
     try:
-        response = requests.get(triton_url, timeout=5)
+        response = requests.get(
+            triton_url,
+            timeout=5,
+        )
         if response.status_code == 200:
             return {"status": "Triton server is reachable and ready"}
         else:
-            raise HTTPException(status_code=503, detail="Triton server is not ready")
+            raise HTTPException(
+                status_code=503,
+                detail="Triton server is not ready",
+            )
     except requests.RequestException as e:
         raise HTTPException(
-            status_code=503, detail=f"Cannot reach Triton server: {str(e)}"
+            status_code=503,
+            detail=f"Cannot reach Triton server: {str(e)}",
         )
 
 
-def convert_numpy(obj):
+def convert_numpy(
+    obj,
+):
     """Convert NumPy arrays in output to lists."""
-    if isinstance(obj, np.ndarray):
+    if isinstance(
+        obj,
+        np.ndarray,
+    ):
         return obj.tolist()
-    elif isinstance(obj, dict):
+    elif isinstance(
+        obj,
+        dict,
+    ):
         return {k: convert_numpy(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
+    elif isinstance(
+        obj,
+        list,
+    ):
         return [convert_numpy(i) for i in obj]
     else:
         return obj
@@ -143,7 +192,10 @@ def _helper_fun(
     apply_chat_template,
 ):
     """run_in_executor doesn't allow to pass kwargs, so we have this helper function to pass args as a list."""
-    nq = NemoQueryLLMPyTorch(url=url, model_name=model)
+    nq = NemoQueryLLMPyTorch(
+        url=url,
+        model_name=model,
+    )
     output = nq.query_llm(
         prompts=prompts,
         temperature=temperature,
@@ -196,12 +248,17 @@ async def query_llm_async(
 
 
 @app.post("/v1/completions/")
-async def completions_v1(request: CompletionRequest):
+async def completions_v1(
+    request: CompletionRequest,
+):
     """Defines the completions endpoint and queries the model deployed on PyTriton server."""
     url = f"http://{triton_settings.triton_service_ip}:{triton_settings.triton_service_port}"
     logging.info(f"Request: {request}")
     prompts = request.prompt
-    if not isinstance(request.prompt, list):
+    if not isinstance(
+        request.prompt,
+        list,
+    ):
         prompts = [request.prompt]
 
     output = await query_llm_async(
@@ -217,32 +274,37 @@ async def completions_v1(request: CompletionRequest):
     )
 
     output_serializable = convert_numpy(output)
-    output_serializable["choices"][0]["text"] = output_serializable["choices"][0][
-        "text"
-    ][0][0]
+    output_serializable["choices"][0]["text"] = output_serializable["choices"][0]["text"][0][0]
     if request.logprobs == 1:
-        output_serializable["choices"][0]["logprobs"]["token_logprobs"] = (
-            output_serializable["choices"][0]["logprobs"]["token_logprobs"][0]
-        )
-        output_serializable["choices"][0]["logprobs"]["top_logprobs"] = (
-            output_serializable["choices"][0]["logprobs"]["top_logprobs"][0]
-        )
+        output_serializable["choices"][0]["logprobs"]["token_logprobs"] = output_serializable["choices"][0]["logprobs"][
+            "token_logprobs"
+        ][0]
+        output_serializable["choices"][0]["logprobs"]["top_logprobs"] = output_serializable["choices"][0]["logprobs"][
+            "top_logprobs"
+        ][0]
     logging.info(f"Output: {output_serializable}")
     return output_serializable
 
 
-def dict_to_str(messages):
+def dict_to_str(
+    messages,
+):
     """Serializes dict to str."""
     return json.dumps(messages)
 
 
 @app.post("/v1/chat/completions/")
-async def chat_completions_v1(request: CompletionRequest):
+async def chat_completions_v1(
+    request: CompletionRequest,
+):
     """Defines the chat completions endpoint and queries the model deployed on PyTriton server."""
     url = f"http://{triton_settings.triton_service_ip}:{triton_settings.triton_service_port}"
     logging.info(f"Request: {request}")
     prompts = request.messages
-    if not isinstance(request.messages, list):
+    if not isinstance(
+        request.messages,
+        list,
+    ):
         prompts = [request.messages]
     # Serialize the dictionary to a JSON string represnetation to be able to convert to numpy array
     # (str_list2numpy) and back to list (str_ndarray2list) as required by PyTriton. Using the dictionaries directly
@@ -269,8 +331,8 @@ async def chat_completions_v1(request: CompletionRequest):
     del output["choices"][0]["text"]
 
     output_serializable = convert_numpy(output)
-    output_serializable["choices"][0]["message"]["content"] = output_serializable[
-        "choices"
-    ][0]["message"]["content"][0][0]
+    output_serializable["choices"][0]["message"]["content"] = output_serializable["choices"][0]["message"]["content"][
+        0
+    ][0]
     logging.info(f"Output: {output_serializable}")
     return output_serializable
