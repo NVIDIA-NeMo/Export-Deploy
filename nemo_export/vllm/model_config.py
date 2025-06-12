@@ -114,7 +114,10 @@ class NemoModelConfig(ModelConfig):
             self.truncation_side = "right"
 
         self.encoder_config = self._get_encoder_config()
-        self.pooler_config = self._init_pooler_config(override_pooler_config)
+        if override_pooler_config is not None:
+            self.runner_type = "pooler"
+            self.override_pooler_config = override_pooler_config
+        self.pooler_config = self._init_pooler_config()
         self.enable_sleep_mode = enable_sleep_mode
 
         from vllm.platforms import (
