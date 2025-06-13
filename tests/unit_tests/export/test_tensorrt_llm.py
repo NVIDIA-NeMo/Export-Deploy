@@ -378,98 +378,6 @@ def test_ray_infer_fn_with_stop_words():
 
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
-def test_ray_infer_fn_with_generation_logits():
-    """Test ray_infer_fn method with generation logits enabled."""
-    try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
-        return
-
-    model_dir = "/tmp/test_model_dir"
-    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
-
-    # Create mock logits tensors
-    mock_logits = [torch.randn(1, 1, 10, 1000), torch.randn(1, 1, 15, 1000)]
-    
-    # Mock the forward method
-    with patch.object(trt_llm, "forward") as mock_forward:
-        mock_forward.return_value = (["Generated text 1", "Generated text 2"], mock_logits)
-        
-        inputs = {
-            "prompts": ["Test prompt 1", "Test prompt 2"],
-            "output_generation_logits": True,
-        }
-        
-        result = trt_llm.ray_infer_fn(inputs)
-        
-        # Verify the result structure
-        assert "sentences" in result
-        assert "generation_logits" in result
-        assert result["sentences"] == ["Generated text 1", "Generated text 2"]
-        assert len(result["generation_logits"]) == 2
-        assert isinstance(result["generation_logits"][0], np.ndarray)
-        assert isinstance(result["generation_logits"][1], np.ndarray)
-        
-        # Verify forward was called with generation logits enabled
-        mock_forward.assert_called_once()
-        call_kwargs = mock_forward.call_args[1]
-        assert call_kwargs["output_generation_logits"] is True
-
-
-@pytest.mark.run_only_on("GPU")
-@pytest.mark.unit
-def test_ray_infer_fn_with_context_logits():
-    """Test ray_infer_fn method with context logits enabled."""
-    try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
-        return
-
-    model_dir = "/tmp/test_model_dir"
-    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
-
-    # Create mock context logits tensors
-    mock_context_logits = [torch.randn(10, 1000), torch.randn(15, 1000)]
-    
-    # Mock the forward method and _pad_logits method
-    with patch.object(trt_llm, "forward") as mock_forward, \
-         patch.object(trt_llm, "_pad_logits") as mock_pad_logits:
-        
-        mock_forward.return_value = (["Generated text 1", "Generated text 2"], mock_context_logits)
-        mock_pad_logits.return_value = mock_context_logits
-        
-        inputs = {
-            "prompts": ["Test prompt 1", "Test prompt 2"],
-            "output_context_logits": True,
-        }
-        
-        result = trt_llm.ray_infer_fn(inputs)
-        
-        # Verify the result structure
-        assert "sentences" in result
-        assert "context_logits" in result
-        assert result["sentences"] == ["Generated text 1", "Generated text 2"]
-        assert len(result["context_logits"]) == 2
-        assert isinstance(result["context_logits"][0], np.ndarray)
-        assert isinstance(result["context_logits"][1], np.ndarray)
-        
-        # Verify forward was called with context logits enabled
-        mock_forward.assert_called_once()
-        call_kwargs = mock_forward.call_args[1]
-        assert call_kwargs["output_context_logits"] is True
-        
-        # Verify _pad_logits was called
-        mock_pad_logits.assert_called_once_with(mock_context_logits)
-
-
-@pytest.mark.run_only_on("GPU")
-@pytest.mark.unit
 def test_ray_infer_fn_with_task_ids_and_lora():
     """Test ray_infer_fn method with task IDs and LoRA UIDs."""
     try:
@@ -638,3 +546,221 @@ def test_ray_infer_fn_all_parameters():
         assert call_kwargs["task_ids"] == ["comprehensive_task"]
         assert call_kwargs["lora_uids"] == ["comprehensive_lora"]
         assert call_kwargs["output_log_probs"] is True
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test__infer_fn_basic():
+    """Test basic functionality of _infer_fn method."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    model_dir = "/tmp/test_model_dir"
+    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+
+    # Mock the forward method
+    with patch.object(trt_llm, "forward") as mock_forward:
+        mock_forward.return_value = ["Generated text 1", "Generated text 2"]
+        
+        prompts = ["Hello", "World"]
+        inputs = {
+            "max_output_len": 256,
+            "temperature": 0.8,
+            "top_k": 50,
+            "top_p": 0.9,
+        }
+        
+        result = trt_llm._infer_fn(prompts, inputs)
+        
+        # Verify the result
+        assert result == ["Generated text 1", "Generated text 2"]
+        
+        # Verify forward was called with correct parameters
+        mock_forward.assert_called_once()
+        call_kwargs = mock_forward.call_args[1]
+        assert call_kwargs["input_texts"] == ["Hello", "World"]
+        assert call_kwargs["max_output_len"] == 256
+        assert call_kwargs["temperature"] == 0.8
+        assert call_kwargs["top_k"] == 50
+        assert call_kwargs["top_p"] == 0.9
+
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test__infer_fn_with_stop_words():
+    """Test _infer_fn method with stop words and bad words processing."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    model_dir = "/tmp/test_model_dir"
+    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+
+    # Mock the forward method
+    with patch.object(trt_llm, "forward") as mock_forward:
+        mock_forward.return_value = ["Generated text"]
+        
+        prompts = ["Test prompt"]
+        inputs = {
+            "stop_words_list": ["stop", "end"],  # String format
+            "bad_words_list": ["bad", "word"],   # String format
+        }
+        
+        result = trt_llm._infer_fn(prompts, inputs)
+        
+        # Verify the result
+        assert result == ["Generated text"]
+        
+        # Verify forward was called with properly formatted word lists
+        mock_forward.assert_called_once()
+        call_kwargs = mock_forward.call_args[1]
+        assert call_kwargs["input_texts"] == ["Test prompt"]
+        assert call_kwargs["stop_words_list"] == [["stop"], ["end"]]
+        assert call_kwargs["bad_words_list"] == [["bad"], ["word"]]
+
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test__infer_fn_with_preformatted_word_lists():
+    """Test _infer_fn method with already properly formatted word lists."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    model_dir = "/tmp/test_model_dir"
+    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+
+    # Mock the forward method
+    with patch.object(trt_llm, "forward") as mock_forward:
+        mock_forward.return_value = ["Generated text"]
+        
+        prompts = ["Test prompt"]
+        inputs = {
+            "stop_words_list": [["stop"], ["end"]],  # Already in correct format
+            "bad_words_list": [["bad"], ["word"]],   # Already in correct format
+        }
+        
+        result = trt_llm._infer_fn(prompts, inputs)
+        
+        # Verify the result
+        assert result == ["Generated text"]
+        
+        # Verify forward was called with word lists unchanged
+        mock_forward.assert_called_once()
+        call_kwargs = mock_forward.call_args[1]
+        assert call_kwargs["input_texts"] == ["Test prompt"]
+        assert call_kwargs["stop_words_list"] == [["stop"], ["end"]]
+        assert call_kwargs["bad_words_list"] == [["bad"], ["word"]]
+
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test__infer_fn_with_all_parameters():
+    """Test _infer_fn method with all possible parameters."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    model_dir = "/tmp/test_model_dir"
+    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+
+    # Mock the forward method
+    with patch.object(trt_llm, "forward") as mock_forward:
+        mock_forward.return_value = ["Comprehensive test response"]
+        
+        prompts = ["Comprehensive test prompt"]
+        inputs = {
+            "max_output_len": 512,
+            "top_k": 50,
+            "top_p": 0.9,
+            "temperature": 0.7,
+            "random_seed": 123,
+            "stop_words_list": ["stop", "end"],
+            "bad_words_list": ["bad", "inappropriate"],
+            "no_repeat_ngram_size": 4,
+            "task_ids": ["comprehensive_task"],
+            "lora_uids": ["comprehensive_lora"],
+            "output_log_probs": True,
+        }
+        
+        result = trt_llm._infer_fn(prompts, inputs)
+        
+        # Verify the result
+        assert result == ["Comprehensive test response"]
+        
+        # Verify forward was called with all parameters
+        mock_forward.assert_called_once()
+        call_kwargs = mock_forward.call_args[1]
+        expected_params = [
+            "input_texts", "max_output_len", "top_k", "top_p", "temperature",
+            "random_seed", "stop_words_list", "bad_words_list", "no_repeat_ngram_size",
+            "task_ids", "lora_uids", "output_log_probs"
+        ]
+        
+        for param in expected_params:
+            assert param in call_kwargs, f"Parameter {param} not found in forward call"
+        
+        # Verify specific values
+        assert call_kwargs["input_texts"] == ["Comprehensive test prompt"]
+        assert call_kwargs["max_output_len"] == 512
+        assert call_kwargs["top_k"] == 50
+        assert call_kwargs["top_p"] == 0.9
+        assert call_kwargs["temperature"] == 0.7
+        assert call_kwargs["random_seed"] == 123
+        assert call_kwargs["stop_words_list"] == [["stop"], ["end"]]
+        assert call_kwargs["bad_words_list"] == [["bad"], ["inappropriate"]]
+        assert call_kwargs["no_repeat_ngram_size"] == 4
+        assert call_kwargs["task_ids"] == ["comprehensive_task"]
+        assert call_kwargs["lora_uids"] == ["comprehensive_lora"]
+        assert call_kwargs["output_log_probs"] is True
+
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test__infer_fn_empty_inputs():
+    """Test _infer_fn method with minimal inputs."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    model_dir = "/tmp/test_model_dir"
+    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
+
+    # Mock the forward method
+    with patch.object(trt_llm, "forward") as mock_forward:
+        mock_forward.return_value = ["Basic response"]
+        
+        prompts = ["Basic prompt"]
+        inputs = {}  # No additional inputs
+        
+        result = trt_llm._infer_fn(prompts, inputs)
+        
+        # Verify the result
+        assert result == ["Basic response"]
+        
+        # Verify forward was called with just input_texts
+        mock_forward.assert_called_once()
+        call_kwargs = mock_forward.call_args[1]
+        assert call_kwargs["input_texts"] == ["Basic prompt"]
+        # Should only have input_texts, no other parameters
+        assert len(call_kwargs) == 1

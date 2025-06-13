@@ -1435,6 +1435,58 @@ class TensorRTLLM(ITritonDeployable):
         )
         return outputs
 
+    def _infer_fn(self, prompts, inputs):
+        """Shared helper function to prepare inference inputs and execute forward pass.
+        
+        Args:
+            prompts: List of input prompts
+            inputs: Dictionary of input parameters
+            
+        Returns:
+            output_texts: List of generated text outputs
+        """
+        infer_input = {"input_texts": prompts}
+        
+        # Process common parameters
+        if "max_output_len" in inputs:
+            infer_input["max_output_len"] = inputs["max_output_len"]
+        if "top_k" in inputs:
+            infer_input["top_k"] = inputs["top_k"]
+        if "top_p" in inputs:
+            infer_input["top_p"] = inputs["top_p"]
+        if "temperature" in inputs:
+            infer_input["temperature"] = inputs["temperature"]
+        if "random_seed" in inputs:
+            infer_input["random_seed"] = inputs["random_seed"]
+        if "stop_words_list" in inputs:
+            stop_words_list = inputs["stop_words_list"]
+            # Ensure proper format for stop words
+            if isinstance(stop_words_list, list) and stop_words_list:
+                if isinstance(stop_words_list[0], str):
+                    infer_input["stop_words_list"] = [[word] for word in stop_words_list]
+                else:
+                    infer_input["stop_words_list"] = stop_words_list
+        if "bad_words_list" in inputs:
+            bad_words_list = inputs["bad_words_list"]
+            # Ensure proper format for bad words
+            if isinstance(bad_words_list, list) and bad_words_list:
+                if isinstance(bad_words_list[0], str):
+                    infer_input["bad_words_list"] = [[word] for word in bad_words_list]
+                else:
+                    infer_input["bad_words_list"] = bad_words_list
+        if "no_repeat_ngram_size" in inputs:
+            infer_input["no_repeat_ngram_size"] = inputs["no_repeat_ngram_size"]
+        if "task_ids" in inputs:
+            infer_input["task_ids"] = inputs["task_ids"]
+        if "lora_uids" in inputs:
+            infer_input["lora_uids"] = inputs["lora_uids"]
+        if "output_log_probs" in inputs:
+            infer_input["output_log_probs"] = inputs["output_log_probs"]
+        
+        output_texts = self.forward(**infer_input)
+            
+        return output_texts
+    
     @batch
     @first_value(
         "max_output_len",
@@ -1449,79 +1501,27 @@ class TensorRTLLM(ITritonDeployable):
     def triton_infer_fn(self, **inputs: np.ndarray):
         """Triton infer function for streaming."""
         output_dict = {}
-        context_logits_available = False
-        generation_logits_available = False
+        
+        # Convert triton-specific inputs
         prompts = str_ndarray2list(inputs.pop("prompts"))
-        infer_input = {"input_texts": prompts}
-        try:
-            if "max_output_len" in inputs:
-                infer_input["max_output_len"] = inputs.pop("max_output_len")
-            if "top_k" in inputs:
-                infer_input["top_k"] = inputs.pop("top_k")
-            if "top_p" in inputs:
-                infer_input["top_p"] = inputs.pop("top_p")
-            if "temperature" in inputs:
-                infer_input["temperature"] = inputs.pop("temperature")
-            if "random_seed" in inputs:
-                infer_input["random_seed"] = inputs.pop("random_seed")
-            if "stop_words_list" in inputs:
-                stop_words_list = str_ndarray2list(inputs.pop("stop_words_list"))
-                infer_input["stop_words_list"] = [
-                    [stop_word] for stop_word in stop_words_list
-                ]
-            if "bad_words_list" in inputs:
-                bad_words_list = str_ndarray2list(inputs.pop("bad_words_list"))
-                infer_input["bad_words_list"] = [
-                    [bad_word] for bad_word in bad_words_list
-                ]
-            if "no_repeat_ngram_size" in inputs:
-                infer_input["no_repeat_ngram_size"] = inputs.pop("no_repeat_ngram_size")
-            if "lora_uids" in inputs:
-                lora_uids = np.char.decode(
-                    inputs.pop("lora_uids").astype("bytes"), encoding="utf-8"
-                )
-                infer_input["lora_uids"] = lora_uids[0].tolist()
-            if "output_generation_logits" in inputs:
-                generation_logits_available = inputs["output_generation_logits"]
-                infer_input["output_generation_logits"] = inputs.pop(
-                    "output_generation_logits"
-                )
-            if "output_context_logits" in inputs:
-                context_logits_available = inputs["output_context_logits"]
-                infer_input["output_context_logits"] = inputs.pop(
-                    "output_context_logits"
-                )
-
-            if generation_logits_available:
-                # generation_logits is a 4d torch tensor of dim [BS,1,#generated_tokens,vocab_size]
-                output_texts, generation_logits = self.forward(**infer_input)
-                # convert generation_logits to numpy array. Note: from my understanding since generation_logits is
-                # returned as a torch tensor it won't have varying number of tokens across multiple sequences,
-                # likely due to TRTLLM taking care of padding hence no addtnl padding is needed.
-                output_dict["generation_logits"] = np.array(
-                    [
-                        generation_logit.cpu().numpy()
-                        for generation_logit in generation_logits
-                    ]
-                )
-
-            elif context_logits_available:
-                output_texts, context_logits = self.forward(**infer_input)
-                # context_logits is a list of tensors shaped [#tokens, vocab_size] and the len of the list  is BS
-                # In case of batched inputs (i.e multiple prompts sent as a list) context_logits returned can have
-                # different seq_len. Following code pads them as it can otherwise error while converting to numpy array
-                context_logits = self._pad_logits(context_logits)
-                # Convert context_Logits to numpy array of shape [bS, 1, padding_len, vocab_size],.
-                context_logits = np.array(
-                    [
-                        logit_tensor.unsqueeze(0).cpu().numpy()
-                        for logit_tensor in context_logits
-                    ]
-                )
-                output_dict["context_logits"] = context_logits
+        
+        # Convert numpy arrays to Python types for triton inputs
+        processed_inputs = {}
+        for key, value in inputs.items():
+            if key == "stop_words_list":
+                processed_inputs[key] = str_ndarray2list(value)
+            elif key == "bad_words_list":
+                processed_inputs[key] = str_ndarray2list(value)
+            elif key == "lora_uids":
+                lora_uids = np.char.decode(value.astype("bytes"), encoding="utf-8")
+                processed_inputs[key] = lora_uids[0].tolist()
             else:
-                output_texts = self.forward(**infer_input)
+                processed_inputs[key] = value
+        
+        try:
+            output_texts = self._infer_fn(prompts, processed_inputs)                       
             output_dict["outputs"] = cast_output(output_texts, np.bytes_)
+            
         except Exception as error:
             err_msg = "An error occurred: {0}".format(str(error))
             output_dict["outputs"] = cast_output([err_msg] * len(prompts), np.bytes_)
@@ -1544,94 +1544,24 @@ class TensorRTLLM(ITritonDeployable):
                 - no_repeat_ngram_size: No repeat ngram size (optional)
                 - task_ids: Task IDs (optional)
                 - lora_uids: LoRA UIDs (optional)
-                - output_generation_logits: Whether to output generation logits (optional)
-                - output_context_logits: Whether to output context logits (optional)
                 - apply_chat_template: Whether to apply chat template (optional)
                 - compute_logprob: Whether to compute log probabilities (optional)
                 
         Returns:
             Dict[str, Any]: Output dictionary containing:
                 - sentences: List of generated text outputs
-                - generation_logits: Generation logits (if requested)
-                - context_logits: Context logits (if requested)
                 - log_probs: Log probabilities (if requested)
         """
         output_dict = {}
-        context_logits_available = False
-        generation_logits_available = False
         
         # Extract prompts - handle both list and single string cases
         prompts = inputs.get("prompts", [])
         if isinstance(prompts, str):
             prompts = [prompts]
         
-        infer_input = {"input_texts": prompts}
-        
         try:
-            # Extract inference parameters
-            if "max_output_len" in inputs:
-                infer_input["max_output_len"] = inputs["max_output_len"]
-            if "top_k" in inputs:
-                infer_input["top_k"] = inputs["top_k"]
-            if "top_p" in inputs:
-                infer_input["top_p"] = inputs["top_p"]
-            if "temperature" in inputs:
-                infer_input["temperature"] = inputs["temperature"]
-            if "random_seed" in inputs:
-                infer_input["random_seed"] = inputs["random_seed"]
-            if "stop_words_list" in inputs:
-                stop_words_list = inputs["stop_words_list"]
-                # Ensure proper format for stop words
-                if isinstance(stop_words_list, list) and stop_words_list:
-                    if isinstance(stop_words_list[0], str):
-                        infer_input["stop_words_list"] = [[word] for word in stop_words_list]
-                    else:
-                        infer_input["stop_words_list"] = stop_words_list
-            if "bad_words_list" in inputs:
-                bad_words_list = inputs["bad_words_list"]
-                # Ensure proper format for bad words
-                if isinstance(bad_words_list, list) and bad_words_list:
-                    if isinstance(bad_words_list[0], str):
-                        infer_input["bad_words_list"] = [[word] for word in bad_words_list]
-                    else:
-                        infer_input["bad_words_list"] = bad_words_list
-            if "no_repeat_ngram_size" in inputs:
-                infer_input["no_repeat_ngram_size"] = inputs["no_repeat_ngram_size"]
-            if "task_ids" in inputs:
-                infer_input["task_ids"] = inputs["task_ids"]
-            if "lora_uids" in inputs:
-                infer_input["lora_uids"] = inputs["lora_uids"]
-            if "output_generation_logits" in inputs:
-                generation_logits_available = inputs["output_generation_logits"]
-                infer_input["output_generation_logits"] = inputs["output_generation_logits"]
-            if "output_context_logits" in inputs:
-                context_logits_available = inputs["output_context_logits"]
-                infer_input["output_context_logits"] = inputs["output_context_logits"]
-            if "output_log_probs" in inputs:
-                infer_input["output_log_probs"] = inputs["output_log_probs"]
-
-            # Call the forward method directly since this is now part of TensorRTLLM class
-            if generation_logits_available:
-                # generation_logits is a 4d torch tensor of dim [BS,1,#generated_tokens,vocab_size]
-                output_texts, generation_logits = self.forward(**infer_input)
-                # Convert generation_logits to list of numpy arrays
-                output_dict["generation_logits"] = [
-                    generation_logit.cpu().numpy() for generation_logit in generation_logits
-                ]
-                output_dict["sentences"] = output_texts
-            elif context_logits_available:
-                output_texts, context_logits = self.forward(**infer_input)
-                # context_logits is a list of tensors shaped [#tokens, vocab_size]
-                # Pad logits to handle different sequence lengths
-                context_logits = self._pad_logits(context_logits)
-                # Convert context_logits to list of numpy arrays
-                output_dict["context_logits"] = [
-                    logit_tensor.unsqueeze(0).cpu().numpy() for logit_tensor in context_logits
-                ]
-                output_dict["sentences"] = output_texts
-            else:
-                output_texts = self.forward(**infer_input)
-                output_dict["sentences"] = output_texts
+            output_texts = self._infer_fn(prompts, inputs)
+            output_dict["sentences"] = output_texts
                 
         except Exception as error:
             err_msg = f"An error occurred: {str(error)}"
