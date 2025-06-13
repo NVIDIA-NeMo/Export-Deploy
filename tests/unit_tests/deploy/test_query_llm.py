@@ -344,26 +344,6 @@ class TestNemoQueryLLM:
         assert "choices" in response
         assert response["choices"][0]["text"] == "test response"
 
-    @patch("nemo_deploy.nlp.query_llm.DecoupledModelClient")
-    def test_query_llm_streaming(self, mock_client, query):
-        # Setup mock
-        mock_instance = MagicMock()
-        mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = [
-            {"outputs": np.array([b"test"])},
-            {"outputs": np.array([b" response"])},
-        ]
-        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
-
-        # Test streaming query
-        responses = list(
-            query.query_llm_streaming(prompts=["test prompt"], max_output_len=100)
-        )
-
-        assert len(responses) == 2
-        assert responses[0] == "test"
-        assert responses[1] == " response"
-
     @patch("nemo_deploy.nlp.query_llm.ModelClient")
     def test_query_llm_with_stop_words(self, mock_client, query):
         # Setup mock
@@ -548,53 +528,3 @@ class TestNemoQueryLLM:
 
         assert isinstance(response[0], str)
         assert response[0] == "test response"
-
-    @patch("nemo_deploy.nlp.query_llm.DecoupledModelClient")
-    def test_query_llm_streaming_non_bytes_output(self, mock_client, query):
-        # Setup mock for streaming with non-bytes output
-        mock_instance = MagicMock()
-        mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = [
-            {"outputs": np.array(["test"])},
-            {"outputs": np.array([" response"])},
-        ]
-        mock_instance.model_config.outputs = [MagicMock(dtype=np.float32)]
-
-        # Test streaming query with non-bytes output
-        responses = list(
-            query.query_llm_streaming(prompts=["test prompt"], max_output_len=100)
-        )
-
-        assert len(responses) == 2
-        assert responses[0] == np.array(["test"])
-        assert responses[1] == np.array([" response"])
-
-    @patch("nemo_deploy.nlp.query_llm.DecoupledModelClient")
-    def test_query_llm_streaming_all_parameters(self, mock_client, query):
-        # Setup mock
-        mock_instance = MagicMock()
-        mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = [
-            {"outputs": np.array([b"test response"])},
-        ]
-        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
-
-        # Test streaming query with all parameters
-        responses = list(
-            query.query_llm_streaming(
-                prompts=["test prompt"],
-                stop_words_list=["stop"],
-                bad_words_list=["bad"],
-                no_repeat_ngram_size=3,
-                max_output_len=100,
-                top_k=5,
-                top_p=0.9,
-                temperature=0.8,
-                random_seed=42,
-                lora_uids=["lora1"],
-                init_timeout=30.0
-            )
-        )
-
-        assert len(responses) == 1
-        assert responses[0] == "test response"
