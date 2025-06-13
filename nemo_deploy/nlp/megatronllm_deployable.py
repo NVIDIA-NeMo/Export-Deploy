@@ -488,8 +488,8 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             output_top_n_log_probs = []
             for r in results:
                 # Convert to torch tensor and then move to cpu as generated_log_probs is a list and cant be moved
-                # to cpu otherwise
-                # TODO: if echo=True add top_logprobs for input tokens once supported
+                # to cpu otherwise.
+                # top_logprobs for input tokens is supported with MCore 0.13 and above.
                 if echo:
                     top_n_lp = dict_to_str(r.prompt_top_n_logprobs + r.generated_top_n_logprobs)
                 else:

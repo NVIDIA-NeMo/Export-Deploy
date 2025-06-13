@@ -316,7 +316,7 @@ def test_infer_fn_with_echo_and_prompt_top_logprobs(deployable):
         output_infer = deployable._infer_fn(
             prompts=prompts,
             echo=True,
-            top_logprobs=2,
+            top_logprobs=1,
             text_only=True
         )
         assert output_infer["sentences"] == ["Hello World"]
