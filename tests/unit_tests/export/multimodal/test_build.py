@@ -116,9 +116,7 @@ class TestBuild(unittest.TestCase):
         mock_wrapper = MagicMock()
         mock_input = MagicMock()
 
-        export_visual_wrapper_onnx(
-            mock_wrapper, mock_input, self.temp_dir
-        )
+        export_visual_wrapper_onnx(mock_wrapper, mock_input, self.temp_dir)
 
         mock_makedirs.assert_called_once_with(f"{self.temp_dir}/onnx", exist_ok=True)
         mock_onnx_export.assert_called_once()
@@ -129,7 +127,9 @@ class TestBuild(unittest.TestCase):
     @patch("nemo_export.multimodal.build.trt.Builder")
     @patch("nemo_export.multimodal.build.shutil.rmtree")
     @patch("builtins.open", new_callable=mock_open)
-    def test_build_trt_engine(self, mock_file, mock_rmtree, mock_trt_builder, mock_builder, mock_yaml_dump):
+    def test_build_trt_engine(
+        self, mock_file, mock_rmtree, mock_trt_builder, mock_builder, mock_yaml_dump
+    ):
         from nemo_export.multimodal.build import build_trt_engine
 
         # Setup mocks
@@ -153,7 +153,9 @@ class TestBuild(unittest.TestCase):
         mock_network.get_input.return_value = mock_input
         mock_network.num_inputs = 1
 
-        with patch("nemo_export.multimodal.build.trt.OnnxParser", return_value=mock_parser):
+        with patch(
+            "nemo_export.multimodal.build.trt.OnnxParser", return_value=mock_parser
+        ):
             build_trt_engine(
                 model_type="neva",
                 input_sizes=[3, 224, 224],
@@ -170,7 +172,14 @@ class TestBuild(unittest.TestCase):
     @patch("nemo_export.multimodal.build.AutoModel.from_pretrained")
     @patch("nemo_export.multimodal.build.load_nemo_model")
     @patch("nemo_export.multimodal.build.torch.cuda.is_available", return_value=True)
-    def test_build_neva_engine(self, mock_cuda, mock_load_nemo, mock_auto_model, mock_export_onnx, mock_build_trt):
+    def test_build_neva_engine(
+        self,
+        mock_cuda,
+        mock_load_nemo,
+        mock_auto_model,
+        mock_export_onnx,
+        mock_build_trt,
+    ):
         from nemo_export.multimodal.build import build_neva_engine
 
         # Setup mocks
@@ -200,15 +209,19 @@ class TestBuild(unittest.TestCase):
     @patch("nemo_export.multimodal.build.AutoModel.from_pretrained")
     @patch("nemo_export.multimodal.build.tarfile.open")
     @patch("nemo_export.multimodal.build.torch.cuda.is_available", return_value=True)
-    def test_build_video_neva_engine(self, mock_cuda, mock_tarfile, mock_auto_model, mock_export_onnx, mock_build_trt):
+    def test_build_video_neva_engine(
+        self, mock_cuda, mock_tarfile, mock_auto_model, mock_export_onnx, mock_build_trt
+    ):
         from nemo_export.multimodal.build import build_video_neva_engine
 
         # Setup mocks
         mock_tar = MagicMock()
         mock_tarfile.return_value.__enter__.return_value = mock_tar
         mock_tar.extractfile.side_effect = [
-            mock_open(read_data="mm_cfg:\n  vision_encoder:\n    from_pretrained: test\n    hidden_size: 768\n  mm_mlp_adapter_type: linear\nhidden_size: 4096\ndata:\n  num_frames: 4")().read(),
-            self.mock_weights
+            mock_open(
+                read_data="mm_cfg:\n  vision_encoder:\n    from_pretrained: test\n    hidden_size: 768\n  mm_mlp_adapter_type: linear\nhidden_size: 4096\ndata:\n  num_frames: 4"
+            )().read(),
+            self.mock_weights,
         ]
 
         mock_encoder = MagicMock()
@@ -217,8 +230,13 @@ class TestBuild(unittest.TestCase):
         mock_encoder.config.torch_dtype = torch.bfloat16
         mock_auto_model.return_value = mock_encoder
 
-        with patch("nemo_export.multimodal.build.yaml.safe_load", return_value=self.mock_config):
-            with patch("nemo_export.multimodal.build.torch.load", return_value=self.mock_weights):
+        with patch(
+            "nemo_export.multimodal.build.yaml.safe_load", return_value=self.mock_config
+        ):
+            with patch(
+                "nemo_export.multimodal.build.torch.load",
+                return_value=self.mock_weights,
+            ):
                 build_video_neva_engine(
                     model_dir=self.temp_dir,
                     visual_checkpoint_path="test_checkpoint.nemo",
@@ -234,7 +252,9 @@ class TestBuild(unittest.TestCase):
     @patch("nemo_export.multimodal.build.AutoProcessor.from_pretrained")
     @patch("nemo_export.multimodal.build.shutil.copy2")
     @patch("nemo_export.multimodal.build.os.listdir")
-    def test_build_mllama_visual_engine(self, mock_listdir, mock_copy, mock_processor, mock_vision_builder):
+    def test_build_mllama_visual_engine(
+        self, mock_listdir, mock_copy, mock_processor, mock_vision_builder
+    ):
         from nemo_export.multimodal.build import build_mllama_visual_engine
 
         # Setup mocks
@@ -293,12 +313,16 @@ class TestBuild(unittest.TestCase):
     @patch("nemo_export.multimodal.build.torch.save")
     @patch("nemo_export.multimodal.build.torch.load")
     @patch("nemo_export.multimodal.build.os.path.exists")
-    def test_extract_lora_ckpt(self, mock_exists, mock_torch_load, mock_torch_save, mock_tarfile):
+    def test_extract_lora_ckpt(
+        self, mock_exists, mock_torch_load, mock_torch_save, mock_tarfile
+    ):
         from nemo_export.multimodal.build import extract_lora_ckpt
 
         # Test with direct model_weights.ckpt
         def mock_exists_side_effect(path):
-            return ("model_weights.ckpt" in path and "mp_rank_00" not in path) or "model_config.yaml" in path
+            return (
+                "model_weights.ckpt" in path and "mp_rank_00" not in path
+            ) or "model_config.yaml" in path
 
         mock_exists.side_effect = mock_exists_side_effect
         mock_torch_load.return_value = self.mock_weights
@@ -313,7 +337,9 @@ class TestBuild(unittest.TestCase):
     @patch("nemo_export.multimodal.build.build_mllama_trtllm_engine")
     @patch("nemo_export.multimodal.build.build_mllama_visual_engine")
     @patch("nemo_export.multimodal.build.llm.export_ckpt")
-    def test_build_mllama_engine(self, mock_export_ckpt, mock_build_visual, mock_build_trtllm):
+    def test_build_mllama_engine(
+        self, mock_export_ckpt, mock_build_visual, mock_build_trtllm
+    ):
         from nemo_export.multimodal.build import build_mllama_engine
 
         build_mllama_engine(

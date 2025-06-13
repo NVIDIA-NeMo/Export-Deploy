@@ -19,6 +19,7 @@ from nemo_deploy import DeployPyTriton
 from nemo_deploy.multimodal import NemoQueryMultimodal
 from nemo.collections import vlm, llm
 
+
 def get_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -37,32 +38,12 @@ def get_args():
         choices=["neva", "video-neva", "lita", "vila", "vita", "salm", "mllama"],
         help="Type of the model that is supported.",
     )
-    parser.add_argument(
-        "-lmt",
-        "--llm_model_type",
-        type=str,
-        required=True,
-        choices=[
-            "gptnext",
-            "gpt",
-            "llama",
-            "falcon",
-            "starcoder",
-            "mixtral",
-            "gemma",
-            "mllama",
-        ],
-        help="Type of LLM. gptnext, gpt, llama, falcon, and starcoder are only supported."
-        " gptnext and gpt are the same and keeping it for backward compatibility",
-    )
     return parser.parse_args()
 
 
 def import_hf_model(args):
     if args.model_type == "mllama":
         model = vlm.MLlamaModel(vlm.MLlamaConfig11BInstruct())
-    else:
-        raise ValueError(f"Model type {args.model_type} not supported")
 
     llm.import_ckpt(
         model=model,
@@ -71,13 +52,20 @@ def import_hf_model(args):
         overwrite=True,
     )
 
+
 def run_inference_tests(args):
     model_dir = "/tmp/trt_llm_model_dir"
     exporter = TensorRTMMExporter(model_dir=model_dir, load_model=True)
+
+    if args.model_type == "mllama":
+        llm_model_type = "mllama"
+    else:
+        llm_model_type = "llama"
+
     exporter.export(
         visual_checkpoint_path="/tmp/nemo2_ckpt",
         model_type=args.model_type,
-        llm_model_type=args.llm_model_type,
+        llm_model_type=llm_model_type,
         max_multimodal_len=6404,
     )
 
@@ -91,11 +79,13 @@ def run_inference_tests(args):
         nm.deploy()
         nm.run()
 
-        nq = NemoQueryMultimodal(url="localhost:8000", model_name="mllama", model_type="mllama")
+        nq = NemoQueryMultimodal(
+            url="localhost:8000", model_name="mllama", model_type="mllama"
+        )
 
         output_deployed = nq.query(
             input_text="What is in this image?",
-            input_media="http://images.cocodataset.org/val2017/000000039769.jpg",
+            input_media="tests/functional_tests/test_image.jpg",
             max_output_len=20,
         )
 

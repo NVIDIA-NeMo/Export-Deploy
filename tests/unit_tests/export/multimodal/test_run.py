@@ -44,7 +44,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
                 "model_type": "neva",
                 "precision": "float16",
                 "num_frames": 4,
-                "image_size": 224
+                "image_size": 224,
             }
         }
 
@@ -57,30 +57,25 @@ class TestMultimodalModelRunner(unittest.TestCase):
             "mm_cfg": {
                 "vision_encoder": {
                     "from_pretrained": "test_model",
-                    "crop_size": [224, 224]
+                    "crop_size": [224, 224],
                 },
                 "lita": {
                     "sample_frames": 8,
                     "visual_token_format": "im_vid_start_end",
-                    "lita_video_arch": "temporal_spatial_pool"
-                }
+                    "lita_video_arch": "temporal_spatial_pool",
+                },
             },
-            "data": {
-                "num_frames": 4,
-                "image_aspect_ratio": "pad"
-            }
+            "data": {"num_frames": 4, "image_aspect_ratio": "pad"},
         }
 
         # Create mock nemo config file
         with open(os.path.join(self.visual_engine_dir, "nemo_config.yaml"), "w") as f:
             import yaml
+
             yaml.dump(self.mock_nemo_config, f)
 
         # Create mock tokenizer config
-        tokenizer_config = {
-            "model_type": "llama",
-            "vocab_size": 32000
-        }
+        tokenizer_config = {"model_type": "llama", "vocab_size": 32000}
         with open(os.path.join(self.llm_engine_dir, "tokenizer_config.json"), "w") as f:
             json.dump(tokenizer_config, f)
 
@@ -88,6 +83,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
     def tearDown(self):
         # Clean up temporary directory
         import shutil
+
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
@@ -98,8 +94,15 @@ class TestMultimodalModelRunner(unittest.TestCase):
     @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
     @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
     @patch("transformers.AutoTokenizer.from_pretrained")
-    def test_init_vision_modality(self, mock_tokenizer, mock_session, mock_model_runner,
-                                  mock_mpi_rank, mock_device_count, mock_set_device):
+    def test_init_vision_modality(
+        self,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
         """Test initialization with vision modality"""
         from nemo_export.multimodal.run import MultimodalModelRunner
 
@@ -124,7 +127,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
         runner = MultimodalModelRunner(
             visual_engine_dir=self.visual_engine_dir,
             llm_engine_dir=self.llm_engine_dir,
-            modality="vision"
+            modality="vision",
         )
 
         self.assertEqual(runner.modality, "vision")
@@ -142,8 +145,16 @@ class TestMultimodalModelRunner(unittest.TestCase):
     @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
     @patch("transformers.AutoTokenizer.from_pretrained")
     @patch("transformers.SiglipImageProcessor.from_pretrained")
-    def test_init_vila_model(self, mock_processor, mock_tokenizer, mock_session,
-                            mock_model_runner, mock_mpi_rank, mock_device_count, mock_set_device):
+    def test_init_vila_model(
+        self,
+        mock_processor,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
         """Test initialization with VILA model type"""
         from nemo_export.multimodal.run import MultimodalModelRunner
 
@@ -176,7 +187,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
         runner = MultimodalModelRunner(
             visual_engine_dir=self.visual_engine_dir,
             llm_engine_dir=self.llm_engine_dir,
-            modality="vision"
+            modality="vision",
         )
 
         self.assertEqual(runner.model_type, "vila")
@@ -189,8 +200,15 @@ class TestMultimodalModelRunner(unittest.TestCase):
     @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
     @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
     @patch("sentencepiece.SentencePieceProcessor")
-    def test_init_sentencepiece_tokenizer(self, mock_sp, mock_session, mock_model_runner,
-                                         mock_mpi_rank, mock_device_count, mock_set_device):
+    def test_init_sentencepiece_tokenizer(
+        self,
+        mock_sp,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
         """Test initialization with SentencePiece tokenizer"""
         from nemo_export.multimodal.run import MultimodalModelRunner
 
@@ -226,7 +244,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
         runner = MultimodalModelRunner(
             visual_engine_dir=self.visual_engine_dir,
             llm_engine_dir=self.llm_engine_dir,
-            modality="vision"
+            modality="vision",
         )
 
         self.assertEqual(runner.tokenizer.eos_token_id, 2)
@@ -252,7 +270,13 @@ class TestMultimodalModelRunner(unittest.TestCase):
     @patch("decord.VideoReader")
     @patch("transformers.CLIPImageProcessor.from_pretrained")
     @patch("PIL.Image.fromarray")
-    def test_video_preprocess_string_path(self, mock_image_fromarray, mock_clip_processor, mock_video_reader, mock_str_dtype_to_torch):
+    def test_video_preprocess_string_path(
+        self,
+        mock_image_fromarray,
+        mock_clip_processor,
+        mock_video_reader,
+        mock_str_dtype_to_torch,
+    ):
         """Test video preprocessing with string path"""
         from nemo_export.multimodal.run import MultimodalModelRunner
 
@@ -261,7 +285,9 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         # Setup mock frames and video reader
         mock_frame = MagicMock()
-        mock_frame.asnumpy.return_value = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
+        mock_frame.asnumpy.return_value = np.random.randint(
+            0, 255, (224, 224, 3), dtype=np.uint8
+        )
 
         mock_vr = MagicMock()
         mock_vr.__len__.return_value = 10  # Total frames in video
@@ -277,7 +303,9 @@ class TestMultimodalModelRunner(unittest.TestCase):
         mock_processor_instance = MagicMock()
         # Create mock tensor with correct shape [num_frames, 3, H, W]
         mock_processed_frames = torch.randn(4, 3, 224, 224, dtype=torch.float32)
-        mock_processor_instance.preprocess.return_value = {"pixel_values": mock_processed_frames}
+        mock_processor_instance.preprocess.return_value = {
+            "pixel_values": mock_processed_frames
+        }
         mock_clip_processor.return_value = mock_processor_instance
 
         # Create runner instance with required attributes
@@ -320,7 +348,9 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         # Setup mock processor
         mock_processor_instance = MagicMock()
-        mock_processor_instance.preprocess.return_value = {"pixel_values": torch.randn(4, 3, 224, 224)}
+        mock_processor_instance.preprocess.return_value = {
+            "pixel_values": torch.randn(4, 3, 224, 224)
+        }
         mock_processor.return_value = mock_processor_instance
 
         # Create mock video data
@@ -353,7 +383,9 @@ class TestMultimodalModelRunner(unittest.TestCase):
         input_ids = torch.tensor([[1, 2, 0, 3, 4]])  # 0 represents image token
         num_frames = 2
 
-        result = MultimodalModelRunner.insert_tokens_by_index(runner, input_ids, num_frames)
+        result = MultimodalModelRunner.insert_tokens_by_index(
+            runner, input_ids, num_frames
+        )
 
         self.assertIsInstance(result, torch.Tensor)
         self.assertEqual(result.shape[0], 1)  # batch dimension maintained
@@ -371,7 +403,9 @@ class TestMultimodalModelRunner(unittest.TestCase):
         prompt = "Hello <image> world"
         batch_size = 2
 
-        result = MultimodalModelRunner.tokenizer_image_token(batch_size, prompt, mock_tokenizer)
+        result = MultimodalModelRunner.tokenizer_image_token(
+            batch_size, prompt, mock_tokenizer
+        )
 
         self.assertEqual(result.shape[0], batch_size)
 
@@ -397,10 +431,14 @@ class TestMultimodalModelRunner(unittest.TestCase):
         runner = MagicMock()
 
         # Test rectangular image (wider than tall)
-        images = torch.randn(2, 3, 100, 200)  # batch=2, channels=3, height=100, width=200
+        images = torch.randn(
+            2, 3, 100, 200
+        )  # batch=2, channels=3, height=100, width=200
         background_color = [0.5, 0.5, 0.5]
 
-        result = MultimodalModelRunner.expand2square_pt(runner, images, background_color)
+        result = MultimodalModelRunner.expand2square_pt(
+            runner, images, background_color
+        )
 
         self.assertEqual(result.shape[-1], result.shape[-2])  # Should be square
         self.assertEqual(result.shape[-1], 200)  # Should match the larger dimension
@@ -413,7 +451,9 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         # Setup mock video reader
         mock_frame = MagicMock()
-        mock_frame.asnumpy.return_value = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
+        mock_frame.asnumpy.return_value = np.random.randint(
+            0, 255, (224, 224, 3), dtype=np.uint8
+        )
 
         mock_vr = MagicMock()
         mock_vr.__len__.return_value = 10
@@ -422,16 +462,18 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         # Mock processor
         mock_processor = MagicMock()
-        mock_processor.preprocess.return_value = {"pixel_values": torch.randn(4, 3, 224, 224)}
+        mock_processor.preprocess.return_value = {
+            "pixel_values": torch.randn(4, 3, 224, 224)
+        }
         mock_processor.image_mean = [0.5, 0.5, 0.5]
 
         # Mock config
-        mock_config = {
-            "data": {"image_aspect_ratio": "pad"}
-        }
+        mock_config = {"data": {"image_aspect_ratio": "pad"}}
 
         runner = MagicMock()
-        result = MultimodalModelRunner.load_video(runner, mock_config, "test_video.mp4", mock_processor, num_frames=4)
+        result = MultimodalModelRunner.load_video(
+            runner, mock_config, "test_video.mp4", mock_processor, num_frames=4
+        )
 
         mock_video_reader.assert_called_once()
 
@@ -445,17 +487,19 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         # Mock processor
         mock_processor = MagicMock()
-        mock_processor.preprocess.return_value = {"pixel_values": torch.randn(10, 3, 224, 224)}
+        mock_processor.preprocess.return_value = {
+            "pixel_values": torch.randn(10, 3, 224, 224)
+        }
         mock_processor.image_mean = [0.5, 0.5, 0.5]
 
         # Mock config
-        mock_config = {
-            "data": {"image_aspect_ratio": "pad"}
-        }
+        mock_config = {"data": {"image_aspect_ratio": "pad"}}
 
         # Create a mock runner and assign the real load_video method to it
         runner = MagicMock()
-        runner.load_video = MultimodalModelRunner.load_video.__get__(runner, MultimodalModelRunner)
+        runner.load_video = MultimodalModelRunner.load_video.__get__(
+            runner, MultimodalModelRunner
+        )
         runner.preprocess_frames.return_value = torch.randn(10, 3, 224, 224)
 
         # Call the method - now it will use the real implementation
@@ -471,39 +515,37 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         # Test with im_vid_start_end format
         config1 = {
-            "mm_cfg": {
-                "lita": {
-                    "visual_token_format": "im_vid_start_end"
-                }
-            },
-            "data": {"num_frames": 8}
+            "mm_cfg": {"lita": {"visual_token_format": "im_vid_start_end"}},
+            "data": {"num_frames": 8},
         }
 
         runner = MagicMock()
 
         # When vid_len > max_frames, it subsamples
         # vid_len=10, max_frames=8 -> subsample=ceil(10/8)=2 -> round(10/2)=5
-        result1 = MultimodalModelRunner.get_num_sample_frames(runner, config1, vid_len=10)
+        result1 = MultimodalModelRunner.get_num_sample_frames(
+            runner, config1, vid_len=10
+        )
         self.assertEqual(result1, 5)
 
         # When vid_len <= max_frames, it returns vid_len
-        result2 = MultimodalModelRunner.get_num_sample_frames(runner, config1, vid_len=4)
+        result2 = MultimodalModelRunner.get_num_sample_frames(
+            runner, config1, vid_len=4
+        )
         self.assertEqual(result2, 4)
 
         # When vid_len == max_frames, it returns vid_len
-        result3 = MultimodalModelRunner.get_num_sample_frames(runner, config1, vid_len=8)
+        result3 = MultimodalModelRunner.get_num_sample_frames(
+            runner, config1, vid_len=8
+        )
         self.assertEqual(result3, 8)
 
         # Test with other format (uses sample_frames)
-        config2 = {
-            "mm_cfg": {
-                "lita": {
-                    "sample_frames": 6
-                }
-            }
-        }
+        config2 = {"mm_cfg": {"lita": {"sample_frames": 6}}}
 
-        result4 = MultimodalModelRunner.get_num_sample_frames(runner, config2, vid_len=10)
+        result4 = MultimodalModelRunner.get_num_sample_frames(
+            runner, config2, vid_len=10
+        )
         self.assertEqual(result4, 6)
 
     @pytest.mark.run_only_on("GPU")
@@ -512,19 +554,19 @@ class TestMultimodalModelRunner(unittest.TestCase):
         from nemo_export.multimodal.run import MultimodalModelRunner
 
         # Create a test image
-        test_image = Image.new('RGB', (256, 256), color='red')
+        test_image = Image.new("RGB", (256, 256), color="red")
 
         # Mock image processor
         mock_processor = MagicMock()
-        mock_processor.preprocess.return_value = {"pixel_values": [torch.randn(3, 224, 224)]}
+        mock_processor.preprocess.return_value = {
+            "pixel_values": [torch.randn(3, 224, 224)]
+        }
         mock_processor.image_mean = [0.5, 0.5, 0.5]
 
         # Mock config
         mock_config = {
-            "mm_cfg": {
-                "vision_encoder": {"crop_size": [224, 224]}
-            },
-            "data": {"image_aspect_ratio": "pad"}
+            "mm_cfg": {"vision_encoder": {"crop_size": [224, 224]}},
+            "data": {"image_aspect_ratio": "pad"},
         }
 
         runner = MagicMock()
@@ -543,8 +585,15 @@ class TestMultimodalModelRunner(unittest.TestCase):
     @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
     @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
     @patch("transformers.AutoTokenizer.from_pretrained")
-    def test_setup_inputs_neva(self, mock_tokenizer, mock_session, mock_model_runner,
-                              mock_mpi_rank, mock_device_count, mock_set_device):
+    def test_setup_inputs_neva(
+        self,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
         """Test setup inputs for NEVA model"""
         from nemo_export.multimodal.run import MultimodalModelRunner
 
@@ -569,20 +618,25 @@ class TestMultimodalModelRunner(unittest.TestCase):
         runner = MultimodalModelRunner(
             visual_engine_dir=self.visual_engine_dir,
             llm_engine_dir=self.llm_engine_dir,
-            modality="vision"
+            modality="vision",
         )
 
         # Create test image
-        test_image = Image.new('RGB', (256, 256), color='red')
+        test_image = Image.new("RGB", (256, 256), color="red")
 
         result = runner.setup_inputs(
-            input_text="What is in this image?",
-            raw_image=test_image,
-            batch_size=1
+            input_text="What is in this image?", raw_image=test_image, batch_size=1
         )
 
         self.assertEqual(len(result), 6)  # Should return 6 elements
-        input_text, pre_prompt, post_prompt, image, decoder_input_ids, attention_mask = result
+        (
+            input_text,
+            pre_prompt,
+            post_prompt,
+            image,
+            decoder_input_ids,
+            attention_mask,
+        ) = result
 
         self.assertIsInstance(pre_prompt, list)
         self.assertIsInstance(post_prompt, list)
@@ -597,16 +651,15 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         config = {
             "mm_cfg": {
-                "lita": {
-                    "visual_token_format": "im_vid_start_end",
-                    "sample_frames": 4
-                }
+                "lita": {"visual_token_format": "im_vid_start_end", "sample_frames": 4}
             }
         }
 
         runner = MagicMock()
-        im_features, vid_features, num_frames = MultimodalModelRunner.preprocess_lita_visual(
-            runner, visual_features, config
+        im_features, vid_features, num_frames = (
+            MultimodalModelRunner.preprocess_lita_visual(
+                runner, visual_features, config
+            )
         )
 
         self.assertEqual(num_frames, 4)
@@ -620,13 +673,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         visual_features = torch.randn(1, 8, 256, 768)  # batch, time, spatial, dim
 
-        config = {
-            "mm_cfg": {
-                "lita": {
-                    "lita_video_arch": "temporal_spatial_pool"
-                }
-            }
-        }
+        config = {"mm_cfg": {"lita": {"lita_video_arch": "temporal_spatial_pool"}}}
 
         runner = MagicMock()
         t_tokens, s_tokens, pool_size_sq = MultimodalModelRunner.preprocess_lita_visual(
@@ -644,7 +691,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
         runner = MagicMock()
         runner.model_type = "neva"
 
-        test_image = Image.new('RGB', (256, 256), color='red')
+        test_image = Image.new("RGB", (256, 256), color="red")
 
         with patch("PIL.Image.open", return_value=test_image):
             result = MultimodalModelRunner.load_test_media(runner, "test_image.jpg")
@@ -682,8 +729,15 @@ class TestMultimodalModelRunner(unittest.TestCase):
     @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
     @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
     @patch("transformers.AutoTokenizer.from_pretrained")
-    def test_print_result(self, mock_tokenizer, mock_session, mock_model_runner,
-                         mock_mpi_rank, mock_device_count, mock_set_device):
+    def test_print_result(
+        self,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
         """Test print result functionality"""
         from nemo_export.multimodal.run import MultimodalModelRunner
 
@@ -709,18 +763,20 @@ class TestMultimodalModelRunner(unittest.TestCase):
         runner = MultimodalModelRunner(
             visual_engine_dir=self.visual_engine_dir,
             llm_engine_dir=self.llm_engine_dir,
-            modality="vision"
+            modality="vision",
         )
 
         # Test with profiling enabled
-        with patch("nemo_export.multimodal.run.profiler.elapsed_time_in_sec", return_value=0.1):
+        with patch(
+            "nemo_export.multimodal.run.profiler.elapsed_time_in_sec", return_value=0.1
+        ):
             runner.print_result(
                 input_text="Test input",
                 output_text=[["Test output"]],
                 batch_size=1,
                 num_beams=1,
                 run_profiling=True,
-                check_accuracy=False
+                check_accuracy=False,
             )
 
     @pytest.mark.run_only_on("GPU")
@@ -730,8 +786,15 @@ class TestMultimodalModelRunner(unittest.TestCase):
     @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
     @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
     @patch("transformers.AutoTokenizer.from_pretrained")
-    def test_ptuning_setup(self, mock_tokenizer, mock_session, mock_model_runner,
-                          mock_mpi_rank, mock_device_count, mock_set_device):
+    def test_ptuning_setup(
+        self,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
         """Test P-tuning setup"""
         from nemo_export.multimodal.run import MultimodalModelRunner
 
@@ -764,7 +827,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
         runner = MultimodalModelRunner(
             visual_engine_dir=self.visual_engine_dir,
             llm_engine_dir=self.llm_engine_dir,
-            modality="vision"
+            modality="vision",
         )
 
         # Test P-tuning setup
@@ -786,18 +849,14 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         visual_features = torch.randn(1, 8, 256, 768)
 
-        config = {
-            "mm_cfg": {
-                "lita": {
-                    "visual_token_format": "invalid_format"
-                }
-            }
-        }
+        config = {"mm_cfg": {"lita": {"visual_token_format": "invalid_format"}}}
 
         runner = MagicMock()
 
         with self.assertRaises(ValueError):
-            MultimodalModelRunner.preprocess_lita_visual(runner, visual_features, config)
+            MultimodalModelRunner.preprocess_lita_visual(
+                runner, visual_features, config
+            )
 
     @pytest.mark.run_only_on("GPU")
     def test_preprocess_lita_model_batch_error(self):
@@ -809,22 +868,32 @@ class TestMultimodalModelRunner(unittest.TestCase):
         runner.modality = "vision"
 
         # Mock the get_visual_features method - called in the for loop for each image
-        runner.get_visual_features = MagicMock(return_value=(torch.randn(8, 256, 768), torch.ones(8, 256)))
+        runner.get_visual_features = MagicMock(
+            return_value=(torch.randn(8, 256, 768), torch.ones(8, 256))
+        )
 
         # Mock the preprocess_lita_visual method - processes visual features
         im_tokens = torch.randn(1, 4, 256, 768)  # image tokens
-        vid_tokens = torch.randn(1, 8, 768)      # video tokens
+        vid_tokens = torch.randn(1, 8, 768)  # video tokens
         num_sample_frames = 4
-        runner.preprocess_lita_visual = MagicMock(return_value=(im_tokens, vid_tokens, num_sample_frames))
+        runner.preprocess_lita_visual = MagicMock(
+            return_value=(im_tokens, vid_tokens, num_sample_frames)
+        )
 
         # Mock tokenizer_image_token - processes text prompts
-        runner.tokenizer_image_token = MagicMock(return_value=torch.tensor([[1, 0, 2, 3]]))
+        runner.tokenizer_image_token = MagicMock(
+            return_value=torch.tensor([[1, 0, 2, 3]])
+        )
 
         # Mock insert_tokens_by_index - inserts special tokens for LITA
-        runner.insert_tokens_by_index = MagicMock(return_value=torch.tensor([[1, 10, 0, 11, 2, 3]]))
+        runner.insert_tokens_by_index = MagicMock(
+            return_value=torch.tensor([[1, 10, 0, 11, 2, 3]])
+        )
 
         # Mock split_prompt_by_images - splits prompt by image tokens
-        runner.split_prompt_by_images = MagicMock(return_value=[[torch.tensor([[1]]), torch.tensor([[2, 3]])]])
+        runner.split_prompt_by_images = MagicMock(
+            return_value=[[torch.tensor([[1]]), torch.tensor([[2, 3]])]]
+        )
 
         # Mock setup_fake_prompts_vila - final setup (shouldn't be called due to ValueError)
         runner.setup_fake_prompts_vila = MagicMock()
@@ -832,10 +901,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
         # Mock nemo_config
         nemo_config = {
             "mm_cfg": {
-                "lita": {
-                    "visual_token_format": "im_vid_start_end",
-                    "sample_frames": 4
-                }
+                "lita": {"visual_token_format": "im_vid_start_end", "sample_frames": 4}
             }
         }
         runner.nemo_config = nemo_config
@@ -851,7 +917,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
         class MockImageList(list):
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
-                self.device = torch.device('cuda:0')
+                self.device = torch.device("cuda:0")
 
         image = MockImageList([mock_image_tensor])
         attention_mask = None
@@ -859,14 +925,24 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         with self.assertRaises(ValueError) as context:
             MultimodalModelRunner.preprocess(
-                runner, warmup=False, pre_prompt=pre_prompt, post_prompt=post_prompt,
-                image=image, attention_mask=attention_mask, batch_size=batch_size
+                runner,
+                warmup=False,
+                pre_prompt=pre_prompt,
+                post_prompt=post_prompt,
+                image=image,
+                attention_mask=attention_mask,
+                batch_size=batch_size,
             )
 
-        self.assertIn("Batch size greater than 1 is not supported for LITA and VITA models", str(context.exception))
+        self.assertIn(
+            "Batch size greater than 1 is not supported for LITA and VITA models",
+            str(context.exception),
+        )
 
         # Verify that the methods were called in the expected order before the ValueError
-        runner.get_visual_features.assert_called_once_with(mock_image_tensor, attention_mask)
+        runner.get_visual_features.assert_called_once_with(
+            mock_image_tensor, attention_mask
+        )
         runner.preprocess_lita_visual.assert_called_once()
         runner.tokenizer_image_token.assert_called_once()
         runner.insert_tokens_by_index.assert_called_once()
@@ -884,10 +960,15 @@ class TestMultimodalModelRunner(unittest.TestCase):
         runner.model_type = "neva"  # Set model type to avoid logger issues
         runner.tokenizer.return_value = {"input_ids": [1, 2, 3, 4, 5]}
         # Bind the real print_result method to the mock runner
-        runner.print_result = MultimodalModelRunner.print_result.__get__(runner, MultimodalModelRunner)
+        runner.print_result = MultimodalModelRunner.print_result.__get__(
+            runner, MultimodalModelRunner
+        )
 
         # Should pass with "robot" in output - use batch_size=2 so the for loop runs
-        output_text = [["I can see a robot in the image"], ["I can see a robot in the image"]]
+        output_text = [
+            ["I can see a robot in the image"],
+            ["I can see a robot in the image"],
+        ]
 
         # Should not raise any exception
         runner.print_result(
@@ -896,11 +977,14 @@ class TestMultimodalModelRunner(unittest.TestCase):
             batch_size=2,
             num_beams=1,
             run_profiling=False,
-            check_accuracy=True
+            check_accuracy=True,
         )
 
         # Should fail without "robot" in output - use batch_size=2 so the for loop runs
-        output_text_fail = [["I can see a car in the image"], ["I can see a car in the image"]]
+        output_text_fail = [
+            ["I can see a car in the image"],
+            ["I can see a car in the image"],
+        ]
 
         with self.assertRaises(AssertionError):
             runner.print_result(
@@ -909,7 +993,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
                 batch_size=2,
                 num_beams=1,
                 run_profiling=False,
-                check_accuracy=True
+                check_accuracy=True,
             )
 
 

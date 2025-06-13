@@ -643,7 +643,7 @@ def build_mllama_engine(
 
         llm.export_ckpt(
             path=checkpoint_path,
-            target='hf',
+            target="hf",
             output_path=hf_model_path,
         )
 
