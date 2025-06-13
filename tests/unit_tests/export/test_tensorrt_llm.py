@@ -18,7 +18,6 @@ from unittest.mock import patch
 
 import pytest
 import torch
-import numpy as np
 
 
 @pytest.mark.run_only_on("GPU")
