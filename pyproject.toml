@@ -83,7 +83,6 @@ default-groups = ["linting", "build", "test"]
 link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }]]
 override-dependencies = [
-    "megatron-core@git+https://github.com/NVIDIA/Megatron-LM.git@54afff44f29e1117b2057ced6fa5be583e35cb7b",
     "urllib3>1.27.0",
     "torch; sys_platform == 'never'",
     "torchvision; sys_platform == 'never'",
