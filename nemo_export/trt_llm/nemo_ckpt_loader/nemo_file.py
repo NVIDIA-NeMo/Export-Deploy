@@ -393,11 +393,14 @@ def load_nemo_config(nemo_ckpt: Union[str, Path]) -> Dict[Any, Any]:
     return config
 
 
-def get_model_type(nemo_ckpt: Union[str, Path]) -> Optional[str]:
-    """Determine the model type from a NeMo checkpoint for TensorRT-LLM engine build.
+def get_model_type(
+    nemo_ckpt: Union[str, Path], use_vllm_type: bool = False
+) -> Optional[str]:
+    """Determine the model type from a NeMo checkpoint for TensorRT-LLM engine build or vLLM model converters.
 
     Args:
         nemo_ckpt (Union[str, Path]): Path to the NeMo checkpoint file.
+        use_vllm_type (bool): If True, uses vLLM model type names for known model converters.
 
     Returns:
         Optional[str]: The model type if it can be determined, otherwise None.
@@ -411,9 +414,13 @@ def get_model_type(nemo_ckpt: Union[str, Path]) -> Optional[str]:
             "nemo.collections.llm.gpt.model.base.GPTModel": "gpt",
             "nemo.collections.llm.gpt.model.llama.LlamaModel": "llama",
             "nemo.collections.llm.gpt.model.mistral.MistralModel": "llama",
-            "nemo.collections.llm.gpt.model.mixtral.MixtralModel": "llama",
+            "nemo.collections.llm.gpt.model.mixtral.MixtralModel": "mixtral"
+            if use_vllm_type
+            else "llama",
             "nemo.collections.llm.gpt.model.starcoder.StarcoderModel": "gpt",
-            "nemo.collections.llm.gpt.model.starcoder2.Starcoder2Model": "gpt",
+            "nemo.collections.llm.gpt.model.starcoder2.Starcoder2Model": "starcoder2"
+            if use_vllm_type
+            else "gpt",
             "nemo.collections.llm.gpt.model.nemotron.NemotronModel": "gpt",
             "nemo.collections.llm.gpt.model.gemma.GemmaModel": "gemma",
             "nemo.collections.llm.gpt.model.phi3mini.Phi3Model": "phi3",
