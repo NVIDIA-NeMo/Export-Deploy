@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gc
 import json
 import logging
 import os
@@ -84,9 +83,7 @@ from nemo_export.trt_llm.converter.model_converter import (
 from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import (
     get_layer_prefix,
 )
-from nemo_export.trt_llm.converter.utils import init_model_parallel_from_nemo
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
-    build_tokenizer,
     get_model_type,
     get_tokenizer,
     get_weights_dtype,
@@ -101,14 +98,11 @@ from nemo_export.trt_llm.qnemo.utils import is_qnemo_checkpoint
 from nemo_export.trt_llm.tensorrt_llm_run import (
     generate,
     load,
-    load_distributed,
-    refit,
     unload_engine,
 )
 from nemo_export.trt_llm.utils import is_rank
 from nemo_export.utils import (
     prepare_directory_for_export,
-    torch_dtype_from_precision,
 )
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
 from megatron.core.export.data_type import DataType
@@ -887,8 +881,6 @@ class TensorRTLLM(ITritonDeployable):
 
         if tensorrt_llm.mpi_world_size() > 1:
             tensorrt_llm.mpi_barrier()
-
-        return model_state_dict
 
     def get_input_dtype(self, storage_dtype):
         """Return mcore export dtype given torch dtype."""

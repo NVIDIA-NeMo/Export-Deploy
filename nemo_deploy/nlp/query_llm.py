@@ -19,7 +19,7 @@ from typing import List, Optional
 import numpy as np
 
 from nemo_deploy.utils import str_list2numpy
-from pytriton.client import DecoupledModelClient, ModelClient
+from pytriton.client import ModelClient
 
 
 class NemoQueryLLMBase(ABC):
