@@ -25,7 +25,6 @@ prerelease-mode = "allow"
 
 [manifest]
 overrides = [
-    { name = "megatron-core", git = "https://github.com/NVIDIA/Megatron-LM.git?rev=54afff44f29e1117b2057ced6fa5be583e35cb7b" },
     { name = "torch", marker = "sys_platform == 'never'" },
     { name = "torchvision", marker = "sys_platform == 'never'" },
     { name = "triton", marker = "sys_platform == 'never'" },
@@ -1694,12 +1693,13 @@ wheels = [
 [[package]]
 name = "megatron-core"
 version = "0.13.0rc0"
-source = { git = "https://github.com/NVIDIA/Megatron-LM.git?rev=54afff44f29e1117b2057ced6fa5be583e35cb7b#54afff44f29e1117b2057ced6fa5be583e35cb7b" }
+source = { git = "https://github.com/NVIDIA/Megatron-LM.git#32737be6efbff557e2e8a5a50e36cefeed1a7c7e" }
 dependencies = [
     { name = "einops" },
     { name = "flask-restful" },
     { name = "nltk" },
     { name = "nvidia-modelopt", extra = ["torch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvtx" },
     { name = "packaging" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -2023,6 +2023,7 @@ trtllm = [
 ]
 vllm = [
     { name = "pandas" },
+    { name = "timm" },
     { name = "vllm" },
 ]
 
@@ -2064,6 +2065,7 @@ requires-dist = [
     { name = "ray", extras = ["serve"] },
     { name = "tensorrt-llm", marker = "extra == 'trtllm'", specifier = "~=0.20.0rc3" },
     { name = "tensorstore", specifier = "<0.1.72" },
+    { name = "timm", marker = "extra == 'vllm'" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
     { name = "transformer-engine", extras = ["pytorch"], marker = "extra == 'te'", specifier = "==2.4.0" },
     { name = "transformers", specifier = ">=4.49.0" },
@@ -3993,6 +3995,22 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/1b/40/da42522018ca496432ffd02793c3a72a739ac04c3794a4914570c9bb2925/tiktoken-0.9.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:99376e1370d59bcf6935c933cb9ba64adc29033b7e73f5f7569f3aad86552b22", size = 1196678, upload-time = "2025-02-14T06:02:29.845Z" },
     { url = "https://files.pythonhosted.org/packages/5c/41/1e59dddaae270ba20187ceb8aa52c75b24ffc09f547233991d5fd822838b/tiktoken-0.9.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:badb947c32739fb6ddde173e14885fb3de4d32ab9d8c591cbd013c22b4c31dd2", size = 1259283, upload-time = "2025-02-14T06:02:33.838Z" },
     { url = "https://files.pythonhosted.org/packages/5b/64/b16003419a1d7728d0d8c0d56a4c24325e7b10a21a9dd1fc0f7115c02f0a/tiktoken-0.9.0-cp312-cp312-win_amd64.whl", hash = "sha256:5a62d7a25225bafed786a524c1b9f0910a1128f4232615bf3f8257a73aaa3b16", size = 894897, upload-time = "2025-02-14T06:02:36.265Z" },
+]
+
+[[package]]
+name = "timm"
+version = "1.0.15"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "huggingface-hub" },
+    { name = "pyyaml" },
+    { name = "safetensors" },
+    { name = "torch", marker = "sys_platform == 'never'" },
+    { name = "torchvision", marker = "sys_platform == 'never'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bc/0c/66b0f9b4a4cb9ffdac7b52b17b37c7d3c4f75623b469e388b0c6d89b4e88/timm-1.0.15.tar.gz", hash = "sha256:756a3bc30c96565f056e608a9b559daed904617eaadb6be536f96874879b1055", size = 2230258, upload-time = "2025-02-23T05:05:55.959Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6c/d0/179abca8b984b3deefd996f362b612c39da73b60f685921e6cd58b6125b4/timm-1.0.15-py3-none-any.whl", hash = "sha256:5a3dc460c24e322ecc7fd1f3e3eb112423ddee320cb059cc1956fbc9731748ef", size = 2361373, upload-time = "2025-02-23T05:05:53.601Z" },
 ]
 
 [[package]]
