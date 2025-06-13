@@ -40,6 +40,15 @@ dependencies = [
     "webdataset>=0.2.86",
     "nvidia-pytriton ; platform_system != 'Darwin' ",
     "flashinfer-python==0.2.5",
+    "wget",
+    "h5py",
+    "ijson",
+    "boto3",
+    "megatron-energon",
+    "qwen_vl_utils",
+    "sacrebleu",
+    "rouge_score",
+    "decord",
 ]
 
 [project.optional-dependencies]
