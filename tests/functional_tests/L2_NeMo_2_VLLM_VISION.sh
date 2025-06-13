@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#!/bin/bash
+set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
+
 export TRANSFORMERS_OFFLINE=1
 export HF_HOME=/home/TestData/vlm/vision/hf/
 

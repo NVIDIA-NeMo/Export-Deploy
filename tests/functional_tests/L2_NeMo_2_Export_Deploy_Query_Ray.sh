@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#!/bin/bash
+set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
+
 coverage run --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/run_nemo_deploy_ray.py \
     --model_name test_model \
     --checkpoint_path /home/TestData/llm/models/llama32_1b_nemo2 \
