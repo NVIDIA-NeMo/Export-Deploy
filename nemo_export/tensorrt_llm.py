@@ -16,7 +16,6 @@ import gc
 import json
 import logging
 import os
-import pickle
 import shutil
 import tempfile
 import warnings
@@ -77,7 +76,7 @@ from tensorrt_llm.plugin import PluginConfig
 from transformers import AutoConfig, PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
-from nemo_export.tarutils import unpack_tarball, TarPath
+from nemo_export.tarutils import unpack_tarball
 from nemo_export.trt_llm.converter.model_converter import (
     determine_quantization_settings,
     model_to_trtllm_ckpt,
@@ -109,7 +108,6 @@ from nemo_export.trt_llm.tensorrt_llm_run import (
 )
 from nemo_export.trt_llm.utils import is_rank
 from nemo_export.utils import (
-    is_nemo_tarfile, 
     prepare_directory_for_export,
     torch_dtype_from_precision,
 )
@@ -1529,58 +1527,7 @@ class TensorRTLLM(ITritonDeployable):
             output_dict["outputs"] = cast_output([err_msg] * len(prompts), np.bytes_)
 
         return output_dict
-
-    @batch
-    @first_value(
-        "max_output_len",
-        "top_k",
-        "top_p",
-        "temperature",
-        "random_seed",
-        "no_repeat_ngram_size",
-    )
-    def triton_infer_fn_streaming(self, **inputs: np.ndarray):
-        """Triton infer function for streaming."""
-        try:
-            infer_input = {"input_texts": str_ndarray2list(inputs.pop("prompts"))}
-            if "max_output_len" in inputs:
-                infer_input["max_output_len"] = inputs.pop("max_output_len")
-            if "top_k" in inputs:
-                infer_input["top_k"] = inputs.pop("top_k")
-            if "top_p" in inputs:
-                infer_input["top_p"] = inputs.pop("top_p")
-            if "temperature" in inputs:
-                infer_input["temperature"] = inputs.pop("temperature")
-            if "random_seed" in inputs:
-                infer_input["random_seed"] = inputs.pop("random_seed")
-            if "stop_words_list" in inputs:
-                stop_words_list = str_ndarray2list(inputs.pop("stop_words_list"))
-                infer_input["stop_words_list"] = [
-                    [stop_word] for stop_word in stop_words_list
-                ]
-            if "bad_words_list" in inputs:
-                bad_words_list = str_ndarray2list(inputs.pop("bad_words_list"))
-                infer_input["bad_words_list"] = [
-                    [bad_word] for bad_word in bad_words_list
-                ]
-            if "no_repeat_ngram_size" in inputs:
-                infer_input["no_repeat_ngram_size"] = inputs.pop("no_repeat_ngram_size")
-            if "lora_uids" in inputs:
-                lora_uids = np.char.decode(
-                    inputs.pop("lora_uids").astype("bytes"), encoding="utf-8"
-                )
-                infer_input["lora_uids"] = lora_uids[0].tolist()
-
-            partial_outputs = self.forward(**infer_input, streaming=True)
-            # On each request to this generator, run the model for one step and return a dict
-            # with full outputs generated until this step.
-            for output_texts in partial_outputs:
-                yield {"outputs": cast_output(output_texts, np.bytes_)}
-        except Exception as error:
-            err_msg = "An error occurred: {0}".format(str(error))
-            output = cast_output([err_msg], np.bytes_)
-            return {"outputs": output}
-
+    
     def ray_infer_fn(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Ray inference function that processes input dictionary and returns output without byte casting.
         
@@ -1694,168 +1641,57 @@ class TensorRTLLM(ITritonDeployable):
 
         return output_dict
 
-    def _prep_ptuning_table(self):
-        self.task_vocab_size = 0
-        for pt in self.ptuning_tables:
-            if self.task_vocab_size < pt["table"].size(dim=0):
-                self.task_vocab_size = pt["table"].size(dim=0)
-
-        # pad tasks to longest task embedding table, remember the original task vtoken counts
-        vtokens_embeddings = []
-        self.task_vtoken_counts = []
-        self.task_ids = {}
-        tid = 0
-        for i, ptuning_table in enumerate(self.ptuning_tables):
-            original_table = ptuning_table["table"]
-            vtoken_count = original_table.size(dim=0)
-            padded_table = torch.zeros(
-                (self.task_vocab_size, self.get_hidden_size), dtype=original_table.dtype
-            )
-            padded_table[:vtoken_count, :] = original_table
-            vtokens_embeddings.append(padded_table)
-            self.task_ids[ptuning_table["task_name"]] = tid
-            self.task_vtoken_counts.append(vtoken_count)
-            tid = tid + 1
-
-        if len(vtokens_embeddings) > 0:
-            self.p_table = torch.stack(vtokens_embeddings, dim=0).view(
-                -1, self.get_hidden_size
-            )
-
-            max_prompt_embedding_table_size = self.config["build_config"][
-                "max_prompt_embedding_table_size"
-            ]
-            actual_prompt_table_size = self.p_table.shape[0]
-
-            if actual_prompt_table_size > max_prompt_embedding_table_size:
-                raise Exception(
-                    f"The size of the combined prompt embedding table ({actual_prompt_table_size}) is greater than max_prompt_embedding_table_size ({max_prompt_embedding_table_size})."
-                )
-        else:
-            self.p_table = None
-
-    def _load_prompt_tables(self):
-        if self.model_dir is not None:
-            pt_path = Path(os.path.join(self.model_dir, "prompt_tables.pkl"))
-            if pt_path.exists():
-                with open(pt_path, "rb") as f:
-                    self.ptuning_tables = pickle.load(f)
-                self._prep_ptuning_table()
-            else:
-                self.ptuning_tables = []
-
-    def _get_prompt_embedding_table_ckpt(self, prompt_embeddings_checkpoint_path):
-        with TarPath(prompt_embeddings_checkpoint_path) as checkpoint_archive:
-            mw_path = checkpoint_archive / "model_weights.ckpt"
-            if not mw_path.exists():
-                mw_path = checkpoint_archive / "mp_rank_00/model_weights.ckpt"
-                if not mw_path.exists():
-                    raise FileNotFoundError(
-                        "File: {0} could not be found in the nemo checkpoint. "
-                        "Please check the nemo checkpoint format for the prompt "
-                        "embedding table.".format(mw_path)
-                    )
-
-            with mw_path.open("rb") as mw_file:
-                weights = torch.load(mw_file)
-
-            weights_found = True
-            if (
-                "model.embedding.adapter_layer.ptuning_adapter.inference_table"
-                in weights
-            ):
-                weights = weights[
-                    "model.embedding.adapter_layer.ptuning_adapter.inference_table"
+    @batch
+    @first_value(
+        "max_output_len",
+        "top_k",
+        "top_p",
+        "temperature",
+        "random_seed",
+        "no_repeat_ngram_size",
+    )
+    def triton_infer_fn_streaming(self, **inputs: np.ndarray):
+        """Triton infer function for streaming."""
+        try:
+            infer_input = {"input_texts": str_ndarray2list(inputs.pop("prompts"))}
+            if "max_output_len" in inputs:
+                infer_input["max_output_len"] = inputs.pop("max_output_len")
+            if "top_k" in inputs:
+                infer_input["top_k"] = inputs.pop("top_k")
+            if "top_p" in inputs:
+                infer_input["top_p"] = inputs.pop("top_p")
+            if "temperature" in inputs:
+                infer_input["temperature"] = inputs.pop("temperature")
+            if "random_seed" in inputs:
+                infer_input["random_seed"] = inputs.pop("random_seed")
+            if "stop_words_list" in inputs:
+                stop_words_list = str_ndarray2list(inputs.pop("stop_words_list"))
+                infer_input["stop_words_list"] = [
+                    [stop_word] for stop_word in stop_words_list
                 ]
-            elif (
-                "model.language_model.adapter_layer.ptuning_adapter.inference_table.prompt_table.taskname.prompt_embeddings.weight"
-                in weights
-            ):
-                weights = weights[
-                    "model.language_model.adapter_layer.ptuning_adapter.inference_table.prompt_table.taskname.prompt_embeddings.weight"
+            if "bad_words_list" in inputs:
+                bad_words_list = str_ndarray2list(inputs.pop("bad_words_list"))
+                infer_input["bad_words_list"] = [
+                    [bad_word] for bad_word in bad_words_list
                 ]
-            elif "prompt_table" in weights:
-                if (
-                    "prompt_table.taskname.prompt_embeddings.weight"
-                    in weights["prompt_table"]
-                ):
-                    weights = weights["prompt_table"][
-                        "prompt_table.taskname.prompt_embeddings.weight"
-                    ]
-                else:
-                    weights_found = False
-            else:
-                weights_found = False
-
-            if not weights_found:
-                raise Exception(
-                    "Could not find the embedding table in the {0}. Please check the nemo file format".format(
-                        prompt_embeddings_checkpoint_path
-                    )
+            if "no_repeat_ngram_size" in inputs:
+                infer_input["no_repeat_ngram_size"] = inputs.pop("no_repeat_ngram_size")
+            if "lora_uids" in inputs:
+                lora_uids = np.char.decode(
+                    inputs.pop("lora_uids").astype("bytes"), encoding="utf-8"
                 )
+                infer_input["lora_uids"] = lora_uids[0].tolist()
 
-            return weights.cpu().detach()
+            partial_outputs = self.forward(**infer_input, streaming=True)
+            # On each request to this generator, run the model for one step and return a dict
+            # with full outputs generated until this step.
+            for output_texts in partial_outputs:
+                yield {"outputs": cast_output(output_texts, np.bytes_)}
+        except Exception as error:
+            err_msg = "An error occurred: {0}".format(str(error))
+            output = cast_output([err_msg], np.bytes_)
+            return {"outputs": output}
 
-    def _get_prompt_embedding_table(
-        self,
-        prompt_embeddings_table=None,
-        prompt_embeddings_checkpoint_path=None,
-    ):
-        if (
-            prompt_embeddings_table is not None
-            and prompt_embeddings_checkpoint_path is not None
-        ):
-            LOGGER.warning(
-                "prompt_embeddings_table will be used and "
-                "prompt_embeddings_checkpoint_path will be "
-                "ignored for ptuning."
-            )
-            p_tuning = "use_table"
-        elif prompt_embeddings_table is not None:
-            p_tuning = "use_table"
-        elif prompt_embeddings_checkpoint_path is not None:
-            p_tuning = "use_checkpoint"
-        else:
-            return None, None
-
-        if p_tuning == "use_table":
-            if not isinstance(prompt_embeddings_table, np.ndarray):
-                raise TypeError(
-                    "Only numpy array is allowed for the prompt embeddings table."
-                )
-
-            if len(prompt_embeddings_table.shape) != 2:
-                raise Exception(
-                    "A two dimensional prompt embeddings table for a single task is only supported."
-                )
-
-            prompt_embeddings_table = torch.from_numpy(prompt_embeddings_table)
-        elif p_tuning == "use_checkpoint":
-            if not is_nemo_tarfile(prompt_embeddings_checkpoint_path):
-                raise TypeError(
-                    prompt_embeddings_checkpoint_path + " is not a nemo file."
-                )
-            prompt_embeddings_table = self._get_prompt_embedding_table_ckpt(
-                prompt_embeddings_checkpoint_path
-            )
-
-        dtype = self.config["pretrained_config"]["dtype"]
-        prompt_embeddings_table = prompt_embeddings_table.to(
-            dtype=tensorrt_llm._utils.str_dtype_to_torch(dtype)
-        ).cuda()
-
-        if (
-            prompt_embeddings_table.size(dim=1)
-            != self.config["pretrained_config"]["hidden_size"]
-        ):
-            raise Exception(
-                "Hidden dimension of the model is {0} and does not match with the dimension of the prompt table.".format(
-                    self.config["pretrained_config"]["hidden_size"]
-                )
-            )
-
-        return prompt_embeddings_table
-      
     def _load_config_file(self):
         config_path = Path(self.engine_dir) / "config.json"
         if config_path.exists():
