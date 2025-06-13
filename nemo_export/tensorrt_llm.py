@@ -100,7 +100,6 @@ from nemo_export.trt_llm.qnemo.tokenizer_utils import (
 from nemo_export.trt_llm.qnemo.utils import is_qnemo_checkpoint
 from nemo_export.trt_llm.tensorrt_llm_run import (
     generate,
-    generate_streaming,
     load,
     load_distributed,
     refit,
@@ -205,12 +204,10 @@ class TensorRTLLM(ITritonDeployable):
         delete_existing_files: bool = True,
         tensor_parallelism_size: int = 1,
         pipeline_parallelism_size: int = 1,
-        gpus_per_node: Optional[int] = None,
         max_input_len: int = 256,
         max_output_len: Optional[int] = None,
         max_batch_size: int = 8,
         use_parallel_embedding: bool = False,
-        use_embedding_sharing: bool = False,
         paged_kv_cache: bool = True,
         remove_input_padding: bool = True,
         paged_context_fmha: bool = False,
@@ -228,8 +225,6 @@ class TensorRTLLM(ITritonDeployable):
         reduce_fusion: bool = True,
         fp8_quantized: Optional[bool] = None,
         fp8_kvcache: Optional[bool] = None,
-        gather_context_logits: Optional[bool] = False,
-        gather_generation_logits: Optional[bool] = False,
         build_rank: Optional[int] = 0,
     ):
         """Export nemo checkpoints to TensorRT-LLM format.
@@ -243,12 +238,10 @@ class TensorRTLLM(ITritonDeployable):
             delete_existing_files (bool, optional): Delete existing files in model_dir. Defaults to True.
             tensor_parallelism_size (int, optional): Size of tensor parallelism. Defaults to 1.
             pipeline_parallelism_size (int, optional): Size of pipeline parallelism. Defaults to 1.
-            gpus_per_node (Optional[int], optional): Number of GPUs per node. Defaults to None.
             max_input_len (int, optional): Maximum input sequence length. Defaults to 256.
             max_output_len (Optional[int], optional): Maximum output sequence length. Defaults to None.
             max_batch_size (int, optional): Maximum batch size. Defaults to 8.
             use_parallel_embedding (bool, optional): Use parallel embedding. Defaults to False.
-            use_embedding_sharing (bool, optional): Share embeddings. Defaults to False.
             paged_kv_cache (bool, optional): Use paged KV cache. Defaults to True.
             remove_input_padding (bool, optional): Remove input padding. Defaults to True.
             paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to False.
@@ -266,17 +259,12 @@ class TensorRTLLM(ITritonDeployable):
             reduce_fusion (bool, optional): Enable reduce fusion. Defaults to True.
             fp8_quantized (Optional[bool], optional): Enable FP8 quantization. Defaults to None.
             fp8_kvcache (Optional[bool], optional): Enable FP8 KV cache. Defaults to None.
-            gather_context_logits (Optional[bool], optional): Gather context logits. Defaults to False.
-            gather_generation_logits (Optional[bool], optional): Gather generation logits. Defaults to False.
             build_rank (Optional[int], optional): Rank to build on. Defaults to 0.
 
         Raises:
             ValueError: If model_type is not supported or dtype cannot be determined.
             Exception: If files cannot be deleted or other export errors occur.
         """
-        gpus_per_node = (
-            tensor_parallelism_size if gpus_per_node is None else gpus_per_node
-        )
         prepare_directory_for_export(
             self.model_dir,
             delete_existing_files=delete_existing_files,
@@ -900,140 +888,6 @@ class TensorRTLLM(ITritonDeployable):
         if tensorrt_llm.mpi_world_size() > 1:
             tensorrt_llm.mpi_barrier()
 
-    def gather_and_reshard_model(self, model_config, model, storage_dtype):
-        """Accumulate all vp model chunks together, and reshard model (i.e) gather all pp ranks if required and return the final model state dict."""
-
-        def _get_layer_index(split_key):
-            for index, key in enumerate(split_key):
-                if key == "layers":
-                    return index + 1
-            raise ValueError(f"Unknown layer name format: {split_key}")
-
-        def rename_layer_num(param_name, layer_num):
-            split_key = param_name.split(".")
-            layer_index = int(_get_layer_index(split_key))
-            split_key[layer_index] = str(layer_num)
-            return ".".join(split_key)
-
-        def get_layer_num(param_name):
-            split_key = param_name.split(".")
-            layer_index = int(_get_layer_index(split_key))
-            return int(split_key[layer_index])
-
-        from megatron.core import parallel_state
-
-        tp_size = parallel_state.get_tensor_model_parallel_world_size()
-        pp_rank = parallel_state.get_pipeline_model_parallel_rank()
-        pp_first_rank = parallel_state.get_pipeline_model_parallel_first_rank()
-        pp_last_rank = parallel_state.get_pipeline_model_parallel_last_rank()
-        pp_size = parallel_state.get_pipeline_model_parallel_world_size()
-        pp_group = parallel_state.get_pipeline_model_parallel_group()
-        vp_size = parallel_state.get_virtual_pipeline_model_parallel_world_size()
-        if not vp_size:
-            vp_size = 1
-
-        inference_tp_size = self.tp_size
-        inference_pp_size = self.pp_size
-        reshard_model = False
-        if inference_tp_size != tp_size or inference_pp_size != pp_size:
-            LOGGER.info("Training/Generation model parallelism resharding enabled")
-            if inference_pp_size == 1 and pp_size > 1 and inference_tp_size == tp_size:
-                reshard_model = True
-            else:
-                raise NotImplementedError(
-                    "NeMo currently only supports PP>1 -> PP=1 resharding, other types of resharding will come in future releases."
-                )
-
-        num_layers = model_config["num_layers"]
-        layers_per_pp = num_layers // pp_size
-        layers_per_chunk = layers_per_pp // vp_size
-
-        tl_params = {}
-        model_level_params = {}
-        if vp_size > 1:  # consolidate params across model chunks
-            for idx, model_chunk in enumerate(model):
-                for key, val in model_chunk.state_dict().items():
-                    # TODO: currently fp8 is not supported
-                    if torch.is_tensor(val) and "_extra_state" not in key:
-                        if "layers" in key:
-                            key2 = rename_layer_num(
-                                key,
-                                get_layer_num(key) + idx * pp_size * layers_per_chunk,
-                            )
-                            tl_params[key2] = val
-                        else:
-                            model_level_params[key] = val
-        else:
-            for key, val in model.state_dict().items():
-                # TODO: currently fp8 is not supported
-                if torch.is_tensor(val) and "_extra_state" not in key:
-                    if "decoder.layers" in key:
-                        tl_params[key] = val
-                    else:
-                        model_level_params[key] = val
-
-        if vp_size > 1 or reshard_model:
-            # gather layers across pp ranks
-            gathered_params = {}
-            for key, val in tl_params.items():
-                weight_list = [torch.zeros_like(val) for _ in range(pp_size)]
-                torch.distributed.all_gather(weight_list, val, group=pp_group)
-                for idx in range(pp_size):
-                    layer_num = get_layer_num(key) + idx * layers_per_chunk
-                    key2 = rename_layer_num(key, layer_num)
-                    if not reshard_model:  # Save only layers of 1 single PP stage
-                        layers_start = layers_per_pp * pp_rank
-                        layers_end = layers_per_pp * (pp_rank + 1) - 1
-                        if layer_num >= layers_start and layer_num <= layers_end:
-                            key2 = rename_layer_num(key, layer_num % layers_per_pp)
-                            gathered_params[key2] = weight_list[idx]
-                    else:
-                        gathered_params[key2] = weight_list[idx]
-            tl_params = gathered_params
-
-        model_state_dict = model_level_params
-        model_state_dict.update(tl_params)
-
-        def get_tensor_if_available(key, pp_src_idx, group):
-            tensor = model_state_dict.get(key)
-            if tensor is not None:
-                tensor_shape = [tensor.shape]
-            else:
-                tensor_shape = [None]
-
-            torch.distributed.broadcast_object_list(
-                tensor_shape, pp_src_idx, group=group
-            )
-
-            if tensor_shape[0] is None:
-                return None
-            if torch.distributed.get_rank() != pp_src_idx:
-                tensor = torch.empty(tensor_shape[0], dtype=storage_dtype).cuda()
-
-            torch.distributed.broadcast(tensor.contiguous(), pp_src_idx, group=pp_group)
-            return tensor
-
-        if reshard_model:
-            key = "decoder.final_layernorm.weight"
-            tensor = get_tensor_if_available(key, pp_last_rank, pp_group)
-            if tensor is not None:
-                model_state_dict[key] = tensor
-
-            key = "decoder.final_layernorm.bias"
-            tensor = get_tensor_if_available(key, pp_last_rank, pp_group)
-            if tensor is not None:
-                model_state_dict[key] = tensor
-
-            key = "embedding.word_embeddings.weight"
-            tensor = get_tensor_if_available(key, pp_first_rank, pp_group)
-            if tensor is not None:
-                model_state_dict[key] = tensor
-
-            key = "output_layer.weight"
-            tensor = get_tensor_if_available(key, pp_last_rank, pp_group)
-            if tensor is not None:
-                model_state_dict[key] = tensor
-
         return model_state_dict
 
     def get_input_dtype(self, storage_dtype):
@@ -1069,148 +923,6 @@ class TensorRTLLM(ITritonDeployable):
                 nemo_model_conversion_dict[key] = value
         return nemo_model_conversion_dict
 
-    def build(
-        self,
-        model,
-        model_config,
-        model_type,
-        gpus_per_node,
-        tokenizer,
-        max_input_len: int = 1024,
-        max_output_len: int = 1024,
-        max_batch_size: int = 4,
-        use_refit: bool = True,
-        reshard_model: bool = False,
-    ):
-        """Convert a model parallel nemo model to TensorRT-LLM."""
-        assert tensorrt_llm.mpi_rank() == torch.distributed.get_rank()
-        self.use_refit, self.model_type, self.gpus_per_node = (
-            use_refit,
-            model_type,
-            gpus_per_node,
-        )
-        self.mp_rank, self.dp_rank, self.tp_size, self.pp_size, self.dp_size = (
-            init_model_parallel_from_nemo(reshard_model)
-        )
-        self.tokenizer = build_tokenizer(tokenizer)
-
-        if self.dp_size > 1:
-            self.model_dir = os.path.join(self.model_dir, f"dp_rank{self.dp_rank}")
-
-        from megatron.core.export.model_type import ModelType
-        from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
-        from tensorrt_llm.layers import MoeConfig
-
-        storage_dtype = torch_dtype_from_precision(model_config.precision)
-        model_state_dict = self.gather_and_reshard_model(
-            model_config, model, storage_dtype
-        )
-        # We build the transformer config using the nemo model config.
-        transformer_config = self.get_transformer_config(model_config)
-        input_model_type = getattr(ModelType, model_type)
-
-        nemo_model_conversion_dict = self.get_nemo_to_trtllm_conversion_dict(
-            model_state_dict
-        )
-        self.trtllm_helper = TRTLLMHelper(
-            transformer_config=transformer_config,
-            model_type=input_model_type,
-            trtllm_conversion_dict=nemo_model_conversion_dict,
-            position_embedding_type=model_config.get("position_embedding_type"),
-            max_position_embeddings=model_config.get("max_position_embeddings"),
-            rotary_percentage=model_config.get("rotary_percentage", 1.0),
-            rotary_base=model_config.get("rotary_base", 10000),
-            moe_tp_mode=model_config.get("moe_tp_mode", 2),
-            multi_query_mode=model_config.get("multi_query_mode", False),
-            activation=model_config.get("activation", "gelu"),
-            seq_len_interpolation_factor=model_config.get(
-                "seq_len_interpolation_factor"
-            ),
-            moe_renorm_mode=model_config.get(
-                "moe_renorm_mode",
-                MoeConfig.ExpertScaleNormalizationMode.RENORMALIZE,
-            ),
-            share_embeddings_and_output_weights=model_config.get(
-                "share_embeddings_and_output_weights", False
-            ),
-        )
-
-        input_dtype = self.get_input_dtype(storage_dtype)
-
-        trtllm_model_weights_list, trtllm_model_config_list = (
-            self.trtllm_helper.get_trtllm_pretrained_config_and_model_weights(
-                model_state_dict=model_state_dict,
-                dtype=input_dtype,
-                state_dict_split_by_layer_numbers=True,
-                on_device_distributed_conversion=True,
-                vocab_size=self.tokenizer.vocab_size,
-                gpus_per_node=gpus_per_node,
-            )
-        )
-        trtllm_model_config = trtllm_model_config_list[0]
-        trtllm_model_weights = trtllm_model_weights_list[0]
-
-        if reshard_model:
-            assert self.pp_size == 1, "Reshard is true, but pp size is not one"
-            # MCORE Export will use parallel_state to determine pp .
-            # Since we reshard to pp = 1, we need to modify the config and mapping
-            world_size = self.tp_size * self.pp_size
-            trtllm_model_config.pp_size = self.pp_size
-            trtllm_model_config.world_size = world_size
-            trtllm_model_config.mapping = tensorrt_llm.Mapping(
-                world_size=world_size,
-                rank=self.mp_rank,
-                tp_size=self.tp_size,
-                pp_size=self.pp_size,
-            )
-
-        engine = self.trtllm_helper.build_and_save_engine(
-            max_input_len=max_input_len,
-            max_output_len=max_output_len,
-            max_seq_len=max_input_len + max_output_len,
-            max_batch_size=max_batch_size,
-            trtllm_model_config=trtllm_model_config,
-            trtllm_model_weights=trtllm_model_weights,
-            engine_dir=self.model_dir,
-            use_refit=use_refit,
-        )
-
-        torch.distributed.barrier()
-
-        cfg_path = Path(
-            os.path.join(self.model_dir, f"config_{torch.distributed.get_rank()}.json")
-        )
-        with open(cfg_path, "w", encoding="utf-8") as f:
-            json.dump(engine.config.to_dict(), f, indent=4)
-
-        load_distributed(self.model_dir, self.mp_rank, gpus_per_node)
-
-    def refit(self, model, model_config):
-        """Refits an TensorRT engine using an instantiated nemo model.
-
-        This function should only be used after calling build()
-        """
-        storage_dtype = torch_dtype_from_precision(model_config.precision)
-
-        model_state_dict = self.gather_and_reshard_model(
-            model_config, model, storage_dtype
-        )
-
-        nemo_model_conversion_dict = self.get_nemo_to_trtllm_conversion_dict(
-            model_state_dict
-        )
-        self.trtllm_helper.weights_converter.convert(
-            model_state_dict=model_state_dict,
-            tokenizer_vocab_size=self.tokenizer.vocab_size,
-            trtllm_conversion_dict=nemo_model_conversion_dict,
-        )
-        weights_dict = self.trtllm_helper.weights_converter.trtllm_model_weights
-
-        load_distributed(self.model_dir, self.mp_rank, self.gpus_per_node)
-        gc.collect()
-        torch.cuda.empty_cache()
-        refit(weights_dict)
-
     def forward(
         self,
         input_texts: List[str],
@@ -1222,7 +934,6 @@ class TensorRTLLM(ITritonDeployable):
         bad_words_list: List[str] = None,
         no_repeat_ngram_size: int = None,
         lora_uids: List[str] = None,
-        streaming: bool = False,
         output_log_probs: bool = False,
         output_context_logits: bool = False,
         output_generation_logits: bool = False,
@@ -1248,46 +959,28 @@ class TensorRTLLM(ITritonDeployable):
                 "then it should be loaded first to run inference."
             )
         else:
-            if not streaming:
-                if (
-                    torch.distributed.is_initialized()
-                    or tensorrt_llm.mpi_world_size() > 1
-                ):
-                    multiprocessed_env = True
-                else:
-                    multiprocessed_env = False
-
-                return generate(
-                    input_texts=input_texts,
-                    max_output_len=max_output_len,
-                    host_context=self.model,
-                    top_k=top_k,
-                    top_p=top_p,
-                    temperature=temperature,
-                    lora_uids=lora_uids,
-                    stop_words_list=stop_words_list,
-                    bad_words_list=bad_words_list,
-                    no_repeat_ngram_size=no_repeat_ngram_size,
-                    output_log_probs=output_log_probs,
-                    multiprocessed_env=multiprocessed_env,
-                    output_context_logits=output_context_logits,
-                    output_generation_logits=output_generation_logits,
-                    **sampling_kwargs,
-                )
+            if torch.distributed.is_initialized() or tensorrt_llm.mpi_world_size() > 1:
+                multiprocessed_env = True
             else:
-                return generate_streaming(
-                    input_texts=input_texts,
-                    max_output_len=max_output_len,
-                    host_context=self.model,
-                    top_k=top_k,
-                    top_p=top_p,
-                    temperature=temperature,
-                    lora_uids=lora_uids,
-                    stop_words_list=stop_words_list,
-                    bad_words_list=bad_words_list,
-                    no_repeat_ngram_size=no_repeat_ngram_size,
-                    **sampling_kwargs,
-                )
+                multiprocessed_env = False
+
+            return generate(
+                input_texts=input_texts,
+                max_output_len=max_output_len,
+                host_context=self.model,
+                top_k=top_k,
+                top_p=top_p,
+                temperature=temperature,
+                lora_uids=lora_uids,
+                stop_words_list=stop_words_list,
+                bad_words_list=bad_words_list,
+                no_repeat_ngram_size=no_repeat_ngram_size,
+                output_log_probs=output_log_probs,
+                multiprocessed_env=multiprocessed_env,
+                output_context_logits=output_context_logits,
+                output_generation_logits=output_generation_logits,
+                **sampling_kwargs,
+            )
 
     def _pad_logits(self, logits_tensor):
         """Pads the logits tensor with 0's on the right."""
@@ -1447,7 +1140,7 @@ class TensorRTLLM(ITritonDeployable):
         "output_context_logits",
     )
     def triton_infer_fn(self, **inputs: np.ndarray):
-        """Triton infer function for streaming."""
+        """Triton infer function for inference."""
         output_dict = {}
         context_logits_available = False
         generation_logits_available = False
@@ -1527,57 +1220,6 @@ class TensorRTLLM(ITritonDeployable):
             output_dict["outputs"] = cast_output([err_msg] * len(prompts), np.bytes_)
 
         return output_dict
-
-    @batch
-    @first_value(
-        "max_output_len",
-        "top_k",
-        "top_p",
-        "temperature",
-        "random_seed",
-        "no_repeat_ngram_size",
-    )
-    def triton_infer_fn_streaming(self, **inputs: np.ndarray):
-        """Triton infer function for streaming."""
-        try:
-            infer_input = {"input_texts": str_ndarray2list(inputs.pop("prompts"))}
-            if "max_output_len" in inputs:
-                infer_input["max_output_len"] = inputs.pop("max_output_len")
-            if "top_k" in inputs:
-                infer_input["top_k"] = inputs.pop("top_k")
-            if "top_p" in inputs:
-                infer_input["top_p"] = inputs.pop("top_p")
-            if "temperature" in inputs:
-                infer_input["temperature"] = inputs.pop("temperature")
-            if "random_seed" in inputs:
-                infer_input["random_seed"] = inputs.pop("random_seed")
-            if "stop_words_list" in inputs:
-                stop_words_list = str_ndarray2list(inputs.pop("stop_words_list"))
-                infer_input["stop_words_list"] = [
-                    [stop_word] for stop_word in stop_words_list
-                ]
-            if "bad_words_list" in inputs:
-                bad_words_list = str_ndarray2list(inputs.pop("bad_words_list"))
-                infer_input["bad_words_list"] = [
-                    [bad_word] for bad_word in bad_words_list
-                ]
-            if "no_repeat_ngram_size" in inputs:
-                infer_input["no_repeat_ngram_size"] = inputs.pop("no_repeat_ngram_size")
-            if "lora_uids" in inputs:
-                lora_uids = np.char.decode(
-                    inputs.pop("lora_uids").astype("bytes"), encoding="utf-8"
-                )
-                infer_input["lora_uids"] = lora_uids[0].tolist()
-
-            partial_outputs = self.forward(**infer_input, streaming=True)
-            # On each request to this generator, run the model for one step and return a dict
-            # with full outputs generated until this step.
-            for output_texts in partial_outputs:
-                yield {"outputs": cast_output(output_texts, np.bytes_)}
-        except Exception as error:
-            err_msg = "An error occurred: {0}".format(str(error))
-            output = cast_output([err_msg], np.bytes_)
-            return {"outputs": output}
 
     def _load_config_file(self):
         config_path = Path(self.engine_dir) / "config.json"

@@ -200,14 +200,8 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
 
 # Tests if the model outputs contain the expected keywords.
 def check_model_outputs(
-    streaming: bool, model_outputs, expected_outputs: List[str]
+    model_outputs, expected_outputs: List[str]
 ) -> bool:
-    # In streaming mode, we get a list of lists of lists, and we only care about the last item in that list
-    if streaming:
-        if len(model_outputs) == 0:
-            return False
-        model_outputs = model_outputs[-1]
-
     # See if we have the right number of final answers.
     if len(model_outputs) != len(expected_outputs):
         return False
@@ -244,7 +238,6 @@ def run_inference(
     temperature=1.0,
     run_accuracy=False,
     debug=True,
-    streaming=False,
     stop_words_list=None,
     test_cpp_runtime=False,
     test_deployment=False,
@@ -355,7 +348,6 @@ def run_inference(
             top_p=top_p,
             temperature=temperature,
             lora_uids=lora_uids,
-            streaming=streaming,
             stop_words_list=stop_words_list,
         )
 
@@ -367,7 +359,7 @@ def run_inference(
         # Check non-deployed funcitonal correctness
         if args.functional_test:
             functional_result.regular_pass = True
-            if not check_model_outputs(streaming, output, expected_outputs):
+            if not check_model_outputs(output, expected_outputs):
                 LOGGER.warning("Model outputs don't match the expected result.")
                 functional_result.regular_pass = False
 
@@ -417,7 +409,7 @@ def run_inference(
             if args.functional_test:
                 functional_result.deployed_pass = True
                 if not check_model_outputs(
-                    streaming, output_deployed, expected_outputs
+                    output_deployed, expected_outputs
                 ):
                     LOGGER.warning(
                         "Deployed model outputs don't match the expected result."
@@ -636,7 +628,6 @@ def get_args():
         type=float,
         default=0.5,
     )
-    parser.add_argument("--streaming", default=False, action="store_true")
     parser.add_argument(
         "--test_cpp_runtime",
         type=str,
@@ -844,7 +835,6 @@ def run_inference_tests(args):
                 temperature=args.temperature,
                 run_accuracy=args.run_accuracy,
                 debug=args.debug,
-                streaming=args.streaming,
                 test_deployment=args.test_deployment,
                 test_cpp_runtime=args.test_cpp_runtime,
                 test_data_path=args.test_data_path,

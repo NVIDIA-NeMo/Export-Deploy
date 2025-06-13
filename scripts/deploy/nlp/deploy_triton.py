@@ -225,13 +225,6 @@ def get_args(argv):
                         Only available when using c++ runtime.",
     )
     parser.add_argument(
-        "-es",
-        "--enable_streaming",
-        default=False,
-        action="store_true",
-        help="Enables streaming sentences.",
-    )
-    parser.add_argument(
         "--use_lora_plugin",
         nargs="?",
         const=None,
@@ -566,7 +559,6 @@ def nemo_deploy(argv):
             max_batch_size=args.max_batch_size,
             http_port=args.triton_port,
             address=args.triton_http_address,
-            streaming=args.enable_streaming,
         )
 
         LOGGER.info("Triton deploy function will be called.")
