@@ -3,7 +3,17 @@ requires = ["setuptools>=42", "wheel", "cython"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["nemo_export", "nemo_deploy", "nemo_export_deploy_common"]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = [
+    "nemo_export",
+    "nemo_export.*",
+    "nemo_deploy",
+    "nemo_deploy.*",
+    "nemo_export_deploy_common",
+    "nemo_export_deploy_common.*",
+]
 
 [tool.setuptools.dynamic]
 version = { attr = "nemo_export_deploy_common.package_info.__version__" } # any module attribute compatible with ast.literal_eval
