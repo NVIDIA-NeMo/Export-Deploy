@@ -4030,7 +4030,7 @@ requires-dist = [
     { name = "transformer-engine", extras = ["pytorch"], marker = "extra == 'te'", specifier = "==2.4.0" },
     { name = "transformers", specifier = ">=4.49.0" },
     { name = "uvicorn" },
-    { name = "vllm", marker = "extra == 'vllm'", index = "https://download.pytorch.org/whl/cu128" },
+    { name = "vllm", marker = "extra == 'vllm'", specifier = "==0.9.0.1" },
     { name = "wandb" },
     { name = "webdataset", specifier = ">=0.2.86" },
     { name = "zarr", specifier = ">=2.18.2,<3.0.0" },
@@ -8789,7 +8789,7 @@ wheels = [
 [[package]]
 name = "vllm"
 version = "0.9.0.1"
-source = { registry = "https://download.pytorch.org/whl/cu128" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "blake3" },
@@ -8848,8 +8848,9 @@ dependencies = [
     { name = "xformers", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
     { name = "xgrammar", version = "0.1.19", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'aarch64' or platform_machine == 'x86_64'" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/bf/e8/abe874ca849a6bb06b4b8290b47784d6c93fa101c0ca5e9d96ed4ac47d2c/vllm-0.9.0.1.tar.gz", hash = "sha256:a1b4e9a832241f981c0b2cbdc1daca71d3ade32f083ec6dcb0ead58a882e9fca", size = 8552044, upload-time = "2025-05-30T20:16:56.49Z" }
 wheels = [
-    { url = "https://download.pytorch.org/whl/cu128/vllm/vllm-0.9.0.1-cp38-abi3-linux_x86_64.whl" },
+    { url = "https://files.pythonhosted.org/packages/af/ca/6ecb087415b9e6251ff3694e59c23c77880270a5c545184b192f35f73484/vllm-0.9.0.1-cp38-abi3-manylinux1_x86_64.whl", hash = "sha256:b581df16f68f871773cf57fe8cc7737808a8745f94971e691b4113ba3b76c304", size = 377193539, upload-time = "2025-05-30T20:16:47.698Z" },
 ]
 
 [[package]]
