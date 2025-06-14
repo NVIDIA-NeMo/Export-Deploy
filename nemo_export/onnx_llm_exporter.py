@@ -15,12 +15,16 @@
 
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
+import modelopt.torch.quantization as mtq
 import numpy as np
 import tensorrt as trt
 import torch
 import wrapt
+from nemo.collections.llm.modelopt.quantization.quant_cfg_choices import (
+    get_quant_cfg_choices,
+)
 from nemo.utils import logging
 from transformers import AutoModel, AutoTokenizer
 
@@ -31,6 +35,8 @@ from nemo_export.utils import (
     is_nemo2_checkpoint,
     validate_fp8_network,
 )
+
+QUANT_CFG_CHOICES = get_quant_cfg_choices()
 
 
 @wrapt.decorator
@@ -97,7 +103,7 @@ class OnnxLLMExporter(ITritonDeployable):
             tokenizer (HF or NeMo tokenizer): tokenizer class.
             model_name_or_path (str): a path for ckpt or HF model ID
             load_runtime (bool): load ONNX runtime if there is any exported model available in
-                                 the onnx_model_dir folder.
+                the onnx_model_dir folder.
         """
         self.onnx_model_dir = onnx_model_dir
         self.model_name_or_path = model_name_or_path
@@ -107,9 +113,7 @@ class OnnxLLMExporter(ITritonDeployable):
         self.model_input_names = None
         self.model_output_names = None
         self.onnx_runtime_session = None
-        self.calibration_data = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.quant_max_batch_size = None
 
         if self.model_name_or_path is not None:
             if model is not None:
@@ -122,6 +126,8 @@ class OnnxLLMExporter(ITritonDeployable):
                     )
                 else:
                     self._load_hf_model()
+
+        self.model.to(self.device)
 
         if load_runtime:
             self._load_runtime()
@@ -195,15 +201,15 @@ class OnnxLLMExporter(ITritonDeployable):
         opset: int = 20,
         dynamic_axes_input: Optional[dict] = None,
         dynamic_axes_output: Optional[dict] = None,
-        export_dtype: Union[torch.dtype, str] = "fp32",
+        export_dtype: Union[torch.dtype, str] = "fp16",
         verbose: bool = False,
     ):
         if example_inputs is None:
-            example_inputs = get_example_inputs(self.tokenizer)
+            example_inputs = get_example_inputs(self.tokenizer, self.device)
 
         if "dimensions" in input_names:
-            example_inputs["dimensions"] = torch.tensor(
-                [1] * example_inputs["input_ids"].shape[0]
+            example_inputs["dimensions"] = torch.ones(
+                len(example_inputs["input_ids"]), dtype=torch.int64, device=self.device
             )
 
         if isinstance(export_dtype, str):
@@ -465,6 +471,29 @@ class OnnxLLMExporter(ITritonDeployable):
 
         output = self.onnx_runtime_session.run(self.model_output_names, inputs)
         return output[0]
+
+    def quantize(
+        self,
+        quant_cfg: Union[str, Dict[str, Any]],
+        forward_loop: Optional[Callable],
+    ) -> None:
+        """Quantize the model by calibrating it using a given forward loop.
+
+        Args:
+            quant_cfg (str or dict): The quantization configuration to use.
+            forward_loop (callable): A function that accepts the model as a single parameter
+                and runs sample data through it. This is used for calibration during quantization.
+        """
+        if isinstance(quant_cfg, str):
+            assert quant_cfg in QUANT_CFG_CHOICES, (
+                f"Quantization config {quant_cfg} is not supported. "
+                f"Supported configs: {list(QUANT_CFG_CHOICES)}"
+            )
+            quant_cfg = QUANT_CFG_CHOICES[quant_cfg]
+
+        logging.info("Starting quantization...")
+        mtq.quantize(self.model, quant_cfg, forward_loop=forward_loop)
+        logging.info("Quantization is completed.")
 
     @property
     def get_model(self):

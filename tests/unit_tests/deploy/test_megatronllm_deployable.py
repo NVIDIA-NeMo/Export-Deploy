@@ -293,6 +293,38 @@ def test_infer_fn_with_echo_and_log_probs(deployable):
         # Verify torch.tensor was called with combined log probs
         mock_tensor.assert_called_once_with([0.1, 0.2, 0.3, 0.4])
 
+@pytest.mark.run_only_on("GPU")
+def test_infer_fn_with_echo_and_prompt_top_logprobs(deployable):
+    """Test _infer_fn method with echo=True and top_logprobs, ensuring prompt_top_n_logprobs is included."""
+    prompts = ["Hello"]
+
+    with (
+        patch.object(deployable, "generate") as mock_generate,
+        patch.object(deployable, "remove_eos_token") as mock_remove_eos,
+        patch("nemo_deploy.nlp.megatronllm_deployable.dict_to_str") as mock_dict_to_str
+    ):
+        mock_result = MagicMock()
+        mock_result.prompt = "Hello"
+        mock_result.generated_text = " World"
+        mock_result.prompt_top_n_logprobs = [{"tokenA": 0.9}]
+        mock_result.generated_top_n_logprobs = [{"tokenB": 0.8}]
+
+        mock_generate.return_value = [mock_result]
+        mock_remove_eos.return_value = ["Hello World"]
+        mock_dict_to_str.return_value = '[{"tokenA": 0.9}, {"tokenB": 0.8}]'
+
+        output_infer = deployable._infer_fn(
+            prompts=prompts,
+            echo=True,
+            top_logprobs=1,
+            text_only=True
+        )
+        assert output_infer["sentences"] == ["Hello World"]
+        assert "top_logprobs" in output_infer
+        assert output_infer["top_logprobs"] == ['[{"tokenA": 0.9}, {"tokenB": 0.8}]']
+        mock_dict_to_str.assert_called_once_with(
+            [{"tokenA": 0.9}] + [{"tokenB": 0.8}]
+        )
 
 @pytest.mark.run_only_on("GPU")
 def test_infer_fn_with_echo_text_only_false(deployable):
@@ -918,4 +950,3 @@ def test_ray_infer_fn_all_parameters(deployable):
             top_logprobs=0,
             echo=False,
         )
-

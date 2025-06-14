@@ -428,11 +428,11 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                     ],
                     src=0,
                 )
-
+        # cast top_k,top_p to native int, float since typecheck assert statements added in MCore0.13 error otherwise
         inference_params = CommonInferenceParams(
             temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
+            top_k=int(top_k),
+            top_p=float(top_p),
             num_tokens_to_generate=num_tokens_to_generate,
             return_log_probs=log_probs,
             top_n_logprobs=top_logprobs,
@@ -488,9 +488,12 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             output_top_n_log_probs = []
             for r in results:
                 # Convert to torch tensor and then move to cpu as generated_log_probs is a list and cant be moved
-                # to cpu otherwise
-                # TODO: if echo=True add top_logprobs for input tokens once supported
-                top_n_lp = dict_to_str(r.generated_top_n_logprobs)
+                # to cpu otherwise.
+                # top_logprobs for input tokens is supported with MCore 0.13 and above.
+                if echo:
+                    top_n_lp = dict_to_str(r.prompt_top_n_logprobs + r.generated_top_n_logprobs)
+                else:
+                    top_n_lp = dict_to_str(r.generated_top_n_logprobs)
                 output_top_n_log_probs.append(top_n_lp)
             output_infer["top_logprobs"] = output_top_n_log_probs
 
