@@ -10,7 +10,7 @@
     },
     "nemo": {
       "repo": "https://github.com/NVIDIA/NeMo.git",
-      "ref": "5e63ca3c1631bb156187705f9c4cf643a67f9c05"
+      "ref": "30e6820dbd47cf46371c41a2e40cb2e9cef51f6b"
     },
     "trt-llm": {
       "repo": "https://github.com/NVIDIA/TensorRT-LLM.git",
