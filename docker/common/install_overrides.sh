@@ -30,10 +30,13 @@ fi
 # Nemo-run has conflicting dependencies to export-deploy:
 # They collide on nvidia-pytriton (export-deploy) and torchx (nemo-run)
 # via urllib3.
+uv pip install nemo-run
+
+# We need nemo-toolkit until migration is complete.
 uv pip install --no-cache-dir --upgrade nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]@git+https://github.com/NVIDIA/NeMo.git@${NEMO_REF}
 
 # megatron-core and export-deploy are dependencies, but for development
-# we override with latest VCS commits
+# we override with latest VCS commits.
 uv pip uninstall megatron-core
 uv pip install --no-cache-dir --upgrade \
     "numpy<2.0.0" "megatron_core@git+https://github.com/NVIDIA/Megatron-LM.git@${MCORE_REF}"
