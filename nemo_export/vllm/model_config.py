@@ -179,7 +179,7 @@ class NemoModelConfig(ModelConfig):
             self.hf_config["rope_scaling"] = rope_scaling
 
         self.hf_text_config = get_hf_text_config(self.hf_config)
-        self.dtype = _get_and_verify_dtype(config=self.hf_text_config, dtype=dtype)
+        self.dtype = _get_and_verify_dtype(self.hf_text_config, dtype)
         self.max_model_len = _get_and_verify_max_len(
             hf_config=self.hf_text_config,
             max_model_len=max_model_len,
