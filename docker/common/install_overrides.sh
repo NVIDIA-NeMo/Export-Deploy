@@ -27,16 +27,18 @@ if [ -z "$NEMO_REF" ] || [ -z "$MCORE_REF" ]; then
     exit 1
 fi
 
+source ${UV_PROJECT_ENVIRONMENT}/bin/activate
+
 # Nemo-run has conflicting dependencies to export-deploy:
 # They collide on nvidia-pytriton (export-deploy) and torchx (nemo-run)
 # via urllib3.
 uv pip install nemo-run
 
 # We need nemo-toolkit until migration is complete.
-uv pip install --no-cache-dir --upgrade nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]@git+https://github.com/NVIDIA/NeMo.git@${NEMO_REF}
+uv pip install --no-cache-dir --upgrade nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]@git+https://github.com/NVIDIA/NeMo.git@${NEMO_REF} pandas==2.3.0 "opentelemetry-sdk<=1.27.0"
 
 # megatron-core and export-deploy are dependencies, but for development
 # we override with latest VCS commits.
 uv pip uninstall megatron-core
-uv pip install --no-cache-dir --upgrade \
+uv pip install --no-cache-dir --upgrade --no-deps \
     "numpy<2.0.0" "megatron_core@git+https://github.com/NVIDIA/Megatron-LM.git@${MCORE_REF}"
