@@ -11,6 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+#!/bin/bash
+set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
+
 coverage run --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/create_hf_model.py \
   --model_name_or_path /home/TestData/hf/Mixtral-8x7B-Instruct-v0.1 \
   --output_dir /tmp/mixtral_tiny_hf \
