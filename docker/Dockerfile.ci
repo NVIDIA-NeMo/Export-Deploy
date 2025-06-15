@@ -39,23 +39,24 @@ RUN --mount=type=bind,source=pyproject.toml,target=/workspace/pyproject.toml \
     --mount=type=bind,source=nemo_export/__init__.py,target=/workspace/nemo_export/__init__.py \
     --mount=type=bind,source=nemo_deploy/__init__.py,target=/workspace/nemo_deploy/__init__.py \
     --mount=type=bind,source=nemo_export_deploy_common/package_info.py,target=/workspace/nemo_export_deploy_common/package_info.py \
-    --mount=type=bind,source=docker/common/install_overrides.sh,target=/workspace/docker/common/install_overrides.sh \
+    --mount=type=bind,source=docker/common/install_conflicting_deps.sh,target=/workspace/docker/common/install_conflicting_deps.sh \
     --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
     PAT=$(cat /run/secrets/GH_TOKEN)
     echo -e "machine github.com\n  login token\n  password $PAT" > ~/.netrc
     chmod 600 ~/.netrc 
     
     uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
-    uv sync --link-mode symlink --locked 
-    if [ -n "$INFERENCE_FRAMEWORK" ]; then
-        uv sync --link-mode copy --locked --extra te --no-install-package torch --no-install-package torchvision --extra $INFERENCE_FRAMEWORK
-    else
-        uv sync --link-mode copy --locked --extra te
-    fi
+
+    uv sync \
+        --link-mode copy \
+        --locked \
+        --extra te \
+        --no-install-package torch \
+        --no-install-package torchvision \
+        --all-groups \
+        ${INFERENCE_FRAMEWORK:+--extra $INFERENCE_FRAMEWORK}
     
-    bash /workspace/docker/common/install_overrides.sh \
-        --nemo-ref ${NEMO_REF} \
-        --mcore-ref ${MCORE_REF}
+    bash /workspace/docker/common/install_conflicting_deps.sh
     
     rm ~/.netrc
 EOF
