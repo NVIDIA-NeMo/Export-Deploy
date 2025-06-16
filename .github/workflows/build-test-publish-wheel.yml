@@ -35,3 +35,4 @@ jobs:
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_RELEASE_ENDPOINT }}
       SLACK_WEBHOOK_ADMIN: ${{ secrets.SLACK_WEBHOOK_ADMIN }}
+      GH_TOKEN: ${{ secrets.PAT }}
