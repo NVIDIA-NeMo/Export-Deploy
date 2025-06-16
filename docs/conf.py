@@ -23,7 +23,7 @@
 import os
 import sys
 
-project = "Export-Deploy"
+project = "NeMo-Export-Deploy"
 copyright = "2025, NVIDIA Corporation"
 author = "NVIDIA Corporation"
 release = "0.1.0"
