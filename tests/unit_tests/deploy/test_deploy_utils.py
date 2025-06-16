@@ -132,7 +132,7 @@ class TestNemoCheckpointVersion:
     def test_nemo1_checkpoint_tar(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             tar_path = os.path.join(tmpdir, "checkpoint.tar")
-            with tarfile.open(tar_path, "w") as tar:
+            with tarfile.open(tar_path, "w"):
                 # Create empty tar (NEMO 1.0)
                 pass
 

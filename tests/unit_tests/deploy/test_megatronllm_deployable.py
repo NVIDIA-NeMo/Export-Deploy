@@ -501,8 +501,8 @@ def test_triton_input_output(deployable):
             name=name, shape=shape, dtype=dtype, optional=optional
         )
 
-        inputs = deployable.get_triton_input
-        outputs = deployable.get_triton_output
+        _ = deployable.get_triton_input
+        _ = deployable.get_triton_output
 
         # Extract mock calls to see what was created
         input_calls = mock_tensor.call_args_list[:11]  # First 9 calls are for inputs

@@ -28,7 +28,7 @@ try:
     from nemo_deploy import DeployPyTriton
     from nemo_deploy.nlp import NemoQueryLLM, NemoQueryLLMPyTorch
     from nemo_export.tensorrt_llm import TensorRTLLM
-except Exception as e:
+except Exception:
     run_export_tests = False
 
 

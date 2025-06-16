@@ -123,7 +123,7 @@ def mock_environment_setup():
 @pytest.fixture
 def mock_model_worker(mock_megatron_model):
     """Mock ModelWorker class while preserving Ray remote functionality."""
-    original_model_worker = ModelWorker
+    _ = ModelWorker
 
     # Create a new class that inherits from the original but mocks the model loading
     @ray.remote(num_gpus=0)  # Use CPU for testing

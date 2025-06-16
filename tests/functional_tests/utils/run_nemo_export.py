@@ -260,7 +260,7 @@ def run_inference(
 
             print("Path: {0} and model: {1} with {2} tps will be tested".format(checkpoint_path, model_name, tp_size))
 
-        task_ids = None
+        _ = None
 
         lora_ckpt_list = None
         lora_uids = None
