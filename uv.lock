@@ -2528,7 +2528,7 @@ dependencies = [
     { name = "hydra-core" },
     { name = "lightning" },
     { name = "megatron-core" },
-    { name = "nvidia-pytriton", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nExport-Deploy-trtllm' and extra == 'extra-18-Export-Deploy-deploy-vllm')" },
+    { name = "nvidia-pytriton", marker = "sys_platform != 'darwin' or (extra == 'extra-18-Export-Deploy-trtllm' and extra == 'extra-18-Export-Deploy-deploy-vllm')" },
     { name = "omegaconf" },
     { name = "peft" },
     { name = "pydantic-settings" },
