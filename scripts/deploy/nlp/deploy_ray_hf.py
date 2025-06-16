@@ -39,33 +39,86 @@ def parse_args():
         help="Path to the HuggingFace model or model identifier from HuggingFace Hub",
     )
     parser.add_argument(
-        "--task", type=str, default="text-generation", help="HuggingFace task type (e.g., 'text-generation')"
+        "--task",
+        type=str,
+        default="text-generation",
+        help="HuggingFace task type (e.g., 'text-generation')",
     )
     parser.add_argument(
-        "--trust_remote_code", action="store_true", help="Whether to trust remote code when loading the model"
-    )
-    parser.add_argument("--device_map", type=str, default="auto", help="Device mapping strategy for model placement")
-    parser.add_argument(
-        "--max_memory", type=str, default=None, help="Maximum memory allocation when using balanced device map"
+        "--trust_remote_code",
+        action="store_true",
+        help="Whether to trust remote code when loading the model",
     )
     parser.add_argument(
-        "--model_id", type=str, default="nemo-model", help="Identifier for the model in the API responses"
+        "--device_map",
+        type=str,
+        default="auto",
+        help="Device mapping strategy for model placement",
     )
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address to bind the Ray Serve server to")
-    parser.add_argument("--port", type=int, default=1024, help="Port number to use for the Ray Serve server")
+    parser.add_argument(
+        "--max_memory",
+        type=str,
+        default=None,
+        help="Maximum memory allocation when using balanced device map",
+    )
+    parser.add_argument(
+        "--model_id",
+        type=str,
+        default="nemo-model",
+        help="Identifier for the model in the API responses",
+    )
+    parser.add_argument(
+        "--host",
+        type=str,
+        default="0.0.0.0",
+        help="Host address to bind the Ray Serve server to",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=1024,
+        help="Port number to use for the Ray Serve server",
+    )
     parser.add_argument(
         "--num_cpus",
         type=int,
         default=None,
         help="Number of CPUs to allocate for the Ray cluster. If None, will use all available CPUs.",
     )
-    parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs to allocate for the Ray cluster")
-    parser.add_argument("--include_dashboard", action="store_true", help="Whether to include the Ray dashboard")
-    parser.add_argument("--num_replicas", type=int, default=1, help="Number of model replicas to deploy")
-    parser.add_argument("--num_gpus_per_replica", type=float, default=1, help="Number of GPUs per model replica")
-    parser.add_argument("--num_cpus_per_replica", type=float, default=8, help="Number of CPUs per model replica")
     parser.add_argument(
-        "--cuda_visible_devices", type=str, default="0,1", help="Comma-separated list of CUDA visible devices"
+        "--num_gpus",
+        type=int,
+        default=1,
+        help="Number of GPUs to allocate for the Ray cluster",
+    )
+    parser.add_argument(
+        "--include_dashboard",
+        action="store_true",
+        help="Whether to include the Ray dashboard",
+    )
+    parser.add_argument(
+        "--num_replicas",
+        type=int,
+        default=1,
+        help="Number of model replicas to deploy",
+    )
+    parser.add_argument(
+        "--num_gpus_per_replica",
+        type=float,
+        default=1,
+        help="Number of GPUs per model replica",
+    )
+    parser.add_argument(
+        "--num_cpus_per_replica",
+        type=float,
+        default=8,
+        help="Number of CPUs per model replica",
+    )
+    parser.add_argument(
+        "--cuda_visible_devices",
+        type=str,
+        default="0,1",
+        help="Comma-separated list of CUDA visible devices",
     )
     return parser.parse_args()
 
@@ -90,12 +143,21 @@ def main():
         num_cpus=args.num_cpus,
         num_gpus=args.num_gpus,
         include_dashboard=args.include_dashboard,
-        runtime_env={"env_vars": {"CUDA_VISIBLE_DEVICES": args.cuda_visible_devices}},
+        runtime_env={
+            "env_vars": {
+                "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
+            }
+        },
     )
 
     # Set up signal handlers
-    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
-    signal.signal(signal.SIGTERM, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
+    signal.signal(
+        signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer)
+    )
+    signal.signal(
+        signal.SIGTERM,
+        lambda signum, frame: signal_handler(signum, frame, ray_deployer),
+    )
 
     try:
         # Start Ray Serve
@@ -104,14 +166,17 @@ def main():
         # Create the HuggingFace model deployment
         app = HFRayDeployable.options(
             num_replicas=args.num_replicas,
-            ray_actor_options={"num_gpus": args.num_gpus_per_replica, "num_cpus": args.num_cpus_per_replica},
+            ray_actor_options={
+                "num_gpus": args.num_gpus_per_replica,
+                "num_cpus": args.num_cpus_per_replica,
+            },
         ).bind(
             hf_model_id_path=args.model_path,
             task=args.task,
             trust_remote_code=args.trust_remote_code,
             model_id=args.model_id,
             device_map=args.device_map,
-            max_memory=args.max_memory,
+            max_memory=args.max_memory
         )
 
         # Deploy the model

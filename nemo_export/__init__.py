@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # WAR for trtllm and lightning conflict
-from nemo_export_deploy_common.package_info import __package_name__, __version__
+from nemo_export_deploy_common.package_info import __version__, __package_name__
 
 try:
     from nemo.lightning import io

@@ -14,11 +14,11 @@
 
 from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pytest
+import numpy as np
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 
-from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeploy, MegatronLLMDeployableNemo2, dict_to_str
+from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2, MegatronLLMDeploy, dict_to_str
 
 
 @pytest.fixture
@@ -59,10 +59,10 @@ def deployable(mock_engine_and_tokenizer):
 @pytest.mark.run_only_on("GPU")
 def test_megatron_llm_deploy():
     """Test the MegatronLLMDeploy class also returns MegatronLLMDeployableNemo2 instance."""
-    with patch("nemo_deploy.nlp.megatronllm_deployable.nemo_checkpoint_version") as mock_version:
-        with patch("nemo_deploy.nlp.megatronllm_deployable.NEMO2", "nemo2"):
-            mock_version.return_value = "nemo2"
-            with patch.object(MegatronLLMDeployableNemo2, "__init__", return_value=None) as mock_init:
+    with patch('nemo_deploy.nlp.megatronllm_deployable.nemo_checkpoint_version') as mock_version:
+        with patch('nemo_deploy.nlp.megatronllm_deployable.NEMO2', 'nemo2'):
+            mock_version.return_value = 'nemo2'
+            with patch.object(MegatronLLMDeployableNemo2, '__init__', return_value=None) as mock_init:
                 deployable = MegatronLLMDeploy.get_deployable(
                     nemo_checkpoint_filepath="test.nemo",
                     num_devices=2,
@@ -75,7 +75,7 @@ def test_megatron_llm_deploy():
                     random_seed=42,
                     enable_flash_decode=True,
                     enable_cuda_graphs=True,
-                    legacy_ckpt=True,
+                    legacy_ckpt=True
                 )
 
                 # Verify the correct instance is returned
@@ -86,9 +86,9 @@ def test_megatron_llm_deploy():
 @pytest.mark.run_only_on("GPU")
 def test_megatron_llm_deploy_unsupported_version():
     """Test the MegatronLLMDeploy class with nemo1 checkpoint version."""
-    with patch("nemo_deploy.nlp.megatronllm_deployable.nemo_checkpoint_version") as mock_version:
-        with patch("nemo_deploy.nlp.megatronllm_deployable.NEMO2", "nemo2"):
-            mock_version.return_value = "nemo1"  # Different from NEMO2
+    with patch('nemo_deploy.nlp.megatronllm_deployable.nemo_checkpoint_version') as mock_version:
+        with patch('nemo_deploy.nlp.megatronllm_deployable.NEMO2', 'nemo2'):
+            mock_version.return_value = 'nemo1'  # Different from NEMO2
             with pytest.raises(Exception, match="Only NeMo 2.0 checkpoint is supported"):
                 MegatronLLMDeploy.get_deployable(nemo_checkpoint_filepath="test.nemo")
 
@@ -172,7 +172,10 @@ def test_generate_with_cuda_graphs_empty_prompts(deployable):
 @pytest.mark.run_only_on("GPU")
 def test_generate_other_ranks_exit_signal(deployable):
     """Test generate_other_ranks method when receiving exit signal."""
-    with patch("torch.distributed.broadcast") as mock_broadcast, patch("torch.empty") as mock_empty:
+    with (
+        patch("torch.distributed.broadcast") as mock_broadcast,
+        patch("torch.empty") as mock_empty
+    ):
         # Mock the message tensor to return 1 (exit signal)
         mock_message = MagicMock()
         mock_message.__eq__ = MagicMock(return_value=False)  # Not equal to 0
@@ -191,7 +194,7 @@ def test_generate_other_ranks_continue_processing(deployable):
         patch("torch.distributed.broadcast") as mock_broadcast,
         patch("torch.empty") as mock_empty,
         patch("nemo_deploy.nlp.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
-        patch.object(deployable, "generate") as mock_generate,
+        patch.object(deployable, "generate") as mock_generate
     ):
         # Mock the message tensor to return 0 first (continue), then 1 (exit)
         mock_message = MagicMock()
@@ -201,7 +204,7 @@ def test_generate_other_ranks_continue_processing(deployable):
         # Mock broadcast_list returns
         mock_broadcast_list.side_effect = [
             ["test prompt"],  # prompts
-            [1.0, 1, 0.0, 256, False],  # inference parameters
+            [1.0, 1, 0.0, 256, False]  # inference parameters
         ]
 
         deployable.generate_other_ranks()
@@ -222,7 +225,7 @@ def test_triton_infer_fn_with_top_logprobs(deployable):
     with (
         patch.object(deployable, "generate") as mock_generate,
         patch.object(deployable, "remove_eos_token") as mock_remove_eos,
-        patch("nemo_deploy.nlp.megatronllm_deployable.dict_to_str") as mock_dict_to_str,
+        patch("nemo_deploy.nlp.megatronllm_deployable.dict_to_str") as mock_dict_to_str
     ):
         mock_result = MagicMock()
         mock_result.generated_text = "Generated text"
@@ -234,7 +237,12 @@ def test_triton_infer_fn_with_top_logprobs(deployable):
 
         # Test the underlying inference logic with top_logprobs
         output_infer = deployable._infer_fn(
-            prompts=prompts, top_logprobs=5, temperature=1.0, top_k=1, top_p=0.0, num_tokens_to_generate=256
+            prompts=prompts,
+            top_logprobs=5,
+            temperature=1.0,
+            top_k=1,
+            top_p=0.0,
+            num_tokens_to_generate=256
         )
 
         assert output_infer["sentences"] == ["Generated text"]
@@ -266,11 +274,18 @@ def test_infer_fn_with_echo_and_log_probs(deployable):
 
         # Mock torch.tensor to return appropriate tensor
         mock_tensor_instance = MagicMock()
-        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = np.array([0.1, 0.2, 0.3, 0.4])
+        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = (
+            np.array([0.1, 0.2, 0.3, 0.4])
+        )
         mock_tensor.return_value = mock_tensor_instance
 
         # Test with echo=True and log probabilities
-        output_infer = deployable._infer_fn(prompts=prompts, echo=True, log_probs=True, text_only=True)
+        output_infer = deployable._infer_fn(
+            prompts=prompts,
+            echo=True,
+            log_probs=True,
+            text_only=True
+        )
 
         assert output_infer["sentences"] == ["Hello World"]
         assert "log_probs" in output_infer.keys()
@@ -278,6 +293,38 @@ def test_infer_fn_with_echo_and_log_probs(deployable):
         # Verify torch.tensor was called with combined log probs
         mock_tensor.assert_called_once_with([0.1, 0.2, 0.3, 0.4])
 
+@pytest.mark.run_only_on("GPU")
+def test_infer_fn_with_echo_and_prompt_top_logprobs(deployable):
+    """Test _infer_fn method with echo=True and top_logprobs, ensuring prompt_top_n_logprobs is included."""
+    prompts = ["Hello"]
+
+    with (
+        patch.object(deployable, "generate") as mock_generate,
+        patch.object(deployable, "remove_eos_token") as mock_remove_eos,
+        patch("nemo_deploy.nlp.megatronllm_deployable.dict_to_str") as mock_dict_to_str
+    ):
+        mock_result = MagicMock()
+        mock_result.prompt = "Hello"
+        mock_result.generated_text = " World"
+        mock_result.prompt_top_n_logprobs = [{"tokenA": 0.9}]
+        mock_result.generated_top_n_logprobs = [{"tokenB": 0.8}]
+
+        mock_generate.return_value = [mock_result]
+        mock_remove_eos.return_value = ["Hello World"]
+        mock_dict_to_str.return_value = '[{"tokenA": 0.9}, {"tokenB": 0.8}]'
+
+        output_infer = deployable._infer_fn(
+            prompts=prompts,
+            echo=True,
+            top_logprobs=1,
+            text_only=True
+        )
+        assert output_infer["sentences"] == ["Hello World"]
+        assert "top_logprobs" in output_infer
+        assert output_infer["top_logprobs"] == ['[{"tokenA": 0.9}, {"tokenB": 0.8}]']
+        mock_dict_to_str.assert_called_once_with(
+            [{"tokenA": 0.9}] + [{"tokenB": 0.8}]
+        )
 
 @pytest.mark.run_only_on("GPU")
 def test_infer_fn_with_echo_text_only_false(deployable):
@@ -295,7 +342,11 @@ def test_infer_fn_with_echo_text_only_false(deployable):
         mock_generate.return_value = [mock_result]
         mock_remove_eos.return_value = [mock_result]  # When text_only=False, returns full result object
 
-        output_infer = deployable._infer_fn(prompts=prompts, echo=True, text_only=False)
+        output_infer = deployable._infer_fn(
+            prompts=prompts,
+            echo=True,
+            text_only=False
+        )
 
         assert output_infer["sentences"] == [mock_result]
 
@@ -309,7 +360,7 @@ def test_infer_fn_echo_with_log_probs_different_lengths(deployable):
         patch.object(deployable, "generate") as mock_generate,
         patch.object(deployable, "remove_eos_token") as mock_remove_eos,
         patch("torch.tensor") as mock_tensor,
-        patch("numpy.pad") as mock_pad,
+        patch("numpy.pad") as mock_pad
     ):
         # Set up mock results with different prompt log prob lengths
         mock_result1 = MagicMock()
@@ -341,10 +392,14 @@ def test_infer_fn_echo_with_log_probs_different_lengths(deployable):
         # Mock numpy.pad to simulate padding behavior
         mock_pad.side_effect = [
             np.array([0.1, 0.2, 0.3, 0.4]),  # First array doesn't need padding
-            np.array([0.5, 0.6, 0, 0]),  # Second array padded to length 4
+            np.array([0.5, 0.6, 0, 0])       # Second array padded to length 4
         ]
 
-        output_infer = deployable._infer_fn(prompts=prompts, echo=True, log_probs=True)
+        output_infer = deployable._infer_fn(
+            prompts=prompts,
+            echo=True,
+            log_probs=True
+        )
 
         assert output_infer["sentences"] == ["Hello World", "Hi There"]
         assert "log_probs" in output_infer.keys()
@@ -369,7 +424,11 @@ def test_generate_without_cuda_graphs(deployable):
 
     prompts = ["Hello", "World"]
     inference_params = CommonInferenceParams(
-        temperature=1.0, top_k=1, top_p=0.0, num_tokens_to_generate=256, return_log_probs=False
+        temperature=1.0,
+        top_k=1,
+        top_p=0.0,
+        num_tokens_to_generate=256,
+        return_log_probs=False,
     )
 
     # Mock the generate method
@@ -380,7 +439,9 @@ def test_generate_without_cuda_graphs(deployable):
 
         results = deployable.generate(prompts, inference_params)
         assert len(results) == 2
-        mock_generate.assert_called_once_with(prompts=prompts, add_BOS=False, common_inference_params=inference_params)
+        mock_generate.assert_called_once_with(
+            prompts=prompts, add_BOS=False, common_inference_params=inference_params
+        )
 
 
 @pytest.mark.run_only_on("GPU")
@@ -392,7 +453,11 @@ def test_generate_with_cuda_graphs(deployable):
 
     prompts = ["Hello", "World"]
     inference_params = CommonInferenceParams(
-        temperature=1.0, top_k=1, top_p=0.0, num_tokens_to_generate=256, return_log_probs=False
+        temperature=1.0,
+        top_k=1,
+        top_p=0.0,
+        num_tokens_to_generate=256,
+        return_log_probs=False,
     )
 
     # Mock the generate method
@@ -403,7 +468,12 @@ def test_generate_with_cuda_graphs(deployable):
         mock_result2.generated_text = "Generated text 2"
         mock_result_pad = MagicMock()
         mock_result_pad.generated_text = "Padding text"
-        mock_generate.return_value = [mock_result1, mock_result2, mock_result_pad, mock_result_pad]
+        mock_generate.return_value = [
+            mock_result1,
+            mock_result2,
+            mock_result_pad,
+            mock_result_pad,
+        ]
 
         results = deployable.generate(prompts, inference_params)
 
@@ -428,7 +498,9 @@ def test_apply_chat_template(deployable):
     template_mock = MagicMock()
     template_mock.render.return_value = "Rendered template with Hello"
 
-    with patch("nemo_deploy.nlp.megatronllm_deployable.Template", return_value=template_mock):
+    with patch(
+        "nemo_deploy.nlp.megatronllm_deployable.Template", return_value=template_mock
+    ):
         template = deployable.apply_chat_template(messages)
         assert template == "Rendered template with Hello"
         template_mock.render.assert_called_once()
@@ -558,7 +630,9 @@ def test_infer_fn_with_log_probs(deployable):
 
         # Mock torch.tensor to return a mock tensor with cpu().detach().numpy()
         mock_tensor_instance = MagicMock()
-        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = np.array([0.1, 0.2, 0.3])
+        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = (
+            np.array([0.1, 0.2, 0.3])
+        )
         mock_tensor.return_value = mock_tensor_instance
 
         # Test with log probabilities
@@ -612,7 +686,9 @@ def test_infer_fn_with_chat_template(deployable):
         assert not "log_probs" in output_infer.keys()
 
         # Verify chat template was applied
-        mock_apply_template.assert_called_once_with({"role": "user", "content": "Hello"})
+        mock_apply_template.assert_called_once_with(
+            {"role": "user", "content": "Hello"}
+        )
 
         # Verify generate was called with templated prompt
         call_args = mock_generate.call_args[0]
@@ -630,7 +706,9 @@ def test_infer_fn_with_distributed(deployable):
         patch("torch.distributed.is_initialized", return_value=True),
         patch("torch.distributed.get_world_size", return_value=2),
         patch("torch.distributed.broadcast") as mock_broadcast,
-        patch("nemo_deploy.nlp.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
+        patch(
+            "nemo_deploy.nlp.megatronllm_deployable.broadcast_list"
+        ) as mock_broadcast_list,
     ):
         # Set up mock results
         mock_result = MagicMock()
@@ -654,7 +732,9 @@ def test_infer_fn_with_distributed(deployable):
 
         # Verify distributed operations were called
         mock_broadcast.assert_called_once()
-        assert mock_broadcast_list.call_count == 2  # One for prompts, one for parameters
+        assert (
+            mock_broadcast_list.call_count == 2
+        )  # One for prompts, one for parameters
 
 
 @pytest.mark.run_only_on("GPU")
@@ -677,7 +757,9 @@ def test_infer_fn_empty_log_probs(deployable):
 
         # Mock torch.tensor to return empty array
         mock_tensor_instance = MagicMock()
-        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = np.array([])
+        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = (
+            np.array([])
+        )
         mock_tensor.return_value = mock_tensor_instance
 
         # Test with log probabilities but empty results
@@ -712,7 +794,9 @@ def test_ray_infer_fn_basic(deployable):
 
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
-        mock_infer_fn.return_value = {"sentences": ["Generated text 1", "Generated text 2"]}
+        mock_infer_fn.return_value = {
+            "sentences": ["Generated text 1", "Generated text 2"]
+        }
 
         result = deployable.ray_infer_fn(inputs)
         assert result == {"sentences": ["Generated text 1", "Generated text 2"]}
@@ -768,7 +852,10 @@ def test_ray_infer_fn_with_log_probs(deployable):
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
         mock_log_probs = np.array([[0.1, 0.2, 0.3]])
-        mock_infer_fn.return_value = {"sentences": ["Generated text"], "log_probs": mock_log_probs}
+        mock_infer_fn.return_value = {
+            "sentences": ["Generated text"],
+            "log_probs": mock_log_probs,
+        }
 
         result = deployable.ray_infer_fn(inputs)
 
@@ -783,7 +870,10 @@ def test_ray_infer_fn_with_log_probs(deployable):
 @pytest.mark.run_only_on("GPU")
 def test_ray_infer_fn_with_chat_template(deployable):
     """Test ray_infer_fn method with chat template enabled."""
-    inputs = {"prompts": [{"role": "user", "content": "Hello"}], "apply_chat_template": True}
+    inputs = {
+        "prompts": [{"role": "user", "content": "Hello"}],
+        "apply_chat_template": True,
+    }
 
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
@@ -835,11 +925,17 @@ def test_ray_infer_fn_all_parameters(deployable):
     # Mock the _infer_fn method
     with patch.object(deployable, "_infer_fn") as mock_infer_fn:
         mock_log_probs = np.array([[0.1, 0.2]])
-        mock_infer_fn.return_value = {"sentences": ["Generated response"], "log_probs": mock_log_probs}
+        mock_infer_fn.return_value = {
+            "sentences": ["Generated response"],
+            "log_probs": mock_log_probs,
+        }
 
         result = deployable.ray_infer_fn(inputs)
 
-        assert result == {"sentences": ["Generated response"], "log_probs": mock_log_probs}
+        assert result == {
+            "sentences": ["Generated response"],
+            "log_probs": mock_log_probs,
+        }
 
         # Verify _infer_fn was called with all specified parameters
         mock_infer_fn.assert_called_once_with(

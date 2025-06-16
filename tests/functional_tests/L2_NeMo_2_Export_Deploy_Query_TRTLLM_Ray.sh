@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
-set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
-
-CUDA_VISIBLE_DEVICES="" NEMO_NUMBA_MINVER=0.53 coverage run -a \
-    --data-file=/workspace/.coverage \
-    --source=/workspace/ \
-    -m pytest tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme" --cpu
+coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_trtllm_deploy_ray.py \
+    --model_name test_model \
+    --nemo_checkpoint_path /home/TestData/llm/models/llama32_1b_nemo2  \
+    --model_type llama \
+    --tensor_parallelism_size 1 \
+    --max_input_len 2048 \
+    --max_output_len 1024 \
+    --max_batch_size 8 \
+    --num_gpus 1 \
+    --num_replicas 1 \
+    --debug

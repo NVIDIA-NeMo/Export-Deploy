@@ -15,4 +15,8 @@
 
 from nemo_deploy.nlp.query_llm import NemoQueryLLM, NemoQueryLLMHF, NemoQueryLLMPyTorch
 
-__all__ = ["NemoQueryLLM", "NemoQueryLLMHF", "NemoQueryLLMPyTorch"]
+__all__ = [
+    "NemoQueryLLM",
+    "NemoQueryLLMHF",
+    "NemoQueryLLMPyTorch",
+]

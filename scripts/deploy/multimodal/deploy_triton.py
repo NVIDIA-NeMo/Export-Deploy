@@ -26,13 +26,16 @@ multimodal_supported = True
 try:
     from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 except Exception as e:
-    LOGGER.warning(f"Cannot import the TensorRTMMExporter exporter, it will not be available. {type(e).__name__}: {e}")
+    LOGGER.warning(
+        f"Cannot import the TensorRTMMExporter exporter, it will not be available. {type(e).__name__}: {e}"
+    )
     multimodal_supported = False
 
 
 def get_args(argv):
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Deploy nemo models to Triton"
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description="Deploy nemo models to Triton",
     )
     # default modality is vision, can be changed to audio
     parser.add_argument(
@@ -44,8 +47,19 @@ def get_args(argv):
         choices=["vision", "audio"],
         help="Modality of the model",
     )
-    parser.add_argument("-vc", "--visual_checkpoint", type=str, help="Source .nemo file for visual model")
-    parser.add_argument("-lc", "--llm_checkpoint", type=str, required=False, help="Source .nemo file for llm")
+    parser.add_argument(
+        "-vc",
+        "--visual_checkpoint",
+        type=str,
+        help="Source .nemo file for visual model",
+    )
+    parser.add_argument(
+        "-lc",
+        "--llm_checkpoint",
+        type=str,
+        required=False,
+        help="Source .nemo file for llm",
+    )
     parser.add_argument(
         "-mt",
         "--model_type",
@@ -59,22 +73,61 @@ def get_args(argv):
         "--llm_model_type",
         type=str,
         required=True,
-        choices=["gptnext", "gpt", "llama", "falcon", "starcoder", "mixtral", "gemma", "mllama"],
+        choices=[
+            "gptnext",
+            "gpt",
+            "llama",
+            "falcon",
+            "starcoder",
+            "mixtral",
+            "gemma",
+            "mllama",
+        ],
         help="Type of LLM. gptnext, gpt, llama, falcon, and starcoder are only supported."
         " gptnext and gpt are the same and keeping it for backward compatibility",
     )
-    parser.add_argument("-tmn", "--triton_model_name", required=True, type=str, help="Name for the service")
-    parser.add_argument("-tmv", "--triton_model_version", default=1, type=int, help="Version for the service")
     parser.add_argument(
-        "-trp", "--triton_port", default=8000, type=int, help="Port for the Triton server to listen for requests"
+        "-tmn",
+        "--triton_model_name",
+        required=True,
+        type=str,
+        help="Name for the service",
     )
     parser.add_argument(
-        "-tha", "--triton_http_address", default="0.0.0.0", type=str, help="HTTP address for the Triton server"
+        "-tmv",
+        "--triton_model_version",
+        default=1,
+        type=int,
+        help="Version for the service",
     )
     parser.add_argument(
-        "-tmr", "--triton_model_repository", default=None, type=str, help="Folder for the trt-llm conversion"
+        "-trp",
+        "--triton_port",
+        default=8000,
+        type=int,
+        help="Port for the Triton server to listen for requests",
     )
-    parser.add_argument("-ng", "--num_gpus", default=1, type=int, help="Number of GPUs for the deployment")
+    parser.add_argument(
+        "-tha",
+        "--triton_http_address",
+        default="0.0.0.0",
+        type=str,
+        help="HTTP address for the Triton server",
+    )
+    parser.add_argument(
+        "-tmr",
+        "--triton_model_repository",
+        default=None,
+        type=str,
+        help="Folder for the trt-llm conversion",
+    )
+    parser.add_argument(
+        "-ng",
+        "--num_gpus",
+        default=1,
+        type=int,
+        help="Number of GPUs for the deployment",
+    )
     parser.add_argument(
         "-dt",
         "--dtype",
@@ -83,10 +136,34 @@ def get_args(argv):
         type=str,
         help="dtype of the model on TensorRT",
     )
-    parser.add_argument("-mil", "--max_input_len", default=4096, type=int, help="Max input length of the model")
-    parser.add_argument("-mol", "--max_output_len", default=256, type=int, help="Max output length of the model")
-    parser.add_argument("-mbs", "--max_batch_size", default=1, type=int, help="Max batch size of the llm model")
-    parser.add_argument("-mml", "--max_multimodal_len", default=3072, type=int, help="Max length of multimodal input")
+    parser.add_argument(
+        "-mil",
+        "--max_input_len",
+        default=4096,
+        type=int,
+        help="Max input length of the model",
+    )
+    parser.add_argument(
+        "-mol",
+        "--max_output_len",
+        default=256,
+        type=int,
+        help="Max output length of the model",
+    )
+    parser.add_argument(
+        "-mbs",
+        "--max_batch_size",
+        default=1,
+        type=int,
+        help="Max batch size of the llm model",
+    )
+    parser.add_argument(
+        "-mml",
+        "--max_multimodal_len",
+        default=3072,
+        type=int,
+        help="Max length of multimodal input",
+    )
     parser.add_argument(
         "-vmb",
         "--vision_max_batch_size",
@@ -105,16 +182,31 @@ def get_args(argv):
         "--lora_target_modules",
         nargs="+",
         default=None,
-        choices=["attn_qkv", "attn_q", "attn_k", "attn_v", "attn_dense", "mlp_h_to_4h", "mlp_gate", "mlp_4h_to_h"],
+        choices=[
+            "attn_qkv",
+            "attn_q",
+            "attn_k",
+            "attn_v",
+            "attn_dense",
+            "mlp_h_to_4h",
+            "mlp_gate",
+            "mlp_4h_to_h",
+        ],
         help="Add lora in which modules. Only be activated when use_lora_plugin is enabled.",
     )
     parser.add_argument(
         "--max_lora_rank",
         type=int,
         default=64,
-        help="maximum lora rank for different lora modules. It is used to compute the workspace size of lora plugin.",
+        help="maximum lora rank for different lora modules. "
+        "It is used to compute the workspace size of lora plugin.",
     )
-    parser.add_argument("--lora_checkpoint_path", default=None, type=str, help="The checkpoint path of LoRA weights")
+    parser.add_argument(
+        "--lora_checkpoint_path",
+        default=None,
+        type=str,
+        help="The checkpoint path of LoRA weights",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -137,22 +229,30 @@ def get_trt_deployable(args):
             "directory. Please provide a --visual_checkpoint."
         )
 
-    if args.visual_checkpoint is None and not os.path.isdir(args.triton_model_repository):
+    if args.visual_checkpoint is None and not os.path.isdir(
+        args.triton_model_repository
+    ):
         raise ValueError(
             "The provided model repository is not a valid TensorRT model "
             "directory. Please provide a --visual_checkpoint."
         )
 
     if args.visual_checkpoint is not None and args.model_type is None:
-        raise ValueError("Model type is required to be defined if a nemo checkpoint is provided.")
+        raise ValueError(
+            "Model type is required to be defined if a nemo checkpoint is provided."
+        )
 
     exporter = TensorRTMMExporter(
-        model_dir=trt_path, load_model=(args.visual_checkpoint is None), modality=args.modality
+        model_dir=trt_path,
+        load_model=(args.visual_checkpoint is None),
+        modality=args.modality,
     )
 
     if args.visual_checkpoint is not None:
         try:
-            LOGGER.info("Export operation will be started to export the nemo checkpoint to TensorRT.")
+            LOGGER.info(
+                "Export operation will be started to export the nemo checkpoint to TensorRT."
+            )
             exporter.export(
                 visual_checkpoint_path=args.visual_checkpoint,
                 llm_checkpoint_path=args.llm_checkpoint,
@@ -171,7 +271,10 @@ def get_trt_deployable(args):
                 lora_checkpoint_path=args.lora_checkpoint_path,
             )
         except Exception as error:
-            raise RuntimeError("An error has occurred during the model export. Error message: " + str(error))
+            raise RuntimeError(
+                "An error has occurred during the model export. Error message: "
+                + str(error)
+            )
 
     return exporter
 
@@ -200,14 +303,20 @@ def nemo_deploy(argv):
         LOGGER.info("Triton deploy function will be called.")
         nm.deploy()
     except Exception as error:
-        LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
+        LOGGER.error(
+            "Error message has occurred during deploy function. Error message: "
+            + str(error)
+        )
         return
 
     try:
         LOGGER.info("Model serving on Triton is will be started.")
         nm.serve()
     except Exception as error:
-        LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
+        LOGGER.error(
+            "Error message has occurred during deploy function. Error message: "
+            + str(error)
+        )
         return
 
     LOGGER.info("Model serving will be stopped.")

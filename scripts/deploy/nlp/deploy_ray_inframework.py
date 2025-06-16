@@ -32,41 +32,110 @@ def get_available_cpus():
 def parse_args():
     """Parse command-line arguments for the Ray deployment script."""
     parser = argparse.ArgumentParser(description="Deploy a Megatron model using Ray")
-    parser.add_argument("--nemo_checkpoint", type=str, required=True, help="Path to the .nemo checkpoint file")
-    parser.add_argument("--num_gpus", type=int, default=1, help="Number of GPUs to use per node")
-    parser.add_argument("--num_nodes", type=int, default=1, help="Number of nodes to use for deployment")
     parser.add_argument(
-        "--tensor_model_parallel_size", type=int, default=1, help="Size of the tensor model parallelism"
+        "--nemo_checkpoint",
+        type=str,
+        required=True,
+        help="Path to the .nemo checkpoint file",
     )
     parser.add_argument(
-        "--pipeline_model_parallel_size", type=int, default=1, help="Size of the pipeline model parallelism"
+        "--num_gpus",
+        type=int,
+        default=1,
+        help="Number of GPUs to use per node",
     )
     parser.add_argument(
-        "--expert_model_parallel_size", type=int, default=1, help="Size of the expert model parallelism"
+        "--num_nodes",
+        type=int,
+        default=1,
+        help="Number of nodes to use for deployment",
     )
-    parser.add_argument("--context_parallel_size", type=int, default=1, help="Size of the context parallelism")
     parser.add_argument(
-        "--model_id", type=str, default="nemo-model", help="Identifier for the model in the API responses"
+        "--tensor_model_parallel_size",
+        type=int,
+        default=1,
+        help="Size of the tensor model parallelism",
     )
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address to bind the Ray Serve server to")
-    parser.add_argument("--port", type=int, default=1024, help="Port number to use for the Ray Serve server")
+    parser.add_argument(
+        "--pipeline_model_parallel_size",
+        type=int,
+        default=1,
+        help="Size of the pipeline model parallelism",
+    )
+    parser.add_argument(
+        "--expert_model_parallel_size",
+        type=int,
+        default=1,
+        help="Size of the expert model parallelism",
+    )
+    parser.add_argument(
+        "--context_parallel_size",
+        type=int,
+        default=1,
+        help="Size of the context parallelism",
+    )
+    parser.add_argument(
+        "--model_id",
+        type=str,
+        default="nemo-model",
+        help="Identifier for the model in the API responses",
+    )
+    parser.add_argument(
+        "--host",
+        type=str,
+        default="0.0.0.0",
+        help="Host address to bind the Ray Serve server to",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=1024,
+        help="Port number to use for the Ray Serve server",
+    )
     parser.add_argument(
         "--num_cpus",
         type=int,
         default=None,
         help="Number of CPUs to allocate for the Ray cluster. If None, will use all available CPUs.",
     )
-    parser.add_argument("--num_cpus_per_replica", type=float, default=8, help="Number of CPUs per model replica")
-    parser.add_argument("--include_dashboard", action="store_true", help="Whether to include the Ray dashboard")
     parser.add_argument(
-        "--cuda_visible_devices", type=str, default="0,1", help="Comma-separated list of CUDA visible devices"
+        "--num_cpus_per_replica",
+        type=float,
+        default=8,
+        help="Number of CPUs per model replica",
     )
     parser.add_argument(
-        "--enable_cuda_graphs", action="store_true", help="Whether to enable CUDA graphs for faster inference"
+        "--include_dashboard",
+        action="store_true",
+        help="Whether to include the Ray dashboard",
     )
-    parser.add_argument("--enable_flash_decode", action="store_true", help="Whether to enable Flash Attention decode")
-    parser.add_argument("--num_replicas", type=int, default=1, help="Number of replicas for the deployment")
-    parser.add_argument("--legacy_ckpt", action="store_true", help="Whether to use legacy checkpoint format")
+    parser.add_argument(
+        "--cuda_visible_devices",
+        type=str,
+        default="0,1",
+        help="Comma-separated list of CUDA visible devices",
+    )
+    parser.add_argument(
+        "--enable_cuda_graphs",
+        action="store_true",
+        help="Whether to enable CUDA graphs for faster inference",
+    )
+    parser.add_argument(
+        "--enable_flash_decode",
+        action="store_true",
+        help="Whether to enable Flash Attention decode",
+    )
+    parser.add_argument(
+        "--num_replicas",
+        type=int,
+        default=1,
+        help="Number of replicas for the deployment",
+    )
+    parser.add_argument(
+        "--legacy_ckpt",
+        action="store_true",
+        help="Whether to use legacy checkpoint format",
+    )
     return parser.parse_args()
 
 
@@ -96,15 +165,19 @@ def main():
     # Validate the parallelism configuration
     # Each replica should use: tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size GPUs
     parallelism_per_replica = (
-        args.tensor_model_parallel_size * args.pipeline_model_parallel_size * args.context_parallel_size
+        args.tensor_model_parallel_size
+        * args.pipeline_model_parallel_size
+        * args.context_parallel_size
     )
 
     if parallelism_per_replica != gpus_per_replica:
         LOGGER.error(
-            f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
+            f"Parallelism per replica ({parallelism_per_replica}) must equal "
+            f"GPUs per replica ({gpus_per_replica})"
         )
         LOGGER.error(
-            f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, GPUs per replica: {gpus_per_replica}"
+            f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, "
+            f"GPUs per replica: {gpus_per_replica}"
         )
         LOGGER.error(
             f"Each replica needs: tensor_parallel({args.tensor_model_parallel_size}) * "
@@ -113,19 +186,30 @@ def main():
         )
         sys.exit(1)
 
-    LOGGER.info(f"Configuration: {args.num_replicas} replicas, {gpus_per_replica} GPUs per replica")
+    LOGGER.info(
+        f"Configuration: {args.num_replicas} replicas, {gpus_per_replica} GPUs per replica"
+    )
 
     # Initialize Ray deployment
     ray_deployer = DeployRay(
         num_cpus=args.num_cpus,
         num_gpus=total_gpus,
         include_dashboard=args.include_dashboard,
-        runtime_env={"env_vars": {"CUDA_VISIBLE_DEVICES": args.cuda_visible_devices}},
+        runtime_env={
+            "env_vars": {
+                "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
+            }
+        },
     )
 
     # Set up signal handlers
-    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
-    signal.signal(signal.SIGTERM, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
+    signal.signal(
+        signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer)
+    )
+    signal.signal(
+        signal.SIGTERM,
+        lambda signum, frame: signal_handler(signum, frame, ray_deployer),
+    )
 
     try:
         # Start Ray Serve

@@ -149,7 +149,9 @@ def test_forward_with_invalid_lora(exporter, mock_llm):
 def test_triton_infer_fn(exporter, mock_llm):
     """Test triton inference function"""
     exporter.export(model="/path/to/model")
-    mock_llm.generate.return_value = [MagicMock(outputs=[MagicMock(text="test output")])]
+    mock_llm.generate.return_value = [
+        MagicMock(outputs=[MagicMock(text="test output")])
+    ]
 
     inputs = {
         "prompts": np.array([b"test prompt"]),

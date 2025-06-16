@@ -13,11 +13,11 @@
 # limitations under the License.
 
 
-import logging
-
 import ray
 from ray import serve
 from ray.serve import Application
+
+import logging
 
 from nemo_deploy.ray_utils import find_available_port
 
@@ -65,10 +65,16 @@ class DeployRay:
 
         try:
             # Try to connect to existing Ray cluster
-            ray.init(address=address, ignore_reinit_error=ignore_reinit_error, runtime_env=runtime_env)
+            ray.init(
+                address=address,
+                ignore_reinit_error=ignore_reinit_error,
+                runtime_env=runtime_env,
+            )
         except ConnectionError:
             # If no cluster exists, start a local one
-            LOGGER.info("No existing Ray cluster found. Starting a local Ray cluster...")
+            LOGGER.info(
+                "No existing Ray cluster found. Starting a local Ray cluster..."
+            )
             ray.init(
                 num_cpus=num_cpus,
                 num_gpus=num_gpus,
@@ -86,7 +92,12 @@ class DeployRay:
         """
         if not port:
             port = find_available_port(8000, host)
-        serve.start(http_options={"host": host, "port": port})
+        serve.start(
+            http_options={
+                "host": host,
+                "port": port,
+            }
+        )
 
     def run(self, app: Application, model_name: str):
         """Deploy and start serving a model using Ray Serve.

@@ -29,7 +29,10 @@ class TestBuild(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.mock_config = {
             "mm_cfg": {
-                "vision_encoder": {"from_pretrained": "test_model", "hidden_size": 768},
+                "vision_encoder": {
+                    "from_pretrained": "test_model",
+                    "hidden_size": 768,
+                },
                 "mm_mlp_adapter_type": "linear",
                 "hidden_size": 4096,
             }
@@ -38,7 +41,9 @@ class TestBuild(unittest.TestCase):
             "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.weight": torch.randn(
                 4096, 768
             ),
-            "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.bias": torch.randn(4096),
+            "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.bias": torch.randn(
+                4096
+            ),
         }
 
     @pytest.mark.run_only_on("GPU")

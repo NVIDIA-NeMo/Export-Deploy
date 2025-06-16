@@ -18,8 +18,8 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-import requests
 from fastapi.testclient import TestClient
+import requests
 
 from nemo_deploy.service.fastapi_interface_to_pytriton import (
     ChatCompletionRequest,
@@ -31,7 +31,9 @@ from nemo_deploy.service.fastapi_interface_to_pytriton import (
     dict_to_str,
     query_llm_async,
 )
-from nemo_deploy.service.rest_model_api import CompletionRequest as RestCompletionRequest
+from nemo_deploy.service.rest_model_api import (
+    CompletionRequest as RestCompletionRequest,
+)
 from nemo_deploy.service.rest_model_api import TritonSettings as RestTritonSettings
 from nemo_deploy.service.rest_model_api import app as rest_app
 
@@ -43,7 +45,9 @@ def client():
 
 @pytest.fixture
 def mock_triton_settings():
-    with patch("nemo_deploy.service.fastapi_interface_to_pytriton.TritonSettings") as mock:
+    with patch(
+        "nemo_deploy.service.fastapi_interface_to_pytriton.TritonSettings"
+    ) as mock:
         instance = mock.return_value
         instance.triton_service_port = 8000
         instance.triton_service_ip = "localhost"
@@ -75,7 +79,11 @@ class TestTritonSettings:
             assert settings.triton_service_ip == "0.0.0.0"
 
     def test_custom_values(self):
-        with patch.dict(os.environ, {"TRITON_PORT": "9000", "TRITON_HTTP_ADDRESS": "127.0.0.1"}, clear=True):
+        with patch.dict(
+            os.environ,
+            {"TRITON_PORT": "9000", "TRITON_HTTP_ADDRESS": "127.0.0.1"},
+            clear=True,
+        ):
             settings = TritonSettings()
             assert settings.triton_service_port == 9000
             assert settings.triton_service_ip == "127.0.0.1"
@@ -83,7 +91,7 @@ class TestTritonSettings:
     def test_triton_settings_exception_handling(self):
         """Test TritonSettings initialization when environment variables cause exceptions"""
         with patch.dict(os.environ, {"TRITON_PORT": "invalid_port"}, clear=True):
-            with patch("nemo.utils.logging.error") as mock_logging:
+            with patch('nemo.utils.logging.error') as mock_logging:
                 settings = TritonSettings()
 
                 # The attributes won't be set due to the early return, so accessing properties will fail
@@ -114,7 +122,9 @@ class TestCompletionRequest:
         assert request.echo is False
 
     def test_default_chat_values(self):
-        request = ChatCompletionRequest(model="test_model", messages=[{"role": "user", "content": "test message"}])
+        request = ChatCompletionRequest(
+            model="test_model", messages=[{"role": "user", "content": "test message"}]
+        )
         assert request.model == "test_model"
         assert request.messages == [{"role": "user", "content": "test message"}]
         assert request.max_tokens == 512
@@ -123,7 +133,9 @@ class TestCompletionRequest:
         assert request.top_k == 0
 
     def test_greedy_params(self):
-        request = CompletionRequest(model="test_model", prompt="test prompt", temperature=0.0, top_p=0.0)
+        request = CompletionRequest(
+            model="test_model", prompt="test prompt", temperature=0.0, top_p=0.0
+        )
         assert request.top_k == 1
 
 
@@ -178,7 +190,10 @@ class TestLLMQueryFunctions:
         mock_nq = MagicMock()
         mock_nq.query_llm.return_value = {"test": "response"}
 
-        with patch("nemo_deploy.service.fastapi_interface_to_pytriton.NemoQueryLLMPyTorch", return_value=mock_nq):
+        with patch(
+            "nemo_deploy.service.fastapi_interface_to_pytriton.NemoQueryLLMPyTorch",
+            return_value=mock_nq,
+        ):
             result = _helper_fun(
                 url="http://test",
                 model="test_model",
@@ -197,7 +212,10 @@ class TestLLMQueryFunctions:
 
     def test_query_llm_async(self):
         mock_result = {"test": "response"}
-        with patch("nemo_deploy.service.fastapi_interface_to_pytriton._helper_fun", return_value=mock_result):
+        with patch(
+            "nemo_deploy.service.fastapi_interface_to_pytriton._helper_fun",
+            return_value=mock_result,
+        ):
             # Create an event loop and run the async function
             import asyncio
 
@@ -226,14 +244,21 @@ class TestAPIEndpoints:
             "choices": [
                 {
                     "text": [["test response"]],
-                    "logprobs": {"token_logprobs": [[1.0, 2.0]], "top_logprobs": [[{"a": 0.5}, {"b": 0.5}]]},
+                    "logprobs": {
+                        "token_logprobs": [[1.0, 2.0]],
+                        "top_logprobs": [[{"a": 0.5}, {"b": 0.5}]],
+                    },
                 }
             ]
         }
 
-        with patch("nemo_deploy.service.fastapi_interface_to_pytriton.query_llm_async", return_value=mock_output):
+        with patch(
+            "nemo_deploy.service.fastapi_interface_to_pytriton.query_llm_async",
+            return_value=mock_output,
+        ):
             response = client.post(
-                "/v1/completions/", json={"model": "test_model", "prompt": "test prompt", "logprobs": 1}
+                "/v1/completions/",
+                json={"model": "test_model", "prompt": "test prompt", "logprobs": 1},
             )
             assert response.status_code == 200
             data = response.json()
@@ -243,10 +268,16 @@ class TestAPIEndpoints:
     def test_chat_completions_v1(self, client):
         mock_output = {"choices": [{"text": [["test response"]]}]}
 
-        with patch("nemo_deploy.service.fastapi_interface_to_pytriton.query_llm_async", return_value=mock_output):
+        with patch(
+            "nemo_deploy.service.fastapi_interface_to_pytriton.query_llm_async",
+            return_value=mock_output,
+        ):
             response = client.post(
                 "/v1/chat/completions/",
-                json={"model": "test_model", "messages": [{"role": "user", "content": "test message"}]},
+                json={
+                    "model": "test_model",
+                    "messages": [{"role": "user", "content": "test message"}],
+                },
             )
             assert response.status_code == 200
             data = response.json()
@@ -344,7 +375,10 @@ class TestRestCompletionsEndpoint:
             mock_instance = mock_llm.return_value
             mock_instance.query_llm.return_value = mock_output
 
-            response = rest_client.post("/v1/completions/", json={"model": "test_model", "prompt": "test prompt"})
+            response = rest_client.post(
+                "/v1/completions/",
+                json={"model": "test_model", "prompt": "test prompt"},
+            )
             assert response.status_code == 200
             assert response.json() == {"output": "test response"}
 
@@ -353,6 +387,9 @@ class TestRestCompletionsEndpoint:
             mock_instance = mock_llm.return_value
             mock_instance.query_llm.side_effect = Exception("Test error")
 
-            response = rest_client.post("/v1/completions/", json={"model": "test_model", "prompt": "test prompt"})
+            response = rest_client.post(
+                "/v1/completions/",
+                json={"model": "test_model", "prompt": "test prompt"},
+            )
             assert response.status_code == 200
             assert response.json() == {"error": "An exception occurred"}

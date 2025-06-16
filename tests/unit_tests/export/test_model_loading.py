@@ -46,7 +46,13 @@ def test_model_loading() -> None:
     export_path_mcore = export_path / "mcore_export"
     export_path_local = export_path / "local_export"
 
-    with patch.dict("sys.modules", {"tensorrt_llm": dummy_module, "tensorrt_llm._utils": dummy_module}):
+    with patch.dict(
+        "sys.modules",
+        {
+            "tensorrt_llm": dummy_module,
+            "tensorrt_llm._utils": dummy_module,
+        },
+    ):
         from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 
         load_nemo_model(nemo_path, export_path_local, False)

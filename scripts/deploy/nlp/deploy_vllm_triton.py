@@ -21,7 +21,10 @@ import tempfile
 from nemo_deploy import DeployPyTriton
 
 # Configure the NeMo logger to look the same as vLLM
-logging.basicConfig(format="%(levelname)s %(asctime)s %(filename)s:%(lineno)d] %(message)s", datefmt="%m-%d %H:%M:%S")
+logging.basicConfig(
+    format="%(levelname)s %(asctime)s %(filename)s:%(lineno)d] %(message)s",
+    datefmt="%m-%d %H:%M:%S",
+)
 LOGGER = logging.getLogger("NeMo")
 
 try:
@@ -45,18 +48,48 @@ def get_args(argv):
         choices=["llama", "mistral", "mixtral", "starcoder2", "gemma"],
         help="Type of the model",
     )
-    parser.add_argument("-tmn", "--triton_model_name", required=True, type=str, help="Name for the service")
-    parser.add_argument("-tmv", "--triton_model_version", default=1, type=int, help="Version for the service")
     parser.add_argument(
-        "-trp", "--triton_port", default=8000, type=int, help="Port for the Triton server to listen for requests"
+        "-tmn",
+        "--triton_model_name",
+        required=True,
+        type=str,
+        help="Name for the service",
     )
     parser.add_argument(
-        "-tha", "--triton_http_address", default="0.0.0.0", type=str, help="HTTP address for the Triton server"
+        "-tmv",
+        "--triton_model_version",
+        default=1,
+        type=int,
+        help="Version for the service",
     )
     parser.add_argument(
-        "-tmr", "--triton_model_repository", default=None, type=str, help="Folder for the vLLM conversion"
+        "-trp",
+        "--triton_port",
+        default=8000,
+        type=int,
+        help="Port for the Triton server to listen for requests",
     )
-    parser.add_argument("-tps", "--tensor_parallelism_size", default=1, type=int, help="Tensor parallelism size")
+    parser.add_argument(
+        "-tha",
+        "--triton_http_address",
+        default="0.0.0.0",
+        type=str,
+        help="HTTP address for the Triton server",
+    )
+    parser.add_argument(
+        "-tmr",
+        "--triton_model_repository",
+        default=None,
+        type=str,
+        help="Folder for the vLLM conversion",
+    )
+    parser.add_argument(
+        "-tps",
+        "--tensor_parallelism_size",
+        default=1,
+        type=int,
+        help="Tensor parallelism size",
+    )
     parser.add_argument(
         "-dt",
         "--dtype",
@@ -65,15 +98,42 @@ def get_args(argv):
         type=str,
         help="dtype of the model on vLLM",
     )
-    parser.add_argument("-mml", "--max_model_len", default=512, type=int, help="Max input + ouptut length of the model")
-    parser.add_argument("-mbs", "--max_batch_size", default=8, type=int, help="Max batch size of the model")
     parser.add_argument(
-        "-lc", "--lora_ckpt", default=[], type=str, nargs="+", help="List of LoRA checkpoints in HF format"
+        "-mml",
+        "--max_model_len",
+        default=512,
+        type=int,
+        help="Max input + ouptut length of the model",
     )
     parser.add_argument(
-        "-es", "--enable_streaming", default=False, action="store_true", help="Enables streaming sentences."
+        "-mbs",
+        "--max_batch_size",
+        default=8,
+        type=int,
+        help="Max batch size of the model",
     )
-    parser.add_argument("-dm", "--debug_mode", default=False, action="store_true", help="Enable debug mode")
+    parser.add_argument(
+        "-lc",
+        "--lora_ckpt",
+        default=[],
+        type=str,
+        nargs="+",
+        help="List of LoRA checkpoints in HF format",
+    )
+    parser.add_argument(
+        "-es",
+        "--enable_streaming",
+        default=False,
+        action="store_true",
+        help="Enables streaming sentences.",
+    )
+    parser.add_argument(
+        "-dm",
+        "--debug_mode",
+        default=False,
+        action="store_true",
+        help="Enable debug mode",
+    )
     parser.add_argument(
         "-ws",
         "--weight_storage",
@@ -85,9 +145,18 @@ def get_args(argv):
         "for single-GPU runs.",
     )
     parser.add_argument(
-        "-gmu", "--gpu_memory_utilization", default=0.9, type=float, help="GPU memory utilization percentage for vLLM."
+        "-gmu",
+        "--gpu_memory_utilization",
+        default=0.9,
+        type=float,
+        help="GPU memory utilization percentage for vLLM.",
     )
-    parser.add_argument("-q", "--quantization", choices=["fp8"], help="Quantization method for vLLM.")
+    parser.add_argument(
+        "-q",
+        "--quantization",
+        choices=["fp8"],
+        help="Quantization method for vLLM.",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -158,7 +227,10 @@ def nemo_deploy(argv):
         nm.stop()
 
     except Exception as error:
-        LOGGER.error("An error has occurred while setting up or serving the model. Error message: " + str(error))
+        LOGGER.error(
+            "An error has occurred while setting up or serving the model. Error message: "
+            + str(error)
+        )
         return
 
     # Clean up the temporary directory

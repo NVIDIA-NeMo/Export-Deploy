@@ -21,7 +21,13 @@ import yaml
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
 from transformers import AutoConfig
-from vllm.config import ModelConfig, ModelImpl, PoolerConfig, _get_and_verify_dtype, _get_and_verify_max_len
+from vllm.config import (
+    ModelConfig,
+    ModelImpl,
+    PoolerConfig,
+    _get_and_verify_dtype,
+    _get_and_verify_max_len,
+)
 from vllm.transformers_utils.config import get_hf_text_config
 
 from nemo_export.tarutils import TarPath
@@ -108,10 +114,15 @@ class NemoModelConfig(ModelConfig):
             self.truncation_side = "right"
 
         self.encoder_config = self._get_encoder_config()
-        self.pooler_config = self._init_pooler_config(override_pooler_config)
+        if override_pooler_config is not None:
+            self.runner_type = "pooler"
+            self.override_pooler_config = override_pooler_config
+        self.pooler_config = self._init_pooler_config()
         self.enable_sleep_mode = enable_sleep_mode
 
-        from vllm.platforms import current_platform  # vLLM uses local import for current_platform
+        from vllm.platforms import (
+            current_platform,
+        )  # vLLM uses local import for current_platform
 
         if self.enable_sleep_mode and not current_platform.is_cuda():
             raise ValueError("Sleep mode is only supported on CUDA devices.")
@@ -122,20 +133,28 @@ class NemoModelConfig(ModelConfig):
 
         if is_nemo2_checkpoint(nemo_checkpoint):
             nemo_checkpoint: Path = Path(nemo_checkpoint)
-            tokenizer_config = OmegaConf.load(nemo_checkpoint / "context/model.yaml").tokenizer
+            tokenizer_config = OmegaConf.load(
+                nemo_checkpoint / "context/model.yaml"
+            ).tokenizer
             if ("additional_special_tokens" in tokenizer_config) and len(
                 tokenizer_config["additional_special_tokens"]
             ) == 0:
                 del tokenizer_config["additional_special_tokens"]
 
-            tokenizer_config = self._change_paths_to_absolute_paths(tokenizer_config, nemo_checkpoint)
+            tokenizer_config = self._change_paths_to_absolute_paths(
+                tokenizer_config, nemo_checkpoint
+            )
             with (nemo_checkpoint / "context/model.yaml").open("r") as config_file:
-                self.nemo_model_config: dict = yaml.load(config_file, Loader=yaml.SafeLoader)
+                self.nemo_model_config: dict = yaml.load(
+                    config_file, Loader=yaml.SafeLoader
+                )
             hf_args = self._load_hf_arguments(self.nemo_model_config["config"])
 
             tokenizer = instantiate(tokenizer_config)
             hf_args["vocab_size"] = tokenizer.original_vocab_size
-            self.model_converter.convert_config(self.nemo_model_config["config"], hf_args)
+            self.model_converter.convert_config(
+                self.nemo_model_config["config"], hf_args
+            )
             # In transformers ~= 4.52.0, the config for model_type="mixtral" loads with head_dim=None
             # which causes issues down the way in vLLM in MixtralAttention class. One possible fix is
             # to delete head_dim from the config if it is None.
@@ -145,7 +164,9 @@ class NemoModelConfig(ModelConfig):
         else:
             with TarPath(nemo_checkpoint) as archive:
                 with (archive / "model_config.yaml").open("r") as model_config_file:
-                    self.nemo_model_config = yaml.load(model_config_file, Loader=yaml.SafeLoader)
+                    self.nemo_model_config = yaml.load(
+                        model_config_file, Loader=yaml.SafeLoader
+                    )
                     hf_args = self._load_hf_arguments(self.nemo_model_config)
                     self.model_converter.convert_config(self.nemo_model_config, hf_args)
                 self.hf_config = AutoConfig.for_model(model_type, **hf_args)
@@ -174,7 +195,9 @@ class NemoModelConfig(ModelConfig):
         self._verify_cuda_graph()
 
     @staticmethod
-    def _change_paths_to_absolute_paths(tokenizer_config: Dict[Any, Any], nemo_checkpoint: Path) -> Dict[Any, Any]:
+    def _change_paths_to_absolute_paths(
+        tokenizer_config: Dict[Any, Any], nemo_checkpoint: Path
+    ) -> Dict[Any, Any]:
         """Creates absolute path to the local tokenizers. Used for NeMo 2.0.
 
         Args:
@@ -210,7 +233,10 @@ class NemoModelConfig(ModelConfig):
             "num_key_value_heads": "num_query_groups",
             # 'hidden_act': 'activation', ## <- vLLM has good defaults for the models, nemo values are wrong
             "num_local_experts": "num_moe_experts",
-            "max_position_embeddings": ["max_position_embeddings", "encoder_seq_length"],
+            "max_position_embeddings": [
+                "max_position_embeddings",
+                "encoder_seq_length",
+            ],
             "tie_word_embeddings": "share_embeddings_and_output_weights",
             "rms_norm_eps": "layernorm_epsilon",
             "attention_dropout": "attention_dropout",
@@ -236,7 +262,9 @@ class NemoModelConfig(ModelConfig):
     def try_get_generation_config(self, *args, **kwargs):
         """Prevent vLLM from trying to load a generation config."""
         nemo_path = Path(self.nemo_checkpoint)
-        generation_config_path = nemo_path / "context" / "artifacts" / "generation_config.json"
+        generation_config_path = (
+            nemo_path / "context" / "artifacts" / "generation_config.json"
+        )
         if generation_config_path.exists():
             with generation_config_path.open("r") as f:
                 return json.load(f)

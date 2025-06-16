@@ -11,11 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-#!/bin/bash
-set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
-
-CUDA_VISIBLE_DEVICES="" NEMO_NUMBA_MINVER=0.53 coverage run -a \
-    --data-file=/workspace/.coverage \
-    --source=/workspace/ \
-    -m pytest tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme" --cpu
+coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/test_export_onnx.py \
+    --hf_model_path /home/TestData/llm/models/llama-3.2-nv-embedqa-1b-v2 \
+    --quant_cfg int8_sq \
+    --calibration_dataset tests/functional_tests/data/calibration_dataset.json \
+    --calibration_batch_size 2 \
+    --calibration_dataset_size 6

@@ -39,12 +39,18 @@ def test_hf_generate():
     )
 
     output = hf_deployable.generate(
-        text_inputs=["What is the color of a banana? ", "Tell me a joke."], max_length=32, do_sample=True
+        text_inputs=["What is the color of a banana? ", "Tell me a joke."],
+        max_length=32,
+        do_sample=True,
     )
 
     assert len(output) == 2, "Output should have to be a list."
-    assert len(output[0]) > 0, "First list in the output should have more than 0 elements."
-    assert len(output[1]) > 0, "Second list in the output should have more than 0 elements."
+    assert len(output[0]) > 0, (
+        "First list in the output should have more than 0 elements."
+    )
+    assert len(output[1]) > 0, (
+        "Second list in the output should have more than 0 elements."
+    )
 
     # Test output_logits and output_scores
     output = hf_deployable.generate(
@@ -114,7 +120,17 @@ def _hf_generate_ranks():
 
         dist.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
         broadcast_list(prompts, src=0)
-        broadcast_list(data=[temperature, top_k, top_p, num_tokens_to_generate, output_logits, output_scores], src=0)
+        broadcast_list(
+            data=[
+                temperature,
+                top_k,
+                top_p,
+                num_tokens_to_generate,
+                output_logits,
+                output_scores,
+            ],
+            src=0,
+        )
 
         output = hf_deployable.generate(
             text_inputs=prompts,
@@ -134,5 +150,9 @@ def _hf_generate_ranks():
 
     if dist.get_rank() == 0:
         assert len(output) == 2, "Output should have to be a lists."
-        assert len(output[0]) > 0, "First list in the output should have more than 0 elements."
-        assert len(output[1]) > 0, "Second list in the output should have more than 0 elements."
+        assert len(output[0]) > 0, (
+            "First list in the output should have more than 0 elements."
+        )
+        assert len(output[1]) > 0, (
+            "Second list in the output should have more than 0 elements."
+        )

@@ -83,7 +83,12 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=Non
 
             if nq is not None:
                 trtllm_deployed_output = nq.query_llm(
-                    prompts=[prompt], max_output_len=1, top_k=1, top_p=0, temperature=0.1, task_id=task_ids
+                    prompts=[prompt],
+                    max_output_len=1,
+                    top_k=1,
+                    top_p=0,
+                    temperature=0.1,
+                    task_id=task_ids,
                 )
                 trtllm_deployed_output = trtllm_deployed_output[0][0].strip().lower()
 
@@ -104,7 +109,9 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=Non
     trtllm_accuracy_relaxed = trtllm_correct_relaxed / len(all_expected_outputs)
 
     trtllm_deployed_accuracy = trtllm_deployed_correct / len(all_expected_outputs)
-    trtllm_deployed_accuracy_relaxed = trtllm_deployed_correct_relaxed / len(all_expected_outputs)
+    trtllm_deployed_accuracy_relaxed = trtllm_deployed_correct_relaxed / len(
+        all_expected_outputs
+    )
 
     evaluation_time = eval_end - eval_start
 
@@ -118,15 +125,27 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=Non
 
 
 def run_in_framework_inference(
-    model_name, prompt, checkpoint_path, n_gpu=1, max_batch_size=None, max_input_len=None, max_output_len=None
+    model_name,
+    prompt,
+    checkpoint_path,
+    n_gpu=1,
+    max_batch_size=None,
+    max_input_len=None,
+    max_output_len=None,
 ):
     model = MegatronLLMDeployable(checkpoint_path, n_gpu)
-    nm = DeployPyTriton(model=model, triton_model_name=model_name, http_port=8000)
+    nm = DeployPyTriton(
+        model=model,
+        triton_model_name=model_name,
+        http_port=8000,
+    )
     nm.deploy()
     nm.run()
     nq = NemoQueryLLMPyTorch(url="localhost:8000", model_name=model_name)
 
-    output_deployed = nq.query_llm(prompts=prompt)
+    output_deployed = nq.query_llm(
+        prompts=prompt,
+    )
 
     print("Output: ", output_deployed)
 
@@ -183,7 +202,11 @@ def run_trt_llm_inference(
             )
             print("")
 
-            print("Path: {0} and model: {1} with {2} gpus will be tested".format(checkpoint_path, model_name, n_gpu))
+            print(
+                "Path: {0} and model: {1} with {2} gpus will be tested".format(
+                    checkpoint_path, model_name, n_gpu
+                )
+            )
 
         prompt_embeddings_checkpoint_path = None
         task_ids = None
@@ -217,7 +240,9 @@ def run_trt_llm_inference(
                 print("---- LoRA could not be enabled and skipping the test.")
                 return None, None, None, None, None
 
-        trt_llm_exporter = TensorRTLLM(trt_llm_model_dir, lora_ckpt_list, load_model=False)
+        trt_llm_exporter = TensorRTLLM(
+            trt_llm_model_dir, lora_ckpt_list, load_model=False
+        )
 
         trt_llm_exporter.export(
             nemo_checkpoint_path=checkpoint_path,
@@ -237,7 +262,8 @@ def run_trt_llm_inference(
 
         if ptuning:
             trt_llm_exporter.add_prompt_table(
-                task_name="0", prompt_embeddings_checkpoint_path=prompt_embeddings_checkpoint_path
+                task_name="0",
+                prompt_embeddings_checkpoint_path=prompt_embeddings_checkpoint_path,
             )
 
         output = trt_llm_exporter.forward(
@@ -253,19 +279,33 @@ def run_trt_llm_inference(
         )
 
         if not use_lora_plugin and not ptuning:
-            test_cpp_runtime(engine_path=trt_llm_model_dir, prompt=prompt, max_output_len=max_output_len, debug=True)
+            test_cpp_runtime(
+                engine_path=trt_llm_model_dir,
+                prompt=prompt,
+                max_output_len=max_output_len,
+                debug=True,
+            )
 
         nq = None
         nm = None
         output_deployed = ""
         if test_deployment:
-            nm = DeployPyTriton(model=trt_llm_exporter, triton_model_name=model_name, http_port=8000)
+            nm = DeployPyTriton(
+                model=trt_llm_exporter,
+                triton_model_name=model_name,
+                http_port=8000,
+            )
             nm.deploy()
             nm.run()
             nq = NemoQueryLLM(url="localhost:8000", model_name=model_name)
 
             output_deployed = nq.query_llm(
-                prompts=prompt, max_output_len=max_output_len, top_k=1, top_p=0.0, temperature=1.0, lora_uids=lora_uids
+                prompts=prompt,
+                max_output_len=max_output_len,
+                top_k=1,
+                top_p=0.0,
+                temperature=1.0,
+                lora_uids=lora_uids,
             )
 
         if debug:
@@ -280,7 +320,9 @@ def run_trt_llm_inference(
 
         if run_accuracy:
             print("Start model accuracy testing ...")
-            result = get_accuracy_with_lambada(trt_llm_exporter, nq, task_ids, lora_uids, test_data_path)
+            result = get_accuracy_with_lambada(
+                trt_llm_exporter, nq, task_ids, lora_uids, test_data_path
+            )
             if test_deployment:
                 nm.stop()
 
@@ -299,10 +341,19 @@ def run_trt_llm_inference(
         raise Exception("Checkpoint {0} could not be found.".format(checkpoint_path))
 
 
-def test_cpp_runtime(engine_path, prompt, max_output_len, debug):
+def test_cpp_runtime(
+    engine_path,
+    prompt,
+    max_output_len,
+    debug,
+):
     trt_llm_exporter = TensorRTLLM(engine_path, load_model=True)
     output = trt_llm_exporter.forward(
-        input_texts=prompt, max_output_len=max_output_len, top_k=1, top_p=0.0, temperature=1.0
+        input_texts=prompt,
+        max_output_len=max_output_len,
+        top_k=1,
+        top_p=0.0,
+        temperature=1.0,
     )
 
     if debug:
@@ -316,31 +367,123 @@ def get_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Deploy nemo models to Triton and benchmark the models",
     )
-    parser.add_argument("--model_name", type=str, required=True)
-    parser.add_argument("--model_type", type=str, required=False)
-    parser.add_argument("--min_gpus", type=int, default=1)
-    parser.add_argument("--max_gpus", type=int)
-    parser.add_argument("--checkpoint_dir", type=str, default="/tmp/nemo_checkpoint/", required=False)
-    parser.add_argument("--trt_llm_model_dir", type=str)
-    parser.add_argument("--max_batch_size", type=int, default=8)
-    parser.add_argument("--max_input_len", type=int, default=256)
-    parser.add_argument("--max_output_len", type=int, default=128)
-    parser.add_argument("--max_num_tokens", type=int)
-    parser.add_argument("--p_tuning_checkpoint", type=str)
-    parser.add_argument("--ptuning", default=False, action="store_true")
-    parser.add_argument("--lora_checkpoint", type=str)
-    parser.add_argument("--lora", default=False, action="store_true")
-    parser.add_argument("--tp_size", type=int, default=1)
-    parser.add_argument("--pp_size", type=int, default=1)
-    parser.add_argument("--top_k", type=int, default=1)
-    parser.add_argument("--top_p", type=float, default=0.0)
-    parser.add_argument("--temperature", type=float, default=1.0)
-    parser.add_argument("--run_accuracy", type=str, default="False")
+    parser.add_argument(
+        "--model_name",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "--model_type",
+        type=str,
+        required=False,
+    )
+    parser.add_argument(
+        "--min_gpus",
+        type=int,
+        default=1,
+    )
+    parser.add_argument(
+        "--max_gpus",
+        type=int,
+    )
+    parser.add_argument(
+        "--checkpoint_dir",
+        type=str,
+        default="/tmp/nemo_checkpoint/",
+        required=False,
+    )
+    parser.add_argument(
+        "--trt_llm_model_dir",
+        type=str,
+    )
+    parser.add_argument(
+        "--max_batch_size",
+        type=int,
+        default=8,
+    )
+    parser.add_argument(
+        "--max_input_len",
+        type=int,
+        default=256,
+    )
+    parser.add_argument(
+        "--max_output_len",
+        type=int,
+        default=128,
+    )
+    parser.add_argument(
+        "--max_num_tokens",
+        type=int,
+    )
+    parser.add_argument(
+        "--p_tuning_checkpoint",
+        type=str,
+    )
+    parser.add_argument(
+        "--ptuning",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--lora_checkpoint",
+        type=str,
+    )
+    parser.add_argument(
+        "--lora",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--tp_size",
+        type=int,
+        default=1,
+    )
+    parser.add_argument(
+        "--pp_size",
+        type=int,
+        default=1,
+    )
+    parser.add_argument(
+        "--top_k",
+        type=int,
+        default=1,
+    )
+    parser.add_argument(
+        "--top_p",
+        type=float,
+        default=0.0,
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
+        "--run_accuracy",
+        type=str,
+        default="False",
+    )
     parser.add_argument("--streaming", default=False, action="store_true")
-    parser.add_argument("--test_deployment", type=str, default="False")
-    parser.add_argument("--debug", default=False, action="store_true")
-    parser.add_argument("--ci_upload_test_results_to_cloud", default=False, action="store_true")
-    parser.add_argument("--test_data_path", type=str, default=None)
+    parser.add_argument(
+        "--test_deployment",
+        type=str,
+        default="False",
+    )
+    parser.add_argument(
+        "--debug",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--ci_upload_test_results_to_cloud",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--test_data_path",
+        type=str,
+        default=None,
+    )
     parser.add_argument(
         "-b",
         "--backend",
@@ -350,7 +493,11 @@ def get_args():
         choices=["TensorRT-LLM", "vLLM", "In-Framework"],
         help="Different options to deploy nemo model.",
     )
-    parser.add_argument("--save_engine", type=str, default="False")
+    parser.add_argument(
+        "--save_engine",
+        type=str,
+        default="False",
+    )
 
     return parser.parse_args()
 

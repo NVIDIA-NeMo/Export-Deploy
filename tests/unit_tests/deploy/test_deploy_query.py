@@ -28,8 +28,18 @@ class MockModel(ITritonDeployable):
         inputs = (
             Tensor(name="prompts", shape=(-1,), dtype=bytes),
             Tensor(name="max_output_len", shape=(-1,), dtype=np.int_, optional=True),
-            Tensor(name="output_context_logits", shape=(-1,), dtype=np.bool_, optional=False),
-            Tensor(name="output_generation_logits", shape=(-1,), dtype=np.bool_, optional=False),
+            Tensor(
+                name="output_context_logits",
+                shape=(-1,),
+                dtype=np.bool_,
+                optional=False,
+            ),
+            Tensor(
+                name="output_generation_logits",
+                shape=(-1,),
+                dtype=np.bool_,
+                optional=False,
+            ),
         )
         return inputs
 
@@ -67,7 +77,10 @@ def test_nemo_deploy_query():
     nm.run()
 
     nq = NemoQueryLLM(url="localhost:9002", model_name=model_name)
-    output_deployed = nq.query_llm(prompts=["Hey, how is it going?"], max_output_len=20)
+    output_deployed = nq.query_llm(
+        prompts=["Hey, how is it going?"],
+        max_output_len=20,
+    )
     nm.stop()
 
     assert output_deployed is not None, "Output cannot be none."
