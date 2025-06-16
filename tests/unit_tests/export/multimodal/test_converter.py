@@ -41,9 +41,7 @@ class TestMultimodalConverter:
 
     def test_split_qkv_weight(self, model_config):
         # Create a test QKV weight tensor
-        batch_size = (
-            model_config.num_attention_heads + 2 * model_config.num_query_groups
-        )
+        batch_size = model_config.num_attention_heads + 2 * model_config.num_query_groups
         qkv_weight = torch.randn(
             batch_size,
             model_config.hidden_size // model_config.num_attention_heads,

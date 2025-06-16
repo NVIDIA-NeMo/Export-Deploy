@@ -26,9 +26,7 @@ from nemo_deploy.multimodal.query_multimodal import NemoQueryMultimodal
 class TestNemoQueryMultimodal:
     @pytest.fixture
     def query_multimodal(self):
-        return NemoQueryMultimodal(
-            url="localhost", model_name="test_model", model_type="neva"
-        )
+        return NemoQueryMultimodal(url="localhost", model_name="test_model", model_type="neva")
 
     @pytest.fixture
     def mock_image(self):
@@ -53,9 +51,7 @@ class TestNemoQueryMultimodal:
             return tmp.name
 
     def test_init(self):
-        nq = NemoQueryMultimodal(
-            url="localhost", model_name="test_model", model_type="neva"
-        )
+        nq = NemoQueryMultimodal(url="localhost", model_name="test_model", model_type="neva")
         assert nq.url == "localhost"
         assert nq.model_name == "test_model"
         assert nq.model_type == "neva"
@@ -103,9 +99,7 @@ class TestNemoQueryMultimodal:
     def test_query(self, mock_model_client, query_multimodal, mock_image):
         # Mock the ModelClient context manager
         mock_client_instance = MagicMock()
-        mock_client_instance.infer_batch.return_value = {
-            "outputs": np.array(["test response"])
-        }
+        mock_client_instance.infer_batch.return_value = {"outputs": np.array(["test response"])}
         mock_client_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
         mock_model_client.return_value.__enter__.return_value = mock_client_instance
 
@@ -124,14 +118,10 @@ class TestNemoQueryMultimodal:
 
     @patch("nemo_deploy.multimodal.query_multimodal.VideoReader")
     def test_setup_media_video(self, mock_video_reader, mock_video):
-        nq = NemoQueryMultimodal(
-            url="localhost", model_name="test_model", model_type="video-neva"
-        )
+        nq = NemoQueryMultimodal(url="localhost", model_name="test_model", model_type="video-neva")
 
         # Mock VideoReader
-        mock_frames = [
-            MagicMock(asnumpy=lambda: np.zeros((100, 100, 3))) for _ in range(10)
-        ]
+        mock_frames = [MagicMock(asnumpy=lambda: np.zeros((100, 100, 3))) for _ in range(10)]
         mock_video_reader.return_value = mock_frames
 
         result = nq.setup_media(mock_video)

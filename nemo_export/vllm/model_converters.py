@@ -74,9 +74,7 @@ class LlamaConverter(ModelConverter):
             yield ("lm_head.weight", state_dict["model.output_layer.weight"])
 
         for layer in range(int(num_layers)):
-            qkv_weights = state_dict[
-                "model.decoder.layers.self_attention.linear_qkv.weight"
-            ][layer]
+            qkv_weights = state_dict["model.decoder.layers.self_attention.linear_qkv.weight"][layer]
             qkv_weights = qkv_weights.reshape([qkv_total_dim, head_size, hidden_size])
 
             q_slice = torch.cat(
@@ -88,12 +86,8 @@ class LlamaConverter(ModelConverter):
                     for i in range(num_query_groups)
                 ]
             )
-            k_slice = torch.arange(
-                heads_per_group, qkv_total_dim, (heads_per_group + 2)
-            )
-            v_slice = torch.arange(
-                heads_per_group + 1, qkv_total_dim, (heads_per_group + 2)
-            )
+            k_slice = torch.arange(heads_per_group, qkv_total_dim, (heads_per_group + 2))
+            v_slice = torch.arange(heads_per_group + 1, qkv_total_dim, (heads_per_group + 2))
 
             for name, slice in [
                 ("q_proj", q_slice),
@@ -103,9 +97,7 @@ class LlamaConverter(ModelConverter):
                 weight_name = f"model.layers.{layer}.self_attn.{name}.weight"
                 yield (weight_name, qkv_weights[slice].reshape(-1, hidden_size))
 
-            linear_proj_weight = state_dict[
-                "model.decoder.layers.self_attention.linear_proj.weight"
-            ][layer]
+            linear_proj_weight = state_dict["model.decoder.layers.self_attention.linear_proj.weight"][layer]
             yield (f"model.layers.{layer}.self_attn.o_proj.weight", linear_proj_weight)
 
             gate_proj_weight, up_proj_weight = torch.chunk(
@@ -116,22 +108,18 @@ class LlamaConverter(ModelConverter):
             yield (f"model.layers.{layer}.mlp.gate_proj.weight", gate_proj_weight)
             yield (f"model.layers.{layer}.mlp.up_proj.weight", up_proj_weight)
 
-            mlp_up_weight = state_dict["model.decoder.layers.mlp.linear_fc2.weight"][
-                layer
-            ]
+            mlp_up_weight = state_dict["model.decoder.layers.mlp.linear_fc2.weight"][layer]
             yield (f"model.layers.{layer}.mlp.down_proj.weight", mlp_up_weight)
 
-            input_layernorm_weight = state_dict[
-                "model.decoder.layers.self_attention.linear_qkv.layer_norm_weight"
-            ][layer]
+            input_layernorm_weight = state_dict["model.decoder.layers.self_attention.linear_qkv.layer_norm_weight"][
+                layer
+            ]
             yield (
                 f"model.layers.{layer}.input_layernorm.weight",
                 input_layernorm_weight,
             )
 
-            post_attn_layernorm_weight = state_dict[
-                "model.decoder.layers.mlp.linear_fc1.layer_norm_weight"
-            ][layer]
+            post_attn_layernorm_weight = state_dict["model.decoder.layers.mlp.linear_fc1.layer_norm_weight"][layer]
             yield (
                 f"model.layers.{layer}.post_attention_layernorm.weight",
                 post_attn_layernorm_weight,
@@ -165,9 +153,7 @@ class MixtralConverter(ModelConverter):
         yield ("lm_head.weight", state_dict["model.output_layer.weight"])
 
         for layer in range(int(num_layers)):
-            qkv_weights = state_dict[
-                "model.decoder.layers.self_attention.linear_qkv.weight"
-            ][layer]
+            qkv_weights = state_dict["model.decoder.layers.self_attention.linear_qkv.weight"][layer]
             qkv_weights = qkv_weights.reshape([qkv_total_dim, head_size, hidden_size])
 
             q_slice = torch.cat(
@@ -179,12 +165,8 @@ class MixtralConverter(ModelConverter):
                     for i in range(num_query_groups)
                 ]
             )
-            k_slice = torch.arange(
-                heads_per_group, qkv_total_dim, (heads_per_group + 2)
-            )
-            v_slice = torch.arange(
-                heads_per_group + 1, qkv_total_dim, (heads_per_group + 2)
-            )
+            k_slice = torch.arange(heads_per_group, qkv_total_dim, (heads_per_group + 2))
+            v_slice = torch.arange(heads_per_group + 1, qkv_total_dim, (heads_per_group + 2))
 
             for name, slice in [
                 ("q_proj", q_slice),
@@ -194,26 +176,20 @@ class MixtralConverter(ModelConverter):
                 weight_name = f"model.layers.{layer}.self_attn.{name}.weight"
                 yield (weight_name, qkv_weights[slice].reshape(-1, hidden_size))
 
-            linear_proj_weight = state_dict[
-                "model.decoder.layers.self_attention.linear_proj.weight"
-            ][layer]
+            linear_proj_weight = state_dict["model.decoder.layers.self_attention.linear_proj.weight"][layer]
             yield (f"model.layers.{layer}.self_attn.o_proj.weight", linear_proj_weight)
 
-            mlp_router_weight = state_dict["model.decoder.layers.mlp.router.weight"][
-                layer
-            ]
+            mlp_router_weight = state_dict["model.decoder.layers.mlp.router.weight"][layer]
             yield (
                 f"model.layers.{layer}.block_sparse_moe.gate.weight",
                 mlp_router_weight,
             )
 
             for expert in range(num_moe_experts):
-                linear_fc1_weight = state_dict[
-                    "model.decoder.layers.mlp.experts.experts.linear_fc1.weight"
-                ][layer][expert]
-                gate_proj_weight, up_proj_weight = torch.chunk(
-                    linear_fc1_weight, 2, dim=0
-                )
+                linear_fc1_weight = state_dict["model.decoder.layers.mlp.experts.experts.linear_fc1.weight"][layer][
+                    expert
+                ]
+                gate_proj_weight, up_proj_weight = torch.chunk(linear_fc1_weight, 2, dim=0)
                 yield (
                     f"model.layers.{layer}.block_sparse_moe.experts.{expert}.w1.weight",
                     gate_proj_weight,
@@ -223,25 +199,23 @@ class MixtralConverter(ModelConverter):
                     up_proj_weight,
                 )
 
-                linear_fc2_weight = state_dict[
-                    "model.decoder.layers.mlp.experts.experts.linear_fc2.weight"
-                ][layer][expert]
+                linear_fc2_weight = state_dict["model.decoder.layers.mlp.experts.experts.linear_fc2.weight"][layer][
+                    expert
+                ]
                 yield (
                     f"model.layers.{layer}.block_sparse_moe.experts.{expert}.w2.weight",
                     linear_fc2_weight,
                 )
 
-            input_layernorm_weight = state_dict[
-                "model.decoder.layers.self_attention.linear_qkv.layer_norm_weight"
-            ][layer]
+            input_layernorm_weight = state_dict["model.decoder.layers.self_attention.linear_qkv.layer_norm_weight"][
+                layer
+            ]
             yield (
                 f"model.layers.{layer}.input_layernorm.weight",
                 input_layernorm_weight,
             )
 
-            post_attn_layernorm_weight = state_dict[
-                "model.decoder.layers.pre_mlp_layernorm.weight"
-            ][layer]
+            post_attn_layernorm_weight = state_dict["model.decoder.layers.pre_mlp_layernorm.weight"][layer]
             yield (
                 f"model.layers.{layer}.post_attention_layernorm.weight",
                 post_attn_layernorm_weight,
@@ -263,9 +237,7 @@ class GemmaConverter(ModelConverter):
         head_num = nemo_model_config["num_attention_heads"]
         head_size = nemo_model_config["kv_channels"]
         hidden_size = nemo_model_config["hidden_size"]
-        zero_centered_gamma = nemo_model_config.get(
-            "layernorm_zero_centered_gamma", False
-        )
+        zero_centered_gamma = nemo_model_config.get("layernorm_zero_centered_gamma", False)
         heads_per_group = head_num // num_query_groups
 
         yield (
@@ -279,9 +251,9 @@ class GemmaConverter(ModelConverter):
         yield ("model.norm.weight", final_layernorm_weight)
 
         for layer in range(int(num_layers)):
-            input_layernorm_weight = state_dict[
-                "model.decoder.layers.self_attention.linear_qkv.layer_norm_weight"
-            ][layer]
+            input_layernorm_weight = state_dict["model.decoder.layers.self_attention.linear_qkv.layer_norm_weight"][
+                layer
+            ]
             if not zero_centered_gamma:
                 input_layernorm_weight -= 1.0
             yield (
@@ -289,9 +261,7 @@ class GemmaConverter(ModelConverter):
                 input_layernorm_weight,
             )
 
-            post_attention_layernorm_weight = state_dict[
-                "model.decoder.layers.mlp.linear_fc1.layer_norm_weight"
-            ][layer]
+            post_attention_layernorm_weight = state_dict["model.decoder.layers.mlp.linear_fc1.layer_norm_weight"][layer]
             if not zero_centered_gamma:
                 post_attention_layernorm_weight -= 1.0
             yield (
@@ -299,9 +269,7 @@ class GemmaConverter(ModelConverter):
                 post_attention_layernorm_weight,
             )
 
-            gate_up_combined_weight = state_dict[
-                "model.decoder.layers.mlp.linear_fc1.weight"
-            ][layer]
+            gate_up_combined_weight = state_dict["model.decoder.layers.mlp.linear_fc1.weight"][layer]
             gate_size = gate_up_combined_weight.shape[0] // 2
             yield (
                 f"model.layers.{layer}.mlp.gate_proj.weight",
@@ -312,42 +280,28 @@ class GemmaConverter(ModelConverter):
                 gate_up_combined_weight[gate_size:, :],
             )
 
-            down_proj_weight = state_dict["model.decoder.layers.mlp.linear_fc2.weight"][
-                layer
-            ]
+            down_proj_weight = state_dict["model.decoder.layers.mlp.linear_fc2.weight"][layer]
             yield (f"model.layers.{layer}.mlp.down_proj.weight", down_proj_weight)
 
-            self_attn_o_proj_weight = state_dict[
-                "model.decoder.layers.self_attention.linear_proj.weight"
-            ][layer]
+            self_attn_o_proj_weight = state_dict["model.decoder.layers.self_attention.linear_proj.weight"][layer]
             yield (
                 f"model.layers.{layer}.self_attn.o_proj.weight",
                 self_attn_o_proj_weight,
             )
 
-            qkv_weight = state_dict[
-                "model.decoder.layers.self_attention.linear_qkv.weight"
-            ][layer]
+            qkv_weight = state_dict["model.decoder.layers.self_attention.linear_qkv.weight"][layer]
             qkv_intermediate_size = head_num + 2 * num_query_groups
-            qkv_weight = qkv_weight.reshape(
-                qkv_intermediate_size, head_size, hidden_size
-            )
+            qkv_weight = qkv_weight.reshape(qkv_intermediate_size, head_size, hidden_size)
 
-            q_weight = torch.empty(
-                (head_num, head_size, hidden_size), dtype=qkv_weight.dtype
-            )
-            k_weight = torch.empty(
-                (num_query_groups, head_size, hidden_size), dtype=qkv_weight.dtype
-            )
-            v_weight = torch.empty(
-                (num_query_groups, head_size, hidden_size), dtype=qkv_weight.dtype
-            )
+            q_weight = torch.empty((head_num, head_size, hidden_size), dtype=qkv_weight.dtype)
+            k_weight = torch.empty((num_query_groups, head_size, hidden_size), dtype=qkv_weight.dtype)
+            v_weight = torch.empty((num_query_groups, head_size, hidden_size), dtype=qkv_weight.dtype)
 
             ptr = 0
             for i in range(num_query_groups):
-                q_weight[i * heads_per_group : (i + 1) * heads_per_group, :, :] = (
-                    qkv_weight[ptr : ptr + heads_per_group, ::]
-                )
+                q_weight[i * heads_per_group : (i + 1) * heads_per_group, :, :] = qkv_weight[
+                    ptr : ptr + heads_per_group, ::
+                ]
                 ptr += heads_per_group
                 k_weight[i : i + 1, :, :] = qkv_weight[ptr : ptr + 1, :, :]
                 ptr += 1
@@ -413,14 +367,10 @@ class Starcoder2Converter(ModelConverter):
 
         for layer in range(int(num_layers)):
             # q,k,v
-            qkv_weights = state_dict[
-                "model.decoder.layers.self_attention.linear_qkv.weight"
-            ][layer]
+            qkv_weights = state_dict["model.decoder.layers.self_attention.linear_qkv.weight"][layer]
             qkv_weights = qkv_weights.reshape([qkv_total_dim, head_size, hidden_size])
             if has_bias:
-                qkv_bias = state_dict[
-                    "model.decoder.layers.self_attention.linear_qkv.bias"
-                ][layer]
+                qkv_bias = state_dict["model.decoder.layers.self_attention.linear_qkv.bias"][layer]
                 qkv_bias = qkv_bias.reshape([qkv_total_dim, head_size])
 
             q_slice = torch.cat(
@@ -432,12 +382,8 @@ class Starcoder2Converter(ModelConverter):
                     for i in range(num_query_groups)
                 ]
             )
-            k_slice = torch.arange(
-                heads_per_group, qkv_total_dim, (heads_per_group + 2)
-            )
-            v_slice = torch.arange(
-                heads_per_group + 1, qkv_total_dim, (heads_per_group + 2)
-            )
+            k_slice = torch.arange(heads_per_group, qkv_total_dim, (heads_per_group + 2))
+            v_slice = torch.arange(heads_per_group + 1, qkv_total_dim, (heads_per_group + 2))
 
             for name, slice in [
                 ("q_proj", q_slice),
@@ -459,16 +405,12 @@ class Starcoder2Converter(ModelConverter):
             # Attention dense
             yield (
                 f"model.layers.{layer}.self_attn.o_proj.weight",
-                state_dict["model.decoder.layers.self_attention.linear_proj.weight"][
-                    layer
-                ],
+                state_dict["model.decoder.layers.self_attention.linear_proj.weight"][layer],
             )
             if has_bias:
                 yield (
                     f"model.layers.{layer}.self_attn.o_proj.bias",
-                    state_dict["model.decoder.layers.self_attention.linear_proj.bias"][
-                        layer
-                    ],
+                    state_dict["model.decoder.layers.self_attention.linear_proj.bias"][layer],
                 )
 
             # MLP FC1
@@ -496,31 +438,23 @@ class Starcoder2Converter(ModelConverter):
             # Input LayerNorm
             yield (
                 f"model.layers.{layer}.input_layernorm.weight",
-                state_dict[
-                    "model.decoder.layers.self_attention.linear_qkv.layer_norm_weight"
-                ][layer],
+                state_dict["model.decoder.layers.self_attention.linear_qkv.layer_norm_weight"][layer],
             )
             if has_bias:
                 yield (
                     f"model.layers.{layer}.input_layernorm.bias",
-                    state_dict[
-                        "model.decoder.layers.self_attention.linear_qkv.layer_norm_bias"
-                    ][layer],
+                    state_dict["model.decoder.layers.self_attention.linear_qkv.layer_norm_bias"][layer],
                 )
 
             # Post-attention LayerNorm
             yield (
                 f"model.layers.{layer}.post_attention_layernorm.weight",
-                state_dict["model.decoder.layers.mlp.linear_fc1.layer_norm_weight"][
-                    layer
-                ],
+                state_dict["model.decoder.layers.mlp.linear_fc1.layer_norm_weight"][layer],
             )
             if has_bias:
                 yield (
                     f"model.layers.{layer}.post_attention_layernorm.bias",
-                    state_dict["model.decoder.layers.mlp.linear_fc1.layer_norm_bias"][
-                        layer
-                    ],
+                    state_dict["model.decoder.layers.mlp.linear_fc1.layer_norm_bias"][layer],
                 )
 
 

@@ -54,9 +54,7 @@ def _mock_import(module: str):
     try:
         importlib.import_module(module)
     except ModuleNotFoundError:
-        LOGGER.warning(
-            f"Module '{module}' is not available, mocking with a dummy module."
-        )
+        LOGGER.warning(f"Module '{module}' is not available, mocking with a dummy module.")
         sys_modules_backup = sys.modules.copy()
 
         dummy_module = DummyModule("dummy")

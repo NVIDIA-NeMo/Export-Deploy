@@ -14,11 +14,11 @@ import os
 import numpy as np
 import requests
 from fastapi import FastAPI, HTTPException
+from nemo.utils import logging
 from pydantic import BaseModel, model_validator
 from pydantic_settings import BaseSettings
 
 from nemo_deploy.nlp import NemoQueryLLMPyTorch
-from nemo.utils import logging
 
 
 class TritonSettings(BaseSettings):
@@ -75,9 +75,7 @@ class BaseRequest(BaseModel):
     def set_greedy_params(self):
         """Validate parameters for greedy decoding."""
         if self.temperature == 0 and self.top_p == 0:
-            logging.warning(
-                "Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling."
-            )
+            logging.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
             self.top_k = 1
         return self
 
@@ -122,12 +120,14 @@ def health_check():
 @app.get("/v1/triton_health")
 async def check_triton_health():
     """This method exposes endpoint "/triton_health".
-    
+
     This can be used to verify if Triton server is accessible while running the REST or FastAPI application.
     Verify by running: curl http://service_http_address:service_port/v1/triton_health and the returned status should
     inform if the server is accessible.
     """
-    triton_url = f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
+    triton_url = (
+        f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
+    )
     logging.info(f"Attempting to connect to Triton server at: {triton_url}")
     try:
         response = requests.get(triton_url, timeout=5)
@@ -136,9 +136,7 @@ async def check_triton_health():
         else:
             raise HTTPException(status_code=503, detail="Triton server is not ready")
     except requests.RequestException as e:
-        raise HTTPException(
-            status_code=503, detail=f"Cannot reach Triton server: {str(e)}"
-        )
+        raise HTTPException(status_code=503, detail=f"Cannot reach Triton server: {str(e)}")
 
 
 def convert_numpy(obj):
@@ -198,7 +196,7 @@ async def query_llm_async(
     echo,
 ):
     """Sends requests to `NemoQueryLLMPyTorch.query_llm` in a non-blocking way.
-    
+
     This allows the server to process concurrent requests. This way enables batching of requests
     in the underlying Triton server.
     """
@@ -249,21 +247,17 @@ async def completions_v1(request: CompletionRequest):
     )
 
     output_serializable = convert_numpy(output)
-    output_serializable["choices"][0]["text"] = output_serializable["choices"][0][
-        "text"
-    ][0][0]
+    output_serializable["choices"][0]["text"] = output_serializable["choices"][0]["text"][0][0]
     if request.logprobs is not None and request.logprobs > 0:
-        output_serializable["choices"][0]["logprobs"]["token_logprobs"] = (
-            output_serializable["choices"][0]["logprobs"]["token_logprobs"][0]
-        )
-        output_serializable["choices"][0]["logprobs"]["top_logprobs"] = (
-            output_serializable["choices"][0]["logprobs"]["top_logprobs"][0]
-        )
+        output_serializable["choices"][0]["logprobs"]["token_logprobs"] = output_serializable["choices"][0]["logprobs"][
+            "token_logprobs"
+        ][0]
+        output_serializable["choices"][0]["logprobs"]["top_logprobs"] = output_serializable["choices"][0]["logprobs"][
+            "top_logprobs"
+        ][0]
         if request.echo:
             # output format requires empty logprobs for the 1st token
-            output_serializable["choices"][0]["logprobs"]["token_logprobs"].insert(
-                0, None
-            )
+            output_serializable["choices"][0]["logprobs"]["token_logprobs"].insert(0, None)
     else:
         output_serializable["choices"][0]["logprobs"] = None
     logging.info(f"Output: {output_serializable}")
@@ -311,9 +305,9 @@ async def chat_completions_v1(request: ChatCompletionRequest):
     del output["choices"][0]["text"]
 
     output_serializable = convert_numpy(output)
-    output_serializable["choices"][0]["message"]["content"] = output_serializable[
-        "choices"
-    ][0]["message"]["content"][0][0]
+    output_serializable["choices"][0]["message"]["content"] = output_serializable["choices"][0]["message"]["content"][
+        0
+    ][0]
 
     logging.info(f"Output: {output_serializable}")
     return output_serializable

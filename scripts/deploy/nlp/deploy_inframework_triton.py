@@ -26,9 +26,7 @@ megatron_llm_supported = True
 try:
     from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 except Exception as e:
-    LOGGER.warning(
-        f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}"
-    )
+    LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False
 
 
@@ -191,25 +189,17 @@ def nemo_deploy(argv):
                 LOGGER.info("Triton deploy function will be called.")
                 nm.deploy()
             except Exception as error:
-                LOGGER.error(
-                    "Error message has occurred during deploy function. Error message: "
-                    + str(error)
-                )
+                LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
                 return
 
             try:
                 LOGGER.info("Model serving on Triton will be started.")
                 nm.serve()
             except Exception as error:
-                LOGGER.error(
-                    "Error message has occurred during deploy function. Error message: "
-                    + str(error)
-                )
+                LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
                 return
 
-            torch.distributed.broadcast(
-                torch.tensor([1], dtype=torch.long, device="cuda"), src=0
-            )
+            torch.distributed.broadcast(torch.tensor([1], dtype=torch.long, device="cuda"), src=0)
 
             LOGGER.info("Model serving will be stopped.")
             nm.stop()
