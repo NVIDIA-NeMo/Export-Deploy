@@ -98,7 +98,6 @@ def build_mllama_trtllm_engine(
     lora_ckpt_list: List[str] = None,
 ):
     """Build mllama TRTLLM engine from HF."""
-
     plugin_config = PluginConfig()
     plugin_config.gpt_attention_plugin = "auto"
     plugin_config.gemm_plugin = "auto"
