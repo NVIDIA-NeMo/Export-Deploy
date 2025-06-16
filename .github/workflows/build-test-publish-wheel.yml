@@ -16,9 +16,6 @@ name: Build, test, and publish a PyPi wheel (to testpypi).
 
 on:
   push:
-    branches:
-      - main
-      - "r**"
 
 defaults:
   run:
@@ -32,6 +29,7 @@ jobs:
       python-package: nemo_export_deploy_common
       python-version: "3.10"
       packaging: uv
+      no-publish: ${{ !(github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/r')) }}
     secrets:
       TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
