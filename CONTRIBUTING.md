@@ -9,11 +9,11 @@ Thanks for your interest in contributing to NeMo Export-Deploy!
 1. **Build and run the Docker container**:
 
 ```bash
-docker build -f docker/Dockerfile.ci -t export-deploy .
+docker build -f docker/Dockerfile.ci -t nemo-export-deploy .
 ```
 
 ```bash
-docker run --rm -it --entrypoint bash --runtime nvidia --gpus all export-deploy
+docker run --rm -it --entrypoint bash --runtime nvidia --gpus all nemo-export-deploy
 ```
 
 ### Development Dependencies
