@@ -11,13 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from ray import serve
 import logging
 import time
 from typing import Any, Dict, List
-import numpy as np
 
+import numpy as np
 from fastapi import FastAPI, HTTPException
+from ray import serve
 
 from nemo_export.tensorrt_llm import TensorRTLLM
 
@@ -109,7 +109,7 @@ class TensorRTLLMRayDeployable:
             if temperature == 0.0 and top_p == 0.0:
                 LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
                 request["top_k"] = 1.0
-            
+
             # Prepare inference inputs with proper parameter mapping
             inference_inputs = {
                 "prompts": request.get("prompts", []),
@@ -120,11 +120,11 @@ class TensorRTLLMRayDeployable:
                 "compute_logprob": True if request.get("logprobs") == 1 else False,
                 "apply_chat_template": False,
             }
-            
+
             results = self.model.ray_infer_fn(inference_inputs)
             # Extract generated texts from results
             generated_texts_raw = results.get("sentences", [])
-            
+
             # Flatten the nested list structure - sentences is a list of lists
             generated_texts = []
             for batch in generated_texts_raw:
@@ -132,17 +132,17 @@ class TensorRTLLMRayDeployable:
                     generated_texts.extend(batch)
                 else:
                     generated_texts.append(batch)
-            
+
             # Calculate token counts asynchronously
             prompt_tokens = sum(len(p.split()) for p in request.get("prompts", []))
             completion_tokens = sum(len(str(r).split()) for r in generated_texts)
             total_tokens = prompt_tokens + completion_tokens
-            
+
             # Convert numpy arrays to Python lists for JSON serialization
             log_probs_data = results.get("log_probs", None)
             if log_probs_data is not None and isinstance(log_probs_data, np.ndarray):
                 log_probs_data = log_probs_data.tolist()
-            
+
             output = {
                 "id": f"cmpl-{int(time.time())}",
                 "object": "text_completion",
@@ -161,7 +161,9 @@ class TensorRTLLMRayDeployable:
                             else None
                         ),
                         "finish_reason": (
-                            "length" if generated_texts and len(str(generated_texts[0])) >= request.get('max_tokens', 256) else "stop"
+                            "length"
+                            if generated_texts and len(str(generated_texts[0])) >= request.get("max_tokens", 256)
+                            else "stop"
                         ),
                     }
                 ],
@@ -181,7 +183,7 @@ class TensorRTLLMRayDeployable:
         """Handle chat completion requests."""
         try:
             # Extract parameters from the request dictionary
-            messages = request.get('messages', [])
+            messages = request.get("messages", [])
 
             inference_inputs = {
                 "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
@@ -198,7 +200,7 @@ class TensorRTLLMRayDeployable:
 
             # Extract generated texts from results
             generated_texts_raw = results["sentences"]
-            
+
             # Flatten the nested list structure - sentences is a list of lists
             generated_texts = []
             for batch in generated_texts_raw:
@@ -235,7 +237,9 @@ class TensorRTLLMRayDeployable:
                             else None
                         ),
                         "finish_reason": (
-                            "length" if generated_texts and len(str(generated_texts[0])) >= inference_inputs["max_length"] else "stop"
+                            "length"
+                            if generated_texts and len(str(generated_texts[0])) >= inference_inputs["max_length"]
+                            else "stop"
                         ),
                     }
                 ],
@@ -263,9 +267,7 @@ class TensorRTLLMRayDeployable:
         """
         return {
             "object": "list",
-            "data": [
-                {"id": self.model_id, "object": "model", "created": int(time.time())}
-            ],
+            "data": [{"id": self.model_id, "object": "model", "created": int(time.time())}],
         }
 
     @app.get("/v1/health")

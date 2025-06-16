@@ -22,9 +22,7 @@ def get_args():
     """Parse PTQ arguments."""
     parser = argparse.ArgumentParser(description="Create sample PTQ checkpoint")
     parser.add_argument("--nemo_checkpoint", help="Source NeMo 2.0 checkpoint")
-    parser.add_argument(
-        "--calibration_tp", type=int, default=1, help="TP size for calibration"
-    )
+    parser.add_argument("--calibration_tp", type=int, default=1, help="TP size for calibration")
     parser.add_argument(
         "--inference_tp",
         type=int,
@@ -43,9 +41,7 @@ def get_args():
         default="fp8",
         help="TensorRT-Model-Optimizer quantization algorithm",
     )
-    parser.add_argument(
-        "--calibration_batch_size", type=int, default=64, help="Calibration batch size"
-    )
+    parser.add_argument("--calibration_batch_size", type=int, default=64, help="Calibration batch size")
     parser.add_argument(
         "--calibration_dataset_size",
         type=int,
@@ -62,9 +58,7 @@ def get_args():
         help="Generate sample model output after performing PTQ",
         action="store_true",
     )
-    parser.add_argument(
-        "--legacy_ckpt", help="Load ckpt saved with TE < 1.14", action="store_true"
-    )
+    parser.add_argument("--legacy_ckpt", help="Load ckpt saved with TE < 1.14", action="store_true")
     args = parser.parse_args()
 
     return args

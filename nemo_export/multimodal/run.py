@@ -80,14 +80,8 @@ class MultimodalModelRunner:
         if modality == "vision":
             self.init_image_encoder(visual_engine_dir)
         self.init_tokenizer(llm_engine_dir)
-        self.init_llm(
-            os.path.join(llm_engine_dir, TRTLLM_ENGINE_DIR)
-        )  # Engine is stored in subdirectory
-        if (
-            self.model_type == "lita"
-            or self.model_type == "vila"
-            or self.model_type == "vita"
-        ):
+        self.init_llm(os.path.join(llm_engine_dir, TRTLLM_ENGINE_DIR))  # Engine is stored in subdirectory
+        if self.model_type == "lita" or self.model_type == "vila" or self.model_type == "vita":
             self.init_vision_preprocessor(visual_engine_dir)
 
     def init_tokenizer(self, llm_engine_dir):
@@ -97,18 +91,10 @@ class MultimodalModelRunner:
             self.tokenizer = AutoTokenizer.from_pretrained(llm_engine_dir)
             self.tokenizer.pad_token = self.tokenizer.eos_token
             if self.model_type == "vita":
-                self.tokenizer.im_start_id = self.tokenizer.convert_tokens_to_ids(
-                    "<extra_id_4>"
-                )
-                self.tokenizer.im_end_id = self.tokenizer.convert_tokens_to_ids(
-                    "<extra_id_5>"
-                )
-                self.tokenizer.vid_start_id = self.tokenizer.convert_tokens_to_ids(
-                    "<extra_id_8>"
-                )
-                self.tokenizer.vid_end_id = self.tokenizer.convert_tokens_to_ids(
-                    "<extra_id_9>"
-                )
+                self.tokenizer.im_start_id = self.tokenizer.convert_tokens_to_ids("<extra_id_4>")
+                self.tokenizer.im_end_id = self.tokenizer.convert_tokens_to_ids("<extra_id_5>")
+                self.tokenizer.vid_start_id = self.tokenizer.convert_tokens_to_ids("<extra_id_8>")
+                self.tokenizer.vid_end_id = self.tokenizer.convert_tokens_to_ids("<extra_id_9>")
         else:
             from sentencepiece import SentencePieceProcessor
 
@@ -202,17 +188,13 @@ class MultimodalModelRunner:
             vr = VideoReader(video_path)
             num_frames = self.num_frames
             if num_frames == -1:
-                frames = [
-                    Image.fromarray(frame.asnumpy()).convert("RGB") for frame in vr
-                ]
+                frames = [Image.fromarray(frame.asnumpy()).convert("RGB") for frame in vr]
             else:
                 # equally sliced frames into self.num_frames frames
                 # if self.num_frames is greater than the number of frames in the video, we will repeat the last frame
                 num_frames = min(num_frames, len(vr))
                 indices = np.linspace(0, len(vr) - 1, num=num_frames, dtype=int)
-                frames = [
-                    Image.fromarray(vr[idx].asnumpy()).convert("RGB") for idx in indices
-                ]
+                frames = [Image.fromarray(vr[idx].asnumpy()).convert("RGB") for idx in indices]
                 if len(frames) < num_frames:
                     frames += [frames[-1]] * (num_frames - len(frames))
         elif isinstance(video_path, np.ndarray):
@@ -223,20 +205,14 @@ class MultimodalModelRunner:
                 # equally sliced frames into self.num_frames frames
                 # if self.num_frames is greater than the number of frames in the video, we will repeat the last frame
                 num_frames = min(num_frames, video_path.shape[0])
-                indices = np.linspace(
-                    0, video_path.shape[0] - 1, num=num_frames, dtype=int
-                )
-                frames = [
-                    Image.fromarray(video_path[idx]).convert("RGB") for idx in indices
-                ]
+                indices = np.linspace(0, video_path.shape[0] - 1, num=num_frames, dtype=int)
+                frames = [Image.fromarray(video_path[idx]).convert("RGB") for idx in indices]
                 if len(frames) < num_frames:
                     frames += [frames[-1]] * (num_frames - len(frames))
         else:
             frames = self.video_path
 
-        processor = CLIPImageProcessor.from_pretrained(
-            "openai/clip-vit-large-patch14", torch_dtype=torch.bfloat16
-        )
+        processor = CLIPImageProcessor.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=torch.bfloat16)
         frames = processor.preprocess(frames, return_tensors="pt")["pixel_values"]
         # make dtype consistent with vision encoder
         media_tensors = frames.to(
@@ -250,9 +226,7 @@ class MultimodalModelRunner:
         vid_start_id = self.tokenizer.vid_start_id
         vid_end_id = self.tokenizer.vid_end_id
 
-        image_token_indices = (
-            (input_ids == 0).nonzero(as_tuple=False).squeeze().tolist()
-        )
+        image_token_indices = (input_ids == 0).nonzero(as_tuple=False).squeeze().tolist()
         input_ids = input_ids.squeeze().tolist()
         offset = 0
 
@@ -275,9 +249,7 @@ class MultimodalModelRunner:
 
         return input_ids
 
-    def preprocess(
-        self, warmup, pre_prompt, post_prompt, image, attention_mask, batch_size
-    ):
+    def preprocess(self, warmup, pre_prompt, post_prompt, image, attention_mask, batch_size):
         if not warmup:
             profiler.start(self.modality.capitalize())
 
@@ -285,12 +257,8 @@ class MultimodalModelRunner:
             profiler.stop(self.modality.capitalize())
 
         if self.model_type == "vila":
-            visual_features, visual_atts = self.get_visual_features(
-                image, attention_mask
-            )
-            input_ids = self.tokenizer_image_token(
-                batch_size, pre_prompt[0] + post_prompt[0], self.tokenizer
-            )
+            visual_features, visual_atts = self.get_visual_features(image, attention_mask)
+            input_ids = self.tokenizer_image_token(batch_size, pre_prompt[0] + post_prompt[0], self.tokenizer)
             batch_split_prompts = self.split_prompt_by_images(input_ids)
             first_batch_split_prompts = batch_split_prompts[0]
             # compute prompt length + visual length
@@ -311,18 +279,12 @@ class MultimodalModelRunner:
         elif self.model_type == "lita" or self.model_type == "vita":
             visual_input = []
             for i, img in enumerate(image):
-                visual_features, visual_atts = self.get_visual_features(
-                    img, attention_mask
-                )
+                visual_features, visual_atts = self.get_visual_features(img, attention_mask)
             visual_features = visual_features.unsqueeze(0)
-            im_tokens, vid_tokens, num_sample_frames = self.preprocess_lita_visual(
-                visual_features, self.nemo_config
-            )
+            im_tokens, vid_tokens, num_sample_frames = self.preprocess_lita_visual(visual_features, self.nemo_config)
             visual_input.extend([im_tokens, vid_tokens])
 
-            input_ids = self.tokenizer_image_token(
-                batch_size, pre_prompt[0] + post_prompt[0], self.tokenizer
-            )
+            input_ids = self.tokenizer_image_token(batch_size, pre_prompt[0] + post_prompt[0], self.tokenizer)
             input_ids = self.insert_tokens_by_index(input_ids, num_sample_frames)
             batch_splits = self.split_prompt_by_images(input_ids)
             first_batch_split_prompts = batch_splits[0]
@@ -331,16 +293,12 @@ class MultimodalModelRunner:
             # Update visual atts shape to match im_tokens shape and vid_tokens shape
             im_tokens = im_tokens.view(1, -1, im_tokens.shape[-1])
             visual_features = torch.cat([im_tokens, vid_tokens], dim=1)
-            visual_atts = torch.ones(visual_features.size()[:-1], dtype=torch.long).to(
-                image.device
-            )
+            visual_atts = torch.ones(visual_features.size()[:-1], dtype=torch.long).to(image.device)
 
             if batch_size == 1:
                 length += visual_atts.shape[0] * visual_atts.shape[1]
             else:
-                raise ValueError(
-                    "Batch size greater than 1 is not supported for LITA and VITA models"
-                )
+                raise ValueError("Batch size greater than 1 is not supported for LITA and VITA models")
 
             input_lengths = torch.IntTensor([length] * batch_size).to(torch.int32)
             input_ids, ptuning_args = self.setup_fake_prompts_vila(
@@ -348,56 +306,36 @@ class MultimodalModelRunner:
             )
             return input_ids, input_lengths, ptuning_args, visual_features
         else:
-            visual_features, visual_atts = self.get_visual_features(
-                image, attention_mask
-            )
-            pre_input_ids = self.tokenizer(
-                pre_prompt, return_tensors="pt", padding=True
-            ).input_ids
+            visual_features, visual_atts = self.get_visual_features(image, attention_mask)
+            pre_input_ids = self.tokenizer(pre_prompt, return_tensors="pt", padding=True).input_ids
             if post_prompt[0] is not None:
-                post_input_ids = self.tokenizer(
-                    post_prompt, return_tensors="pt", padding=True
-                ).input_ids
+                post_input_ids = self.tokenizer(post_prompt, return_tensors="pt", padding=True).input_ids
                 if self.model_type == "video-neva":
                     length = (
-                        pre_input_ids.shape[1]
-                        + post_input_ids.shape[1]
-                        + visual_atts.shape[2] * visual_atts.shape[1]
+                        pre_input_ids.shape[1] + post_input_ids.shape[1] + visual_atts.shape[2] * visual_atts.shape[1]
                     )
                 else:
-                    length = (
-                        pre_input_ids.shape[1]
-                        + post_input_ids.shape[1]
-                        + visual_atts.shape[1]
-                    )
+                    length = pre_input_ids.shape[1] + post_input_ids.shape[1] + visual_atts.shape[1]
             else:
                 post_input_ids = None
                 length = pre_input_ids.shape[1] + visual_atts.shape[1]
 
         input_lengths = torch.IntTensor([length] * batch_size).to(torch.int32)
 
-        input_ids, ptuning_args = self.setup_fake_prompts(
-            visual_features, pre_input_ids, post_input_ids, input_lengths
-        )
+        input_ids, ptuning_args = self.setup_fake_prompts(visual_features, pre_input_ids, post_input_ids, input_lengths)
 
         return input_ids, input_lengths, ptuning_args, visual_features
 
     @staticmethod
     def tokenizer_image_token(batch_size, prompt, tokenizer, image_token_index=-200):
-        prompt_chunks = [
-            tokenizer(chunk).input_ids for chunk in prompt.split("<image>")
-        ]
+        prompt_chunks = [tokenizer(chunk).input_ids for chunk in prompt.split("<image>")]
 
         def insert_separator(X, sep):
             return [ele for sublist in zip(X, [sep] * len(X)) for ele in sublist][:-1]
 
         input_ids = []
         offset = 0
-        if (
-            len(prompt_chunks) > 0
-            and len(prompt_chunks[0]) > 0
-            and prompt_chunks[0][0] == tokenizer.bos_token_id
-        ):
+        if len(prompt_chunks) > 0 and len(prompt_chunks[0]) > 0 and prompt_chunks[0][0] == tokenizer.bos_token_id:
             offset = 1
             input_ids.append(prompt_chunks[0][0])
 
@@ -495,10 +433,7 @@ class MultimodalModelRunner:
             ]
 
             stripped_text = [
-                [
-                    output_beams_list[batch_idx][beam_idx].strip()
-                    for beam_idx in range(num_beams)
-                ]
+                [output_beams_list[batch_idx][beam_idx].strip() for beam_idx in range(num_beams)]
                 for batch_idx in range(batch_size)
             ]
             profiler.stop("Generate")
@@ -508,62 +443,39 @@ class MultimodalModelRunner:
             return None
 
     def get_visual_features(self, image, attention_mask):
-        visual_features = {
-            "input": image.to(
-                tensorrt_llm._utils.str_dtype_to_torch(self.vision_precision)
-            )
-        }
+        visual_features = {"input": image.to(tensorrt_llm._utils.str_dtype_to_torch(self.vision_precision))}
         if attention_mask is not None:
             visual_features["attention_mask"] = attention_mask
-        tensor_info = [
-            TensorInfo("input", str_dtype_to_trt(self.vision_precision), image.shape)
-        ]
+        tensor_info = [TensorInfo("input", str_dtype_to_trt(self.vision_precision), image.shape)]
         if attention_mask is not None:
-            tensor_info.append(
-                TensorInfo("attention_mask", trt.DataType.INT32, attention_mask.shape)
-            )
+            tensor_info.append(TensorInfo("attention_mask", trt.DataType.INT32, attention_mask.shape))
 
         visual_output_info = self.visual_encoder_session.infer_shapes(tensor_info)
 
         visual_outputs = {
-            t.name: torch.empty(
-                tuple(t.shape), dtype=trt_dtype_to_torch(t.dtype), device=image.device
-            )
+            t.name: torch.empty(tuple(t.shape), dtype=trt_dtype_to_torch(t.dtype), device=image.device)
             for t in visual_output_info
         }
 
-        ok = self.visual_encoder_session.run(
-            visual_features, visual_outputs, self.stream.cuda_stream
-        )
+        ok = self.visual_encoder_session.run(visual_features, visual_outputs, self.stream.cuda_stream)
         assert ok, "Runtime execution failed for vision encoder session"
         self.stream.synchronize()
 
         image_embeds = visual_outputs["output"]
-        image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(
-            image.device
-        )
+        image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(image.device)
 
         return image_embeds, image_atts
 
-    def setup_fake_prompts(
-        self, visual_features, pre_input_ids, post_input_ids, input_lengths
-    ):
+    def setup_fake_prompts(self, visual_features, pre_input_ids, post_input_ids, input_lengths):
         # Assemble fake prompts which points to image embedding actually
-        if hasattr(self, "num_frames") and (
-            visual_features.shape[1] == self.num_frames
-        ):
-            visual_features = visual_features.view(
-                visual_features.shape[0], -1, visual_features.shape[-1]
-            )
+        if hasattr(self, "num_frames") and (visual_features.shape[1] == self.num_frames):
+            visual_features = visual_features.view(visual_features.shape[0], -1, visual_features.shape[-1])
 
         fake_prompt_id = torch.arange(
             self.model_config.vocab_size,
-            self.model_config.vocab_size
-            + visual_features.shape[0] * visual_features.shape[1],
+            self.model_config.vocab_size + visual_features.shape[0] * visual_features.shape[1],
         )
-        fake_prompt_id = fake_prompt_id.reshape(
-            visual_features.shape[0], visual_features.shape[1]
-        )
+        fake_prompt_id = fake_prompt_id.reshape(visual_features.shape[0], visual_features.shape[1])
 
         if post_input_ids is not None:
             input_ids = [pre_input_ids, fake_prompt_id, post_input_ids]
@@ -575,9 +487,7 @@ class MultimodalModelRunner:
 
         return input_ids, ptuning_args
 
-    def setup_fake_prompts_vila(
-        self, batch_size, visual_features, split_input_ids, input_lengths
-    ):
+    def setup_fake_prompts_vila(self, batch_size, visual_features, split_input_ids, input_lengths):
         if self.model_type == "lita" or self.model_type == "vita":
             squeeze_img_tokens = visual_features[0].squeeze(0)
             reshape_img_tokens = [t.unsqueeze(0) for t in squeeze_img_tokens]
@@ -610,9 +520,7 @@ class MultimodalModelRunner:
                         input_ids.append(split_input_ids[idx + 1])
             elif self.model_type == "lita" or self.model_type == "vita":
                 for idx, visual_f in enumerate(visual_features):
-                    fake_prompt_id = torch.arange(
-                        fake_prompt_counter, fake_prompt_counter + visual_f.shape[1]
-                    )
+                    fake_prompt_id = torch.arange(fake_prompt_counter, fake_prompt_counter + visual_f.shape[1])
                     fake_prompt_id = fake_prompt_id.reshape(visual_f.shape[1])
                     fake_prompt_counter += visual_f.shape[1]
                     fake_prompt_id = fake_prompt_id.unsqueeze(0)
@@ -626,9 +534,7 @@ class MultimodalModelRunner:
             # mode 2: each image have individual prompt, <pre><image><post>
             for idx, visual_feature in enumerate(visual_features):
                 input_ids.append(split_input_ids[0])
-                fake_prompt_id = torch.arange(
-                    fake_prompt_counter, fake_prompt_counter + visual_feature.shape[0]
-                )
+                fake_prompt_id = torch.arange(fake_prompt_counter, fake_prompt_counter + visual_feature.shape[0])
                 fake_prompt_counter += visual_feature.shape[0]
                 fake_prompt_id = fake_prompt_id.unsqueeze(0)
                 input_ids.append(fake_prompt_id)
@@ -648,9 +554,7 @@ class MultimodalModelRunner:
             "visual_token_format" in config["mm_cfg"]["lita"]
             and config["mm_cfg"]["lita"]["visual_token_format"] == "im_vid_start_end"
         ):
-            num_image_frames = min(
-                num_frames, config["mm_cfg"]["lita"]["sample_frames"]
-            )
+            num_image_frames = min(num_frames, config["mm_cfg"]["lita"]["sample_frames"])
             idx = np.round(np.linspace(0, num_frames - 1, num_image_frames)).astype(int)
 
             # Image and video features
@@ -664,13 +568,9 @@ class MultimodalModelRunner:
             and config["mm_cfg"]["lita"]["lita_video_arch"] == "temporal_spatial_pool"
         ):
             pool_size = 2
-            selected_frames = np.round(
-                np.linspace(0, visual_features.shape[1] - 1, pool_size * pool_size)
-            ).astype(int)
+            selected_frames = np.round(np.linspace(0, visual_features.shape[1] - 1, pool_size * pool_size)).astype(int)
             s_tokens = visual_features[:, selected_frames, ...]
-            s_tokens = einops.rearrange(
-                s_tokens, "b t (h w) d -> (b t) d h w", h=16, w=16
-            )
+            s_tokens = einops.rearrange(s_tokens, "b t (h w) d -> (b t) d h w", h=16, w=16)
             s_tokens = F.avg_pool2d(s_tokens, kernel_size=pool_size)
             s_tokens = einops.rearrange(s_tokens, "(b t) d h w -> b (t h w) d", b=b)
 
@@ -679,9 +579,7 @@ class MultimodalModelRunner:
             return t_tokens, s_tokens, pool_size**2
 
         else:
-            raise ValueError(
-                f"Invalid visual token format: {config['mm_cfg']['lita']['visual_token_format']}"
-            )
+            raise ValueError(f"Invalid visual token format: {config['mm_cfg']['lita']['visual_token_format']}")
 
     def ptuning_setup(self, prompt_table, input_ids, input_lengths):
         hidden_size = self.model_config.hidden_size * self.runtime_mapping.tp_size
@@ -693,17 +591,11 @@ class MultimodalModelRunner:
                 [prompt_table.shape[1]],
                 dtype=torch.int32,
             ).cuda()
-            prompt_table = prompt_table.view(
-                (prompt_table.shape[0] * prompt_table.shape[1], prompt_table.shape[2])
-            )
+            prompt_table = prompt_table.view((prompt_table.shape[0] * prompt_table.shape[1], prompt_table.shape[2]))
 
-            assert prompt_table.shape[1] == hidden_size, (
-                "Prompt table dimensions do not match hidden size"
-            )
+            assert prompt_table.shape[1] == hidden_size, "Prompt table dimensions do not match hidden size"
 
-            prompt_table = prompt_table.cuda().to(
-                dtype=tensorrt_llm._utils.str_dtype_to_torch(self.model_config.dtype)
-            )
+            prompt_table = prompt_table.cuda().to(dtype=tensorrt_llm._utils.str_dtype_to_torch(self.model_config.dtype))
         else:
             prompt_table = torch.empty([1, hidden_size]).cuda()
             task_vocab_size = torch.zeros([1]).cuda()
@@ -722,17 +614,13 @@ class MultimodalModelRunner:
         if width == height:
             return images
         elif width > height:
-            result = einops.repeat(
-                background_color, "c -> b c h w", b=b, h=width, w=width
-            ).clone()
+            result = einops.repeat(background_color, "c -> b c h w", b=b, h=width, w=width).clone()
             paste_start = (width - height) // 2
             paste_end = paste_start + height
             result[:, :, paste_start:paste_end, :] = images
             return result
         else:
-            result = einops.repeat(
-                background_color, "c -> b c h w", b=b, h=height, w=height
-            ).clone()
+            result = einops.repeat(background_color, "c -> b c h w", b=b, h=height, w=height).clone()
             paste_start = (height - width) // 2
             paste_end = paste_start + width
             result[:, :, :, paste_start:paste_end] = images
@@ -744,9 +632,7 @@ class MultimodalModelRunner:
             decord.bridge.set_bridge("torch")
             video_reader = decord.VideoReader(uri=video_path)
             if num_frames is not None:
-                idx = np.round(
-                    np.linspace(0, len(video_reader) - 1, num_frames)
-                ).astype(int)
+                idx = np.round(np.linspace(0, len(video_reader) - 1, num_frames)).astype(int)
                 frames = video_reader.get_batch(idx)
             else:
                 frames = torch.cat([torch.tensor(f.asnumpy()) for f in video_reader])
@@ -758,12 +644,8 @@ class MultimodalModelRunner:
     def preprocess_frames(self, frames, config, processor):
         frames = einops.rearrange(frames, "t h w c -> t c h w")
         if config["data"]["image_aspect_ratio"] == "pad":
-            frames = self.expand2square_pt(
-                frames, tuple(int(x * 255) for x in processor.image_mean)
-            )
-        processed_frames = processor.preprocess(frames, return_tensors="pt")[
-            "pixel_values"
-        ]
+            frames = self.expand2square_pt(frames, tuple(int(x * 255) for x in processor.image_mean))
+        processed_frames = processor.preprocess(frames, return_tensors="pt")["pixel_values"]
         return processed_frames
 
     def get_num_sample_frames(self, config, vid_len):
@@ -786,9 +668,7 @@ class MultimodalModelRunner:
             vid_len = len(decord.VideoReader(video_path))
             num_sample_frames = self.get_num_sample_frames(nemo_config, vid_len)
             image = (
-                self.load_video(
-                    nemo_config, video_path, image_processor, num_sample_frames
-                )
+                self.load_video(nemo_config, video_path, image_processor, num_sample_frames)
                 .unsqueeze(0)
                 .to(self.device, dtype=torch.bfloat16)
             )
@@ -803,9 +683,7 @@ class MultimodalModelRunner:
     def process_image(self, image_file, image_processor, nemo_config, image_folder):
         if isinstance(image_file, str):
             if image_folder is not None:
-                image = Image.open(os.path.join(image_folder, image_file)).convert(
-                    "RGB"
-                )
+                image = Image.open(os.path.join(image_folder, image_file)).convert("RGB")
             else:
                 image = Image.open(image_file).convert("RGB")
         else:
@@ -816,23 +694,14 @@ class MultimodalModelRunner:
         crop_size = tuple(crop_size)
         image = image.resize(crop_size)
         if nemo_config["data"]["image_aspect_ratio"] == "pad":
-            image = self.expand2square_pt(
-                image, tuple(int(x * 255) for x in image_processor.image_mean)
-            )
-            image = image_processor.preprocess(image, return_tensors="pt")[
-                "pixel_values"
-            ][0]
+            image = self.expand2square_pt(image, tuple(int(x * 255) for x in image_processor.image_mean))
+            image = image_processor.preprocess(image, return_tensors="pt")["pixel_values"][0]
         else:
-            image = image_processor.preprocess(image, return_tensors="pt")[
-                "pixel_values"
-            ][0]
+            image = image_processor.preprocess(image, return_tensors="pt")["pixel_values"][0]
         return image
 
     def process_vila_img(self, images):
-        new_images = [
-            self.process_image(image, self.image_processor, self.nemo_config, None)
-            for image in images
-        ]
+        new_images = [self.process_image(image, self.image_processor, self.nemo_config, None) for image in images]
 
         if all(x.shape == new_images[0].shape for x in new_images):
             new_images = torch.stack(new_images, dim=0)
@@ -886,9 +755,7 @@ class MultimodalModelRunner:
                     "The assistant gives helpful, detailed, and polite answers to the user's questions. USER: "
                 )
                 if input_text is None:
-                    input_text = (
-                        "<image>\n Please elaborate what you see in the images?"
-                    )
+                    input_text = "<image>\n Please elaborate what you see in the images?"
                 post_prompt = input_text + " ASSISTANT:"
 
             elif self.model_type == "vita":
@@ -901,20 +768,14 @@ class MultimodalModelRunner:
                     "<|start_header_id|>user<|end_header_id|>\n\n"
                 )
                 if input_text is None:
-                    input_text = (
-                        "<image>\n Please elaborate what you see in the images?"
-                    )
-                post_prompt = (
-                    input_text + "<|start_header_id|>assistant<|end_header_id|>\n\n"
-                )
+                    input_text = "<image>\n Please elaborate what you see in the images?"
+                post_prompt = input_text + "<|start_header_id|>assistant<|end_header_id|>\n\n"
 
         else:
             raise RuntimeError(f"Invalid model type {self.model_type}")
 
         if self.model_type == "lita" or self.model_type == "vita":
-            image = self.process_lita_video(
-                self.nemo_config, raw_image, self.image_processor
-            )
+            image = self.process_lita_video(self.nemo_config, raw_image, self.image_processor)
 
         if self.model_type == "vila":
             raw_image = [raw_image] * batch_size
@@ -1027,9 +888,7 @@ class MultimodalModelRunner:
         logger.info(f"\n[A] {output_text[0]}")
 
         if num_beams == 1:
-            output_ids = self.tokenizer(output_text[0][0], add_special_tokens=False)[
-                "input_ids"
-            ]
+            output_ids = self.tokenizer(output_text[0][0], add_special_tokens=False)["input_ids"]
             logger.info(f"Generated {len(output_ids)} tokens")
 
         if check_accuracy:
@@ -1041,16 +900,9 @@ class MultimodalModelRunner:
                 assert "robot" in output_text[0][0].lower()
 
         if run_profiling:
-            msec_per_batch = (
-                lambda name: 1000
-                * profiler.elapsed_time_in_sec(name)
-                / self.profiling_iterations
-            )
+            msec_per_batch = lambda name: 1000 * profiler.elapsed_time_in_sec(name) / self.profiling_iterations
             logger.info("Latencies per batch (msec)")
-            logger.info(
-                f"TRT {self.modality} encoder: %.1f"
-                % (msec_per_batch(self.modality.capitalize()))
-            )
+            logger.info(f"TRT {self.modality} encoder: %.1f" % (msec_per_batch(self.modality.capitalize())))
             logger.info("TRTLLM LLM generate: %.1f" % (msec_per_batch("LLM")))
             logger.info("Multimodal generate: %.1f" % (msec_per_batch("Generate")))
 

@@ -123,16 +123,21 @@ jobs:
       - name: Run ruff
         run: |
           ruff check .
+          ruff format --check .
 
   cicd-wait-in-queue:
-    needs: [pre-flight]
+    needs: [pre-flight, linting]
     runs-on: ubuntu-latest
     environment: test
     if: |
       needs.pre-flight.outputs.test_to_run != '[]' 
       && needs.pre-flight.outputs.components_to_run != '[]'
       && needs.pre-flight.outputs.is_ci_workload == 'false'
-      && (needs.pre-flight.outputs.docs_only == 'false' || needs.pre-flight.outputs.force_run_all == 'true')
+      && (
+        success() 
+        || (needs.pre-flight.outputs.docs_only == 'false' || needs.pre-flight.outputs.force_run_all == 'true')
+      )
+      && !cancelled()
     steps:
       - name: Running CI tests
         run: |

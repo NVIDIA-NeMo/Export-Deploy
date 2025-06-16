@@ -25,9 +25,10 @@ import torch
 # Ray deployment imports
 run_ray_tests = True
 try:
+    from ray import serve
+
     from nemo_deploy.deploy_ray import DeployRay
     from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
-    from ray import serve
 except Exception as e:
     print(f"Ray dependencies not available: {e}")
     run_ray_tests = False
@@ -83,32 +84,22 @@ def test_deployment_handle_direct(
             else:
                 raise ValueError(f"Unknown endpoint type: {endpoint_type}")
 
-            if response and (
-                isinstance(response, dict) or hasattr(response, "__dict__")
-            ):
+            if response and (isinstance(response, dict) or hasattr(response, "__dict__")):
                 print(f"✓ {endpoint_type.capitalize()} endpoint is responsive")
                 return True, response
             else:
-                print(
-                    f"✗ {endpoint_type.capitalize()} endpoint returned invalid response: {response}"
-                )
+                print(f"✗ {endpoint_type.capitalize()} endpoint returned invalid response: {response}")
                 if attempt < max_retries - 1:
-                    print(
-                        f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})"
-                    )
+                    print(f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})")
                     time.sleep(retry_delay)
 
         except Exception as e:
             print(f"✗ Error calling {endpoint_type} endpoint: {e}")
             if attempt < max_retries - 1:
-                print(
-                    f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})"
-                )
+                print(f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})")
                 time.sleep(retry_delay)
 
-    print(
-        f"✗ {endpoint_type.capitalize()} endpoint failed after {max_retries} attempts"
-    )
+    print(f"✗ {endpoint_type.capitalize()} endpoint failed after {max_retries} attempts")
     return False, None
 
 
@@ -123,18 +114,14 @@ def run_comprehensive_deployment_tests(deployment_handle, model_id):
 
     for endpoint in endpoints:
         print(f"\n--- Testing {endpoint} endpoint ---")
-        success, response = test_deployment_handle_direct(
-            deployment_handle, model_id, endpoint
-        )
+        success, response = test_deployment_handle_direct(deployment_handle, model_id, endpoint)
         test_results[endpoint] = {"success": success, "response": response}
 
         if success and response:
             print(f"✓ {endpoint.capitalize()} endpoint test PASSED")
             if endpoint in ["completions", "chat"]:
                 if isinstance(response, dict) and "choices" in response:
-                    choice_content = response["choices"][0].get(
-                        "text", response["choices"][0].get("message", {})
-                    )
+                    choice_content = response["choices"][0].get("text", response["choices"][0].get("message", {}))
                     print(f"  Sample response: {choice_content}")
                 else:
                     print(f"  Response type: {type(response)}")
@@ -204,22 +191,15 @@ def run_ray_inference(
     total_gpus = num_gpus * num_nodes
     gpus_per_replica = total_gpus // num_replicas
 
-    parallelism_per_replica = (
-        tensor_model_parallel_size
-        * pipeline_model_parallel_size
-        * context_parallel_size
-    )
+    parallelism_per_replica = tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size
 
     if parallelism_per_replica != gpus_per_replica:
         raise Exception(
-            f"Parallelism per replica ({parallelism_per_replica}) must equal "
-            f"GPUs per replica ({gpus_per_replica})"
+            f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
         )
 
     if debug:
-        print(
-            f"Configuration: {num_replicas} replicas, {gpus_per_replica} GPUs per replica"
-        )
+        print(f"Configuration: {num_replicas} replicas, {gpus_per_replica} GPUs per replica")
 
     # Initialize Ray deployment
     ray_deployer = DeployRay(
@@ -285,9 +265,7 @@ def run_ray_inference(
 
         # Test endpoints if requested using deployment handle
         if test_endpoints:
-            test_results = run_comprehensive_deployment_tests(
-                deployment_handle, model_name
-            )
+            test_results = run_comprehensive_deployment_tests(deployment_handle, model_name)
 
         return test_results
 
@@ -485,9 +463,7 @@ def run_ray_deployment_tests(args):
             print("✓ DEPLOYMENT SUCCESSFUL (endpoint testing skipped)")
             test_result = "PASS"
         else:
-            passed_endpoints = sum(
-                1 for result in test_results.values() if result["success"]
-            )
+            passed_endpoints = sum(1 for result in test_results.values() if result["success"])
             total_endpoints = len(test_results)
 
             print(f"Endpoint Tests: {passed_endpoints}/{total_endpoints} passed")

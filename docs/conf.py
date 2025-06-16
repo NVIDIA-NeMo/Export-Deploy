@@ -67,19 +67,14 @@ autodoc2_output_dir = "apidocs"  # Output directory for autodoc2 (relative to do
 # This is a workaround that uses the parser located in autodoc2_docstrings_parser.py to allow autodoc2 to
 # render google style docstrings.
 # Related Issue: https://github.com/sphinx-extensions2/sphinx-autodoc2/issues/33
-autodoc2_docstring_parser_regexes = [
-    (r".*", "docs.autodoc2_docstrings_parser"),
-]
+autodoc2_docstring_parser_regexes = [(r".*", "docs.autodoc2_docstrings_parser")]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "nvidia_sphinx_theme"
 html_theme_options = {
-    "switcher": {
-        "json_url": "../versions1.json",
-        "version_match": release,
-    },
+    "switcher": {"json_url": "../versions1.json", "version_match": release},
     "extra_head": {
         """
     <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js" ></script>
