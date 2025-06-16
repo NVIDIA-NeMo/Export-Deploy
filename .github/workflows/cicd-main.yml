@@ -34,6 +34,7 @@ jobs:
     outputs:
       is_ci_workload: ${{ steps.is_ci_workload.outputs.main }}
       no_fail_fast: ${{ steps.no_fail_fast.outputs.main }}
+      force_run_all: ${{ steps.force_run_all.outputs.main }}
       docs_only: ${{ steps.docs_only.outputs.main == 'true' }}
     env:
       TESTS_TO_RUN: ${{ inputs.test_to_run }}
@@ -92,6 +93,20 @@ jobs:
 
           echo "main=$no_fail_fast" | tee -a "$GITHUB_OUTPUT"
 
+      - name: Check if force-run-all is set
+        shell: bash
+        id: force_run_all
+        env:
+          HAS_FORCE_RUN_ALL_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'force-run-all') }}
+        run: |
+          if [[ "$HAS_FORCE_RUN_ALL_LABEL" == "true" || "$EVENT_NAME" == "schedule" ]]; then
+            force_run_all=true
+          else
+            force_run_all=false
+          fi
+
+          echo "main=$force_run_all" | tee -a "$GITHUB_OUTPUT"
+
   linting:
     runs-on: ubuntu-latest
     steps:
@@ -117,7 +132,7 @@ jobs:
       needs.pre-flight.outputs.test_to_run != '[]' 
       && needs.pre-flight.outputs.components_to_run != '[]'
       && needs.pre-flight.outputs.is_ci_workload == 'false'
-      && needs.pre-flight.outputs.docs_only == 'false'
+      && (needs.pre-flight.outputs.docs_only == 'false' || needs.pre-flight.outputs.force_run_all == 'true')
     steps:
       - name: Running CI tests
         run: |
