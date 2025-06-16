@@ -21,7 +21,7 @@ readme = { file = "README.md", content-type = "text/markdown" }
 
 
 [project]
-name = "Export-Deploy"
+name = "NeMo-Export-Deploy"
 dynamic = ["version", "readme"]
 description = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
 requires-python = ">=3.12,<3.13"
