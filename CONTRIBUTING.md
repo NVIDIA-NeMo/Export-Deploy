@@ -62,7 +62,7 @@ We follow a direct clone and branch workflow for now:
 1. Clone the repository directly:
 
    ```bash
-   git clone https://github.com/NVIDIA/Export-Deploy
+   git clone https://github.com/NVIDIA-NeMo/Export-Deploy
    cd Export-Deploy
    ```
 

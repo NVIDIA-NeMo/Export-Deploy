@@ -69,7 +69,7 @@ Executing the script will directly deploy the NeMo LLM model and initiate the se
    - ``--max_batch_size``: maximum batch size of the model. Default is 8.
    - ``--debug_mode``: enables additional debug logging messages from the script
 
-3. To deploy a different model, just change the ``--nemo_checkpoint`` in the [scripts/deploy/nlp/deploy_inframework_triton.py](https://github.com/NVIDIA/Export-Deploy/blob/main/scripts/deploy/nlp/deploy_inframework_triton.py) script.
+3. To deploy a different model, just change the ``--nemo_checkpoint`` in the [scripts/deploy/nlp/deploy_inframework_triton.py](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/scripts/deploy/nlp/deploy_inframework_triton.py) script.
 
 4. Access the models with a Hugging Face token.
 
