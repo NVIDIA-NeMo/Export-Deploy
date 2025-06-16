@@ -17,7 +17,6 @@ import shutil
 import pytest
 
 
-@pytest.mark.pleasefixme  # disabled since it required data
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 @pytest.mark.parametrize(
@@ -61,7 +60,6 @@ def test_nemo2_convert_to_safe_tensors(
     shutil.rmtree("/tmp/safe_tensor_test/")
 
 
-@pytest.mark.pleasefixme  # disabled since it required data
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_nemo2_convert_to_export():
@@ -81,7 +79,7 @@ def test_nemo2_convert_to_export():
         pipeline_parallelism_size=1,
         max_input_len=1024,
         max_output_len=256,
-        max_batch_size=4,
+        max_batch_size=3,
         use_parallel_embedding=False,
         paged_kv_cache=True,
         remove_input_padding=True,
