@@ -13,11 +13,11 @@
 # limitations under the License.
 
 
+import logging
+
 import ray
 from ray import serve
 from ray.serve import Application
-
-import logging
 
 from nemo_deploy.ray_utils import find_available_port
 
@@ -72,9 +72,7 @@ class DeployRay:
             )
         except ConnectionError:
             # If no cluster exists, start a local one
-            LOGGER.info(
-                "No existing Ray cluster found. Starting a local Ray cluster..."
-            )
+            LOGGER.info("No existing Ray cluster found. Starting a local Ray cluster...")
             ray.init(
                 num_cpus=num_cpus,
                 num_gpus=num_gpus,

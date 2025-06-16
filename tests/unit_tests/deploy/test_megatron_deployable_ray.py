@@ -27,7 +27,6 @@ from nemo_deploy.nlp.megatronllm_deployable_ray import (
     ModelWorker,
 )
 
-
 # Fixtures for Ray cluster setup and model mocking
 
 
@@ -36,9 +35,7 @@ def ray_cluster():
     """Setup a real Ray cluster for testing."""
     # Initialize Ray for testing
     if not ray.is_initialized():
-        ray.init(
-            num_cpus=4, num_gpus=0, include_dashboard=False, ignore_reinit_error=True
-        )
+        ray.init(num_cpus=4, num_gpus=0, include_dashboard=False, ignore_reinit_error=True)
 
     yield
 
@@ -90,9 +87,7 @@ def mock_nemo_checkpoint():
 @pytest.fixture
 def mock_megatron_model():
     """Mock the MegatronLLMDeployableNemo2 model to avoid loading real models."""
-    with patch(
-        "nemo_deploy.nlp.megatronllm_deployable_ray.MegatronLLMDeployableNemo2"
-    ) as mock:
+    with patch("nemo_deploy.nlp.megatronllm_deployable_ray.MegatronLLMDeployableNemo2") as mock:
         mock_instance = MagicMock()
 
         # Mock the ray_infer_fn method
@@ -140,9 +135,7 @@ def mock_model_worker(mock_megatron_model):
             # Create a mock model instead of loading real one
             self.model = mock_megatron_model.return_value
             # Initialize successfully
-            print(
-                f"MockModelWorker initialized with args: {args[:2] if args else []}"
-            )  # Limit logging
+            print(f"MockModelWorker initialized with args: {args[:2] if args else []}")  # Limit logging
 
         def infer(self, inputs):
             """Mock inference method that returns consistent results."""
@@ -155,9 +148,7 @@ def mock_model_worker(mock_megatron_model):
                         [0.3, 0.4],
                     ],  # Use regular lists instead of numpy arrays
                 }
-                print(
-                    f"MockModelWorker.infer called with keys: {list(inputs.keys()) if inputs else []}"
-                )
+                print(f"MockModelWorker.infer called with keys: {list(inputs.keys()) if inputs else []}")
                 return result
             except Exception as e:
                 # Log but don't raise exceptions that might cause serialization issues
@@ -168,9 +159,7 @@ def mock_model_worker(mock_megatron_model):
                 }
 
     # Patch the original ModelWorker with our mock
-    with patch(
-        "nemo_deploy.nlp.megatronllm_deployable_ray.ModelWorker", MockModelWorker
-    ):
+    with patch("nemo_deploy.nlp.megatronllm_deployable_ray.ModelWorker", MockModelWorker):
         yield MockModelWorker
 
 

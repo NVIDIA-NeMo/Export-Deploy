@@ -25,9 +25,7 @@ try:
 
     HAVE_ZARR = True
 except Exception as e:
-    LOGGER.warning(
-        f"Cannot import zarr, support for zarr-based checkpoints is not available. {type(e).__name__}: {e}"
-    )
+    LOGGER.warning(f"Cannot import zarr, support for zarr-based checkpoints is not available. {type(e).__name__}: {e}")
     BaseStore = object
     HAVE_ZARR = False
 
@@ -63,9 +61,7 @@ class TarPath:
             if parts:
                 self._relpath = os.path.join(*parts)
         else:
-            raise ValueError(
-                f"Unexpected argument type for TarPath: {type(tar).__name__}"
-            )
+            raise ValueError(f"Unexpected argument type for TarPath: {type(tar).__name__}")
 
     def __del__(self):
         if self._needs_to_close:

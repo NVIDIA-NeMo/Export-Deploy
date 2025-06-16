@@ -41,15 +41,9 @@ def get_args(argv):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Benchmarks Triton server running an in-framework Nemo model",
     )
-    parser.add_argument(
-        "-u", "--url", default="0.0.0.0", type=str, help="url for the triton server"
-    )
-    parser.add_argument(
-        "-mn", "--model_name", required=True, type=str, help="Name of the triton model"
-    )
-    parser.add_argument(
-        "-n", "--num_queries", default=10, type=int, help="Number of queries to run"
-    )
+    parser.add_argument("-u", "--url", default="0.0.0.0", type=str, help="url for the triton server")
+    parser.add_argument("-mn", "--model_name", required=True, type=str, help="Name of the triton model")
+    parser.add_argument("-n", "--num_queries", default=10, type=int, help="Number of queries to run")
     parser.add_argument(
         "-b",
         "--batch_size",
@@ -66,9 +60,7 @@ def get_args(argv):
     )
     parser.add_argument("-tk", "--top_k", default=1, type=int, help="top_k")
     parser.add_argument("-tpp", "--top_p", default=0.0, type=float, help="top_p")
-    parser.add_argument(
-        "-t", "--temperature", default=1.0, type=float, help="temperature"
-    )
+    parser.add_argument("-t", "--temperature", default=1.0, type=float, help="temperature")
     parser.add_argument(
         "-it",
         "--init_timeout",
@@ -177,9 +169,7 @@ def run_benchmark(
         for i in range(current_batch_size):
             latencies.append(per_query_latency)
             outputs.append(result[i] if isinstance(result, list) else result)
-            print(
-                f"Query {start_idx + i + 1}/{num_queries} completed in {per_query_latency:.2f} seconds"
-            )
+            print(f"Query {start_idx + i + 1}/{num_queries} completed in {per_query_latency:.2f} seconds")
 
     # Calculate statistics
     latencies = np.array(latencies)
