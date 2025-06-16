@@ -13,17 +13,17 @@
 # limitations under the License.
 
 
+from ray import serve
 import logging
+import numpy as np
 import time
 from typing import Any, Dict
 
-import numpy as np
 import torch
 from fastapi import FastAPI, HTTPException
-from ray import serve
 
-from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
 from nemo_deploy.ray_utils import find_available_port
+from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -63,7 +63,7 @@ class HFRayDeployable:
         trust_remote_code: bool = True,
         model_id: str = "nemo-model",
         device_map: str = "auto",
-        max_memory: str = None,
+        max_memory: str = None
     ):
         """Initialize the HuggingFace model deployment.
 
@@ -84,10 +84,14 @@ class HFRayDeployable:
             self._setup_unique_distributed_parameters(device_map)
             if device_map == "balanced":
                 if not max_memory:
-                    raise ValueError("max_memory must be provided when device_map is 'balanced'")
+                    raise ValueError(
+                        "max_memory must be provided when device_map is 'balanced'"
+                    )
                 num_gpus = torch.cuda.device_count()
                 if num_gpus > 1:
-                    print(f"Using tensor parallel across {num_gpus} GPUs for large model")
+                    print(
+                        f"Using tensor parallel across {num_gpus} GPUs for large model"
+                    )
                     max_memory_dict = {i: "75GiB" for i in range(num_gpus)}
             self.model = HuggingFaceLLMDeploy(
                 hf_model_id_path=hf_model_id_path,
@@ -160,9 +164,11 @@ class HFRayDeployable:
             temperature = request.get("temperature", 0.0)
             top_p = request.get("top_p", 0.0)
             if temperature == 0.0 and top_p == 0.0:
-                LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
+                LOGGER.warning(
+                    "Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling."
+                )
                 request["top_k"] = 1.0
-
+            
             inference_inputs = {
                 "prompts": request.get("prompts", []),
                 "max_length": request.get("max_tokens", 256),
@@ -187,7 +193,7 @@ class HFRayDeployable:
             scores = results.get("scores", None)
             if scores is not None and isinstance(scores, np.ndarray):
                 scores = scores.tolist()
-
+            
             logits = results.get("logits", None)
             if logits is not None and isinstance(logits, np.ndarray):
                 logits = logits.tolist()
@@ -215,7 +221,9 @@ class HFRayDeployable:
                         ),
                         "finish_reason": (
                             "length"
-                            if generated_texts and len(generated_texts[0]) >= request.get("max_tokens", 256)
+                            if generated_texts
+                            and len(generated_texts[0])
+                            >= request.get("max_tokens", 256)
                             else "stop"
                         ),
                     }
@@ -229,7 +237,9 @@ class HFRayDeployable:
             return output
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Error during inference: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Error during inference: {str(e)}"
+            )
 
     @app.post("/v1/chat/completions/")
     async def chat_completions(self, request: Dict[Any, Any]):
@@ -264,7 +274,12 @@ class HFRayDeployable:
             messages = request.get("messages", [])
 
             # Convert messages to a single prompt
-            prompt = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages])
+            prompt = "\n".join(
+                [
+                    f"{msg.get('role', 'user')}: {msg.get('content', '')}"
+                    for msg in messages
+                ]
+            )
             prompt += "\nassistant:"
 
             # Create a modified request with the prompt
@@ -276,13 +291,15 @@ class HFRayDeployable:
 
             # Prepare inference parameters
             inference_inputs = {
-                "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
+                "prompts": [
+                    messages
+                ],  # Wrap messages in a list so apply_chat_template gets the full conversation
                 "max_length": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0.0),
                 "output_logits": request.get("output_logits", False),
-                "output_scores": request.get("output_scores", False),
+                "output_scores": request.get("output_scores", False)
             }
 
             # Run model inference in the thread pool
@@ -299,10 +316,11 @@ class HFRayDeployable:
             scores = results.get("scores", None)
             if scores is not None and isinstance(scores, np.ndarray):
                 scores = scores.tolist()
-
+            
             logits = results.get("logits", None)
             if logits is not None and isinstance(logits, np.ndarray):
                 logits = logits.tolist()
+
 
             output = {
                 "id": f"chatcmpl-{int(time.time())}",
@@ -317,7 +335,7 @@ class HFRayDeployable:
                         },
                         "index": 0,
                         "logprobs": (
-                            {
+                             {
                                 "scores": scores,
                             }
                             if scores is not None
@@ -326,11 +344,13 @@ class HFRayDeployable:
                                 "logits": logits,
                             }
                             if logits is not None
-                            else None,
+                            else None
                         ),
                         "finish_reason": (
                             "length"
-                            if generated_texts and len(generated_texts[0]) >= inference_inputs["max_length"]
+                            if generated_texts
+                            and len(generated_texts[0])
+                            >= inference_inputs["max_length"]
                             else "stop"
                         ),
                     }
@@ -344,7 +364,9 @@ class HFRayDeployable:
             return output
         except Exception as e:
             LOGGER.error(f"Error during chat completion: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Error during chat completion: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Error during chat completion: {str(e)}"
+            )
 
     @app.get("/v1/models")
     async def list_models(self):
@@ -359,7 +381,9 @@ class HFRayDeployable:
         """
         return {
             "object": "list",
-            "data": [{"id": self.model_id, "object": "model", "created": int(time.time())}],
+            "data": [
+                {"id": self.model_id, "object": "model", "created": int(time.time())}
+            ],
         }
 
     @app.get("/v1/health")

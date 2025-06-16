@@ -16,11 +16,10 @@ import json
 import time
 from abc import ABC
 from typing import List, Optional
-
 import numpy as np
-from pytriton.client import ModelClient
 
 from nemo_deploy.utils import str_list2numpy
+from pytriton.client import ModelClient
 
 
 class NemoQueryLLMBase(ABC):
@@ -113,13 +112,17 @@ class NemoQueryLLMPyTorch(NemoQueryLLMBase):
         if top_p is not None:
             inputs["top_p"] = np.full(prompts.shape, top_p, dtype=np.single)
         if repetition_penalty is not None:
-            inputs["repetition_penalty"] = np.full(prompts.shape, repetition_penalty, dtype=np.single)
+            inputs["repetition_penalty"] = np.full(
+                prompts.shape, repetition_penalty, dtype=np.single
+            )
         if add_BOS is not None:
             inputs["add_BOS"] = np.full(prompts.shape, add_BOS, dtype=np.bool_)
         if all_probs is not None:
             inputs["all_probs"] = np.full(prompts.shape, all_probs, dtype=np.bool_)
         if compute_logprob is not None:
-            inputs["compute_logprob"] = np.full(prompts.shape, compute_logprob, dtype=np.bool_)
+            inputs["compute_logprob"] = np.full(
+                prompts.shape, compute_logprob, dtype=np.bool_
+            )
         if end_strings is not None:
             inputs["end_strings"] = str_list2numpy(end_strings)
         if min_length is not None:
@@ -127,9 +130,13 @@ class NemoQueryLLMPyTorch(NemoQueryLLMBase):
         if max_length is not None:
             inputs["max_length"] = np.full(prompts.shape, max_length, dtype=np.int_)
         if apply_chat_template is not None:
-            inputs["apply_chat_template"] = np.full(prompts.shape, apply_chat_template, dtype=np.bool_)
+            inputs["apply_chat_template"] = np.full(
+                prompts.shape, apply_chat_template, dtype=np.bool_
+            )
         if n_top_logprobs is not None:
-            inputs["n_top_logprobs"] = np.full(prompts.shape, n_top_logprobs, dtype=np.int_)
+            inputs["n_top_logprobs"] = np.full(
+                prompts.shape, n_top_logprobs, dtype=np.int_
+            )
         if echo is not None:
             inputs["echo"] = np.full(prompts.shape, echo, dtype=np.bool_)
 
@@ -167,12 +174,19 @@ class NemoQueryLLMPyTorch(NemoQueryLLMBase):
                 if log_probs_output is not None:
                     # logprobs are stored under choices in openai format.
                     openai_response["choices"][0]["logprobs"] = {}
-                    openai_response["choices"][0]["logprobs"]["token_logprobs"] = log_probs_output
+                    openai_response["choices"][0]["logprobs"]["token_logprobs"] = (
+                        log_probs_output
+                    )
                     # TODO athitten: get top_n_logprobs from mcore once available
                     # we take 1st element because cast_output adds an extra dimension
                     if top_log_probs_output is not None:
-                        n_log_probs_output = [json.loads(top_log_prob[0]) for top_log_prob in top_log_probs_output]
-                        openai_response["choices"][0]["logprobs"]["top_logprobs"] = n_log_probs_output
+                        n_log_probs_output = [
+                            json.loads(top_log_prob[0])
+                            for top_log_prob in top_log_probs_output
+                        ]
+                        openai_response["choices"][0]["logprobs"]["top_logprobs"] = (
+                            n_log_probs_output
+                        )
                 return openai_response
             else:
                 return result_dict["sentences"]
@@ -253,15 +267,21 @@ class NemoQueryLLMHF(NemoQueryLLMBase):
         if top_p is not None:
             inputs["top_p"] = np.full(prompts.shape, top_p, dtype=np.single)
         if repetition_penalty is not None:
-            inputs["repetition_penalty"] = np.full(prompts.shape, repetition_penalty, dtype=np.single)
+            inputs["repetition_penalty"] = np.full(
+                prompts.shape, repetition_penalty, dtype=np.single
+            )
         if add_BOS is not None:
             inputs["add_BOS"] = np.full(prompts.shape, add_BOS, dtype=np.bool_)
         if all_probs is not None:
             inputs["all_probs"] = np.full(prompts.shape, all_probs, dtype=np.bool_)
         if output_logits is not None:
-            inputs["output_logits"] = np.full(prompts.shape, output_logits, dtype=np.bool_)
+            inputs["output_logits"] = np.full(
+                prompts.shape, output_logits, dtype=np.bool_
+            )
         if output_scores is not None:
-            inputs["output_scores"] = np.full(prompts.shape, output_scores, dtype=np.bool_)
+            inputs["output_scores"] = np.full(
+                prompts.shape, output_scores, dtype=np.bool_
+            )
         if end_strings is not None:
             inputs["end_strings"] = str_list2numpy(end_strings)
         if min_length is not None:
@@ -269,7 +289,9 @@ class NemoQueryLLMHF(NemoQueryLLMBase):
         if max_length is not None:
             inputs["max_length"] = np.full(prompts.shape, max_length, dtype=np.int_)
 
-        with ModelClient(self.url, self.model_name, init_timeout_s=init_timeout) as client:
+        with ModelClient(
+            self.url, self.model_name, init_timeout_s=init_timeout
+        ) as client:
             result_dict = client.infer_batch(**inputs)
             output_type = client.model_config.outputs[0].dtype
 
@@ -365,10 +387,14 @@ class NemoQueryLLM(NemoQueryLLMBase):
         inputs = {"prompts": prompts}
 
         if min_output_len is not None:
-            inputs["min_output_len"] = np.full(prompts.shape, max_output_len, dtype=np.int_)
+            inputs["min_output_len"] = np.full(
+                prompts.shape, max_output_len, dtype=np.int_
+            )
 
         if max_output_len is not None:
-            inputs["max_output_len"] = np.full(prompts.shape, max_output_len, dtype=np.int_)
+            inputs["max_output_len"] = np.full(
+                prompts.shape, max_output_len, dtype=np.int_
+            )
 
         if top_k is not None:
             inputs["top_k"] = np.full(prompts.shape, top_k, dtype=np.int_)
@@ -389,7 +415,9 @@ class NemoQueryLLM(NemoQueryLLMBase):
             inputs["bad_words_list"] = str_list2numpy(bad_words_list)
 
         if no_repeat_ngram_size is not None:
-            inputs["no_repeat_ngram_size"] = np.full(prompts.shape, no_repeat_ngram_size, dtype=np.single)
+            inputs["no_repeat_ngram_size"] = np.full(
+                prompts.shape, no_repeat_ngram_size, dtype=np.single
+            )
 
         if lora_uids is not None:
             lora_uids = np.char.encode(lora_uids, "utf-8")
@@ -399,7 +427,9 @@ class NemoQueryLLM(NemoQueryLLMBase):
             inputs["use_greedy"] = np.full(prompts.shape, use_greedy, dtype=np.bool_)
 
         if repetition_penalty is not None:
-            inputs["repetition_penalty"] = np.full(prompts.shape, repetition_penalty, dtype=np.single)
+            inputs["repetition_penalty"] = np.full(
+                prompts.shape, repetition_penalty, dtype=np.single
+            )
 
         if add_BOS is not None:
             inputs["add_BOS"] = np.full(prompts.shape, add_BOS, dtype=np.bool_)
@@ -408,18 +438,26 @@ class NemoQueryLLM(NemoQueryLLMBase):
             inputs["all_probs"] = np.full(prompts.shape, all_probs, dtype=np.bool_)
 
         if compute_logprob is not None:
-            inputs["compute_logprob"] = np.full(prompts.shape, compute_logprob, dtype=np.bool_)
+            inputs["compute_logprob"] = np.full(
+                prompts.shape, compute_logprob, dtype=np.bool_
+            )
 
         if end_strings is not None:
             inputs["end_strings"] = str_list2numpy(end_strings)
 
         if output_context_logits is not None:
-            inputs["output_context_logits"] = np.full(prompts.shape, output_context_logits, dtype=np.bool_)
+            inputs["output_context_logits"] = np.full(
+                prompts.shape, output_context_logits, dtype=np.bool_
+            )
 
         if output_generation_logits is not None:
-            inputs["output_generation_logits"] = np.full(prompts.shape, output_generation_logits, dtype=np.bool_)
+            inputs["output_generation_logits"] = np.full(
+                prompts.shape, output_generation_logits, dtype=np.bool_
+            )
 
-        with ModelClient(self.url, self.model_name, init_timeout_s=init_timeout) as client:
+        with ModelClient(
+            self.url, self.model_name, init_timeout_s=init_timeout
+        ) as client:
             result_dict = client.infer_batch(**inputs)
             output_type = client.model_config.outputs[0].dtype
 
@@ -441,9 +479,13 @@ class NemoQueryLLM(NemoQueryLLMBase):
                         "choices": [{"text": sentences}],
                     }
                     if output_generation_logits:
-                        openai_response["choices"][0]["generation_logits"] = result_dict["generation_logits"]
+                        openai_response["choices"][0]["generation_logits"] = (
+                            result_dict["generation_logits"]
+                        )
                     if output_context_logits:
-                        openai_response["choices"][0]["context_logits"] = result_dict["context_logits"]
+                        openai_response["choices"][0]["context_logits"] = result_dict[
+                            "context_logits"
+                        ]
                     return openai_response
                 else:
                     return sentences

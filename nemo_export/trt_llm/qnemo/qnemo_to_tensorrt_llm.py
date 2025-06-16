@@ -47,7 +47,9 @@ def qnemo_to_tensorrt_llm(
     reduce_fusion: bool = True,
 ):
     """Build TensorRT-LLM engine with trtllm-build command in a subprocess."""
-    assert not lora_target_modules, f"LoRA is not supported for quantized checkpoints, got {lora_target_modules}"
+    assert not lora_target_modules, (
+        f"LoRA is not supported for quantized checkpoints, got {lora_target_modules}"
+    )
 
     warnings.warn(
         "Note that setting tensor_parallel_size, pipeline_parallel_size and use_parallel_embedding "
@@ -57,10 +59,16 @@ def qnemo_to_tensorrt_llm(
         stacklevel=3,
     )
 
-    num_build_workers = len(glob.glob(os.path.join(nemo_checkpoint_path, WEIGHTS_NAME.format("*"))))
-    assert num_build_workers, f"No TensorRT-LLM weight files found in {nemo_checkpoint_path}"
+    num_build_workers = len(
+        glob.glob(os.path.join(nemo_checkpoint_path, WEIGHTS_NAME.format("*")))
+    )
+    assert num_build_workers, (
+        f"No TensorRT-LLM weight files found in {nemo_checkpoint_path}"
+    )
 
-    config = PretrainedConfig.from_json_file(os.path.join(nemo_checkpoint_path, CONFIG_NAME))
+    config = PretrainedConfig.from_json_file(
+        os.path.join(nemo_checkpoint_path, CONFIG_NAME)
+    )
 
     log_level = "warning"
 

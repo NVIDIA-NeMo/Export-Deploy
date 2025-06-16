@@ -115,8 +115,12 @@ class vLLMHFExporter(ITritonDeployable):
         if lora_model_name is not None:
             if self.lora_models is None:
                 raise Exception("No lora models are available.")
-            assert lora_model_name in self.lora_models.keys(), "Lora model was not added before"
-            lora_request = LoRARequest(lora_model_name, 1, self.lora_models[lora_model_name])
+            assert lora_model_name in self.lora_models.keys(), (
+                "Lora model was not added before"
+            )
+            lora_request = LoRARequest(
+                lora_model_name, 1, self.lora_models[lora_model_name]
+            )
 
         sampling_params = SamplingParams(
             max_tokens=max_output_len,
@@ -125,7 +129,9 @@ class vLLMHFExporter(ITritonDeployable):
             top_p=top_p,
         )
 
-        request_output = self.model.generate(input_texts, sampling_params, lora_request=lora_request)
+        request_output = self.model.generate(
+            input_texts, sampling_params, lora_request=lora_request
+        )
         output = []
         for o in request_output:
             output.append(o.outputs[0].text)

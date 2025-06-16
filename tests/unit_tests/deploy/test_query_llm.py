@@ -49,11 +49,15 @@ class TestNemoQueryLLMPyTorch:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test basic query
-        response = query.query_llm(prompts=["test prompt"], max_length=100, temperature=0.7, top_k=1, top_p=0.9)
+        response = query.query_llm(
+            prompts=["test prompt"], max_length=100, temperature=0.7, top_k=1, top_p=0.9
+        )
 
         assert isinstance(response, dict)
         assert "choices" in response
@@ -71,7 +75,9 @@ class TestNemoQueryLLMPyTorch:
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with logprobs
-        response = query.query_llm(prompts=["test prompt"], max_length=100, compute_logprob=True)
+        response = query.query_llm(
+            prompts=["test prompt"], max_length=100, compute_logprob=True
+        )
 
         assert "logprobs" in response["choices"][0]
         assert "token_logprobs" in response["choices"][0]["logprobs"]
@@ -81,7 +87,9 @@ class TestNemoQueryLLMPyTorch:
         # Setup mock for unknown output keyword case
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"unknown_key": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "unknown_key": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with unknown output keyword
@@ -94,7 +102,9 @@ class TestNemoQueryLLMPyTorch:
         # Setup mock for non-bytes output type
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"sentences": np.array(["test response"])}
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array(["test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.float32)]
 
         # Test query with non-bytes output
@@ -115,7 +125,9 @@ class TestNemoQueryLLMPyTorch:
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with top logprobs
-        response = query.query_llm(prompts=["test prompt"], compute_logprob=True, n_top_logprobs=5)
+        response = query.query_llm(
+            prompts=["test prompt"], compute_logprob=True, n_top_logprobs=5
+        )
 
         assert "logprobs" in response["choices"][0]
         assert "top_logprobs" in response["choices"][0]["logprobs"]
@@ -125,7 +137,9 @@ class TestNemoQueryLLMPyTorch:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with all parameters
@@ -145,7 +159,7 @@ class TestNemoQueryLLMPyTorch:
             apply_chat_template=True,
             n_top_logprobs=3,
             init_timeout=30.0,
-            echo=True,
+            echo=True
         )
 
         assert isinstance(response, dict)
@@ -167,11 +181,15 @@ class TestNemoQueryLLMHF:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test basic query
-        response = query.query_llm(prompts=["test prompt"], max_length=100, temperature=0.7, top_k=1, top_p=0.9)
+        response = query.query_llm(
+            prompts=["test prompt"], max_length=100, temperature=0.7, top_k=1, top_p=0.9
+        )
 
         assert isinstance(response, dict)
         assert "choices" in response
@@ -189,7 +207,9 @@ class TestNemoQueryLLMHF:
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with logits
-        response = query.query_llm(prompts=["test prompt"], max_length=100, output_logits=True)
+        response = query.query_llm(
+            prompts=["test prompt"], max_length=100, output_logits=True
+        )
 
         assert "logits" in response
 
@@ -198,7 +218,9 @@ class TestNemoQueryLLMHF:
         # Setup mock for unknown output keyword case
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"unknown_key": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "unknown_key": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with unknown output keyword
@@ -211,7 +233,9 @@ class TestNemoQueryLLMHF:
         # Setup mock for non-bytes output type
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"sentences": np.array(["test response"])}
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array(["test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.float32)]
 
         # Test query with non-bytes output
@@ -231,7 +255,9 @@ class TestNemoQueryLLMHF:
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with scores
-        response = query.query_llm(prompts=["test prompt"], max_length=100, output_scores=True)
+        response = query.query_llm(
+            prompts=["test prompt"], max_length=100, output_scores=True
+        )
 
         assert "scores" in response
 
@@ -240,7 +266,9 @@ class TestNemoQueryLLMHF:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with all parameters
@@ -258,7 +286,7 @@ class TestNemoQueryLLMHF:
             end_strings=["</s>"],
             min_length=10,
             max_length=100,
-            init_timeout=30.0,
+            init_timeout=30.0
         )
 
         assert isinstance(response, dict)
@@ -280,7 +308,9 @@ class TestNemoQueryLLM:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"outputs": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "outputs": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test basic query
@@ -300,11 +330,15 @@ class TestNemoQueryLLM:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"outputs": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "outputs": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with OpenAI format
-        response = query.query_llm(prompts=["test prompt"], max_output_len=100, openai_format_response=True)
+        response = query.query_llm(
+            prompts=["test prompt"], max_output_len=100, openai_format_response=True
+        )
 
         assert isinstance(response, dict)
         assert "choices" in response
@@ -315,11 +349,15 @@ class TestNemoQueryLLM:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"outputs": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "outputs": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with stop words
-        response = query.query_llm(prompts=["test prompt"], max_output_len=100, stop_words_list=["stop"])
+        response = query.query_llm(
+            prompts=["test prompt"], max_output_len=100, stop_words_list=["stop"]
+        )
 
         assert isinstance(response[0], str)
         assert response[0] == "test response"
@@ -329,11 +367,15 @@ class TestNemoQueryLLM:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"outputs": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "outputs": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with bad words
-        response = query.query_llm(prompts=["test prompt"], max_output_len=100, bad_words_list=["bad"])
+        response = query.query_llm(
+            prompts=["test prompt"], max_output_len=100, bad_words_list=["bad"]
+        )
 
         assert isinstance(response[0], str)
         assert response[0] == "test response"
@@ -343,7 +385,9 @@ class TestNemoQueryLLM:
         # Setup mock for unknown output keyword case
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"unknown_key": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "unknown_key": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with unknown output keyword
@@ -356,7 +400,9 @@ class TestNemoQueryLLM:
         # Setup mock for non-bytes output type
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"outputs": np.array(["test response"])}
+        mock_instance.infer_batch.return_value = {
+            "outputs": np.array(["test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.float32)]
 
         # Test query with non-bytes output
@@ -369,7 +415,9 @@ class TestNemoQueryLLM:
         # Setup mock for sentences fallback case
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query that falls back to sentences key
@@ -383,11 +431,17 @@ class TestNemoQueryLLM:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"outputs": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "outputs": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with LoRA UIDs
-        response = query.query_llm(prompts=["test prompt"], max_output_len=100, lora_uids=["lora1", "lora2"])
+        response = query.query_llm(
+            prompts=["test prompt"],
+            max_output_len=100,
+            lora_uids=["lora1", "lora2"]
+        )
 
         assert isinstance(response[0], str)
         assert response[0] == "test response"
@@ -397,11 +451,17 @@ class TestNemoQueryLLM:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"outputs": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "outputs": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with min_output_len
-        response = query.query_llm(prompts=["test prompt"], min_output_len=10, max_output_len=100)
+        response = query.query_llm(
+            prompts=["test prompt"],
+            min_output_len=10,
+            max_output_len=100
+        )
 
         assert isinstance(response[0], str)
         assert response[0] == "test response"
@@ -414,7 +474,7 @@ class TestNemoQueryLLM:
         mock_instance.infer_batch.return_value = {
             "outputs": np.array([b"test response"]),
             "generation_logits": np.array([[0.1, 0.2, 0.3]]),
-            "context_logits": np.array([[0.4, 0.5, 0.6]]),
+            "context_logits": np.array([[0.4, 0.5, 0.6]])
         }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
@@ -423,7 +483,7 @@ class TestNemoQueryLLM:
             prompts=["test prompt"],
             openai_format_response=True,
             output_generation_logits=True,
-            output_context_logits=True,
+            output_context_logits=True
         )
 
         assert isinstance(response, dict)
@@ -436,7 +496,9 @@ class TestNemoQueryLLM:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {"outputs": np.array([b"test response"])}
+        mock_instance.infer_batch.return_value = {
+            "outputs": np.array([b"test response"])
+        }
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with all parameters
@@ -461,7 +523,7 @@ class TestNemoQueryLLM:
             init_timeout=30.0,
             openai_format_response=False,
             output_context_logits=True,
-            output_generation_logits=True,
+            output_generation_logits=True
         )
 
         assert isinstance(response[0], str)

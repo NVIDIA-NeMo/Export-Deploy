@@ -27,8 +27,12 @@ def get_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Exports NeMo checkpoint to TensorRT-LLM engine",
     )
-    parser.add_argument("-nc", "--nemo_checkpoint", required=True, type=str, help="Source model path")
-    parser.add_argument("-mt", "--model_type", type=str, help="Type of the TensorRT-LLM model.")
+    parser.add_argument(
+        "-nc", "--nemo_checkpoint", required=True, type=str, help="Source model path"
+    )
+    parser.add_argument(
+        "-mt", "--model_type", type=str, help="Type of the TensorRT-LLM model."
+    )
     parser.add_argument(
         "-mr",
         "--model_repository",
@@ -78,7 +82,9 @@ def get_args():
         type=int,
         help="Max batch size of the model",
     )
-    parser.add_argument("-mnt", "--max_num_tokens", default=None, type=int, help="Max number of tokens")
+    parser.add_argument(
+        "-mnt", "--max_num_tokens", default=None, type=int, help="Max number of tokens"
+    )
     parser.add_argument(
         "-ont",
         "--opt_num_tokens",
@@ -150,7 +156,8 @@ def get_args():
         "--max_lora_rank",
         type=int,
         default=64,
-        help="maximum lora rank for different lora modules. It is used to compute the workspace size of lora plugin.",
+        help="maximum lora rank for different lora modules. "
+        "It is used to compute the workspace size of lora plugin.",
     )
     parser.add_argument(
         "-dm",
@@ -185,10 +192,16 @@ def get_args():
             return False
         if optional and s == "auto":
             return None
-        raise argparse.ArgumentTypeError(f"Invalid boolean value for argument --{name}: '{s}'")
+        raise argparse.ArgumentTypeError(
+            f"Invalid boolean value for argument --{name}: '{s}'"
+        )
 
-    args.export_fp8_quantized = str_to_bool("export_fp8_quantized", args.export_fp8_quantized, optional=True)
-    args.use_fp8_kv_cache = str_to_bool("use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True)
+    args.export_fp8_quantized = str_to_bool(
+        "export_fp8_quantized", args.export_fp8_quantized, optional=True
+    )
+    args.use_fp8_kv_cache = str_to_bool(
+        "use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True
+    )
     return args
 
 

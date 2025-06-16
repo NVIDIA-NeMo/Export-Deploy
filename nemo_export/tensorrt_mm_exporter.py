@@ -128,7 +128,9 @@ class TensorRTMMExporter(ITritonDeployable):
                 if len(os.listdir(self.model_dir)) > 0:
                     raise Exception("Couldn't delete all files.")
             elif len(os.listdir(self.model_dir)) > 0:
-                raise Exception("There are files in this folder. Try setting delete_existing_files=True.")
+                raise Exception(
+                    "There are files in this folder. Try setting delete_existing_files=True."
+                )
         else:
             Path(self.model_dir).mkdir(parents=True, exist_ok=True)
 
@@ -207,7 +209,10 @@ class TensorRTMMExporter(ITritonDeployable):
     ):
         """Run forward with loaded TRTLLM engine."""
         if self.runner is None:
-            raise Exception("A nemo checkpoint should be exported and then it should be loaded first to run inference.")
+            raise Exception(
+                "A nemo checkpoint should be exported and "
+                "then it should be loaded first to run inference."
+            )
 
         if isinstance(self.runner, TRTLLMRunner):
             self.runner.args.image_path = input_media
@@ -251,7 +256,9 @@ class TensorRTMMExporter(ITritonDeployable):
             + self.get_input_media_tensors()
             + [
                 Tensor(name="batch_size", shape=(-1,), dtype=np.int_, optional=True),
-                Tensor(name="max_output_len", shape=(-1,), dtype=np.int_, optional=True),
+                Tensor(
+                    name="max_output_len", shape=(-1,), dtype=np.int_, optional=True
+                ),
                 Tensor(name="top_k", shape=(-1,), dtype=np.int_, optional=True),
                 Tensor(name="top_p", shape=(-1,), dtype=np.single, optional=True),
                 Tensor(name="temperature", shape=(-1,), dtype=np.single, optional=True),
@@ -293,12 +300,16 @@ class TensorRTMMExporter(ITritonDeployable):
             infer_input = {"input_text": str_ndarray2list(inputs.pop("input_text")[0])}
             video_model_list = ["video-neva", "lita", "vita"]
             if self.runner.model_type in ["neva", "vila", "mllama"]:
-                infer_input["input_image"] = ndarray2img(inputs.pop("input_media")[0])[0]
+                infer_input["input_image"] = ndarray2img(inputs.pop("input_media")[0])[
+                    0
+                ]
             elif self.runner.model_type in video_model_list:
                 infer_input["input_image"] = inputs.pop("input_media")[0]
             elif self.runner.model_type == "salm":
                 infer_input["input_signal"] = inputs.pop("input_signal")
-                infer_input["input_signal_length"] = inputs.pop("input_signal_length")[:, 0]
+                infer_input["input_signal_length"] = inputs.pop("input_signal_length")[
+                    :, 0
+                ]
             if "batch_size" in inputs:
                 infer_input["batch_size"] = inputs.pop("batch_size")
             if "max_output_len" in inputs:
@@ -314,7 +325,9 @@ class TensorRTMMExporter(ITritonDeployable):
             if "num_beams" in inputs:
                 infer_input["num_beams"] = inputs.pop("num_beams")
             if "lora_uids" in inputs:
-                lora_uids = np.char.decode(inputs.pop("lora_uids").astype("bytes"), encoding="utf-8")
+                lora_uids = np.char.decode(
+                    inputs.pop("lora_uids").astype("bytes"), encoding="utf-8"
+                )
                 infer_input["lora_uids"] = lora_uids[0].tolist()
 
             if isinstance(self.runner, TRTLLMRunner):
@@ -322,7 +335,9 @@ class TensorRTMMExporter(ITritonDeployable):
                 self.runner.args.top_k = infer_input.pop("top_k")
                 self.runner.args.top_p = infer_input.pop("top_p")
                 self.runner.args.temperature = infer_input.pop("temperature")
-                self.runner.args.repetition_penalty = infer_input.pop("repetition_penalty")
+                self.runner.args.repetition_penalty = infer_input.pop(
+                    "repetition_penalty"
+                )
                 self.runner.args.num_beams = infer_input.pop("num_beams")
                 output_texts = self.runner.run(**infer_input)[1]
             else:

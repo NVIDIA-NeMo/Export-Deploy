@@ -29,7 +29,9 @@ from nemo_export.onnx_llm_exporter import OnnxLLMExporter
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Test ONNX and TensorRT export for LLM embedding models.")
+    parser = argparse.ArgumentParser(
+        description="Test ONNX and TensorRT export for LLM embedding models."
+    )
     parser.add_argument(
         "--hf_model_path",
         type=str,
@@ -54,7 +56,9 @@ def get_args():
         default="/tmp/onnx_model/",
         help="Path to store ONNX model.",
     )
-    parser.add_argument("--onnx_opset", type=int, default=17, help="ONNX version to use for export.")
+    parser.add_argument(
+        "--onnx_opset", type=int, default=17, help="ONNX version to use for export."
+    )
     parser.add_argument(
         "--trt_model_path",
         type=str,
@@ -129,7 +133,9 @@ def export_onnx_trt(args):
 
         def forward_loop(model, data, tokenizer):
             for inputs in tqdm(data):
-                batch = tokenizer(inputs, padding=True, truncation=True, return_tensors="pt")
+                batch = tokenizer(
+                    inputs, padding=True, truncation=True, return_tensors="pt"
+                )
                 batch = {k: v.to(model.device) for k, v in batch.items()}
                 with torch.no_grad():
                     model(**batch)
@@ -139,7 +145,9 @@ def export_onnx_trt(args):
             batch_size=args.calibration_batch_size,
             calib_size=args.calibration_dataset_size,
         )
-        forward_loop = partial(forward_loop, data=data, tokenizer=onnx_exporter.tokenizer)
+        forward_loop = partial(
+            forward_loop, data=data, tokenizer=onnx_exporter.tokenizer
+        )
 
         onnx_exporter.quantize(quant_cfg=args.quant_cfg, forward_loop=forward_loop)
 

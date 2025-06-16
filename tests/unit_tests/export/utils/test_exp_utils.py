@@ -73,7 +73,9 @@ class TestUtils:
         assert not os.path.exists(os.path.join(model_dir, "test.txt"))
 
         # Test with subdir
-        prepare_directory_for_export(model_dir, delete_existing_files=False, subdir="subdir")
+        prepare_directory_for_export(
+            model_dir, delete_existing_files=False, subdir="subdir"
+        )
         assert os.path.exists(os.path.join(model_dir, "subdir"))
 
     @pytest.mark.run_only_on("GPU")
@@ -100,7 +102,9 @@ class TestUtils:
         from nemo_export.utils.utils import torch_dtype_from_precision
 
         # Test with megatron_amp_O2=False
-        assert torch_dtype_from_precision("bf16", megatron_amp_O2=False) == torch.float32
+        assert (
+            torch_dtype_from_precision("bf16", megatron_amp_O2=False) == torch.float32
+        )
 
         # Test with different precision values
         assert torch_dtype_from_precision("bf16") == torch.bfloat16
