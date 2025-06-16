@@ -9,11 +9,11 @@ Thanks for your interest in contributing to Export-Deploy!
 1. **Build and run the Docker container**:
 
 ```bash
-docker build -f docker/Dockerfile.ci -t Export-Deploy .
+docker build -f docker/Dockerfile.ci -t export-deploy .
 ```
 
 ```bash
-docker run --rm -it --entrypoint bash --runtime nvidia --gpus all Export-Deploy
+docker run --rm -it --entrypoint bash --runtime nvidia --gpus all export-deploy
 ```
 
 ### Development Dependencies
