@@ -26,7 +26,7 @@ NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and 
 
 ### Using Docker
 
-Export-Deploy provides support for TRT-LLM and vLLM.  
+NeMo-Export-Deploy provides support for TRT-LLM and vLLM.  
 
 Build a container with TRT-LLM support:
 
@@ -288,7 +288,7 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
 
 ## Installation
 
-For Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
+For NeMo-Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
 
 ```bash
 pip install nemo-export-deploy
@@ -334,7 +334,7 @@ pip install -e '.[vllm]'
 
 For detailed documentation, please refer to:
 
-- [Export-Deploy User Guide](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)
+- [NeMo-Export-Deploy User Guide](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)
 
 ## Contributing
 
