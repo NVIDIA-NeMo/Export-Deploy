@@ -1,6 +1,6 @@
-# Contributing To Export-Deploy
+# Contributing To NeMo Export-Deploy
 
-Thanks for your interest in contributing to Export-Deploy!
+Thanks for your interest in contributing to NeMo Export-Deploy!
 
 ## Setting Up
 
@@ -103,7 +103,7 @@ This ensures that all significant changes are well-thought-out and properly docu
 1. **User Adoption**: Helps users understand how to effectively use the library's features in their projects
 2. **Developer Extensibility**: Enables developers to understand the internal architecture and implementation details, making it easier to modify, extend, or adapt the code for their specific use cases
 
-Quality documentation is essential for both the usability of Export-Deploy and its ability to be customized by the community.
+Quality documentation is essential for both the usability of NeMo Export-Deploy and its ability to be customized by the community.
 
 ## Code Quality
 

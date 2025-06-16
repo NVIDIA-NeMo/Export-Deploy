@@ -33,7 +33,7 @@ Build a container with TRT-LLM support:
 ```bash
 docker build \
     -f docker/Dockerfile.ci \
-    -t export-deploy \
+    -t nemo-export-deploy \
     --build-arg INFERENCE_FRAMEWORK=trtllm \
     .
 ```
@@ -43,7 +43,7 @@ Or, alternatively to build a container with vLLM support, run:
 ```bash
 docker build \
     -f docker/Dockerfile.ci \
-    -t export-deploy \
+    -t nemo-export-deploy \
     --build-arg INFERENCE_FRAMEWORK=vllm \
     .
 ```
@@ -60,7 +60,7 @@ docker run \
     --gpus all \
     -v ${PWD}:/opt/Export-Deploy \
     -v ${PWD}/checkpoints/:/opt/checkpoints/ \
-    export-deploy
+    nemo-export-deploy
 ```
 
 ### Export and Deploy LLM Examples
@@ -288,7 +288,7 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
 
 ## Installation
 
-For NeMo-Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
+For NeMo Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
 
 ```bash
 pip install nemo-export-deploy
