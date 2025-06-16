@@ -132,7 +132,9 @@ class TestSentencePieceTokenizer(unittest.TestCase):
 
     def test_legacy_mode(self):
         special_tokens = ["[PAD]", "[BOS]", "[EOS]"]
-        tokenizer = SentencePieceTokenizer(model_path=self.model_path, special_tokens=special_tokens, legacy=True)
+        tokenizer = SentencePieceTokenizer(
+            model_path=self.model_path, special_tokens=special_tokens, legacy=True
+        )
 
         # Test adding special tokens
         self.assertGreater(tokenizer.vocab_size, tokenizer.original_vocab_size)

@@ -96,7 +96,9 @@ class TestHuggingFaceLLMDeploy:
     def test_initialization_with_model_and_tokenizer(self):
         model = MagicMock(spec=AutoModelForCausalLM)
         tokenizer = MagicMock(spec=AutoTokenizer)
-        deployer = HuggingFaceLLMDeploy(model=model, tokenizer=tokenizer, task="text-generation")
+        deployer = HuggingFaceLLMDeploy(
+            model=model, tokenizer=tokenizer, task="text-generation"
+        )
         assert deployer.model == model
         assert deployer.tokenizer == tokenizer
         assert deployer.task == "text-generation"
@@ -112,11 +114,15 @@ class TestHuggingFaceLLMDeploy:
                 return_value=mock_tokenizer,
             ),
         ):
-            deployer = HuggingFaceLLMDeploy(hf_model_id_path="test/model", task="text-generation")
+            deployer = HuggingFaceLLMDeploy(
+                hf_model_id_path="test/model", task="text-generation"
+            )
             assert deployer.model == mock_model
             assert deployer.tokenizer == mock_tokenizer
 
-    def test_initialization_with_peft_model(self, mock_model, mock_tokenizer, mock_peft_model):
+    def test_initialization_with_peft_model(
+        self, mock_model, mock_tokenizer, mock_peft_model
+    ):
         with (
             patch(
                 "transformers.AutoModelForCausalLM.from_pretrained",
@@ -135,7 +141,9 @@ class TestHuggingFaceLLMDeploy:
             assert deployer.model == mock_peft_model.from_pretrained.return_value
 
     def test_triton_input_output_config(self):
-        deployer = HuggingFaceLLMDeploy(model=MagicMock(), tokenizer=MagicMock(), task="text-generation")
+        deployer = HuggingFaceLLMDeploy(
+            model=MagicMock(), tokenizer=MagicMock(), task="text-generation"
+        )
 
         inputs = deployer.get_triton_input
         outputs = deployer.get_triton_output
@@ -153,25 +161,33 @@ class TestHuggingFaceLLMDeploy:
         assert any(tensor.name == "scores" for tensor in outputs)
 
     def test_generate_without_model(self):
-        deployer = HuggingFaceLLMDeploy(model=MagicMock(), tokenizer=MagicMock(), task="text-generation")
+        deployer = HuggingFaceLLMDeploy(
+            model=MagicMock(), tokenizer=MagicMock(), task="text-generation"
+        )
         deployer.model = None
         with pytest.raises(RuntimeError):
             deployer.generate(text_inputs=["test prompt"])
 
     def test_generate_with_model(self, mock_model, mock_tokenizer, mock_torch_cuda):
-        deployer = HuggingFaceLLMDeploy(model=mock_model, tokenizer=mock_tokenizer, task="text-generation")
+        deployer = HuggingFaceLLMDeploy(
+            model=mock_model, tokenizer=mock_tokenizer, task="text-generation"
+        )
         output = deployer.generate(text_inputs=["test prompt"])
         assert output == ["Generated text"]
         mock_model.generate.assert_called_once()
         mock_tokenizer.batch_decode.assert_called_once()
 
-    def test_generate_with_output_logits_and_scores(self, mock_model, mock_tokenizer, mock_torch_cuda):
+    def test_generate_with_output_logits_and_scores(
+        self, mock_model, mock_tokenizer, mock_torch_cuda
+    ):
         mock_model.generate.return_value = {
             "sequences": torch.tensor([[1, 2, 3]]),
             "logits": torch.tensor([1.0]),
             "scores": torch.tensor([0.5]),
         }
-        deployer = HuggingFaceLLMDeploy(model=mock_model, tokenizer=mock_tokenizer, task="text-generation")
+        deployer = HuggingFaceLLMDeploy(
+            model=mock_model, tokenizer=mock_tokenizer, task="text-generation"
+        )
         output = deployer.generate(
             text_inputs=["test prompt"],
             output_logits=True,
@@ -184,7 +200,9 @@ class TestHuggingFaceLLMDeploy:
         assert "scores" in output
 
     def test_triton_infer_fn(self, mock_model, mock_tokenizer):
-        deployer = HuggingFaceLLMDeploy(model=mock_model, tokenizer=mock_tokenizer, task="text-generation")
+        deployer = HuggingFaceLLMDeploy(
+            model=mock_model, tokenizer=mock_tokenizer, task="text-generation"
+        )
         request_data = {
             "prompts": np.array(["test prompt"]),
             "temperature": np.array([[1.0]]),
@@ -200,7 +218,9 @@ class TestHuggingFaceLLMDeploy:
         assert isinstance(output[0]["sentences"], np.ndarray)
 
     def test_triton_infer_fn_with_error(self, mock_model, mock_tokenizer):
-        deployer = HuggingFaceLLMDeploy(model=mock_model, tokenizer=mock_tokenizer, task="text-generation")
+        deployer = HuggingFaceLLMDeploy(
+            model=mock_model, tokenizer=mock_tokenizer, task="text-generation"
+        )
         mock_model.generate.side_effect = Exception("Test error")
         request_data = {
             "prompts": np.array(["test prompt"]),

@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from nemo_export_deploy_common.package_info import __version__, __package_name__
+
 from nemo_deploy.deploy_base import DeployBase
 from nemo_deploy.deploy_pytriton import DeployPyTriton
 from nemo_deploy.triton_deployable import ITritonDeployable
-from nemo_export_deploy_common.package_info import __package_name__, __version__
 
 __all__ = [
     "DeployBase",

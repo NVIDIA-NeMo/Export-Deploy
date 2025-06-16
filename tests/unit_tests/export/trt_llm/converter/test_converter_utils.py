@@ -22,7 +22,10 @@ def test_any_word_in_key():
     # Test positive cases
     from nemo_export.trt_llm.converter.utils import any_word_in_key
 
-    assert any_word_in_key("model.layer1.attention.dense.weight", ["attention", "mlp"]) == True
+    assert (
+        any_word_in_key("model.layer1.attention.dense.weight", ["attention", "mlp"])
+        == True
+    )
     assert any_word_in_key("model.layer1.mlp.weight", ["attention", "mlp"]) == True
 
     # Test negative cases
@@ -38,8 +41,14 @@ def test_get_trt_llm_keyname():
     assert get_trt_llm_keyname("final_layernorm.weight") == "transformer.ln_f.weight"
 
     # Test layer cases
-    assert get_trt_llm_keyname("layers.1.attention.dense.weight") == "transformer.layers.1.attention.dense.weight"
-    assert get_trt_llm_keyname("layers.2.mlp.linear_fc2.weight") == "transformer.layers.2.mlp.proj.weight"
+    assert (
+        get_trt_llm_keyname("layers.1.attention.dense.weight")
+        == "transformer.layers.1.attention.dense.weight"
+    )
+    assert (
+        get_trt_llm_keyname("layers.2.mlp.linear_fc2.weight")
+        == "transformer.layers.2.mlp.proj.weight"
+    )
 
 
 @pytest.mark.run_only_on("GPU")

@@ -227,7 +227,10 @@ def nemo_deploy(argv):
         nm.stop()
 
     except Exception as error:
-        LOGGER.error("An error has occurred while setting up or serving the model. Error message: " + str(error))
+        LOGGER.error(
+            "An error has occurred while setting up or serving the model. Error message: "
+            + str(error)
+        )
         return
 
     # Clean up the temporary directory

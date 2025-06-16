@@ -22,7 +22,9 @@ LOGGER = logging.getLogger("NeMo")
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Query a deployed HuggingFace model using Ray")
+    parser = argparse.ArgumentParser(
+        description="Query a deployed HuggingFace model using Ray"
+    )
     parser.add_argument(
         "--host",
         type=str,

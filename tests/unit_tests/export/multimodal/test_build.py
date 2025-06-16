@@ -41,7 +41,9 @@ class TestBuild(unittest.TestCase):
             "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.weight": torch.randn(
                 4096, 768
             ),
-            "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.bias": torch.randn(4096),
+            "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector.bias": torch.randn(
+                4096
+            ),
         }
 
     @pytest.mark.run_only_on("GPU")

@@ -39,7 +39,9 @@ Finally, the output NeMo model is loaded using the Fabric API of pl.Trainer.
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Test Llama2 7B model model conversion from HF")
+    parser = argparse.ArgumentParser(
+        description="Test Llama2 7B model model conversion from HF"
+    )
     parser.add_argument("--hf_model", type=str, help="Original HF model")
     parser.add_argument(
         "--model",
@@ -52,7 +54,9 @@ def get_args():
         help="Config class from nemo.collections.llm module",
     )
     parser.add_argument("--output_path", type=str, help="NeMo 2.0 export path")
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite the output model if exists")
+    parser.add_argument(
+        "--overwrite", action="store_true", help="Overwrite the output model if exists"
+    )
     return parser.parse_args()
 
 
