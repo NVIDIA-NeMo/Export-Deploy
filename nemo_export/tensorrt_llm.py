@@ -213,7 +213,7 @@ class TensorRTLLM(ITritonDeployable):
         use_embedding_sharing: bool = False,
         paged_kv_cache: bool = True,
         remove_input_padding: bool = True,
-        paged_context_fmha: bool = False,
+        use_paged_context_fmha: bool = True,
         dtype: Optional[str] = None,
         load_model: bool = True,
         use_lora_plugin: str = None,
@@ -251,7 +251,7 @@ class TensorRTLLM(ITritonDeployable):
             use_embedding_sharing (bool, optional): Share embeddings. Defaults to False.
             paged_kv_cache (bool, optional): Use paged KV cache. Defaults to True.
             remove_input_padding (bool, optional): Remove input padding. Defaults to True.
-            paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to False.
+            use_paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to True.
             dtype (Optional[str], optional): Data type for model weights. Defaults to None.
             load_model (bool, optional): Load model after export. Defaults to True.
             use_lora_plugin (str, optional): Use LoRA plugin. Defaults to None.
@@ -350,7 +350,7 @@ class TensorRTLLM(ITritonDeployable):
                     pipeline_parallel_size=pipeline_parallelism_size,
                     use_parallel_embedding=use_parallel_embedding,
                     paged_kv_cache=paged_kv_cache,
-                    paged_context_fmha=paged_context_fmha,
+                    use_paged_context_fmha=use_paged_context_fmha,
                     remove_input_padding=remove_input_padding,
                     use_lora_plugin=use_lora_plugin,
                     lora_target_modules=lora_target_modules,
@@ -476,7 +476,7 @@ class TensorRTLLM(ITritonDeployable):
                         max_prompt_embedding_table_size=0,
                         paged_kv_cache=paged_kv_cache,
                         remove_input_padding=remove_input_padding,
-                        paged_context_fmha=paged_context_fmha,
+                        paged_context_fmha=use_paged_context_fmha,  # TODO: rename paged_context_fmha -> use_paged_context_fmha in MCore
                         use_refit=False,
                         max_num_tokens=max_num_tokens,
                         max_seq_len=max_seq_len,
@@ -535,7 +535,7 @@ class TensorRTLLM(ITritonDeployable):
         max_seq_len: Optional[int] = 512,
         gemm_plugin: str = "auto",
         remove_input_padding: bool = True,
-        paged_context_fmha: bool = False,
+        use_paged_context_fmha: bool = True,
         paged_kv_cache: bool = True,
         tokens_per_block: int = 128,
         multiple_profiles: bool = False,
@@ -562,7 +562,7 @@ class TensorRTLLM(ITritonDeployable):
             max_seq_len (Optional[int], optional): Maximum sequence length. Defaults to 512.
             gemm_plugin (str, optional): GEMM plugin type. Defaults to "auto".
             remove_input_padding (bool, optional): Remove input padding. Defaults to True.
-            paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to False.
+            use_paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to True.
             paged_kv_cache (bool, optional): Use paged KV cache. Defaults to True.
             tokens_per_block (int, optional): Tokens per block. Defaults to 128.
             multiple_profiles (bool, optional): Use multiple profiles. Defaults to False.
@@ -613,7 +613,7 @@ class TensorRTLLM(ITritonDeployable):
         else:
             plugin_config.paged_kv_cache = False
         plugin_config.remove_input_padding = remove_input_padding
-        plugin_config.use_paged_context_fmha = paged_context_fmha
+        plugin_config.use_paged_context_fmha = use_paged_context_fmha
         plugin_config.multiple_profiles = multiple_profiles
         plugin_config.reduce_fusion = reduce_fusion
         max_seq_len = max_input_len + max_output_len

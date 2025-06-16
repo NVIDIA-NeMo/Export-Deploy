@@ -35,7 +35,7 @@ def qnemo_to_tensorrt_llm(
     pipeline_parallel_size: Optional[int] = None,
     use_parallel_embedding: bool = False,
     paged_kv_cache: bool = True,
-    paged_context_fmha: bool = False,
+    use_paged_context_fmha: bool = True,
     remove_input_padding: bool = True,
     use_lora_plugin: Optional[str] = None,
     lora_target_modules: Optional[List[str]] = None,
@@ -97,7 +97,7 @@ def qnemo_to_tensorrt_llm(
     build_cmd.extend(["--max_beam_width", str(max_beam_width)])
     build_cmd.extend(["--max_prompt_embedding_table_size", str(max_prompt_embedding_table_size)])
     build_cmd.extend(["--paged_kv_cache", "enable" if paged_kv_cache else "disable"])
-    build_cmd.extend(["--use_paged_context_fmha", "enable" if paged_context_fmha else "disable"])
+    build_cmd.extend(["--use_paged_context_fmha", "enable" if use_paged_context_fmha else "disable"])
     build_cmd.extend(["--remove_input_padding", "enable" if remove_input_padding else "disable"])
     build_cmd.extend(["--multiple_profiles", "enable" if multiple_profiles else "disable"])
     build_cmd.extend(["--reduce_fusion", "enable" if reduce_fusion else "disable"])

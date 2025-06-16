@@ -87,7 +87,7 @@ def test_nemo2_convert_to_export():
         use_embedding_sharing=False,
         paged_kv_cache=True,
         remove_input_padding=True,
-        paged_context_fmha=False,
+        use_paged_context_fmha=False,
         dtype=None,
         load_model=True,
         use_lora_plugin=None,
