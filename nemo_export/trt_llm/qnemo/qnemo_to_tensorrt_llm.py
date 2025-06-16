@@ -35,7 +35,7 @@ def qnemo_to_tensorrt_llm(
     pipeline_parallel_size: Optional[int] = None,
     use_parallel_embedding: bool = False,
     paged_kv_cache: bool = True,
-    paged_context_fmha: bool = False,
+    paged_context_fmha: bool = True,
     remove_input_padding: bool = True,
     use_lora_plugin: Optional[str] = None,
     lora_target_modules: Optional[List[str]] = None,

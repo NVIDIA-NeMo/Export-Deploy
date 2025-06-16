@@ -213,7 +213,7 @@ class TensorRTLLM(ITritonDeployable):
         use_embedding_sharing: bool = False,
         paged_kv_cache: bool = True,
         remove_input_padding: bool = True,
-        paged_context_fmha: bool = False,
+        paged_context_fmha: bool = True,
         dtype: Optional[str] = None,
         load_model: bool = True,
         use_lora_plugin: str = None,
@@ -251,7 +251,7 @@ class TensorRTLLM(ITritonDeployable):
             use_embedding_sharing (bool, optional): Share embeddings. Defaults to False.
             paged_kv_cache (bool, optional): Use paged KV cache. Defaults to True.
             remove_input_padding (bool, optional): Remove input padding. Defaults to True.
-            paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to False.
+            paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to True.
             dtype (Optional[str], optional): Data type for model weights. Defaults to None.
             load_model (bool, optional): Load model after export. Defaults to True.
             use_lora_plugin (str, optional): Use LoRA plugin. Defaults to None.
@@ -535,7 +535,7 @@ class TensorRTLLM(ITritonDeployable):
         max_seq_len: Optional[int] = 512,
         gemm_plugin: str = "auto",
         remove_input_padding: bool = True,
-        paged_context_fmha: bool = False,
+        paged_context_fmha: bool = True,
         paged_kv_cache: bool = True,
         tokens_per_block: int = 128,
         multiple_profiles: bool = False,
@@ -562,7 +562,7 @@ class TensorRTLLM(ITritonDeployable):
             max_seq_len (Optional[int], optional): Maximum sequence length. Defaults to 512.
             gemm_plugin (str, optional): GEMM plugin type. Defaults to "auto".
             remove_input_padding (bool, optional): Remove input padding. Defaults to True.
-            paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to False.
+            paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to True.
             paged_kv_cache (bool, optional): Use paged KV cache. Defaults to True.
             tokens_per_block (int, optional): Tokens per block. Defaults to 128.
             multiple_profiles (bool, optional): Use multiple profiles. Defaults to False.
