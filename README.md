@@ -26,14 +26,14 @@ NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and 
 
 ### Using Docker
 
-NeMo-Export-Deploy provides support for TRT-LLM and vLLM.  
+Export-Deploy provides support for TRT-LLM and vLLM.  
 
 Build a container with TRT-LLM support:
 
 ```bash
 docker build \
     -f docker/Dockerfile.ci \
-    -t nemo-export-deploy \
+    -t Export-Deploy \
     --build-arg INFERENCE_FRAMEWORK=trtllm \
     .
 ```
@@ -43,7 +43,7 @@ Or, alternatively to build a container with vLLM support, run:
 ```bash
 docker build \
     -f docker/Dockerfile.ci \
-    -t nemo-export-deploy \
+    -t Export-Deploy \
     --build-arg INFERENCE_FRAMEWORK=vllm \
     .
 ```
@@ -55,12 +55,12 @@ docker run \
     --rm \
     -it \
     --entrypoint bash \
-    --workdir /opt/nemo-export-deploy \
+    --workdir /opt/Export-Deploy \
     --shm-size=4g \
     --gpus all \
-    -v ${PWD}:/opt/nemo-export-deploy \
+    -v ${PWD}:/opt/Export-Deploy \
     -v ${PWD}/checkpoints/:/opt/checkpoints/ \
-    nemo-export-deploy
+    Export-Deploy
 ```
 
 ### Export and Deploy LLM Examples
@@ -288,10 +288,10 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
 
 ## Installation
 
-For NeMo-Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
+For Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
 
 ```bash
-pip install nemo-export-deploy
+pip install Export-Deploy
 pip install nemo-run # Needs to be installed additionally
 ```
 
@@ -303,8 +303,8 @@ A compatible C++ compiler
 CUDA Toolkit with cuDNN and NVCC (NVIDIA CUDA Compiler) installed
 
 ```bash
-git clone https://github.com/NVIDIA-NeMo/NeMo-Export-Deploy
-cd NeMo-Export-Deploy
+git clone https://github.com/NVIDIA-NeMo/Export-Deploy
+cd Export-Deploy
 
 pip install torch pybind11 setuptools
 pip install -e --build-isolation '.[te]'
@@ -317,16 +317,16 @@ Additionally to Megatron-Core/TransformerEngine, users may also add TRT-LLM or v
 For TRT-LLM, make sure to `sudo apt install libopenmpi-dev` before.
 
 ```bash
-git clone https://github.com/NVIDIA-NeMo/NeMo-Export-Deploy
-cd NeMo-Export-Deploy
+git clone https://github.com/NVIDIA-NeMo/Export-Deploy
+cd Export-Deploy
 pip install -e '.[trtllm]'
 ```
 
 For vLLM:
 
 ```bash
-git clone https://github.com/NVIDIA-NeMo/NeMo-Export-Deploy
-cd NeMo-Export-Deploy
+git clone https://github.com/NVIDIA-NeMo/Export-Deploy
+cd Export-Deploy
 pip install -e '.[vllm]'
 ```
 
@@ -334,7 +334,7 @@ pip install -e '.[vllm]'
 
 For detailed documentation, please refer to:
 
-- [NeMo-Export-Deploy User Guide](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)
+- [Export-Deploy User Guide](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)
 
 ## Contributing
 

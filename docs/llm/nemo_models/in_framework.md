@@ -13,7 +13,7 @@ This section demonstrates how to deploy PyTorch-level NeMo LLMs within the frame
 
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}/:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:vr
    ```
-      
+
 3. Using a NeMo 2.0 model, run the following deployment script to verify that everything is working correctly. The script directly serves the NeMo 2.0 model on the Triton server:
 
    ```shell
@@ -57,7 +57,7 @@ Executing the script will directly deploy the NeMo LLM model and initiate the se
    ```shell
    python scripts/deploy/nlp/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo --triton_model_name llama
    ```
-   
+
    The following parameters are defined in the ``deploy_inframework_triton.py`` script:
 
    - ``--nemo_checkpoint``: path of the .nemo or .qnemo checkpoint file.
@@ -66,10 +66,10 @@ Executing the script will directly deploy the NeMo LLM model and initiate the se
    - ``--triton_port``: port for the Triton server to listen for requests. Default is 8000.
    - ``--triton_http_address``: HTTP address for the Triton server. Default is 0.0.0.0.
    - ``--num_gpus``: number of GPUs to use for inference. Large models require multi-gpu export. *This parameter is deprecated*.
-   - ``--max_batch_size``: maximum batch size of the model. Default is 8. 
+   - ``--max_batch_size``: maximum batch size of the model. Default is 8.
    - ``--debug_mode``: enables additional debug logging messages from the script
 
-3. To deploy a different model, just change the ``--nemo_checkpoint`` in the [scripts/deploy/nlp/deploy_inframework_triton.py](https://github.com/NVIDIA/NeMo-Export-Deploy/blob/main/scripts/deploy/nlp/deploy_inframework_triton.py) script.
+3. To deploy a different model, just change the ``--nemo_checkpoint`` in the [scripts/deploy/nlp/deploy_inframework_triton.py](https://github.com/NVIDIA/Export-Deploy/blob/main/scripts/deploy/nlp/deploy_inframework_triton.py) script.
 
 4. Access the models with a Hugging Face token.
 
