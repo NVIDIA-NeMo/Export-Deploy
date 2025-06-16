@@ -95,9 +95,7 @@ def save_val(val, dir, key, tp_num=None):
         weights_dict[f"{key}{suffix}"].copy_(val, non_blocking=True)
     else:
         if len(val.shape) >= 2:
-            val = np.ascontiguousarray(
-                np.transpose(val.reshape(val.shape[0], -1), [1, 0])
-            )
+            val = np.ascontiguousarray(np.transpose(val.reshape(val.shape[0], -1), [1, 0]))
         weights_dict[f"{key}{suffix}"] = val
 
 
@@ -144,10 +142,7 @@ def generate_int8(weights, act_range, is_qkv=False, multi_query_mode=False):
     """
     # compute weight scaling factors for fp->int8 and int8->fp
     if is_qkv and not multi_query_mode:
-        scale_w_orig_quant_t = (
-            127.0
-            / act_range["w"].reshape(3, -1).max(dim=-1, keepdims=True)[0].cpu().numpy()
-        )
+        scale_w_orig_quant_t = 127.0 / act_range["w"].reshape(3, -1).max(dim=-1, keepdims=True)[0].cpu().numpy()
         scale_w_orig_quant_c = 127.0 / act_range["w"].reshape(3, -1).cpu().numpy()
     elif is_qkv and multi_query_mode:
         raise ValueError("Multi-query w/ int8 quant has not been supported yet")
@@ -161,19 +156,11 @@ def generate_int8(weights, act_range, is_qkv=False, multi_query_mode=False):
     scale_x_orig_quant_t = np.array(127.0 / act_range["x"].max().item())
     scale_y_orig_quant_t = np.array(127.0 / act_range["y"].max().item())
     scale_y_quant_orig_t = np.array(act_range["y"].max().item() / 127.0)
-    scale_y_accum_quant_t = scale_y_orig_quant_t / (
-        scale_x_orig_quant_t * scale_w_orig_quant_t
-    )
-    scale_y_accum_quant_c = scale_y_orig_quant_t / (
-        scale_x_orig_quant_t * scale_w_orig_quant_c
-    )
+    scale_y_accum_quant_t = scale_y_orig_quant_t / (scale_x_orig_quant_t * scale_w_orig_quant_t)
+    scale_y_accum_quant_c = scale_y_orig_quant_t / (scale_x_orig_quant_t * scale_w_orig_quant_c)
     if is_qkv:
-        scale_y_accum_quant_t = np.broadcast_to(
-            scale_y_accum_quant_t, scale_w_orig_quant_c.shape
-        )
-        scale_w_quant_orig_t = np.broadcast_to(
-            scale_w_quant_orig_t, scale_w_orig_quant_c.shape
-        )
+        scale_y_accum_quant_t = np.broadcast_to(scale_y_accum_quant_t, scale_w_orig_quant_c.shape)
+        scale_w_quant_orig_t = np.broadcast_to(scale_w_quant_orig_t, scale_w_orig_quant_c.shape)
 
     def to_i8(x):
         return x.round().clip(-127, 127).astype(np.int8)
@@ -190,9 +177,7 @@ def generate_int8(weights, act_range, is_qkv=False, multi_query_mode=False):
     }
 
 
-def write_int8(
-    vals, dir, base_key, split_dim, tp_rank, split_factor, kv_cache_only=False
-):
+def write_int8(vals, dir, base_key, split_dim, tp_rank, split_factor, kv_cache_only=False):
     if not kv_cache_only:
         save_split(
             np.split(vals["weight.int8"], split_factor, axis=split_dim),
@@ -313,9 +298,7 @@ def get_scaling_factor_keys(key: str) -> Tuple[Tuple[str, str], Tuple[str, str]]
     return keys, gate_keys
 
 
-def save_scaling_factor(
-    scaling_factors: dict, key: str, val: torch.Tensor, config: dict
-):
+def save_scaling_factor(scaling_factors: dict, key: str, val: torch.Tensor, config: dict):
     if not is_scaling_factor(key):
         return scaling_factors
 
@@ -327,9 +310,7 @@ def save_scaling_factor(
     scaling_factors[weights_key] = weights_factor
 
     split_gated_activation = config.get("split_gated_activation", False)
-    if split_gated_activation and any_word_in_key(
-        key, ["mlp.dense_h_to_4h", "mlp.linear_fc1"]
-    ):
+    if split_gated_activation and any_word_in_key(key, ["mlp.dense_h_to_4h", "mlp.linear_fc1"]):
         (gate_activation_key, gate_weight_key) = gate_keys
         scaling_factors[gate_activation_key] = activation_factor
         scaling_factors[gate_weight_key] = weights_factor
@@ -343,9 +324,7 @@ def cast_val_datatype(vals, trt_llm_key, storage_type, is_fp8_model, scaling_fac
 
     fp8_storage_type = torch.float8_e4m3fn
     quantized_keys = [
-        k.split(weight_scaling_suffix)[0]
-        for k in scaling_factors.keys()
-        if k.endswith(weight_scaling_suffix)
+        k.split(weight_scaling_suffix)[0] for k in scaling_factors.keys() if k.endswith(weight_scaling_suffix)
     ]
     for k in quantized_keys:
         if k in trt_llm_key:
@@ -401,9 +380,7 @@ def split_and_save_weight(
     if "layernorm.weight" in key and config.get("apply_layernorm_1p", False):
         vals = [val.float() + 1.0 for val in vals]
 
-    vals = cast_val_datatype(
-        vals, trt_llm_key, storage_type, is_fp8_model, scaling_factors
-    )
+    vals = cast_val_datatype(vals, trt_llm_key, storage_type, is_fp8_model, scaling_factors)
     if convert_on_device:
         assert len(vals) == 1  # Should only convert a single device param per call
         assert torch.is_tensor(vals[0])
@@ -494,9 +471,7 @@ def split_and_save_weight(
         # Split the QKV to separate variables.
         if convert_on_device:
             qkv = torch.split(val, [q_num, 1, 1], dim=1)
-            split_vals = torch.concatenate(
-                [qkv[0].reshape(-1), qkv[1].reshape(-1), qkv[2].reshape(-1)], dim=1
-            )
+            split_vals = torch.concatenate([qkv[0].reshape(-1), qkv[1].reshape(-1), qkv[2].reshape(-1)], dim=1)
             save_val(split_vals, saved_dir, trt_llm_key)
         else:
             qkv = np.split(val, [q_num, q_num + 1], axis=1)
@@ -529,9 +504,7 @@ def split_and_save_weight(
         # Depending on the format, 'vals' can look like either [QQQQ..KV, QQQQ..KV, ...](for GQA) or [QKV, QKV, ...](for MHA).
         # We first concat all sub weights per tp rank together.
         if convert_on_device:
-            val = vals[0].reshape(
-                hidden_dim, num_kv_heads // tp_size, q_num + 2, size_per_head
-            )
+            val = vals[0].reshape(hidden_dim, num_kv_heads // tp_size, q_num + 2, size_per_head)
             qkv = torch.split(val, [q_num, 1, 1], dim=2)
             split_vals = torch.concatenate(
                 [
@@ -545,9 +518,7 @@ def split_and_save_weight(
         else:
             len_vals = len(vals)
             val = np.concatenate(vals, axis=1)
-            val = val.reshape(
-                hidden_dim, num_kv_heads * len_vals // tp_size, q_num + 2, size_per_head
-            )
+            val = val.reshape(hidden_dim, num_kv_heads * len_vals // tp_size, q_num + 2, size_per_head)
 
             # Split the QKV to separate variables.
             qkv = np.split(val, [q_num, q_num + 1], axis=2)
@@ -581,9 +552,7 @@ def split_and_save_weight(
 
         if save_int8:
             base_key = trt_llm_key.replace(".weight", "")
-            vals_i8 = generate_int8(
-                val, act_range, is_qkv=True, multi_query_mode=multi_query_mode
-            )
+            vals_i8 = generate_int8(val, act_range, is_qkv=True, multi_query_mode=multi_query_mode)
             write_int8(
                 vals_i8,
                 saved_dir,
@@ -615,9 +584,7 @@ def split_and_save_weight(
         # w3 splits
         split_w3s = np.split(w3, split_factor, axis=1)
 
-        split_vals = [
-            np.concatenate(item, axis=1) for item in zip(split_w3s, split_w1s)
-        ]
+        split_vals = [np.concatenate(item, axis=1) for item in zip(split_w3s, split_w1s)]
         save_expert_split(split_vals, saved_dir, trt_llm_key, tp_rank, split_factor)
 
     elif any_word_in_key(key, mlp_proj_experts_keys):

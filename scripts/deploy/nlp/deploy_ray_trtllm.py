@@ -13,13 +13,14 @@
 # limitations under the License.
 
 import argparse
+import json
 import logging
 import multiprocessing
+import os
 import signal
 import sys
-import json
-import os
 from pathlib import Path
+
 from nemo_deploy.deploy_ray import DeployRay
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.tensorrt_llm_deployable_ray import TensorRTLLMRayDeployable
@@ -54,7 +55,7 @@ def check_engine_config(engine_dir):
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Deploy a TensorRT-LLM model using Ray")
-    
+
     # Model path arguments (at least one required)
     model_group = parser.add_mutually_exclusive_group(required=True)
     model_group.add_argument(
@@ -75,7 +76,7 @@ def parse_args():
         default=None,
         help="Path to the HuggingFace model to be exported to TensorRT-LLM",
     )
-    
+
     # Model configuration
     parser.add_argument(
         "--model_type",
@@ -146,7 +147,7 @@ def parse_args():
         default=None,
         help="List of LoRA checkpoint paths",
     )
-    
+
     # API configuration
     parser.add_argument(
         "--model_id",
@@ -166,7 +167,7 @@ def parse_args():
         default=1024,
         help="Port number to use for the Ray Serve server",
     )
-    
+
     # Ray cluster configuration
     parser.add_argument(
         "--num_cpus",
@@ -209,7 +210,7 @@ def parse_args():
         default="0,1",
         help="Comma-separated list of CUDA visible devices",
     )
-    
+
     return parser.parse_args()
 
 
@@ -242,16 +243,18 @@ def main():
 
     try:
         if not args.nemo_checkpoint_path and not args.hf_model_path and not args.trt_llm_path:
-            raise ValueError("Either nemo_checkpoint_path or hf_model_path or trt_llm_path must be provided for deployment")
+            raise ValueError(
+                "Either nemo_checkpoint_path or hf_model_path or trt_llm_path must be provided for deployment"
+            )
         if not args.trt_llm_path:
             args.trt_llm_path = "/tmp/trt_llm_model_dir/"
             LOGGER.info(
-                    "/tmp/trt_llm_model_dir/ path will be used as the TensorRT LLM folder. "
-                    "Please set the --triton_model_repository parameter if you'd like to use a path that already "
-                    "includes the TensorRT LLM model files."
+                "/tmp/trt_llm_model_dir/ path will be used as the TensorRT LLM folder. "
+                "Please set the --triton_model_repository parameter if you'd like to use a path that already "
+                "includes the TensorRT LLM model files."
             )
             Path(args.trt_llm_path).mkdir(parents=True, exist_ok=True)
-            
+
             # Prepare TensorRTLLM constructor arguments
             trtllm_kwargs = {
                 "model_dir": args.trt_llm_path,
@@ -260,14 +263,14 @@ def main():
                 "use_python_runtime": use_python_runtime,
                 "multi_block_mode": args.multi_block_mode,
             }
-            
+
             # Add C++ runtime specific options if using C++ runtime
             if not use_python_runtime:
                 trtllm_kwargs["enable_chunked_context"] = args.enable_chunked_context
                 trtllm_kwargs["max_tokens_in_paged_kv_cache"] = args.max_tokens_in_paged_kv_cache
-            
+
             trtllmConverter = TensorRTLLM(**trtllm_kwargs)
-            
+
             if args.nemo_checkpoint_path:
                 LOGGER.info("Exporting Nemo checkpoint to TensorRT-LLM")
                 try:
@@ -280,7 +283,7 @@ def main():
                         max_output_len=args.max_output_len,
                         max_batch_size=args.max_batch_size,
                         delete_existing_files=True,
-                        max_seq_len=args.max_input_len + args.max_output_len
+                        max_seq_len=args.max_input_len + args.max_output_len,
                     )
                 except Exception as e:
                     LOGGER.error(f"Error exporting Nemo checkpoint to TensorRT-LLM: {str(e)}")
@@ -295,7 +298,7 @@ def main():
                         max_input_len=args.max_input_len,
                         max_output_len=args.max_output_len,
                         delete_existing_files=True,
-                        max_seq_len=args.max_input_len + args.max_output_len
+                        max_seq_len=args.max_input_len + args.max_output_len,
                     )
                 except Exception as e:
                     LOGGER.error(f"Error exporting HF model to TensorRT-LLM: {str(e)}")
@@ -333,9 +336,7 @@ def main():
     )
 
     # Set up signal handlers
-    signal.signal(
-        signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer)
-    )
+    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
     signal.signal(
         signal.SIGTERM,
         lambda signum, frame: signal_handler(signum, frame, ray_deployer),
@@ -345,11 +346,11 @@ def main():
 
     # Prepare deployment parameters
     deployment_kwargs = {
-            "trt_llm_path": args.trt_llm_path,
-            "model_id": args.model_id,
-            "use_python_runtime": use_python_runtime,
-            "multi_block_mode": args.multi_block_mode,
-            "lora_ckpt_list": args.lora_ckpt_list,
+        "trt_llm_path": args.trt_llm_path,
+        "model_id": args.model_id,
+        "use_python_runtime": use_python_runtime,
+        "multi_block_mode": args.multi_block_mode,
+        "lora_ckpt_list": args.lora_ckpt_list,
     }
 
     # Add C++ runtime specific options if using C++ runtime
@@ -378,4 +379,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

@@ -57,9 +57,7 @@ def prepare_directory_for_export(
         if delete_existing_files:
             shutil.rmtree(model_path)
         elif any(model_path.iterdir()):
-            raise RuntimeError(
-                f"There are files in {model_path} folder: try setting delete_existing_files=True."
-            )
+            raise RuntimeError(f"There are files in {model_path} folder: try setting delete_existing_files=True.")
 
     if subdir is not None:
         model_path /= subdir
@@ -80,9 +78,7 @@ def is_nemo_tarfile(path: str) -> bool:
 
 
 # Copied from nemo.collections.nlp.parts.utils_funcs to avoid introducing extra NeMo dependencies:
-def torch_dtype_from_precision(
-    precision: Union[int, str], megatron_amp_O2: bool = True
-) -> torch.dtype:
+def torch_dtype_from_precision(precision: Union[int, str], megatron_amp_O2: bool = True) -> torch.dtype:
     """Mapping from PyTorch Lighthing (PTL) precision types to corresponding PyTorch parameter data type.
 
     Args:
@@ -102,9 +98,7 @@ def torch_dtype_from_precision(
     elif precision in [32, "32", "32-true"]:
         return torch.float32
     else:
-        raise ValueError(
-            f"Could not parse the precision of '{precision}' to a valid torch.dtype"
-        )
+        raise ValueError(f"Could not parse the precision of '{precision}' to a valid torch.dtype")
 
 
 def get_model_device_type(module: torch.nn.Module) -> str:
@@ -167,9 +161,7 @@ def validate_fp8_network(network) -> None:
     if not quantize_dequantize_layers:
         error_msg = "No Quantize/Dequantize layers found"
         raise ValueError(error_msg)
-    quantize_dequantize_layer_dtypes = Counter(
-        layer.precision for layer in quantize_dequantize_layers
-    )
+    quantize_dequantize_layer_dtypes = Counter(layer.precision for layer in quantize_dequantize_layers)
     if trt.DataType.FP8 not in quantize_dequantize_layer_dtypes:
         error_msg = "Found Quantize/Dequantize layers. But none with FP8 precision."
         raise ValueError(error_msg)

@@ -165,19 +165,15 @@ def main():
     # Validate the parallelism configuration
     # Each replica should use: tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size GPUs
     parallelism_per_replica = (
-        args.tensor_model_parallel_size
-        * args.pipeline_model_parallel_size
-        * args.context_parallel_size
+        args.tensor_model_parallel_size * args.pipeline_model_parallel_size * args.context_parallel_size
     )
 
     if parallelism_per_replica != gpus_per_replica:
         LOGGER.error(
-            f"Parallelism per replica ({parallelism_per_replica}) must equal "
-            f"GPUs per replica ({gpus_per_replica})"
+            f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
         )
         LOGGER.error(
-            f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, "
-            f"GPUs per replica: {gpus_per_replica}"
+            f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, GPUs per replica: {gpus_per_replica}"
         )
         LOGGER.error(
             f"Each replica needs: tensor_parallel({args.tensor_model_parallel_size}) * "
@@ -186,9 +182,7 @@ def main():
         )
         sys.exit(1)
 
-    LOGGER.info(
-        f"Configuration: {args.num_replicas} replicas, {gpus_per_replica} GPUs per replica"
-    )
+    LOGGER.info(f"Configuration: {args.num_replicas} replicas, {gpus_per_replica} GPUs per replica")
 
     # Initialize Ray deployment
     ray_deployer = DeployRay(
@@ -203,9 +197,7 @@ def main():
     )
 
     # Set up signal handlers
-    signal.signal(
-        signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer)
-    )
+    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
     signal.signal(
         signal.SIGTERM,
         lambda signum, frame: signal_handler(signum, frame, ray_deployer),

@@ -18,8 +18,8 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-from fastapi.testclient import TestClient
 import requests
+from fastapi.testclient import TestClient
 
 from nemo_deploy.service.fastapi_interface_to_pytriton import (
     ChatCompletionRequest,
@@ -45,9 +45,7 @@ def client():
 
 @pytest.fixture
 def mock_triton_settings():
-    with patch(
-        "nemo_deploy.service.fastapi_interface_to_pytriton.TritonSettings"
-    ) as mock:
+    with patch("nemo_deploy.service.fastapi_interface_to_pytriton.TritonSettings") as mock:
         instance = mock.return_value
         instance.triton_service_port = 8000
         instance.triton_service_ip = "localhost"
@@ -91,7 +89,7 @@ class TestTritonSettings:
     def test_triton_settings_exception_handling(self):
         """Test TritonSettings initialization when environment variables cause exceptions"""
         with patch.dict(os.environ, {"TRITON_PORT": "invalid_port"}, clear=True):
-            with patch('nemo.utils.logging.error') as mock_logging:
+            with patch("nemo.utils.logging.error") as mock_logging:
                 settings = TritonSettings()
 
                 # The attributes won't be set due to the early return, so accessing properties will fail
@@ -122,9 +120,7 @@ class TestCompletionRequest:
         assert request.echo is False
 
     def test_default_chat_values(self):
-        request = ChatCompletionRequest(
-            model="test_model", messages=[{"role": "user", "content": "test message"}]
-        )
+        request = ChatCompletionRequest(model="test_model", messages=[{"role": "user", "content": "test message"}])
         assert request.model == "test_model"
         assert request.messages == [{"role": "user", "content": "test message"}]
         assert request.max_tokens == 512
@@ -133,9 +129,7 @@ class TestCompletionRequest:
         assert request.top_k == 0
 
     def test_greedy_params(self):
-        request = CompletionRequest(
-            model="test_model", prompt="test prompt", temperature=0.0, top_p=0.0
-        )
+        request = CompletionRequest(model="test_model", prompt="test prompt", temperature=0.0, top_p=0.0)
         assert request.top_k == 1
 
 
