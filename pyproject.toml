@@ -27,7 +27,7 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.12,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    "megatron-hub",
+    # "megatron-hub", add here after the release of Megatron-Hub
     "megatron-core>=0.12.0",
     "accelerate",
     "fastapi",
@@ -73,6 +73,7 @@ test = ["pytest", "pytest-mock", "coverage"]
 nemo-legacy = [
     "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]",
 ]
+megatron-hub-pre = ["megatron-hub"]
 
 [tool.uv.sources]
 xformers = [{ index = "pytorch-cu128" }]

@@ -2528,7 +2528,6 @@ dependencies = [
     { name = "hydra-core" },
     { name = "lightning" },
     { name = "megatron-core" },
-    { name = "megatron-hub" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "omegaconf" },
     { name = "peft" },
@@ -2569,6 +2568,9 @@ docs = [
 linting = [
     { name = "ruff" },
 ]
+megatron-hub-pre = [
+    { name = "megatron-hub" },
+]
 nemo-legacy = [
     { name = "nemo-toolkit", extra = ["automodel", "common-only", "eval", "multimodal-only", "nlp-only"] },
 ]
@@ -2588,7 +2590,6 @@ requires-dist = [
     { name = "hydra-core", specifier = ">1.3,<=1.3.2" },
     { name = "lightning", specifier = ">2.2.1,<=2.4.0" },
     { name = "megatron-core", git = "https://github.com/NVIDIA/Megatron-LM.git?rev=ad36348f397451dbc4a4b4adb5e40055c89fec2f" },
-    { name = "megatron-hub", git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git?rev=cc2a60c3be11549f070fe1d7b6324a3dae51c6e0" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
     { name = "omegaconf", specifier = "<=2.3" },
     { name = "pandas", marker = "extra == 'vllm'" },
@@ -2623,6 +2624,7 @@ docs = [
     { name = "sphinx-copybutton" },
 ]
 linting = [{ name = "ruff", specifier = "~=0.9.0" }]
+megatron-hub-pre = [{ name = "megatron-hub", git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git?rev=cc2a60c3be11549f070fe1d7b6324a3dae51c6e0" }]
 nemo-legacy = [{ name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], git = "https://github.com/NVIDIA/NeMo.git?rev=5e63ca3c1631bb156187705f9c4cf643a67f9c05" }]
 test = [
     { name = "coverage" },
