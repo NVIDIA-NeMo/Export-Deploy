@@ -19,12 +19,8 @@ import pytest
 
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
-@pytest.mark.parametrize(
-    "tensor_parallelism_size,pipeline_parallelism_size", [(2, 1), (1, 2)]
-)
-def test_nemo2_convert_to_safe_tensors(
-    tensor_parallelism_size, pipeline_parallelism_size
-):
+@pytest.mark.parametrize("tensor_parallelism_size,pipeline_parallelism_size", [(2, 1), (1, 2)])
+def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_parallelism_size):
     """
     Test safe tensor exporter. This tests the whole nemo export until engine building.
     """
@@ -46,16 +42,10 @@ def test_nemo2_convert_to_safe_tensors(
     )
 
     assert Path("/tmp/safe_tensor_test/").exists(), "Safe tensors were not generated."
-    assert Path("/tmp/safe_tensor_test/rank0.safetensors").exists(), (
-        "Safe tensors for rank0 were not generated."
-    )
+    assert Path("/tmp/safe_tensor_test/rank0.safetensors").exists(), "Safe tensors for rank0 were not generated."
     if pipeline_parallelism_size == 1 and tensor_parallelism_size == 2:
-        assert Path("/tmp/safe_tensor_test/rank1.safetensors").exists(), (
-            "Safe tensors for rank1 were not generated."
-        )
-    assert Path("/tmp/safe_tensor_test/config.json").exists(), (
-        "config.yaml was not generated."
-    )
+        assert Path("/tmp/safe_tensor_test/rank1.safetensors").exists(), "Safe tensors for rank1 were not generated."
+    assert Path("/tmp/safe_tensor_test/config.json").exists(), "config.yaml was not generated."
 
     shutil.rmtree("/tmp/safe_tensor_test/")
 
@@ -100,7 +90,7 @@ def test_nemo2_convert_to_export(tensor_parallelism_size):
         gemm_plugin="auto",
         reduce_fusion=True,
         fp8_quantized=None,
-        fp8_kvcache=None,        
+        fp8_kvcache=None,
         build_rank=None,
     )
 
@@ -121,14 +111,10 @@ def test_nemo2_convert_to_export(tensor_parallelism_size):
 
     print(output)
 
-    assert Path("/tmp/safe_tensor_test_2/trtllm_engine/").exists(), (
-        "Safe tensors were not generated."
-    )
+    assert Path("/tmp/safe_tensor_test_2/trtllm_engine/").exists(), "Safe tensors were not generated."
     assert Path("/tmp/safe_tensor_test_2/trtllm_engine/rank0.engine").exists(), (
         "Safe tensors for rank0 were not generated."
     )
-    assert Path("/tmp/safe_tensor_test_2/trtllm_engine/config.json").exists(), (
-        "config.yaml was not generated."
-    )
+    assert Path("/tmp/safe_tensor_test_2/trtllm_engine/config.json").exists(), "config.yaml was not generated."
 
     shutil.rmtree("/tmp/safe_tensor_test_2/")

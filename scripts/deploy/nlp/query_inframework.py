@@ -27,12 +27,8 @@ def get_args(argv):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Queries Triton server running an in-framework Nemo model",
     )
-    parser.add_argument(
-        "-u", "--url", default="0.0.0.0", type=str, help="url for the triton server"
-    )
-    parser.add_argument(
-        "-mn", "--model_name", required=True, type=str, help="Name of the triton model"
-    )
+    parser.add_argument("-u", "--url", default="0.0.0.0", type=str, help="url for the triton server")
+    parser.add_argument("-mn", "--model_name", required=True, type=str, help="Name of the triton model")
     prompt_group = parser.add_mutually_exclusive_group(required=True)
     prompt_group.add_argument("-p", "--prompt", required=False, type=str, help="Prompt")
     prompt_group.add_argument(
@@ -51,9 +47,7 @@ def get_args(argv):
     )
     parser.add_argument("-tk", "--top_k", default=1, type=int, help="top_k")
     parser.add_argument("-tpp", "--top_p", default=0.0, type=float, help="top_p")
-    parser.add_argument(
-        "-t", "--temperature", default=1.0, type=float, help="temperature"
-    )
+    parser.add_argument("-t", "--temperature", default=1.0, type=float, help="temperature")
     parser.add_argument(
         "-it",
         "--init_timeout",

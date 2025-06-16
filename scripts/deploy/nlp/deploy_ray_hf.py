@@ -151,9 +151,7 @@ def main():
     )
 
     # Set up signal handlers
-    signal.signal(
-        signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer)
-    )
+    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
     signal.signal(
         signal.SIGTERM,
         lambda signum, frame: signal_handler(signum, frame, ray_deployer),
@@ -176,7 +174,7 @@ def main():
             trust_remote_code=args.trust_remote_code,
             model_id=args.model_id,
             device_map=args.device_map,
-            max_memory=args.max_memory
+            max_memory=args.max_memory,
         )
 
         # Deploy the model

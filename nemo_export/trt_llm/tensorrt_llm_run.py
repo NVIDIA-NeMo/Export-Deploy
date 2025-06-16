@@ -109,13 +109,9 @@ def _load(
 
         if use_python_runtime:
             if enable_chunked_context:
-                logging.warning(
-                    "enable_chunked_context is disabled when using python runtime"
-                )
+                logging.warning("enable_chunked_context is disabled when using python runtime")
             if multi_block_mode:
-                logging.warning(
-                    "multi_block_mode is disabled when using python runtime"
-                )
+                logging.warning("multi_block_mode is disabled when using python runtime")
 
             decoder = ModelRunner.from_dir(
                 engine_dir=engine_dir,
@@ -190,14 +186,10 @@ def _forward(
         max_input_len = tensorrt_llm_worker_context.max_input_len
 
         batch_size = len(input_tensors)
-        assert batch_size <= max_batch_size, (
-            f"batch size {batch_size} exceedng max batch size {max_batch_size}"
-        )
+        assert batch_size <= max_batch_size, f"batch size {batch_size} exceedng max batch size {max_batch_size}"
         input_lengths = [t.shape[0] for t in input_tensors]
         max_length = max(input_lengths)
-        assert max_length <= max_input_len, (
-            f"input length {max_length} exceedng max input length {max_input_len}"
-        )
+        assert max_length <= max_input_len, f"input length {max_length} exceedng max input length {max_input_len}"
         pad_id = sampling_config.pad_id
         end_id = sampling_config.end_id
         num_beams = sampling_config.num_beams
@@ -207,9 +199,7 @@ def _forward(
                 raise TypeError(f"Unknown sampling args '{k}'")
 
         with torch.no_grad():
-            prompt_tasks = (
-                None if task_ids is None else ",".join(str(task) for task in task_ids)
-            )
+            prompt_tasks = None if task_ids is None else ",".join(str(task) for task in task_ids)
 
             if prompt_table is not None:
                 prompt_table = prompt_table.reshape(1, *prompt_table.shape)
@@ -324,9 +314,7 @@ def load(
         "MistralForCausalLM",
         "MixtralForCausalLM",
     ]
-    add_bos = (
-        config["pretrained_config"]["architecture"] in architectures_that_need_bos_token
-    )
+    add_bos = config["pretrained_config"]["architecture"] in architectures_that_need_bos_token
 
     return TensorrtLLMHostContext(
         executor=executor,
@@ -359,14 +347,10 @@ def forward(
     """Run the loaded model with the host_context provided from the `load` API."""
     batch_size = len(input_tensors)
     max_batch_size = host_context.max_batch_size
-    assert batch_size <= max_batch_size, (
-        f"batch size {batch_size} exceedng max batch size {max_batch_size}"
-    )
+    assert batch_size <= max_batch_size, f"batch size {batch_size} exceedng max batch size {max_batch_size}"
     max_length = max([t.shape[0] for t in input_tensors])
     max_input_len = host_context.max_input_len
-    assert max_length <= max_input_len, (
-        f"input length {max_length} exceedng max input length {max_input_len}"
-    )
+    assert max_length <= max_input_len, f"input length {max_length} exceedng max input length {max_input_len}"
 
     world_size = host_context.world_size
     if world_size == 1 or multiprocessed_env:
@@ -431,9 +415,7 @@ def maybe_cast_to_trt_dtype(dtype):
     elif isinstance(dtype, torch.dtype):
         return tensorrt_llm._utils.torch_dtype_to_trt(dtype)
     else:
-        raise NotImplementedError(
-            f"Expects the type to be a tensorrt.DataType or torch.dtype, but got {type(dtype)=}"
-        )
+        raise NotImplementedError(f"Expects the type to be a tensorrt.DataType or torch.dtype, but got {type(dtype)=}")
 
 
 def unload_engine():
@@ -530,34 +512,24 @@ def generate(
     Returns a 2D string list with shape [batch_size, num_beams].
     """
     tokenizer = host_context.tokenizer
-    input_tensors = prepare_input_tensors(
-        input_texts, host_context, prompt_table, task_vtoken_counts, task_ids
-    )
+    input_tensors = prepare_input_tensors(input_texts, host_context, prompt_table, task_vtoken_counts, task_ids)
 
     stop_words_list_tensors = None
     if stop_words_list is not None:
         stop_words_arrays = to_word_list_format(stop_words_list, tokenizer)
         stop_words_list_tensors = (
-            torch.Tensor(stop_words_arrays)
-            .to(torch.int32)
-            .to(torch.cuda.current_device())
-            .contiguous()
+            torch.Tensor(stop_words_arrays).to(torch.int32).to(torch.cuda.current_device()).contiguous()
         )
 
     bad_words_list_tensors = None
     if bad_words_list is not None:
         bad_words_arrays = to_word_list_format(bad_words_list, tokenizer)
         bad_words_list_tensors = (
-            torch.Tensor(bad_words_arrays)
-            .to(torch.int32)
-            .to(torch.cuda.current_device())
-            .contiguous()
+            torch.Tensor(bad_words_arrays).to(torch.int32).to(torch.cuda.current_device()).contiguous()
         )
 
     if no_repeat_ngram_size is not None:
-        no_repeat_ngram_size = torch.IntTensor(no_repeat_ngram_size).to(
-            torch.cuda.current_device()
-        )
+        no_repeat_ngram_size = torch.IntTensor(no_repeat_ngram_size).to(torch.cuda.current_device())
 
     outputs = forward(
         input_tensors=input_tensors,
@@ -588,9 +560,7 @@ def generate(
     input_lengths = [t.shape[0] for t in input_tensors]
 
     output_lines_list = [
-        tokenizer.batch_decode(
-            output_ids[b, :, input_lengths[b] : sequence_lengths[b][0]]
-        )
+        tokenizer.batch_decode(output_ids[b, :, input_lengths[b] : sequence_lengths[b][0]])
         for b in range(output_ids.shape[0])
     ]
 
@@ -651,9 +621,7 @@ def to_word_list_format(
                 # Unfortunately the prefix was merged with `word`. We could try with a different prefix, but
                 # for now we just use the basic encoding since this should be a very rare edge case.
                 ids = tokenizer.encode(word)
-                logging.warning(
-                    f"The encoding of word '{word}' into tokens {ids} might be incorrect"
-                )
+                logging.warning(f"The encoding of word '{word}' into tokens {ids} might be incorrect")
 
             if len(ids) == 0:
                 continue

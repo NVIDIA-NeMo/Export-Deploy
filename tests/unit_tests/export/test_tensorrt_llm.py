@@ -27,9 +27,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     dummy_state = object()
@@ -37,9 +35,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
         "model.embedding.word_embeddings.weight": dummy_state,
         "model.decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
     }
-    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(
-        model_state_dict
-    )
+    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
 
     # Check that every key starts with 'model.' and not 'model..' by using a regex
     # This pattern ensures:
@@ -61,9 +57,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
 
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     dummy_state = object()
@@ -71,9 +65,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
         "embedding.word_embeddings.weight": dummy_state,
         "decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
     }
-    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(
-        model_state_dict
-    )
+    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
 
     # This is essentially a no-op
     assert nemo_model_conversion_dict == DEFAULT_CONVERSION_DICT
@@ -85,9 +77,7 @@ def test_tensorrt_llm_initialization():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     # Test basic initialization
@@ -101,9 +91,7 @@ def test_tensorrt_llm_initialization():
 
     # Test initialization with lora checkpoints
     lora_ckpt_list = ["/path/to/lora1", "/path/to/lora2"]
-    trt_llm = TensorRTLLM(
-        model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False
-    )
+    trt_llm = TensorRTLLM(model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False)
     assert trt_llm.lora_ckpt_list == lora_ckpt_list
 
     # Test initialization with python runtime options
@@ -125,9 +113,7 @@ def test_tensorrt_llm_supported_models():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -151,9 +137,7 @@ def test_tensorrt_llm_input_dtype():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -170,9 +154,7 @@ def test_tensorrt_llm_input_dtype():
 
     for storage_dtype, expected_dtype in test_cases:
         input_dtype = trt_llm.get_input_dtype(storage_dtype)
-        assert input_dtype == expected_dtype, (
-            f"Expected {expected_dtype} for {storage_dtype}, got {input_dtype}"
-        )
+        assert input_dtype == expected_dtype, f"Expected {expected_dtype} for {storage_dtype}, got {input_dtype}"
 
 
 @pytest.mark.run_only_on("GPU")
@@ -181,9 +163,7 @@ def test_tensorrt_llm_hidden_size():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -204,9 +184,7 @@ def test_tensorrt_llm_triton_io():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -239,9 +217,7 @@ def test_tensorrt_llm_pad_logits():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -268,9 +244,7 @@ def test_ray_infer_fn_basic():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -279,7 +253,7 @@ def test_ray_infer_fn_basic():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = ["Generated text 1", "Generated text 2"]
-        
+
         inputs = {
             "prompts": ["Hello", "World"],
             "max_output_len": 256,
@@ -287,13 +261,13 @@ def test_ray_infer_fn_basic():
             "top_k": 50,
             "top_p": 0.9,
         }
-        
+
         result = trt_llm.ray_infer_fn(inputs)
-        
+
         # Verify the result structure
         assert "sentences" in result
         assert result["sentences"] == ["Generated text 1", "Generated text 2"]
-        
+
         # Verify forward was called with correct parameters
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
@@ -311,9 +285,7 @@ def test_ray_infer_fn_with_single_string_prompt():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -322,17 +294,17 @@ def test_ray_infer_fn_with_single_string_prompt():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = ["Generated response"]
-        
+
         inputs = {
             "prompts": "Hello world",  # Single string instead of list
             "temperature": 1.0,
         }
-        
+
         result = trt_llm.ray_infer_fn(inputs)
-        
+
         # Verify the result
         assert result["sentences"] == ["Generated response"]
-        
+
         # Verify forward was called with prompts converted to list
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
@@ -346,9 +318,7 @@ def test_ray_infer_fn_with_stop_words():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -357,18 +327,18 @@ def test_ray_infer_fn_with_stop_words():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = ["Generated text"]
-        
+
         inputs = {
             "prompts": ["Test prompt"],
             "stop_words_list": ["stop", "end"],
             "bad_words_list": ["bad", "word"],
         }
-        
+
         result = trt_llm.ray_infer_fn(inputs)
-        
+
         # Verify the result
         assert result["sentences"] == ["Generated text"]
-        
+
         # Verify forward was called with properly formatted word lists
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
@@ -383,9 +353,7 @@ def test_ray_infer_fn_with_task_ids_and_lora():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -394,7 +362,7 @@ def test_ray_infer_fn_with_task_ids_and_lora():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = ["Generated text with LoRA"]
-        
+
         inputs = {
             "prompts": ["Test prompt"],
             "task_ids": ["task1"],
@@ -402,12 +370,12 @@ def test_ray_infer_fn_with_task_ids_and_lora():
             "random_seed": 42,
             "no_repeat_ngram_size": 3,
         }
-        
+
         result = trt_llm.ray_infer_fn(inputs)
-        
+
         # Verify the result
         assert result["sentences"] == ["Generated text with LoRA"]
-        
+
         # Verify forward was called with all parameters
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
@@ -424,9 +392,7 @@ def test_ray_infer_fn_empty_prompts():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -435,14 +401,14 @@ def test_ray_infer_fn_empty_prompts():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = []
-        
+
         inputs = {}  # No prompts provided
-        
+
         result = trt_llm.ray_infer_fn(inputs)
-        
+
         # Verify the result
         assert result["sentences"] == []
-        
+
         # Verify forward was called with empty input_texts
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
@@ -456,9 +422,7 @@ def test_ray_infer_fn_error_handling():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -467,13 +431,13 @@ def test_ray_infer_fn_error_handling():
     # Mock the forward method to raise an exception
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.side_effect = Exception("Model inference failed")
-        
+
         inputs = {
             "prompts": ["Test prompt 1", "Test prompt 2"],
         }
-        
+
         result = trt_llm.ray_infer_fn(inputs)
-        
+
         # Verify error handling
         assert "sentences" in result
         assert "error" in result
@@ -489,9 +453,7 @@ def test_ray_infer_fn_all_parameters():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -500,7 +462,7 @@ def test_ray_infer_fn_all_parameters():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = ["Comprehensive test response"]
-        
+
         inputs = {
             "prompts": ["Comprehensive test prompt"],
             "max_output_len": 512,
@@ -515,24 +477,33 @@ def test_ray_infer_fn_all_parameters():
             "lora_uids": ["comprehensive_lora"],
             "output_log_probs": True,
         }
-        
+
         result = trt_llm.ray_infer_fn(inputs)
-        
+
         # Verify the result
         assert result["sentences"] == ["Comprehensive test response"]
-        
+
         # Verify forward was called with all parameters
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
         expected_params = [
-            "input_texts", "max_output_len", "top_k", "top_p", "temperature",
-            "random_seed", "stop_words_list", "bad_words_list", "no_repeat_ngram_size",
-            "task_ids", "lora_uids", "output_log_probs"
+            "input_texts",
+            "max_output_len",
+            "top_k",
+            "top_p",
+            "temperature",
+            "random_seed",
+            "stop_words_list",
+            "bad_words_list",
+            "no_repeat_ngram_size",
+            "task_ids",
+            "lora_uids",
+            "output_log_probs",
         ]
-        
+
         for param in expected_params:
             assert param in call_kwargs, f"Parameter {param} not found in forward call"
-        
+
         # Verify specific values
         assert call_kwargs["input_texts"] == ["Comprehensive test prompt"]
         assert call_kwargs["max_output_len"] == 512
@@ -547,6 +518,7 @@ def test_ray_infer_fn_all_parameters():
         assert call_kwargs["lora_uids"] == ["comprehensive_lora"]
         assert call_kwargs["output_log_probs"] is True
 
+
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test__infer_fn_basic():
@@ -554,9 +526,7 @@ def test__infer_fn_basic():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -565,7 +535,7 @@ def test__infer_fn_basic():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = ["Generated text 1", "Generated text 2"]
-        
+
         prompts = ["Hello", "World"]
         inputs = {
             "max_output_len": 256,
@@ -573,12 +543,12 @@ def test__infer_fn_basic():
             "top_k": 50,
             "top_p": 0.9,
         }
-        
+
         result = trt_llm._infer_fn(prompts, inputs)
-        
+
         # Verify the result
         assert result == ["Generated text 1", "Generated text 2"]
-        
+
         # Verify forward was called with correct parameters
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
@@ -596,9 +566,7 @@ def test__infer_fn_with_stop_words():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -607,18 +575,18 @@ def test__infer_fn_with_stop_words():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = ["Generated text"]
-        
+
         prompts = ["Test prompt"]
         inputs = {
             "stop_words_list": ["stop", "end"],  # String format
-            "bad_words_list": ["bad", "word"],   # String format
+            "bad_words_list": ["bad", "word"],  # String format
         }
-        
+
         result = trt_llm._infer_fn(prompts, inputs)
-        
+
         # Verify the result
         assert result == ["Generated text"]
-        
+
         # Verify forward was called with properly formatted word lists
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
@@ -634,9 +602,7 @@ def test__infer_fn_with_preformatted_word_lists():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -645,18 +611,18 @@ def test__infer_fn_with_preformatted_word_lists():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = ["Generated text"]
-        
+
         prompts = ["Test prompt"]
         inputs = {
             "stop_words_list": [["stop"], ["end"]],  # Already in correct format
-            "bad_words_list": [["bad"], ["word"]],   # Already in correct format
+            "bad_words_list": [["bad"], ["word"]],  # Already in correct format
         }
-        
+
         result = trt_llm._infer_fn(prompts, inputs)
-        
+
         # Verify the result
         assert result == ["Generated text"]
-        
+
         # Verify forward was called with word lists unchanged
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
@@ -672,9 +638,7 @@ def test__infer_fn_with_all_parameters():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -683,7 +647,7 @@ def test__infer_fn_with_all_parameters():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = ["Comprehensive test response"]
-        
+
         prompts = ["Comprehensive test prompt"]
         inputs = {
             "max_output_len": 512,
@@ -698,24 +662,33 @@ def test__infer_fn_with_all_parameters():
             "lora_uids": ["comprehensive_lora"],
             "output_log_probs": True,
         }
-        
+
         result = trt_llm._infer_fn(prompts, inputs)
-        
+
         # Verify the result
         assert result == ["Comprehensive test response"]
-        
+
         # Verify forward was called with all parameters
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
         expected_params = [
-            "input_texts", "max_output_len", "top_k", "top_p", "temperature",
-            "random_seed", "stop_words_list", "bad_words_list", "no_repeat_ngram_size",
-            "task_ids", "lora_uids", "output_log_probs"
+            "input_texts",
+            "max_output_len",
+            "top_k",
+            "top_p",
+            "temperature",
+            "random_seed",
+            "stop_words_list",
+            "bad_words_list",
+            "no_repeat_ngram_size",
+            "task_ids",
+            "lora_uids",
+            "output_log_probs",
         ]
-        
+
         for param in expected_params:
             assert param in call_kwargs, f"Parameter {param} not found in forward call"
-        
+
         # Verify specific values
         assert call_kwargs["input_texts"] == ["Comprehensive test prompt"]
         assert call_kwargs["max_output_len"] == 512
@@ -738,9 +711,7 @@ def test__infer_fn_empty_inputs():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     model_dir = "/tmp/test_model_dir"
@@ -749,15 +720,15 @@ def test__infer_fn_empty_inputs():
     # Mock the forward method
     with patch.object(trt_llm, "forward") as mock_forward:
         mock_forward.return_value = ["Basic response"]
-        
+
         prompts = ["Basic prompt"]
         inputs = {}  # No additional inputs
-        
+
         result = trt_llm._infer_fn(prompts, inputs)
-        
+
         # Verify the result
         assert result == ["Basic response"]
-        
+
         # Verify forward was called with just input_texts
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]

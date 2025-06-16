@@ -27,10 +27,11 @@ import torch
 # TensorRT-LLM Ray deployment imports
 run_ray_tests = True
 try:
+    from ray import serve
+
     from nemo_deploy.deploy_ray import DeployRay
     from nemo_export.tensorrt_llm import TensorRTLLM
     from nemo_export.tensorrt_llm_deployable_ray import TensorRTLLMRayDeployable
-    from ray import serve
 except Exception as e:
     print(f"TensorRT-LLM Ray dependencies not available: {e}")
     run_ray_tests = False
@@ -66,10 +67,12 @@ def check_engine_config(engine_dir):
         return None
 
 
-def test_deployment_handle_direct(deployment_handle, model_id, endpoint_type="completions", max_retries=10, retry_delay=2):
+def test_deployment_handle_direct(
+    deployment_handle, model_id, endpoint_type="completions", max_retries=10, retry_delay=2
+):
     """Test deployment handle directly without HTTP requests."""
     print(f"Testing {endpoint_type} endpoint via deployment handle...")
-    
+
     for attempt in range(max_retries):
         try:
             if endpoint_type == "completions":
@@ -80,26 +83,26 @@ def test_deployment_handle_direct(deployment_handle, model_id, endpoint_type="co
                     "temperature": 0.1,
                 }
                 response = deployment_handle.completions.remote(payload).result()
-                    
+
             elif endpoint_type == "chat":
                 payload = {
                     "model": model_id,
                     "messages": "Hello, how are you?",
                     "max_tokens": 10,
                     "temperature": 0.1,
-                    "apply_chat_template": False
+                    "apply_chat_template": False,
                 }
                 response = deployment_handle.chat_completions.remote(payload).result()
-                    
+
             elif endpoint_type == "models":
                 response = deployment_handle.list_models.remote().result()
-                    
+
             elif endpoint_type == "health":
                 response = deployment_handle.health_check.remote().result()
             else:
                 raise ValueError(f"Unknown endpoint type: {endpoint_type}")
-            
-            if response and (isinstance(response, dict) or hasattr(response, '__dict__')):
+
+            if response and (isinstance(response, dict) or hasattr(response, "__dict__")):
                 print(f"✓ {endpoint_type.capitalize()} endpoint is responsive")
                 return True, response
             else:
@@ -107,45 +110,42 @@ def test_deployment_handle_direct(deployment_handle, model_id, endpoint_type="co
                 if attempt < max_retries - 1:
                     print(f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})")
                     time.sleep(retry_delay)
-                
+
         except Exception as e:
             print(f"✗ Error calling {endpoint_type} endpoint: {e}")
             if attempt < max_retries - 1:
                 print(f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})")
                 time.sleep(retry_delay)
-    
+
     print(f"✗ {endpoint_type.capitalize()} endpoint failed after {max_retries} attempts")
     return False, None
 
 
 def run_comprehensive_deployment_tests(deployment_handle, model_id):
     """Run comprehensive tests on deployment handle directly."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("RUNNING COMPREHENSIVE TRTLLM DEPLOYMENT HANDLE TESTS")
-    print("="*60)
-    
+    print("=" * 60)
+
     test_results = {}
     endpoints = ["health", "models", "completions", "chat"]
-    
+
     for endpoint in endpoints:
         print(f"\n--- Testing {endpoint} endpoint ---")
         success, response = test_deployment_handle_direct(deployment_handle, model_id, endpoint)
-        test_results[endpoint] = {
-            "success": success,
-            "response": response
-        }
-        
+        test_results[endpoint] = {"success": success, "response": response}
+
         if success and response:
             print(f"✓ {endpoint.capitalize()} endpoint test PASSED")
             if endpoint in ["completions", "chat"]:
                 if isinstance(response, dict) and "choices" in response:
-                    choice_content = response['choices'][0].get('text', response['choices'][0].get('message', {}))
+                    choice_content = response["choices"][0].get("text", response["choices"][0].get("message", {}))
                     print(f"  Sample response: {choice_content}")
                 else:
                     print(f"  Response type: {type(response)}")
         else:
             print(f"✗ {endpoint.capitalize()} endpoint test FAILED")
-    
+
     return test_results
 
 
@@ -163,10 +163,10 @@ def convert_nemo_to_trtllm(
     enable_chunked_context=False,
     max_tokens_in_paged_kv_cache=None,
     lora_ckpt_list=None,
-    debug=True
+    debug=True,
 ):
     """Convert NeMo checkpoint to TensorRT-LLM model."""
-    
+
     if debug:
         print("\nConverting NeMo checkpoint to TensorRT-LLM...")
         print(f"Source: {nemo_checkpoint_path}")
@@ -178,11 +178,11 @@ def convert_nemo_to_trtllm(
         print(f"Max output length: {max_output_len}")
         print(f"Max batch size: {max_batch_size}")
         print(f"Python runtime: {use_python_runtime}")
-    
+
     try:
         # Create TensorRT-LLM directory
         Path(trt_llm_path).mkdir(parents=True, exist_ok=True)
-        
+
         # Prepare TensorRTLLM constructor arguments
         trtllm_kwargs = {
             "model_dir": trt_llm_path,
@@ -191,18 +191,18 @@ def convert_nemo_to_trtllm(
             "use_python_runtime": use_python_runtime,
             "multi_block_mode": multi_block_mode,
         }
-        
+
         # Add C++ runtime specific options if using C++ runtime
         if not use_python_runtime:
             trtllm_kwargs["enable_chunked_context"] = enable_chunked_context
             trtllm_kwargs["max_tokens_in_paged_kv_cache"] = max_tokens_in_paged_kv_cache
-        
+
         trtllm_converter = TensorRTLLM(**trtllm_kwargs)
-        
+
         # Export NeMo checkpoint to TensorRT-LLM
         if debug:
             print("Starting NeMo to TensorRT-LLM conversion...")
-        
+
         trtllm_converter.export(
             nemo_checkpoint_path=nemo_checkpoint_path,
             model_type=model_type,
@@ -212,11 +212,11 @@ def convert_nemo_to_trtllm(
             max_output_len=max_output_len,
             max_batch_size=max_batch_size,
             delete_existing_files=True,
-            max_seq_len=max_input_len + max_output_len
+            max_seq_len=max_input_len + max_output_len,
         )
-        
+
         del trtllm_converter
-        
+
         # Check the engine configuration after export
         engine_dir = os.path.join(trt_llm_path, "engines")
         if os.path.exists(engine_dir):
@@ -233,12 +233,12 @@ def convert_nemo_to_trtllm(
                     print(f"✓ Engine configuration verified: max_input_len = {actual_max_input_len}")
         else:
             LOGGER.warning(f"Engine directory not found at: {engine_dir}")
-        
+
         if debug:
             print("✓ NeMo to TensorRT-LLM conversion completed successfully")
-        
+
         return True
-        
+
     except Exception as e:
         LOGGER.error(f"Error converting NeMo checkpoint to TensorRT-LLM: {str(e)}")
         return False
@@ -273,24 +273,24 @@ def run_trtllm_ray_inference(
     debug=True,
 ):
     """Deploy a TensorRT-LLM model (converted from NeMo) on Ray cluster and test all endpoints."""
-    
+
     if not run_ray_tests:
         print("TensorRT-LLM Ray dependencies not available. Skipping TensorRT-LLM Ray tests.")
         return None
-    
+
     if not Path(nemo_checkpoint_path).exists():
         raise Exception(f"NeMo checkpoint {nemo_checkpoint_path} could not be found.")
-    
+
     if num_gpus > torch.cuda.device_count():
         print(
             f"Model: {model_name} with {num_gpus} gpus won't be tested since available # of gpus = {torch.cuda.device_count()}"
         )
         return None
-    
+
     # Set default TensorRT-LLM path if not provided
     if trt_llm_path is None:
         trt_llm_path = f"/tmp/trt_llm_{model_name}_model_dir/"
-    
+
     if debug:
         print("")
         print("=" * 80)
@@ -331,9 +331,9 @@ def run_trtllm_ray_inference(
         enable_chunked_context=enable_chunked_context,
         max_tokens_in_paged_kv_cache=max_tokens_in_paged_kv_cache,
         lora_ckpt_list=lora_ckpt_list,
-        debug=debug
+        debug=debug,
     )
-    
+
     if not conversion_success:
         print("✗ Failed to convert NeMo checkpoint to TensorRT-LLM")
         return None
@@ -347,23 +347,23 @@ def run_trtllm_ray_inference(
             "env_vars": {
                 "CUDA_VISIBLE_DEVICES": cuda_visible_devices,
             }
-        }
+        },
     )
 
     deployment_success = False
     test_results = {}
     deployment_handle = None
-    
+
     try:
         # Start Ray Serve
         if debug:
             print(f"Starting Ray Serve on {host}:{port}...")
         ray_deployer.start(host=host, port=port)
-        
+
         # Create the TensorRT-LLM model deployment
         if debug:
             print("Creating TensorRT-LLM Ray deployable...")
-        
+
         # Prepare deployment parameters
         deployment_kwargs = {
             "trt_llm_path": trt_llm_path,
@@ -389,10 +389,10 @@ def run_trtllm_ray_inference(
         # Deploy the model and get handle
         if debug:
             print("Deploying TensorRT-LLM model...")
-        
+
         # Deploy using serve.run and get the deployment handle
         serve.run(app, name=model_name)
-        
+
         # Get the app handle (not deployment handle) - this is the correct approach
         deployment_handle = serve.get_app_handle(model_name)
         deployment_success = True
@@ -405,11 +405,11 @@ def run_trtllm_ray_inference(
         if debug:
             print("Waiting for deployment to be fully ready...")
         time.sleep(5)
-        
+
         # Test endpoints if requested using deployment handle
         if test_endpoints:
             test_results = run_comprehensive_deployment_tests(deployment_handle, model_name)
-        
+
         return test_results
 
     except Exception as e:
@@ -590,7 +590,7 @@ def get_args():
 
 def run_trtllm_ray_deployment_tests(args):
     """Run TensorRT-LLM Ray deployment tests with the provided arguments."""
-    
+
     # Convert string arguments to boolean
     if args.test_endpoints == "True":
         args.test_endpoints = True
@@ -601,15 +601,15 @@ def run_trtllm_ray_deployment_tests(args):
     # Default to Python runtime unless C++ runtime is explicitly requested
     use_python_runtime = not args.use_cpp_runtime
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("TRTLLM RAY DEPLOYMENT TEST SUITE")
-    print("="*80)
+    print("=" * 80)
     print(f"Model: {args.model_name}")
     print(f"NeMo Checkpoint: {args.nemo_checkpoint_path}")
     print(f"TensorRT-LLM Path: {args.trt_llm_path}")
     print(f"Configuration: {args.num_replicas} replicas, {args.num_gpus} GPUs")
     print(f"Runtime: {'Python' if use_python_runtime else 'C++'}")
-    print("="*80)
+    print("=" * 80)
 
     try:
         test_results = run_trtllm_ray_inference(
@@ -642,10 +642,10 @@ def run_trtllm_ray_deployment_tests(args):
         )
 
         # Print test summary
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("TEST SUMMARY")
-        print("="*80)
-        
+        print("=" * 80)
+
         if test_results is None:
             print("✗ DEPLOYMENT FAILED")
             test_result = "FAIL"
@@ -655,13 +655,13 @@ def run_trtllm_ray_deployment_tests(args):
         else:
             passed_endpoints = sum(1 for result in test_results.values() if result["success"])
             total_endpoints = len(test_results)
-            
+
             print(f"Endpoint Tests: {passed_endpoints}/{total_endpoints} passed")
-            
+
             for endpoint, result in test_results.items():
                 status = "✓ PASS" if result["success"] else "✗ FAIL"
                 print(f"  {endpoint.capitalize()}: {status}")
-            
+
             if passed_endpoints == total_endpoints:
                 test_result = "PASS"
                 print("\n✓ ALL TESTS PASSED")
@@ -669,9 +669,9 @@ def run_trtllm_ray_deployment_tests(args):
                 test_result = "FAIL"
                 print(f"\n✗ {total_endpoints - passed_endpoints} TESTS FAILED")
 
-        print("="*80)
+        print("=" * 80)
         print(f"FINAL RESULT: {test_result}")
-        print("="*80)
+        print("=" * 80)
 
         if test_result == "FAIL":
             raise Exception("One or more tests failed")
@@ -683,4 +683,4 @@ def run_trtllm_ray_deployment_tests(args):
 
 if __name__ == "__main__":
     args = get_args()
-    run_trtllm_ray_deployment_tests(args) 
+    run_trtllm_ray_deployment_tests(args)
