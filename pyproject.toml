@@ -21,7 +21,7 @@ readme = { file = "README.md", content-type = "text/markdown" }
 
 
 [project]
-name = "nemo-export-deploy"
+name = "NeMo-Export-Deploy"
 dynamic = ["version", "readme"]
 description = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
 requires-python = ">=3.12,<3.13"
@@ -145,11 +145,7 @@ omit = [
 ]
 
 [tool.coverage.paths]
-source = [
-    ".",
-    "/workspace",
-    "/home/runner/work/NeMo-Export-Deploy/NeMo-Export-Deploy",
-]
+source = [".", "/workspace", "/home/runner/work/Export-Deploy/Export-Deploy"]
 
 
 [tool.ruff.lint]

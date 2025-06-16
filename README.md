@@ -55,10 +55,10 @@ docker run \
     --rm \
     -it \
     --entrypoint bash \
-    --workdir /opt/nemo-export-deploy \
+    --workdir /opt/Export-Deploy \
     --shm-size=4g \
     --gpus all \
-    -v ${PWD}:/opt/nemo-export-deploy \
+    -v ${PWD}:/opt/Export-Deploy \
     -v ${PWD}/checkpoints/:/opt/checkpoints/ \
     nemo-export-deploy
 ```
@@ -288,7 +288,7 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
 
 ## Installation
 
-For NeMo-Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
+For NeMo Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
 
 ```bash
 pip install nemo-export-deploy
@@ -303,8 +303,8 @@ A compatible C++ compiler
 CUDA Toolkit with cuDNN and NVCC (NVIDIA CUDA Compiler) installed
 
 ```bash
-git clone https://github.com/NVIDIA-NeMo/NeMo-Export-Deploy
-cd NeMo-Export-Deploy
+git clone https://github.com/NVIDIA-NeMo/Export-Deploy
+cd Export-Deploy
 
 pip install torch pybind11 setuptools
 pip install -e --build-isolation '.[te]'
@@ -317,16 +317,16 @@ Additionally to Megatron-Core/TransformerEngine, users may also add TRT-LLM or v
 For TRT-LLM, make sure to `sudo apt install libopenmpi-dev` before.
 
 ```bash
-git clone https://github.com/NVIDIA-NeMo/NeMo-Export-Deploy
-cd NeMo-Export-Deploy
+git clone https://github.com/NVIDIA-NeMo/Export-Deploy
+cd Export-Deploy
 pip install -e '.[trtllm]'
 ```
 
 For vLLM:
 
 ```bash
-git clone https://github.com/NVIDIA-NeMo/NeMo-Export-Deploy
-cd NeMo-Export-Deploy
+git clone https://github.com/NVIDIA-NeMo/Export-Deploy
+cd Export-Deploy
 pip install -e '.[vllm]'
 ```
 
