@@ -17,6 +17,7 @@ import shutil
 import pytest
 
 
+@pytest.mark.pleasefixme  # disabled since it required data
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 @pytest.mark.parametrize("tensor_parallelism_size,pipeline_parallelism_size", [(2, 1), (1, 2)])
@@ -50,6 +51,7 @@ def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_paralle
     shutil.rmtree("/tmp/safe_tensor_test/")
 
 
+@pytest.mark.pleasefixme  # disabled since it required data
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_nemo2_convert_to_export():
@@ -92,7 +94,7 @@ def test_nemo2_convert_to_export():
     )
 
     output = trt_llm_exporter.forward(
-        input_texts=["Tell me the capital of France "],
+        input_texts=["Tell me the capitol of France "],
         max_output_len=16,
         top_k=1,
         top_p=0.0,
