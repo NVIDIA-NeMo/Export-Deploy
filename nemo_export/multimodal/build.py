@@ -19,12 +19,13 @@ import tarfile
 import tempfile
 from pathlib import Path
 from time import time
-from typing import List
 from types import SimpleNamespace
+from typing import List
 
 import tensorrt as trt
 import torch
 import yaml
+from nemo.collections import llm
 from tensorrt_llm._common import check_max_num_tokens
 from tensorrt_llm.builder import BuildConfig, Builder
 from tensorrt_llm.commands.build import build as build_trtllm
@@ -34,10 +35,8 @@ from tensorrt_llm.plugin import PluginConfig
 from tensorrt_llm.tools.multimodal_builder import VisionEngineBuilder
 from transformers import AutoModel, AutoProcessor
 
-from nemo.collections import llm
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
-
 
 logger = trt.Logger(trt.Logger.INFO)
 

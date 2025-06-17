@@ -14,10 +14,12 @@
 
 
 import argparse
-from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+from nemo.collections import llm, vlm
+
 from nemo_deploy import DeployPyTriton
 from nemo_deploy.multimodal import NemoQueryMultimodal
-from nemo.collections import vlm, llm
+from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
 
 def get_args():
@@ -79,9 +81,7 @@ def run_inference_tests(args):
         nm.deploy()
         nm.run()
 
-        nq = NemoQueryMultimodal(
-            url="localhost:8000", model_name="mllama", model_type="mllama"
-        )
+        nq = NemoQueryMultimodal(url="localhost:8000", model_name="mllama", model_type="mllama")
 
         output_deployed = nq.query(
             input_text="What is in this image?",
