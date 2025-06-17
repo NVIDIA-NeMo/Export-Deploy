@@ -14,7 +14,8 @@
 
 import os
 import re
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, mock_open
+import json
 
 import pytest
 import torch
@@ -734,3 +735,138 @@ def test__infer_fn_empty_inputs():
         assert call_kwargs["input_texts"] == ["Basic prompt"]
         # Should only have input_texts, no other parameters
         assert len(call_kwargs) == 1
+
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test_tensorrt_llm_forward_without_model():
+    """Test forward pass when model is not loaded."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    trt_llm = TensorRTLLM(model_dir="/tmp/test_model", load_model=False)
+
+    with pytest.raises(Exception) as exc_info:
+        trt_llm.forward(
+            input_texts=["Hello"],
+            max_output_len=128,
+            top_k=50,
+            top_p=0.9,
+            temperature=0.7,
+            stop_words_list=["stop"],
+            bad_words_list=["bad"],
+            no_repeat_ngram_size=3,
+            output_log_probs=True
+        )
+
+    assert "A nemo checkpoint should be exported" in str(exc_info.value)
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test_tensorrt_llm_unload_engine():
+    """Test engine unloading functionality."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    trt_llm = TensorRTLLM(model_dir="/tmp/test_model")
+
+    # Mock the unload_engine function
+    with patch('nemo_export.tensorrt_llm.unload_engine') as mock_unload:
+        trt_llm.unload_engine()
+        mock_unload.assert_called_once()
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test_tensorrt_llm_get_hf_model_type():
+    """Test getting model type from HF config."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    trt_llm = TensorRTLLM(model_dir="/tmp/test_model")
+
+    # Mock AutoConfig
+    with patch('transformers.AutoConfig.from_pretrained') as mock_config:
+        mock_config.return_value.architectures = ["LlamaForCausalLM"]
+        model_type = trt_llm.get_hf_model_type("/tmp/model")
+        assert model_type == "LlamaForCausalLM"
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test_tensorrt_llm_get_hf_model_type_ambiguous():
+    """Test getting model type with ambiguous architecture."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    trt_llm = TensorRTLLM(model_dir="/tmp/test_model")
+
+    # Mock AutoConfig with multiple architectures
+    with patch('transformers.AutoConfig.from_pretrained') as mock_config:
+        mock_config.return_value.architectures = ["Model1", "Model2"]
+        with pytest.raises(ValueError) as exc_info:
+            trt_llm.get_hf_model_type("/tmp/model")
+        assert "Ambiguous architecture choice" in str(exc_info.value)
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test_tensorrt_llm_get_hf_model_dtype():
+    """Test getting model dtype from HF config."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    trt_llm = TensorRTLLM(model_dir="/tmp/test_model")
+
+    # Mock config file reading
+    mock_config = {
+        "torch_dtype": "float16",
+        "fp16": True,
+        "bf16": False
+    }
+
+    with patch('pathlib.Path.exists', return_value=True), \
+         patch('builtins.open', mock_open(read_data=json.dumps(mock_config))):
+        dtype = trt_llm.get_hf_model_dtype("/tmp/model")
+        assert dtype == "float16"
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.unit
+def test_tensorrt_llm_get_hf_model_dtype_not_found():
+    """Test getting model dtype when config file doesn't exist."""
+    try:
+        from nemo_export.tensorrt_llm import TensorRTLLM
+    except ImportError:
+        pytest.skip(
+            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
+        )
+        return
+
+    trt_llm = TensorRTLLM(model_dir="/tmp/test_model")
+
+    with patch('pathlib.Path.exists', return_value=False):
+        with pytest.raises(FileNotFoundError) as exc_info:
+            trt_llm.get_hf_model_dtype("/tmp/model")
+        assert "Config file not found" in str(exc_info.value)
