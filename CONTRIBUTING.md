@@ -1,6 +1,6 @@
-# Contributing To Nemo-Export-Deploy
+# Contributing To NeMo Export-Deploy
 
-Thanks for your interest in contributing to Nemo-Export-Deploy!
+Thanks for your interest in contributing to NeMo Export-Deploy!
 
 ## Setting Up
 
@@ -35,6 +35,22 @@ git commit -m "build: Adding dependencies"
 git push
 ```
 
+### Linting and Formatting
+
+We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting.
+
+Installation:
+
+```bash
+pip install ruff
+```
+
+Format:
+
+```bash
+ruff format .
+```
+
 ## Making Changes
 
 ### Workflow: Clone and Branch (No Fork Required)
@@ -46,8 +62,8 @@ We follow a direct clone and branch workflow for now:
 1. Clone the repository directly:
 
    ```bash
-   git clone https://github.com/NVIDIA/NeMo-Export-Deploy
-   cd NeMo-Export-Deploy
+   git clone https://github.com/NVIDIA-NeMo/Export-Deploy
+   cd Export-Deploy
    ```
 
 2. Create a new branch for your changes:
@@ -87,7 +103,7 @@ This ensures that all significant changes are well-thought-out and properly docu
 1. **User Adoption**: Helps users understand how to effectively use the library's features in their projects
 2. **Developer Extensibility**: Enables developers to understand the internal architecture and implementation details, making it easier to modify, extend, or adapt the code for their specific use cases
 
-Quality documentation is essential for both the usability of Nemo-Export-Deploy and its ability to be customized by the community.
+Quality documentation is essential for both the usability of NeMo Export-Deploy and its ability to be customized by the community.
 
 ## Code Quality
 

@@ -11,24 +11,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-python tests/functional_tests/utils/create_hf_model.py \
+
+#!/bin/bash
+set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
+
+coverage run --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/create_hf_model.py \
   --model_name_or_path /home/TestData/hf/Mixtral-8x7B-Instruct-v0.1 \
   --output_dir /tmp/mixtral_tiny_hf \
   --config_updates "{\"num_hidden_layers\": 2, \"hidden_size\": 128, \"intermediate_size\": 448, \"num_attention_heads\": 4, \"num_key_value_heads\": 2, \"head_dim\": 32, \"num_local_experts\": 4}"
 
-python tests/functional_tests/utils/test_hf_import.py \
+coverage run --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/test_hf_import.py \
   --hf_model /tmp/mixtral_tiny_hf \
   --model MixtralModel \
   --config MixtralConfig8x7B \
   --output_path /tmp/mixtral_tiny_nemo2
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_export.py \
+coverage run --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/run_nemo_export.py \
   --min_tps 1 \
   --max_tps 1 \
   --use_vllm True \
-  --model_type mixtral \
   --max_output_len 128 \
   --test_deployment True \
   --model_name nemo2_ckpt \
   --model_dir /tmp/vllm_from_nemo2 \
   --checkpoint_dir /tmp/mixtral_tiny_nemo2
+coverage combine

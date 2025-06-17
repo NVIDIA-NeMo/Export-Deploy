@@ -25,9 +25,10 @@ import torch
 # Ray deployment imports
 run_ray_tests = True
 try:
+    from ray import serve
+
     from nemo_deploy.deploy_ray import DeployRay
     from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
-    from ray import serve
 except Exception as e:
     print(f"Ray dependencies not available: {e}")
     run_ray_tests = False
@@ -44,10 +45,16 @@ def get_available_cpus():
     return multiprocessing.cpu_count()
 
 
-def test_deployment_handle_direct(deployment_handle, model_id, endpoint_type="completions", max_retries=10, retry_delay=2):
+def test_deployment_handle_direct(
+    deployment_handle,
+    model_id,
+    endpoint_type="completions",
+    max_retries=10,
+    retry_delay=2,
+):
     """Test deployment handle directly without HTTP requests."""
     print(f"Testing {endpoint_type} endpoint via deployment handle...")
-    
+
     for attempt in range(max_retries):
         try:
             if endpoint_type == "completions":
@@ -58,26 +65,26 @@ def test_deployment_handle_direct(deployment_handle, model_id, endpoint_type="co
                     "temperature": 0.1,
                 }
                 response = deployment_handle.completions.remote(payload).result()
-                    
+
             elif endpoint_type == "chat":
                 payload = {
                     "model": model_id,
                     "messages": "Hello, how are you?",
                     "max_tokens": 10,
                     "temperature": 0.1,
-                    "apply_chat_template": False
+                    "apply_chat_template": False,
                 }
                 response = deployment_handle.chat_completions.remote(payload).result()
-                    
+
             elif endpoint_type == "models":
                 response = deployment_handle.list_models.remote().result()
-                    
+
             elif endpoint_type == "health":
                 response = deployment_handle.health_check.remote().result()
             else:
                 raise ValueError(f"Unknown endpoint type: {endpoint_type}")
-            
-            if response and (isinstance(response, dict) or hasattr(response, '__dict__')):
+
+            if response and (isinstance(response, dict) or hasattr(response, "__dict__")):
                 print(f"✓ {endpoint_type.capitalize()} endpoint is responsive")
                 return True, response
             else:
@@ -85,45 +92,42 @@ def test_deployment_handle_direct(deployment_handle, model_id, endpoint_type="co
                 if attempt < max_retries - 1:
                     print(f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})")
                     time.sleep(retry_delay)
-                
+
         except Exception as e:
             print(f"✗ Error calling {endpoint_type} endpoint: {e}")
             if attempt < max_retries - 1:
                 print(f"Retrying in {retry_delay} seconds... (attempt {attempt + 1}/{max_retries})")
                 time.sleep(retry_delay)
-    
+
     print(f"✗ {endpoint_type.capitalize()} endpoint failed after {max_retries} attempts")
     return False, None
 
 
 def run_comprehensive_deployment_tests(deployment_handle, model_id):
     """Run comprehensive tests on deployment handle directly."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("RUNNING COMPREHENSIVE DEPLOYMENT HANDLE TESTS")
-    print("="*60)
-    
+    print("=" * 60)
+
     test_results = {}
     endpoints = ["health", "models", "completions", "chat"]
-    
+
     for endpoint in endpoints:
         print(f"\n--- Testing {endpoint} endpoint ---")
         success, response = test_deployment_handle_direct(deployment_handle, model_id, endpoint)
-        test_results[endpoint] = {
-            "success": success,
-            "response": response
-        }
-        
+        test_results[endpoint] = {"success": success, "response": response}
+
         if success and response:
             print(f"✓ {endpoint.capitalize()} endpoint test PASSED")
             if endpoint in ["completions", "chat"]:
                 if isinstance(response, dict) and "choices" in response:
-                    choice_content = response['choices'][0].get('text', response['choices'][0].get('message', {}))
+                    choice_content = response["choices"][0].get("text", response["choices"][0].get("message", {}))
                     print(f"  Sample response: {choice_content}")
                 else:
                     print(f"  Response type: {type(response)}")
         else:
             print(f"✗ {endpoint.capitalize()} endpoint test FAILED")
-    
+
     return test_results
 
 
@@ -151,20 +155,20 @@ def run_ray_inference(
     debug=True,
 ):
     """Deploy a NeMo model on Ray cluster and test all endpoints."""
-    
+
     if not run_ray_tests:
         print("Ray dependencies not available. Skipping Ray tests.")
         return None
-    
+
     if not Path(checkpoint_path).exists():
         raise Exception(f"Checkpoint {checkpoint_path} could not be found.")
-    
+
     if num_gpus > torch.cuda.device_count():
         print(
             f"Model: {model_name} with {num_gpus} gpus won't be tested since available # of gpus = {torch.cuda.device_count()}"
         )
         return None
-    
+
     if debug:
         print("")
         print("=" * 80)
@@ -186,17 +190,12 @@ def run_ray_inference(
     # Calculate total GPUs and validate configuration
     total_gpus = num_gpus * num_nodes
     gpus_per_replica = total_gpus // num_replicas
-    
-    parallelism_per_replica = (
-        tensor_model_parallel_size * 
-        pipeline_model_parallel_size * 
-        context_parallel_size
-    )
-    
+
+    parallelism_per_replica = tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size
+
     if parallelism_per_replica != gpus_per_replica:
         raise Exception(
-            f"Parallelism per replica ({parallelism_per_replica}) must equal "
-            f"GPUs per replica ({gpus_per_replica})"
+            f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
         )
 
     if debug:
@@ -211,27 +210,25 @@ def run_ray_inference(
             "env_vars": {
                 "CUDA_VISIBLE_DEVICES": cuda_visible_devices,
             }
-        }
+        },
     )
 
     deployment_success = False
     test_results = {}
     deployment_handle = None
-    
+
     try:
         # Start Ray Serve
         if debug:
             print(f"Starting Ray Serve on {host}:{port}...")
         ray_deployer.start(host=host, port=port)
-        
+
         # Create the Multi-Rank Megatron model deployment
         if debug:
             print("Creating Megatron Ray deployable...")
         app = MegatronRayDeployable.options(
             num_replicas=num_replicas,
-            ray_actor_options={
-                "num_cpus": num_cpus_per_replica
-            }
+            ray_actor_options={"num_cpus": num_cpus_per_replica},
         ).bind(
             nemo_checkpoint_filepath=checkpoint_path,
             num_gpus=gpus_per_replica,
@@ -243,16 +240,16 @@ def run_ray_inference(
             model_id=model_name,
             enable_cuda_graphs=enable_cuda_graphs,
             enable_flash_decode=enable_flash_decode,
-            legacy_ckpt=legacy_ckpt
+            legacy_ckpt=legacy_ckpt,
         )
 
         # Deploy the model and get handle
         if debug:
             print("Deploying model...")
-        
+
         # Deploy using serve.run and get the deployment handle
         serve.run(app, name=model_name)
-        
+
         # Get the app handle (not deployment handle) - this is the correct approach
         deployment_handle = serve.get_app_handle(model_name)
         deployment_success = True
@@ -265,11 +262,11 @@ def run_ray_inference(
         if debug:
             print("Waiting for deployment to be fully ready...")
         time.sleep(5)
-        
+
         # Test endpoints if requested using deployment handle
         if test_endpoints:
             test_results = run_comprehensive_deployment_tests(deployment_handle, model_name)
-        
+
         return test_results
 
     except Exception as e:
@@ -414,20 +411,20 @@ def get_args():
 
 def run_ray_deployment_tests(args):
     """Run Ray deployment tests with the provided arguments."""
-    
+
     # Convert string arguments to boolean
     if args.test_endpoints == "True":
         args.test_endpoints = True
     else:
         args.test_endpoints = False
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("NEMO RAY DEPLOYMENT TEST SUITE")
-    print("="*80)
+    print("=" * 80)
     print(f"Model: {args.model_name}")
     print(f"Checkpoint: {args.checkpoint_path}")
     print(f"Configuration: {args.num_replicas} replicas, {args.num_gpus} GPUs per node")
-    print("="*80)
+    print("=" * 80)
 
     try:
         test_results = run_ray_inference(
@@ -455,10 +452,10 @@ def run_ray_deployment_tests(args):
         )
 
         # Print test summary
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("TEST SUMMARY")
-        print("="*80)
-        
+        print("=" * 80)
+
         if test_results is None:
             print("✗ DEPLOYMENT FAILED")
             test_result = "FAIL"
@@ -468,13 +465,13 @@ def run_ray_deployment_tests(args):
         else:
             passed_endpoints = sum(1 for result in test_results.values() if result["success"])
             total_endpoints = len(test_results)
-            
+
             print(f"Endpoint Tests: {passed_endpoints}/{total_endpoints} passed")
-            
+
             for endpoint, result in test_results.items():
                 status = "✓ PASS" if result["success"] else "✗ FAIL"
                 print(f"  {endpoint.capitalize()}: {status}")
-            
+
             if passed_endpoints == total_endpoints:
                 test_result = "PASS"
                 print("\n✓ ALL TESTS PASSED")
@@ -482,9 +479,9 @@ def run_ray_deployment_tests(args):
                 test_result = "FAIL"
                 print(f"\n✗ {total_endpoints - passed_endpoints} TESTS FAILED")
 
-        print("="*80)
+        print("=" * 80)
         print(f"FINAL RESULT: {test_result}")
-        print("="*80)
+        print("=" * 80)
 
         if test_result == "FAIL":
             raise Exception("One or more tests failed")

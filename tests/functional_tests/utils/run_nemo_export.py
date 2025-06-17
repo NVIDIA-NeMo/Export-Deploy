@@ -30,9 +30,7 @@ try:
     from nemo_deploy import DeployPyTriton
     from nemo_deploy.nlp import NemoQueryLLM
 except Exception as e:
-    LOGGER.warning(
-        f"Cannot import Triton, deployment will not be available. {type(e).__name__}: {e}"
-    )
+    LOGGER.warning(f"Cannot import Triton, deployment will not be available. {type(e).__name__}: {e}")
     triton_supported = False
 
 in_framework_supported = True
@@ -55,18 +53,14 @@ trt_llm_supported = True
 try:
     from nemo_export.tensorrt_llm import TensorRTLLM
 except Exception as e:
-    LOGGER.warning(
-        f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}"
-    )
+    LOGGER.warning(f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}")
     trt_llm_supported = False
 
 vllm_supported = True
 try:
     from nemo_export.vllm_exporter import vLLMExporter
 except Exception as e:
-    LOGGER.warning(
-        f"Cannot import the vLLM exporter, it will not be available. {type(e).__name__}: {e}"
-    )
+    LOGGER.warning(f"Cannot import the vLLM exporter, it will not be available. {type(e).__name__}: {e}")
     vllm_supported = False
 
 
@@ -89,7 +83,7 @@ class AccuracyResult:
     evaluation_time: float
 
 
-def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
+def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
     # lambada dataset based accuracy test, which includes more than 5000 sentences.
     # Use generated last token with original text's last token for accuracy comparison.
     # If the generated last token start with the original token, trtllm_correct make an increment.
@@ -111,9 +105,7 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
             expected_output = record["last_word"].strip().lower()
             all_expected_outputs.append(expected_output)
             if model is not None:
-                if in_framework_supported and isinstance(
-                    model, MegatronLLMDeployableNemo2
-                ):
+                if in_framework_supported and isinstance(model, MegatronLLMDeployableNemo2):
                     model_output = model.generate(
                         prompts=[prompt],
                         inference_params=CommonInferenceParams(
@@ -124,9 +116,7 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
                             return_log_probs=False,
                         ),
                     )
-                    model_output = model_output[
-                        0
-                    ].generated_text  # Index [0] as a single prompt is used
+                    model_output = model_output[0].generated_text  # Index [0] as a single prompt is used
                 else:
                     model_output = model.forward(
                         input_texts=[prompt],
@@ -134,7 +124,6 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
                         top_k=1,
                         top_p=0,
                         temperature=0.1,
-                        task_ids=task_ids,
                         lora_uids=lora_uids,
                     )
                     model_output = model_output[0][0].strip().lower()
@@ -163,9 +152,7 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
                     )
                     # Accessing [0][0] of "text" is to get a raw string entry from a NumPy array
                     # for a single prompt (batch size = 1) and stripping prefix if needed:
-                    deployed_output = (
-                        deployed_output["choices"][0]["text"][0][0][0:].strip().lower()
-                    )
+                    deployed_output = deployed_output["choices"][0]["text"][0][0][0:].strip().lower()
                 else:
                     deployed_output = nq.query_llm(
                         prompts=[prompt],
@@ -173,7 +160,6 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
                         top_k=1,
                         top_p=0,
                         temperature=0.1,
-                        task_id=task_ids,
                     )
                     deployed_output = deployed_output[0][0].strip().lower()
 
@@ -194,22 +180,13 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path):
         accuracy=correct_answers / len(all_expected_outputs),
         accuracy_relaxed=correct_answers_relaxed / len(all_expected_outputs),
         deployed_accuracy=correct_answers_deployed / len(all_expected_outputs),
-        deployed_accuracy_relaxed=correct_answers_deployed_relaxed
-        / len(all_expected_outputs),
+        deployed_accuracy_relaxed=correct_answers_deployed_relaxed / len(all_expected_outputs),
         evaluation_time=eval_end - eval_start,
     )
 
 
 # Tests if the model outputs contain the expected keywords.
-def check_model_outputs(
-    streaming: bool, model_outputs, expected_outputs: List[str]
-) -> bool:
-    # In streaming mode, we get a list of lists of lists, and we only care about the last item in that list
-    if streaming:
-        if len(model_outputs) == 0:
-            return False
-        model_outputs = model_outputs[-1]
-
+def check_model_outputs(model_outputs, expected_outputs: List[str]) -> bool:
     # See if we have the right number of final answers.
     if len(model_outputs) != len(expected_outputs):
         return False
@@ -237,8 +214,6 @@ def run_inference(
     max_output_len=128,
     max_num_tokens=None,
     use_parallel_embedding=False,
-    ptuning=False,
-    p_tuning_checkpoint=None,
     lora=False,
     lora_checkpoint=None,
     tp_size=1,
@@ -248,7 +223,6 @@ def run_inference(
     temperature=1.0,
     run_accuracy=False,
     debug=True,
-    streaming=False,
     stop_words_list=None,
     test_cpp_runtime=False,
     test_deployment=False,
@@ -284,26 +258,9 @@ def run_inference(
             )
             print("")
 
-            print(
-                "Path: {0} and model: {1} with {2} tps will be tested".format(
-                    checkpoint_path, model_name, tp_size
-                )
-            )
+            print("Path: {0} and model: {1} with {2} tps will be tested".format(checkpoint_path, model_name, tp_size))
 
-        prompt_embeddings_checkpoint_path = None
-        task_ids = None
-        max_prompt_embedding_table_size = 0
-
-        if ptuning:
-            if Path(p_tuning_checkpoint).exists():
-                prompt_embeddings_checkpoint_path = p_tuning_checkpoint
-                max_prompt_embedding_table_size = 8192
-                task_ids = ["0"]
-                if debug:
-                    print("---- PTuning enabled.")
-            else:
-                print("---- PTuning could not be enabled and skipping the test.")
-                return (None, None)
+        _ = None
 
         lora_ckpt_list = None
         lora_uids = None
@@ -356,7 +313,6 @@ def run_inference(
                     max_seq_len=(max_input_len + max_output_len),
                     max_batch_size=max_batch_size,
                     use_parallel_embedding=use_parallel_embedding,
-                    max_prompt_embedding_table_size=max_prompt_embedding_table_size,
                     use_lora_plugin=use_lora_plugin,
                     lora_target_modules=lora_target_modules,
                     max_num_tokens=max_num_tokens,
@@ -366,21 +322,13 @@ def run_inference(
                     **trt_llm_export_kwargs,
                 )
 
-        if ptuning:
-            exporter.add_prompt_table(
-                task_name="0",
-                prompt_embeddings_checkpoint_path=prompt_embeddings_checkpoint_path,
-            )
-
         output = exporter.forward(
             input_texts=prompts,
             max_output_len=max_output_len,
             top_k=top_k,
             top_p=top_p,
             temperature=temperature,
-            task_ids=task_ids,
             lora_uids=lora_uids,
-            streaming=streaming,
             stop_words_list=stop_words_list,
         )
 
@@ -392,12 +340,12 @@ def run_inference(
         # Check non-deployed funcitonal correctness
         if args.functional_test:
             functional_result.regular_pass = True
-            if not check_model_outputs(streaming, output, expected_outputs):
+            if not check_model_outputs(output, expected_outputs):
                 LOGGER.warning("Model outputs don't match the expected result.")
                 functional_result.regular_pass = False
 
         output_cpp = ""
-        if test_cpp_runtime and not use_lora_plugin and not ptuning and not use_vllm:
+        if test_cpp_runtime and not use_lora_plugin and not use_vllm:
             # This may cause OOM for large models as it creates 2nd instance of a model
             exporter_cpp = TensorRTLLM(
                 model_dir,
@@ -441,19 +389,11 @@ def run_inference(
             # Check deployed funcitonal correctness
             if args.functional_test:
                 functional_result.deployed_pass = True
-                if not check_model_outputs(
-                    streaming, output_deployed, expected_outputs
-                ):
-                    LOGGER.warning(
-                        "Deployed model outputs don't match the expected result."
-                    )
+                if not check_model_outputs(output_deployed, expected_outputs):
+                    LOGGER.warning("Deployed model outputs don't match the expected result.")
                     functional_result.deployed_pass = False
 
-        if (
-            debug
-            or functional_result.regular_pass == False
-            or functional_result.deployed_pass == False
-        ):
+        if debug or functional_result.regular_pass == False or functional_result.deployed_pass == False:
             print("")
             print("--- Prompt: ", prompts)
             print("")
@@ -470,9 +410,7 @@ def run_inference(
         accuracy_result = None
         if run_accuracy:
             print("Start model accuracy testing ...")
-            accuracy_result = get_accuracy_with_lambada(
-                exporter, nq, task_ids, lora_uids, test_data_path
-            )
+            accuracy_result = get_accuracy_with_lambada(exporter, nq, lora_uids, test_data_path)
 
         if test_deployment:
             nm.stop()
@@ -509,11 +447,7 @@ def run_in_framework_inference(
             )
             print("")
 
-            print(
-                "Path: {0} and model: {1} will be tested".format(
-                    checkpoint_path, model_name
-                )
-            )
+            print("Path: {0} and model: {1} will be tested".format(checkpoint_path, model_name))
 
         deployed_model = MegatronLLMDeploy.get_deployable(
             checkpoint_path,
@@ -548,9 +482,7 @@ def run_in_framework_inference(
         if run_accuracy:
             print("Start model accuracy testing ...")
             # This script is not written with torch.distributed support in mind, so running non-deployed in-framework models on multiple devices will not work
-            accuracy_result = get_accuracy_with_lambada(
-                deployed_model, nq, None, None, test_data_path
-            )
+            accuracy_result = get_accuracy_with_lambada(deployed_model, nq, None, test_data_path)
 
         nm.stop()
 
@@ -628,11 +560,6 @@ def get_args():
         type=str,
     )
     parser.add_argument(
-        "--ptuning",
-        type=str,
-        default="False",
-    )
-    parser.add_argument(
         "--lora_checkpoint",
         type=str,
     )
@@ -666,7 +593,6 @@ def get_args():
         type=float,
         default=0.5,
     )
-    parser.add_argument("--streaming", default=False, action="store_true")
     parser.add_argument(
         "--test_cpp_runtime",
         type=str,
@@ -767,9 +693,7 @@ def get_args():
             return None
         raise UsageError(f"Invalid boolean value for argument --{name}: '{s}'")
 
-    args.model_type = (
-        None if str(args.model_type).lower() == "none" else args.model_type
-    )
+    args.model_type = None if str(args.model_type).lower() == "none" else args.model_type
     args.test_cpp_runtime = str_to_bool("test_cpp_runtime", args.test_cpp_runtime)
     args.test_deployment = str_to_bool("test_deployment", args.test_deployment)
     args.functional_test = str_to_bool("functional_test", args.functional_test)
@@ -777,21 +701,12 @@ def get_args():
     args.run_accuracy = str_to_bool("run_accuracy", args.run_accuracy)
     args.use_vllm = str_to_bool("use_vllm", args.use_vllm)
     args.use_huggingface = str_to_bool("use_huggingface", args.use_huggingface)
-    args.enable_flash_decode = str_to_bool(
-        "enable_flash_decode", args.enable_flash_decode
-    )
+    args.enable_flash_decode = str_to_bool("enable_flash_decode", args.enable_flash_decode)
     args.lora = str_to_bool("lora", args.lora)
-    args.ptuning = str_to_bool("ptuning", args.ptuning)
-    args.use_parallel_embedding = str_to_bool(
-        "use_parallel_embedding", args.use_parallel_embedding
-    )
+    args.use_parallel_embedding = str_to_bool("use_parallel_embedding", args.use_parallel_embedding)
     args.in_framework = str_to_bool("in_framework", args.in_framework)
-    args.export_fp8_quantized = str_to_bool(
-        "export_fp8_quantized", args.export_fp8_quantized, optional=True
-    )
-    args.use_fp8_kv_cache = str_to_bool(
-        "use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True
-    )
+    args.export_fp8_quantized = str_to_bool("export_fp8_quantized", args.export_fp8_quantized, optional=True)
+    args.use_fp8_kv_cache = str_to_bool("use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True)
 
     return args
 
@@ -806,15 +721,8 @@ def run_inference_tests(args):
     if args.in_framework and not in_framework_supported:
         raise UsageError("In-framework inference is not supported in this environment.")
 
-    if args.use_vllm and (args.ptuning or args.lora):
-        raise UsageError(
-            "The vLLM integration currently does not support P-tuning or LoRA."
-        )
-
     if args.test_deployment and not triton_supported:
-        raise UsageError(
-            "Deployment tests are not available because Triton is not supported in this environment."
-        )
+        raise UsageError("Deployment tests are not available because Triton is not supported in this environment.")
 
     if args.run_accuracy and args.test_data_path is None:
         raise UsageError("Accuracy testing requires the --test_data_path argument.")
@@ -873,8 +781,6 @@ def run_inference_tests(args):
                 max_output_len=args.max_output_len,
                 max_num_tokens=args.max_num_tokens,
                 use_parallel_embedding=args.use_parallel_embedding,
-                ptuning=args.ptuning,
-                p_tuning_checkpoint=args.p_tuning_checkpoint,
                 lora=args.lora,
                 lora_checkpoint=args.lora_checkpoint,
                 top_k=args.top_k,
@@ -882,7 +788,6 @@ def run_inference_tests(args):
                 temperature=args.temperature,
                 run_accuracy=args.run_accuracy,
                 debug=args.debug,
-                streaming=args.streaming,
                 test_deployment=args.test_deployment,
                 test_cpp_runtime=args.test_cpp_runtime,
                 test_data_path=args.test_data_path,
@@ -916,12 +821,8 @@ def run_inference_tests(args):
         print(f"Tensor Parallelism:              {num_tps}")
 
         if args.functional_test and functional_result is not None:
-            print(
-                f"Functional Test:                 {optional_bool_to_pass_fail(functional_result.regular_pass)}"
-            )
-            print(
-                f"Deployed Functional Test:        {optional_bool_to_pass_fail(functional_result.deployed_pass)}"
-            )
+            print(f"Functional Test:                 {optional_bool_to_pass_fail(functional_result.regular_pass)}")
+            print(f"Deployed Functional Test:        {optional_bool_to_pass_fail(functional_result.deployed_pass)}")
 
             if functional_result.regular_pass == False:
                 functional_test_result = "FAIL"
@@ -930,24 +831,12 @@ def run_inference_tests(args):
 
         if args.run_accuracy and accuracy_result is not None:
             print(f"Model Accuracy:                  {accuracy_result.accuracy:.4f}")
-            print(
-                f"Relaxed Model Accuracy:          {accuracy_result.accuracy_relaxed:.4f}"
-            )
-            print(
-                f"Deployed Model Accuracy:         {accuracy_result.deployed_accuracy:.4f}"
-            )
-            print(
-                f"Deployed Relaxed Model Accuracy: {accuracy_result.deployed_accuracy_relaxed:.4f}"
-            )
-            print(
-                f"Evaluation Time [s]:             {accuracy_result.evaluation_time:.2f}"
-            )
-            if (
-                deployed_tests_only
-                and accuracy_result.deployed_accuracy_relaxed < args.accuracy_threshold
-            ) or (
-                not deployed_tests_only
-                and accuracy_result.accuracy_relaxed < args.accuracy_threshold
+            print(f"Relaxed Model Accuracy:          {accuracy_result.accuracy_relaxed:.4f}")
+            print(f"Deployed Model Accuracy:         {accuracy_result.deployed_accuracy:.4f}")
+            print(f"Deployed Relaxed Model Accuracy: {accuracy_result.deployed_accuracy_relaxed:.4f}")
+            print(f"Evaluation Time [s]:             {accuracy_result.evaluation_time:.2f}")
+            if (deployed_tests_only and accuracy_result.deployed_accuracy_relaxed < args.accuracy_threshold) or (
+                not deployed_tests_only and accuracy_result.accuracy_relaxed < args.accuracy_threshold
             ):
                 accuracy_test_result = "FAIL"
 

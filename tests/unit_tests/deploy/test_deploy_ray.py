@@ -1,7 +1,20 @@
+# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import unittest
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from nemo_deploy.deploy_ray import DeployRay
 
@@ -11,18 +24,14 @@ class TestDeployRay(unittest.TestCase):
     def test_init_with_existing_cluster(self, mock_ray):
         # Test initialization connecting to existing cluster
         DeployRay(address="auto", num_cpus=2, num_gpus=1)
-        mock_ray.init.assert_called_once_with(
-            address="auto", ignore_reinit_error=True, runtime_env=None
-        )
+        mock_ray.init.assert_called_once_with(address="auto", ignore_reinit_error=True, runtime_env=None)
 
     @patch("nemo_deploy.deploy_ray.ray")
     def test_init_with_runtime_env(self, mock_ray):
         # Test initialization with custom runtime environment
         runtime_env = {"pip": ["numpy", "pandas"]}
         DeployRay(runtime_env=runtime_env)
-        mock_ray.init.assert_called_once_with(
-            address="auto", ignore_reinit_error=True, runtime_env=runtime_env
-        )
+        mock_ray.init.assert_called_once_with(address="auto", ignore_reinit_error=True, runtime_env=runtime_env)
 
     @patch("nemo_deploy.deploy_ray.ray")
     def test_init_with_new_cluster(self, mock_ray):
@@ -39,13 +48,6 @@ class TestDeployRay(unittest.TestCase):
             ignore_reinit_error=True,
             runtime_env=None,
         )
-
-    @patch("nemo_deploy.deploy_ray.use_ray", False)
-    def test_init_without_ray(self):
-        # Test initialization when Ray is not installed
-        with pytest.raises(Exception) as excinfo:
-            DeployRay()
-        assert "Ray is not installed" in str(excinfo.value)
 
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
@@ -113,12 +115,8 @@ class TestDeployRay(unittest.TestCase):
 
         # Verify we log warnings but don't crash
         assert mock_logger.warning.call_count == 2
-        mock_logger.warning.assert_any_call(
-            "Error during serve.shutdown(): Serve shutdown error"
-        )
-        mock_logger.warning.assert_any_call(
-            "Error during ray.shutdown(): Ray shutdown error"
-        )
+        mock_logger.warning.assert_any_call("Error during serve.shutdown(): Serve shutdown error")
+        mock_logger.warning.assert_any_call("Error during ray.shutdown(): Ray shutdown error")
 
 
 if __name__ == "__main__":

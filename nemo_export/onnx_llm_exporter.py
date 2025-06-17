@@ -15,12 +15,16 @@
 
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
+import modelopt.torch.quantization as mtq
 import numpy as np
 import tensorrt as trt
 import torch
 import wrapt
+from nemo.collections.llm.modelopt.quantization.quant_cfg_choices import (
+    get_quant_cfg_choices,
+)
 from nemo.utils import logging
 from transformers import AutoModel, AutoTokenizer
 
@@ -31,6 +35,8 @@ from nemo_export.utils import (
     is_nemo2_checkpoint,
     validate_fp8_network,
 )
+
+QUANT_CFG_CHOICES = get_quant_cfg_choices()
 
 
 @wrapt.decorator
@@ -97,7 +103,7 @@ class OnnxLLMExporter(ITritonDeployable):
             tokenizer (HF or NeMo tokenizer): tokenizer class.
             model_name_or_path (str): a path for ckpt or HF model ID
             load_runtime (bool): load ONNX runtime if there is any exported model available in
-                                 the onnx_model_dir folder.
+                the onnx_model_dir folder.
         """
         self.onnx_model_dir = onnx_model_dir
         self.model_name_or_path = model_name_or_path
@@ -107,9 +113,7 @@ class OnnxLLMExporter(ITritonDeployable):
         self.model_input_names = None
         self.model_output_names = None
         self.onnx_runtime_session = None
-        self.calibration_data = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.quant_max_batch_size = None
 
         if self.model_name_or_path is not None:
             if model is not None:
@@ -117,11 +121,11 @@ class OnnxLLMExporter(ITritonDeployable):
 
             if Path(self.model_name_or_path).is_dir():
                 if is_nemo2_checkpoint(self.model_name_or_path):
-                    raise NotImplementedError(
-                        "NeMo 2.0 checkpoint will be supported later."
-                    )
+                    raise NotImplementedError("NeMo 2.0 checkpoint will be supported later.")
                 else:
                     self._load_hf_model()
+
+        self.model.to(self.device)
 
         if load_runtime:
             self._load_runtime()
@@ -129,15 +133,9 @@ class OnnxLLMExporter(ITritonDeployable):
     def _load_runtime(self):
         if use_onnxruntime:
             if Path(self.onnx_model_path).exists():
-                self.onnx_runtime_session = onnxruntime.InferenceSession(
-                    self.onnx_model_path
-                )
-                self.model_input_names = [
-                    input.name for input in self.onnx_runtime_session.get_inputs()
-                ]
-                self.model_output_names = [
-                    output.name for output in self.onnx_runtime_session.get_outputs()
-                ]
+                self.onnx_runtime_session = onnxruntime.InferenceSession(self.onnx_model_path)
+                self.model_input_names = [input.name for input in self.onnx_runtime_session.get_inputs()]
+                self.model_output_names = [output.name for output in self.onnx_runtime_session.get_outputs()]
                 self.tokenizer = AutoTokenizer.from_pretrained(
                     Path(self.onnx_model_dir) / "tokenizer", trust_remote_code=True
                 )
@@ -148,9 +146,7 @@ class OnnxLLMExporter(ITritonDeployable):
             trust_remote_code=True,
         ).eval()
 
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.model_name_or_path, trust_remote_code=True
-        )
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name_or_path, trust_remote_code=True)
 
     def export(
         self,
@@ -195,15 +191,15 @@ class OnnxLLMExporter(ITritonDeployable):
         opset: int = 20,
         dynamic_axes_input: Optional[dict] = None,
         dynamic_axes_output: Optional[dict] = None,
-        export_dtype: Union[torch.dtype, str] = "fp32",
+        export_dtype: Union[torch.dtype, str] = "fp16",
         verbose: bool = False,
     ):
         if example_inputs is None:
-            example_inputs = get_example_inputs(self.tokenizer)
+            example_inputs = get_example_inputs(self.tokenizer, self.device)
 
         if "dimensions" in input_names:
-            example_inputs["dimensions"] = torch.tensor(
-                [1] * example_inputs["input_ids"].shape[0]
+            example_inputs["dimensions"] = torch.ones(
+                len(example_inputs["input_ids"]), dtype=torch.int64, device=self.device
             )
 
         if isinstance(export_dtype, str):
@@ -213,9 +209,7 @@ class OnnxLLMExporter(ITritonDeployable):
 
         Path(self.onnx_model_dir).mkdir(parents=True, exist_ok=True)
 
-        with torch.autocast(
-            device_type=get_model_device_type(self.model), dtype=export_dtype
-        ):
+        with torch.autocast(device_type=get_model_device_type(self.model), dtype=export_dtype):
             torch.onnx.export(
                 model=self.model,
                 args=(example_inputs,),
@@ -226,9 +220,7 @@ class OnnxLLMExporter(ITritonDeployable):
                 verbose=verbose,
                 opset_version=opset,
             )
-        logging.info(
-            f"Successfully exported PyTorch model to ONNX model {self.onnx_model_path}"
-        )
+        logging.info(f"Successfully exported PyTorch model to ONNX model {self.onnx_model_path}")
 
         existing_directory_path = Path(self.onnx_model_dir) / "tokenizer"
         existing_directory_path.mkdir(exist_ok=True)
@@ -258,9 +250,7 @@ class OnnxLLMExporter(ITritonDeployable):
         logging.info(f"Building TRT engine from ONNX model ({self.onnx_model_path})")
         trt_logger = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(trt_logger)
-        network = builder.create_network(
-            1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
-        )
+        network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
         config = builder.create_builder_config()
         parser = trt.OnnxParser(network, trt_logger)
 
@@ -323,40 +313,28 @@ class OnnxLLMExporter(ITritonDeployable):
 
         engine_string = builder.build_serialized_network(network, config)
         if engine_string is None:
-            raise Exception(
-                "Failed to serialize the TensorRT Engine. Please check the "
-                "TensorRT logs for details"
-            )
+            raise Exception("Failed to serialize the TensorRT Engine. Please check the TensorRT logs for details")
 
         trt_model_path = Path(trt_model_dir)
         trt_model_path.mkdir(parents=True, exist_ok=True)
         trt_model_path = trt_model_path / "model.plan"
         trt_model_path.write_bytes(engine_string)
-        logging.info(
-            f"Successfully exported ONNX model ({self.onnx_model_path}) "
-            f"to TRT engine ({trt_model_path})"
-        )
+        logging.info(f"Successfully exported ONNX model ({self.onnx_model_path}) to TRT engine ({trt_model_path})")
 
     def _override_layer_precision_to_fp32(self, layer: trt.ILayer) -> None:
         layer.precision = trt.float32
         layer.set_output_type(0, trt.float32)
 
-    def _override_layers_to_fp32(
-        self, network: trt.INetworkDefinition, fp32_layer_patterns: list[str]
-    ) -> None:
+    def _override_layers_to_fp32(self, network: trt.INetworkDefinition, fp32_layer_patterns: list[str]) -> None:
         for i in range(network.num_layers):
             layer = network.get_layer(i)
             layer_name = layer.name
-            if any(
-                layer_name.startswith(pattern) for pattern in fp32_layer_patterns
-            ) and layer.precision in {
+            if any(layer_name.startswith(pattern) for pattern in fp32_layer_patterns) and layer.precision in {
                 trt.float32,
                 trt.float16,
             }:
                 if layer.type in {trt.LayerType.CAST}:
-                    logging.info(
-                        f"Skipping overriding {layer.type} layer {i} {layer_name} dtype"
-                    )
+                    logging.info(f"Skipping overriding {layer.type} layer {i} {layer_name} dtype")
                     continue
                 if any(
                     layer.get_input(input_idx).dtype in {trt.float32, trt.float16}
@@ -365,19 +343,13 @@ class OnnxLLMExporter(ITritonDeployable):
                     # Note: Assigning to layer.precision (even the same value) sets precision_is_set=True,
                     # which prevents TensorRT from changing this layer's precision
                     layer.precision = trt.float32
-                    logging.info(
-                        f"Setting layer {i} {layer_name} (type: {layer.type}) precision to FP32"
-                    )
+                    logging.info(f"Setting layer {i} {layer_name} (type: {layer.type}) precision to FP32")
                 for j in range(layer.num_outputs):
                     if layer.get_output_type(j) in {trt.float32, trt.float16}:
                         layer.set_output_type(j, trt.float32)
-                        logging.info(
-                            f"Setting layer {i} {layer_name} (type: {layer.type}) output type {j} to FP32"
-                        )
+                        logging.info(f"Setting layer {i} {layer_name} (type: {layer.type}) output type {j} to FP32")
 
-    def _override_layernorm_precision_to_fp32(
-        self, network: trt.INetworkDefinition
-    ) -> None:
+    def _override_layernorm_precision_to_fp32(self, network: trt.INetworkDefinition) -> None:
         """Set the precision of LayerNorm subgraphs to FP32 to preserve accuracy.
 
         - https://nvbugs/4478448 (Mistral)
@@ -393,8 +365,7 @@ class OnnxLLMExporter(ITritonDeployable):
             if layer.type == trt.LayerType.IDENTITY:
                 all_fp32 = all(
                     [
-                        layer.output_type_is_set(o)
-                        and layer.get_output_type(o) == trt.float32
+                        layer.output_type_is_set(o) and layer.get_output_type(o) == trt.float32
                         for o in range(layer.num_outputs)
                     ]
                 )
@@ -452,9 +423,7 @@ class OnnxLLMExporter(ITritonDeployable):
             np.ndarray: Model output.
         """
         if self.onnx_runtime_session is None:
-            warnings.warn(
-                "ONNX Runtime is not available. Please install the onnxruntime-gpu and try again."
-            )
+            warnings.warn("ONNX Runtime is not available. Please install the onnxruntime-gpu and try again.")
             return None
 
         if isinstance(inputs, List):
@@ -465,6 +434,28 @@ class OnnxLLMExporter(ITritonDeployable):
 
         output = self.onnx_runtime_session.run(self.model_output_names, inputs)
         return output[0]
+
+    def quantize(
+        self,
+        quant_cfg: Union[str, Dict[str, Any]],
+        forward_loop: Optional[Callable],
+    ) -> None:
+        """Quantize the model by calibrating it using a given forward loop.
+
+        Args:
+            quant_cfg (str or dict): The quantization configuration to use.
+            forward_loop (callable): A function that accepts the model as a single parameter
+                and runs sample data through it. This is used for calibration during quantization.
+        """
+        if isinstance(quant_cfg, str):
+            assert quant_cfg in QUANT_CFG_CHOICES, (
+                f"Quantization config {quant_cfg} is not supported. Supported configs: {list(QUANT_CFG_CHOICES)}"
+            )
+            quant_cfg = QUANT_CFG_CHOICES[quant_cfg]
+
+        logging.info("Starting quantization...")
+        mtq.quantize(self.model, quant_cfg, forward_loop=forward_loop)
+        logging.info("Quantization is completed.")
 
     @property
     def get_model(self):

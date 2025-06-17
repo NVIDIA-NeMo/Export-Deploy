@@ -24,6 +24,7 @@ from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoin
 from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
 )
+from megatron.core.dist_checkpointing.validation import StrictHandling
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
@@ -40,7 +41,6 @@ from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
 from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
 from nemo.collections.llm.t5.model.t5 import T5Config
-from megatron.core.dist_checkpointing.validation import StrictHandling
 from nemo.lightning import io
 from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
 from nemo.lightning.io.pl import ckpt_to_weights_subdir
@@ -58,9 +58,7 @@ from .tron_utils import (
 LOGGER = logging.getLogger("NeMo")
 
 
-def _load_dist_shards_into_model(
-    model: List[MegatronModule], weights_dir: Path, legacy_ckpt: bool = False
-) -> None:
+def _load_dist_shards_into_model(model: List[MegatronModule], weights_dir: Path, legacy_ckpt: bool = False) -> None:
     """Load a NeMo-2 distributed checkpoint (torch_dist .distcp shards) into an already-constructed Megatron model list.
 
     Args:
@@ -89,7 +87,7 @@ def _load_dist_shards_into_model(
         sharded_state_dict=sharded_state_dict,
         checkpoint_dir=str(weights_dir),
         sharded_strategy=load_strategy,
-        strict=strict
+        strict=strict,
     )
 
     # Normal torch `load_state_dict()` still required for non-sharded
@@ -164,11 +162,7 @@ def peel(m: torch.nn.Module) -> torch.nn.Module:
     return m
 
 
-def load_nemo_checkpoint_to_tron_model(
-    model: List[MegatronModule],
-    path: Path,
-    legacy_ckpt: bool = False
-) -> None:
+def load_nemo_checkpoint_to_tron_model(model: List[MegatronModule], path: Path, legacy_ckpt: bool = False) -> None:
     """Load NeMo checkpoint weights into a Tron model.
 
     Args:
@@ -192,7 +186,7 @@ def setup_model_and_tokenizer_for_inference(
     micro_batch_size: Optional[int] = None,
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
-    legacy_ckpt: bool = False
+    legacy_ckpt: bool = False,
 ) -> Tuple[List[MegatronModule], MCoreTokenizerWrappper]:
     """Initialize a Megatron-Core model and tokenizer for inference from a NeMo-2.0 checkpoint.
 
@@ -218,9 +212,7 @@ def setup_model_and_tokenizer_for_inference(
     checkpoint_path = Path(checkpoint_path)
 
     # Load model context for config and tokenizer
-    model_context = io.load_context(
-        path=ckpt_to_context_subdir(checkpoint_path), subpath="model"
-    )
+    model_context = io.load_context(path=ckpt_to_context_subdir(checkpoint_path), subpath="model")
 
     model_config = model_context.config
 
@@ -242,18 +234,14 @@ def setup_model_and_tokenizer_for_inference(
     if micro_batch_size is None:
         micro_batch_size = 1
 
-    is_dist_ckpt = check_is_distributed_checkpoint(
-        ckpt_to_weights_subdir(checkpoint_path, is_saving=False)
-    )
+    is_dist_ckpt = check_is_distributed_checkpoint(ckpt_to_weights_subdir(checkpoint_path, is_saving=False))
     if not is_dist_ckpt:
         raise ValueError("Checkpoint is not a NeMo-2 distributed checkpoint")
 
     # Initialize Megatron for inference
     rng_config = RNGConfig(inference_rng_tracker=True)
     dist_config = DistributedInitConfig(distributed_backend="nccl")
-    initialize_megatron_for_inference(
-        model_config, dist_config, rng_config, micro_batch_size
-    )
+    initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
 
     # Needed for model creation
     if not model_config.vocab_size:
@@ -279,9 +267,7 @@ def setup_model_and_tokenizer_for_inference(
 
     # Ensure model is configured
     for model_module in model:
-        if hasattr(model_module, "configure_model") and callable(
-            model_module.configure_model
-        ):
+        if hasattr(model_module, "configure_model") and callable(model_module.configure_model):
             model_module.configure_model()
 
     # Load checkpoint weights
@@ -344,7 +330,7 @@ def create_mcore_engine(
     expert_model_parallel_size: Optional[int] = None,
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
-    legacy_ckpt: bool = False
+    legacy_ckpt: bool = False,
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, MCoreTokenizerWrappper]:
     """Set up the model, tokenizer and MCoreEngine for inference.
 
@@ -370,9 +356,7 @@ def create_mcore_engine(
     """
     # Load model context to get default parallelism settings from checkpoint
     checkpoint_path = Path(path)
-    model_context = io.load_context(
-        path=ckpt_to_context_subdir(checkpoint_path), subpath="model"
-    )
+    model_context = io.load_context(path=ckpt_to_context_subdir(checkpoint_path), subpath="model")
     model_config = model_context.config
 
     # Use checkpoint values as defaults if not specified
@@ -386,11 +370,7 @@ def create_mcore_engine(
         if pipeline_model_parallel_size is not None
         else model_config.pipeline_model_parallel_size
     )
-    cp_size = (
-        context_parallel_size
-        if context_parallel_size is not None
-        else model_config.context_parallel_size
-    )
+    cp_size = context_parallel_size if context_parallel_size is not None else model_config.context_parallel_size
     ep_size = (
         expert_model_parallel_size
         if expert_model_parallel_size is not None
@@ -428,7 +408,7 @@ def create_mcore_engine(
         params_dtype=params_dtype,
         enable_flash_decode=enable_flash_decode,
         enable_cuda_graphs=enable_cuda_graphs,
-        legacy_ckpt=legacy_ckpt
+        legacy_ckpt=legacy_ckpt,
     )
     model = modelList[0]
     vocab_size = None
@@ -459,8 +439,6 @@ def create_mcore_engine(
     )
 
     # Wrap the engine to ensure cleanup
-    wrapped_engine = MCoreEngineWithCleanup(
-        mcore_engine, model_inference_wrapper, tokenizer
-    )
+    wrapped_engine = MCoreEngineWithCleanup(mcore_engine, model_inference_wrapper, tokenizer)
 
     return wrapped_engine, model_inference_wrapper, tokenizer

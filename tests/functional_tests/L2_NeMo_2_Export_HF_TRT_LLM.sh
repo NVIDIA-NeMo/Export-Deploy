@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_export.py \
+#!/bin/bash
+set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
+
+coverage run --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/run_nemo_export.py \
   --model_name test \
   --model_dir /tmp/trt_llm_model_dir/ \
-  --model_type LlamaForCausalLM \
   --use_huggingface True \
   --checkpoint_dir /home/TestData/llm/models/llama3.2-1B-hf/ \
   --min_tps 1 \
   --test_deployment True \
   --debug
+coverage combine

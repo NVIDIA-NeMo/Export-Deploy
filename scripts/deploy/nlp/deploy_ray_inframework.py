@@ -23,6 +23,7 @@ from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
 
 LOGGER = logging.getLogger("NeMo")
 
+
 def get_available_cpus():
     """Get the total number of available CPUs in the system."""
     return multiprocessing.cpu_count()
@@ -148,35 +149,39 @@ def signal_handler(signum, frame, deployer):
 def main():
     """Main function to deploy a Megatron model using Ray."""
     args = parse_args()
-    
+
     # If num_cpus is not specified, use all available CPUs
     if args.num_cpus is None:
         args.num_cpus = get_available_cpus()
         LOGGER.info(f"Using all available CPUs: {args.num_cpus}")
-    
+
     # Calculate total GPUs if not specified
     total_gpus = args.num_gpus * args.num_nodes
     LOGGER.info(f"Total GPUs: {total_gpus}")
-    
+
     # Calculate GPUs per replica
     gpus_per_replica = total_gpus // args.num_replicas
-    
+
     # Validate the parallelism configuration
     # Each replica should use: tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size GPUs
-    parallelism_per_replica = (args.tensor_model_parallel_size * 
-                              args.pipeline_model_parallel_size * 
-                              args.context_parallel_size)
-    
+    parallelism_per_replica = (
+        args.tensor_model_parallel_size * args.pipeline_model_parallel_size * args.context_parallel_size
+    )
+
     if parallelism_per_replica != gpus_per_replica:
-        LOGGER.error(f"Parallelism per replica ({parallelism_per_replica}) must equal "
-                    f"GPUs per replica ({gpus_per_replica})")
-        LOGGER.error(f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, "
-                    f"GPUs per replica: {gpus_per_replica}")
-        LOGGER.error(f"Each replica needs: tensor_parallel({args.tensor_model_parallel_size}) * "
-                    f"pipeline_parallel({args.pipeline_model_parallel_size}) * "
-                    f"context_parallel({args.context_parallel_size}) = {parallelism_per_replica} GPUs")
+        LOGGER.error(
+            f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
+        )
+        LOGGER.error(
+            f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, GPUs per replica: {gpus_per_replica}"
+        )
+        LOGGER.error(
+            f"Each replica needs: tensor_parallel({args.tensor_model_parallel_size}) * "
+            f"pipeline_parallel({args.pipeline_model_parallel_size}) * "
+            f"context_parallel({args.context_parallel_size}) = {parallelism_per_replica} GPUs"
+        )
         sys.exit(1)
-    
+
     LOGGER.info(f"Configuration: {args.num_replicas} replicas, {gpus_per_replica} GPUs per replica")
 
     # Initialize Ray deployment
@@ -188,24 +193,27 @@ def main():
             "env_vars": {
                 "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
             }
-        }
+        },
     )
 
     # Set up signal handlers
     signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
-    signal.signal(signal.SIGTERM, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
+    signal.signal(
+        signal.SIGTERM,
+        lambda signum, frame: signal_handler(signum, frame, ray_deployer),
+    )
 
     try:
         # Start Ray Serve
         ray_deployer.start(host=args.host, port=args.port)
-        
+
         # Create the Multi-Rank Megatron model deployment
         app = MegatronRayDeployable.options(
-            num_replicas=args.num_replicas,  # Configurable replicas, typically 1 since multi-rank 
-                                           # deployable uses internal parallelism
+            num_replicas=args.num_replicas,  # Configurable replicas, typically 1 since multi-rank
+            # deployable uses internal parallelism
             ray_actor_options={
                 "num_cpus": args.num_cpus_per_replica  # Using default from the multi_rank implementation
-            }
+            },
         ).bind(
             nemo_checkpoint_filepath=args.nemo_checkpoint,
             num_gpus=gpus_per_replica,
@@ -217,7 +225,7 @@ def main():
             model_id=args.model_id,
             enable_cuda_graphs=args.enable_cuda_graphs,
             enable_flash_decode=args.enable_flash_decode,
-            legacy_ckpt=args.legacy_ckpt
+            legacy_ckpt=args.legacy_ckpt,
         )
 
         # Deploy the model
@@ -236,4 +244,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

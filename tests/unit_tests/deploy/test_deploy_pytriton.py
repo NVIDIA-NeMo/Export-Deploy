@@ -42,9 +42,7 @@ def mock_model():
 
 @pytest.fixture
 def deploy_pytriton(mock_model):
-    return DeployPyTriton(
-        triton_model_name="test_model", model=mock_model, http_port=8000, grpc_port=8001
-    )
+    return DeployPyTriton(triton_model_name="test_model", model=mock_model, http_port=8000, grpc_port=8001)
 
 
 @patch("nemo_deploy.deploy_pytriton.Triton")
@@ -56,9 +54,7 @@ def test_deploy_success(mock_triton, deploy_pytriton):
 
 @patch("nemo_deploy.deploy_pytriton.Triton")
 def test_deploy_streaming_success(mock_triton):
-    deploy = DeployPyTriton(
-        triton_model_name="test_model", model=MockModel(), streaming=True
-    )
+    deploy = DeployPyTriton(triton_model_name="test_model", model=MockModel(), streaming=True)
     deploy.deploy()
     assert deploy.triton is not None
     mock_triton.return_value.bind.assert_called_once()
