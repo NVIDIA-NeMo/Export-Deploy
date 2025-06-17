@@ -9,12 +9,13 @@ on:
 jobs:
   pip-test:
     runs-on: ${{ matrix.arch }}
-    name: (CPU) Python ${{ matrix.python-version }} on ${{ matrix.arch }}
+    name: (CPU) Python ${{ matrix.python-version }} on ${{ matrix.arch }} (${{ matrix.inference-framework }})
     strategy:
       fail-fast: false
       matrix:
         arch: ["ubuntu-latest", "macos-latest"]
         python-version: ["3.10", "3.11", "3.12"]
+        inference-framework: ["trtllm", "vllm"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,11 +31,11 @@ jobs:
 
       - name: Install project
         run: |
-          pip install ".[eval,recipes]"
+          pip install ".[${{ matrix.inference-framework }}]"
 
   ngc-cuda-test:
     runs-on: linux-amd64-cpu16
-    name: (GPU) Python ${{ matrix.python-version }}
+    name: (GPU) Python ${{ matrix.python-version }} (${{ matrix.inference-framework }})
     container:
       image: nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
     environment: nemo-ci
@@ -42,6 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.12"]
+        inference-framework: ["trtllm", "vllm"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -87,10 +89,9 @@ jobs:
 
           export PATH="./bin/:$PATH"
 
-          pip install ".[eval,recipes]"
+          pip install ".[${{ matrix.inference-framework }}]"
 
-          bash ./docker/common/install_conflicting_deps.sh \
-            --export-deploy-ref $(cat ./docker/manifest.json | yq -r '.vcs-dependencies.export-deploy.ref')
+          bash ./docker/common/install_conflicting_deps.sh
 
   uv-test:
     runs-on: ${{ matrix.arch }}
