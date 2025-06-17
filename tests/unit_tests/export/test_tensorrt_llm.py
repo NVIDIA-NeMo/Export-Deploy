@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 import re
-from unittest.mock import patch, MagicMock, mock_open
-import json
-
+from unittest.mock import mock_open, patch
 import pytest
 import torch
 
@@ -24,6 +23,7 @@ import torch
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
+    """Test conversion dict generation for NeMo model format."""
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
@@ -35,7 +35,9 @@ def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
         "model.embedding.word_embeddings.weight": dummy_state,
         "model.decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
     }
-    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
+    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(
+        model_state_dict
+    )
 
     # Check that every key starts with 'model.' and not 'model..' by using a regex
     # This pattern ensures:
@@ -50,6 +52,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
+    """Test conversion dict generation for mcore model format."""
     try:
         from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
             DEFAULT_CONVERSION_DICT,
@@ -65,7 +68,9 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
         "embedding.word_embeddings.weight": dummy_state,
         "decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
     }
-    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
+    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(
+        model_state_dict
+    )
 
     # This is essentially a no-op
     assert nemo_model_conversion_dict == DEFAULT_CONVERSION_DICT
@@ -74,6 +79,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_tensorrt_llm_initialization():
+    """Test TensorRTLLM class initialization with various parameters."""
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
@@ -91,7 +97,9 @@ def test_tensorrt_llm_initialization():
 
     # Test initialization with lora checkpoints
     lora_ckpt_list = ["/path/to/lora1", "/path/to/lora2"]
-    trt_llm = TensorRTLLM(model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False)
+    trt_llm = TensorRTLLM(
+        model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False
+    )
     assert trt_llm.lora_ckpt_list == lora_ckpt_list
 
     # Test initialization with python runtime options
@@ -110,6 +118,7 @@ def test_tensorrt_llm_initialization():
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_tensorrt_llm_supported_models():
+    """Test supported models list and HF model mapping."""
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
@@ -134,6 +143,7 @@ def test_tensorrt_llm_supported_models():
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_tensorrt_llm_input_dtype():
+    """Test input dtype conversion functionality."""
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
@@ -154,12 +164,15 @@ def test_tensorrt_llm_input_dtype():
 
     for storage_dtype, expected_dtype in test_cases:
         input_dtype = trt_llm.get_input_dtype(storage_dtype)
-        assert input_dtype == expected_dtype, f"Expected {expected_dtype} for {storage_dtype}, got {input_dtype}"
+        assert input_dtype == expected_dtype, (
+            f"Expected {expected_dtype} for {storage_dtype}, got {input_dtype}"
+        )
 
 
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_tensorrt_llm_hidden_size():
+    """Test hidden size property retrieval."""
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
@@ -181,6 +194,7 @@ def test_tensorrt_llm_hidden_size():
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_tensorrt_llm_triton_io():
+    """Test Triton input/output configuration."""
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
@@ -214,6 +228,7 @@ def test_tensorrt_llm_triton_io():
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_tensorrt_llm_pad_logits():
+    """Test logits padding functionality."""
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
@@ -234,7 +249,8 @@ def test_tensorrt_llm_pad_logits():
     assert isinstance(padded_logits, torch.Tensor)
     assert padded_logits.shape[0] == batch_size
     assert padded_logits.shape[1] == seq_len
-    assert padded_logits.shape[2] >= vocab_size  # Should be padded to a multiple of 8
+    # Should be padded to a multiple of 8
+    assert padded_logits.shape[2] >= vocab_size
 
 
 @pytest.mark.run_only_on("GPU")
@@ -441,7 +457,8 @@ def test_ray_infer_fn_error_handling():
         # Verify error handling
         assert "sentences" in result
         assert "error" in result
-        assert len(result["sentences"]) == 2  # Should match number of prompts
+        # Should match number of prompts
+        assert len(result["sentences"]) == 2
         assert all("An error occurred" in sentence for sentence in result["sentences"])
         assert "Model inference failed" in result["error"]
 
@@ -761,10 +778,11 @@ def test_tensorrt_llm_forward_without_model():
             stop_words_list=["stop"],
             bad_words_list=["bad"],
             no_repeat_ngram_size=3,
-            output_log_probs=True
+            output_log_probs=True,
         )
 
     assert "A nemo checkpoint should be exported" in str(exc_info.value)
+
 
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
@@ -785,6 +803,7 @@ def test_tensorrt_llm_unload_engine():
         trt_llm.unload_engine()
         mock_unload.assert_called_once()
 
+
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_tensorrt_llm_get_hf_model_type():
@@ -804,6 +823,7 @@ def test_tensorrt_llm_get_hf_model_type():
         mock_config.return_value.architectures = ["LlamaForCausalLM"]
         model_type = trt_llm.get_hf_model_type("/tmp/model")
         assert model_type == "LlamaForCausalLM"
+
 
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
@@ -826,6 +846,7 @@ def test_tensorrt_llm_get_hf_model_type_ambiguous():
             trt_llm.get_hf_model_type("/tmp/model")
         assert "Ambiguous architecture choice" in str(exc_info.value)
 
+
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
 def test_tensorrt_llm_get_hf_model_dtype():
@@ -844,13 +865,14 @@ def test_tensorrt_llm_get_hf_model_dtype():
     mock_config = {
         "torch_dtype": "float16",
         "fp16": True,
-        "bf16": False
+        "bf16": False,
     }
 
     with patch('pathlib.Path.exists', return_value=True), \
          patch('builtins.open', mock_open(read_data=json.dumps(mock_config))):
         dtype = trt_llm.get_hf_model_dtype("/tmp/model")
         assert dtype == "float16"
+
 
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit

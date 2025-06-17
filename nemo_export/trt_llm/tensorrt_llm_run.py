@@ -27,11 +27,8 @@ import tensorrt as trt
 import tensorrt_llm
 import torch
 from mpi4py.futures import MPIPoolExecutor
-from tensorrt_llm.builder import Engine
 from tensorrt_llm.lora_manager import LoraManager
-from tensorrt_llm.quantization import QuantMode
 from tensorrt_llm.runtime import (
-    ModelConfig,
     ModelRunner,
     ModelRunnerCpp,
     SamplingConfig,
@@ -40,17 +37,6 @@ from transformers import PreTrainedTokenizer
 
 LOGGER = logging.getLogger("NeMo")
 
-use_trtllm_bindings = True
-try:
-    from tensorrt_llm.bindings import GptJsonConfig
-except Exception:
-    use_trtllm_bindings = False
-
-TRTLLM_SUPPORTS_DEVICE_DISABLE = True
-try:
-    from tensorrt_llm.runtime.generation import DISABLE_TORCH_DEVICE_SET
-except (ImportError, ModuleNotFoundError):
-    TRTLLM_SUPPORTS_DEVICE_DISABLE = False
 
 
 @dataclass
@@ -162,12 +148,12 @@ def _forward(
     top_p: float = 0.0,
     temperature: float = 1.0,
     prompt_table=None,
-    task_vocab_size=None,
+    task_vocab_size=None,  # noqa: ARG001
     task_ids: List[int] = None,
     lora_uids: List[str] = None,
     stop_words_list=None,
     bad_words_list=None,
-    no_repeat_ngram_size=None,
+    no_repeat_ngram_size=None,  # noqa: ARG001
     streaming: bool = False,
     multiprocessed_env=False,
     **sampling_kwargs,
@@ -187,10 +173,14 @@ def _forward(
         max_input_len = tensorrt_llm_worker_context.max_input_len
 
         batch_size = len(input_tensors)
-        assert batch_size <= max_batch_size, f"batch size {batch_size} exceedng max batch size {max_batch_size}"
+        assert batch_size <= max_batch_size, (
+            f"batch size {batch_size} exceedng max batch size {max_batch_size}"
+        )
         input_lengths = [t.shape[0] for t in input_tensors]
         max_length = max(input_lengths)
-        assert max_length <= max_input_len, f"input length {max_length} exceedng max input length {max_input_len}"
+        assert max_length <= max_input_len, (
+            f"input length {max_length} exceedng max input length {max_input_len}"
+        )
         pad_id = sampling_config.pad_id
         end_id = sampling_config.end_id
         num_beams = sampling_config.num_beams
@@ -335,12 +325,12 @@ def forward(
     top_p: float = 0.0,
     temperature: float = 1.0,
     prompt_table=None,
-    task_vocab_size=None,
+    task_vocab_size=None,  # noqa: ARG001
     task_ids: List[int] = None,
     lora_uids: List[str] = None,
     stop_words_list=None,
     bad_words_list=None,
-    no_repeat_ngram_size=None,
+    no_repeat_ngram_size=None,  # noqa: ARG001
     streaming: bool = False,
     multiprocessed_env=False,
     **sampling_kwargs,
@@ -348,10 +338,14 @@ def forward(
     """Run the loaded model with the host_context provided from the `load` API."""
     batch_size = len(input_tensors)
     max_batch_size = host_context.max_batch_size
-    assert batch_size <= max_batch_size, f"batch size {batch_size} exceedng max batch size {max_batch_size}"
+    assert batch_size <= max_batch_size, (
+        f"batch size {batch_size} exceedng max batch size {max_batch_size}"
+    )
     max_length = max([t.shape[0] for t in input_tensors])
     max_input_len = host_context.max_input_len
-    assert max_length <= max_input_len, f"input length {max_length} exceedng max input length {max_input_len}"
+    assert max_length <= max_input_len, (
+        f"input length {max_length} exceedng max input length {max_input_len}"
+    )
 
     world_size = host_context.world_size
     if world_size == 1 or multiprocessed_env:
@@ -416,7 +410,9 @@ def maybe_cast_to_trt_dtype(dtype):
     elif isinstance(dtype, torch.dtype):
         return tensorrt_llm._utils.torch_dtype_to_trt(dtype)
     else:
-        raise NotImplementedError(f"Expects the type to be a tensorrt.DataType or torch.dtype, but got {type(dtype)=}")
+        raise NotImplementedError(
+            f"Expects the type to be a tensorrt.DataType or torch.dtype, but got {type(dtype)=}"
+        )
 
 
 def unload_engine():
@@ -494,15 +490,15 @@ def generate(
     top_p: float = 0.0,
     temperature: float = 1.0,
     prompt_table=None,
-    task_vocab_size=None,
+    task_vocab_size=None,  # noqa: ARG001
     task_vtoken_counts: List[int] = None,
     task_ids: List[int] = None,
     lora_uids: List[str] = None,
     stop_words_list=None,
     bad_words_list=None,
-    no_repeat_ngram_size=None,
+    no_repeat_ngram_size=None,  # noqa: ARG001
     streaming: bool = False,
-    output_log_probs=False,
+    output_log_probs=False,  # noqa: ARG001
     multiprocessed_env=False,
     output_context_logits=False,
     output_generation_logits=False,
