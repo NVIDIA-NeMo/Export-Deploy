@@ -13,5 +13,4 @@
 # limitations under the License.
 coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_nemo_multimodal_deploy.py \
   --hf_model meta-llama/Llama-3.2-11B-Vision-Instruct \
-  --model_type mllama \
-  --llm_model_type mllama
+  --model_type mllama
