@@ -9,13 +9,12 @@ on:
 jobs:
   pip-test:
     runs-on: ${{ matrix.arch }}
-    name: (CPU) Python ${{ matrix.python-version }} on ${{ matrix.arch }} (${{ matrix.inference-framework }})
+    name: (CPU) Python ${{ matrix.python-version }} on ${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:
         arch: ["ubuntu-latest", "macos-latest"]
         python-version: ["3.12"]
-        inference-framework: ["trtllm", "vllm"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,7 +30,7 @@ jobs:
 
       - name: Install project
         run: |
-          pip install ".[${{ matrix.inference-framework }}]"
+          pip install "."
 
   ngc-cuda-test:
     runs-on: linux-amd64-cpu16
