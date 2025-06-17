@@ -417,7 +417,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             num_tokens_to_generate=num_tokens_to_generate,
             return_log_probs=log_probs,
             top_n_logprobs=top_logprobs,
-            return_prompt_top_n_logprobs=top_logprobs
+            return_prompt_top_n_logprobs=top_logprobs,
         )
 
         results = self.generate(prompts, inference_params)
