@@ -20,12 +20,8 @@ import pytest
 @pytest.mark.pleasefixme  # disabled since it required data
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
-@pytest.mark.parametrize(
-    "tensor_parallelism_size,pipeline_parallelism_size", [(2, 1), (1, 2)]
-)
-def test_nemo2_convert_to_safe_tensors(
-    tensor_parallelism_size, pipeline_parallelism_size
-):
+@pytest.mark.parametrize("tensor_parallelism_size,pipeline_parallelism_size", [(2, 1), (1, 2)])
+def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_parallelism_size):
     """
     Test safe tensor exporter. This tests the whole nemo export until engine building.
     """
@@ -47,16 +43,10 @@ def test_nemo2_convert_to_safe_tensors(
     )
 
     assert Path("/tmp/safe_tensor_test/").exists(), "Safe tensors were not generated."
-    assert Path("/tmp/safe_tensor_test/rank0.safetensors").exists(), (
-        "Safe tensors for rank0 were not generated."
-    )
+    assert Path("/tmp/safe_tensor_test/rank0.safetensors").exists(), "Safe tensors for rank0 were not generated."
     if pipeline_parallelism_size == 1 and tensor_parallelism_size == 2:
-        assert Path("/tmp/safe_tensor_test/rank1.safetensors").exists(), (
-            "Safe tensors for rank1 were not generated."
-        )
-    assert Path("/tmp/safe_tensor_test/config.json").exists(), (
-        "config.yaml was not generated."
-    )
+        assert Path("/tmp/safe_tensor_test/rank1.safetensors").exists(), "Safe tensors for rank1 were not generated."
+    assert Path("/tmp/safe_tensor_test/config.json").exists(), "config.yaml was not generated."
 
     shutil.rmtree("/tmp/safe_tensor_test/")
 
@@ -79,15 +69,13 @@ def test_nemo2_convert_to_export():
         delete_existing_files=True,
         tensor_parallelism_size=1,
         pipeline_parallelism_size=1,
-        gpus_per_node=None,
         max_input_len=1024,
         max_output_len=256,
         max_batch_size=4,
         use_parallel_embedding=False,
-        use_embedding_sharing=False,
         paged_kv_cache=True,
         remove_input_padding=True,
-        paged_context_fmha=False,
+        use_paged_context_fmha=False,
         dtype=None,
         load_model=True,
         use_lora_plugin=None,
@@ -102,8 +90,6 @@ def test_nemo2_convert_to_export():
         reduce_fusion=True,
         fp8_quantized=None,
         fp8_kvcache=None,
-        gather_context_logits=True,
-        gather_generation_logits=True,
         build_rank=None,
     )
 
@@ -117,7 +103,6 @@ def test_nemo2_convert_to_export():
         bad_words_list=None,
         no_repeat_ngram_size=None,
         lora_uids=None,
-        streaming=False,
         output_log_probs=False,
         output_context_logits=False,
         output_generation_logits=False,
@@ -125,14 +110,10 @@ def test_nemo2_convert_to_export():
 
     print(output)
 
-    assert Path("/tmp/safe_tensor_test_2/trtllm_engine/").exists(), (
-        "Safe tensors were not generated."
-    )
+    assert Path("/tmp/safe_tensor_test_2/trtllm_engine/").exists(), "Safe tensors were not generated."
     assert Path("/tmp/safe_tensor_test_2/trtllm_engine/rank0.engine").exists(), (
         "Safe tensors for rank0 were not generated."
     )
-    assert Path("/tmp/safe_tensor_test_2/trtllm_engine/config.json").exists(), (
-        "config.yaml was not generated."
-    )
+    assert Path("/tmp/safe_tensor_test_2/trtllm_engine/config.json").exists(), "config.yaml was not generated."
 
     shutil.rmtree("/tmp/safe_tensor_test_2/")

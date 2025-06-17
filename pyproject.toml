@@ -21,13 +21,13 @@ readme = { file = "README.md", content-type = "text/markdown" }
 
 
 [project]
-name = "nemo-export-deploy"
+name = "NeMo-Export-Deploy"
 dynamic = ["version", "readme"]
 description = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
 requires-python = ">=3.12,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    "megatron-hub",
+    # "megatron-hub", add here after the release of Megatron-Hub
     "megatron-core>=0.12.0",
     "accelerate",
     "fastapi",
@@ -73,6 +73,7 @@ test = ["pytest", "pytest-mock", "coverage"]
 nemo-legacy = [
     "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]",
 ]
+megatron-hub-pre = ["megatron-hub"]
 
 [tool.uv.sources]
 xformers = [{ index = "pytorch-cu128" }]
@@ -117,17 +118,6 @@ name = "pytorch-cu128"
 url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
-[tool.black]
-line-length = 120
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.venv
-  | build
-)/
-'''
-
 [tool.pytest.ini_options]
 addopts = "--durations=15 -s -rA -x"
 testpaths = ["tests"]
@@ -144,23 +134,36 @@ omit = [
 ]
 
 [tool.coverage.paths]
-source = [
-    ".",
-    "/workspace",
-    "/home/runner/work/NeMo-Export-Deploy/NeMo-Export-Deploy",
-]
+source = [".", "/workspace", "/home/runner/work/Export-Deploy/Export-Deploy"]
 
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.ruff.lint]
 # Enable all `pydocstyle` rules, limiting to those that adhere to the
 # Google convention via `convention = "google"`, below.
-select = ["D", "F"]
+select = [
+    "F541", # f-string without any placeholders
+    "F841", # local variable assigned but never used
+    "F401", # imported but unused
+    "E741", # ambiguous variable name
+    "F821", # undefined name
+    "E266", # too many leading '#' for block comment
+    "I",    # isort
+    "D101", # docstring
+    "D103",
+]
 
-# - On top of the Google convention, disable `D417`, which requires
-#   documentation for every function parameter.
-# - F841: local variable assigned but never used (exluced to favor readability)
-# TODO: Remove D10 once we are about to release to get all the docstrings written
-ignore = ["D417", "D10", "F841"]
+ignore = [
+    "E501", # Line too long - handled by formatter
+    "D101",
+    "D103",
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

@@ -26,9 +26,7 @@ multimodal_supported = True
 try:
     from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 except Exception as e:
-    LOGGER.warning(
-        f"Cannot import the TensorRTMMExporter exporter, it will not be available. {type(e).__name__}: {e}"
-    )
+    LOGGER.warning(f"Cannot import the TensorRTMMExporter exporter, it will not be available. {type(e).__name__}: {e}")
     multimodal_supported = False
 
 
@@ -198,8 +196,7 @@ def get_args(argv):
         "--max_lora_rank",
         type=int,
         default=64,
-        help="maximum lora rank for different lora modules. "
-        "It is used to compute the workspace size of lora plugin.",
+        help="maximum lora rank for different lora modules. It is used to compute the workspace size of lora plugin.",
     )
     parser.add_argument(
         "--lora_checkpoint_path",
@@ -229,18 +226,14 @@ def get_trt_deployable(args):
             "directory. Please provide a --visual_checkpoint."
         )
 
-    if args.visual_checkpoint is None and not os.path.isdir(
-        args.triton_model_repository
-    ):
+    if args.visual_checkpoint is None and not os.path.isdir(args.triton_model_repository):
         raise ValueError(
             "The provided model repository is not a valid TensorRT model "
             "directory. Please provide a --visual_checkpoint."
         )
 
     if args.visual_checkpoint is not None and args.model_type is None:
-        raise ValueError(
-            "Model type is required to be defined if a nemo checkpoint is provided."
-        )
+        raise ValueError("Model type is required to be defined if a nemo checkpoint is provided.")
 
     exporter = TensorRTMMExporter(
         model_dir=trt_path,
@@ -250,9 +243,7 @@ def get_trt_deployable(args):
 
     if args.visual_checkpoint is not None:
         try:
-            LOGGER.info(
-                "Export operation will be started to export the nemo checkpoint to TensorRT."
-            )
+            LOGGER.info("Export operation will be started to export the nemo checkpoint to TensorRT.")
             exporter.export(
                 visual_checkpoint_path=args.visual_checkpoint,
                 llm_checkpoint_path=args.llm_checkpoint,
@@ -271,10 +262,7 @@ def get_trt_deployable(args):
                 lora_checkpoint_path=args.lora_checkpoint_path,
             )
         except Exception as error:
-            raise RuntimeError(
-                "An error has occurred during the model export. Error message: "
-                + str(error)
-            )
+            raise RuntimeError("An error has occurred during the model export. Error message: " + str(error))
 
     return exporter
 
@@ -303,20 +291,14 @@ def nemo_deploy(argv):
         LOGGER.info("Triton deploy function will be called.")
         nm.deploy()
     except Exception as error:
-        LOGGER.error(
-            "Error message has occurred during deploy function. Error message: "
-            + str(error)
-        )
+        LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
         return
 
     try:
         LOGGER.info("Model serving on Triton is will be started.")
         nm.serve()
     except Exception as error:
-        LOGGER.error(
-            "Error message has occurred during deploy function. Error message: "
-            + str(error)
-        )
+        LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
         return
 
     LOGGER.info("Model serving will be stopped.")

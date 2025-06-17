@@ -36,9 +36,7 @@ def test_determine_quantization_settings():
     assert fp8_kv
 
     # Test with override parameters
-    fp8_quant, fp8_kv = determine_quantization_settings(
-        nemo_config, fp8_quantized=False, fp8_kvcache=True
-    )
+    fp8_quant, fp8_kv = determine_quantization_settings(nemo_config, fp8_quantized=False, fp8_kvcache=True)
     assert not fp8_quant
     assert fp8_kv
 
