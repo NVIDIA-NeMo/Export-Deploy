@@ -15,7 +15,11 @@
 import json
 import os
 import re
-from unittest.mock import mock_open, patch
+from unittest.mock import (
+    mock_open,
+    patch,
+)
+
 import pytest
 import torch
 
@@ -35,9 +39,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
         "model.embedding.word_embeddings.weight": dummy_state,
         "model.decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
     }
-    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(
-        model_state_dict
-    )
+    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
 
     # Check that every key starts with 'model.' and not 'model..' by using a regex
     # This pattern ensures:
@@ -68,9 +70,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
         "embedding.word_embeddings.weight": dummy_state,
         "decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
     }
-    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(
-        model_state_dict
-    )
+    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
 
     # This is essentially a no-op
     assert nemo_model_conversion_dict == DEFAULT_CONVERSION_DICT
@@ -97,9 +97,7 @@ def test_tensorrt_llm_initialization():
 
     # Test initialization with lora checkpoints
     lora_ckpt_list = ["/path/to/lora1", "/path/to/lora2"]
-    trt_llm = TensorRTLLM(
-        model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False
-    )
+    trt_llm = TensorRTLLM(model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False)
     assert trt_llm.lora_ckpt_list == lora_ckpt_list
 
     # Test initialization with python runtime options
@@ -164,9 +162,7 @@ def test_tensorrt_llm_input_dtype():
 
     for storage_dtype, expected_dtype in test_cases:
         input_dtype = trt_llm.get_input_dtype(storage_dtype)
-        assert input_dtype == expected_dtype, (
-            f"Expected {expected_dtype} for {storage_dtype}, got {input_dtype}"
-        )
+        assert input_dtype == expected_dtype, f"Expected {expected_dtype} for {storage_dtype}, got {input_dtype}"
 
 
 @pytest.mark.run_only_on("GPU")
@@ -761,9 +757,7 @@ def test_tensorrt_llm_forward_without_model():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     trt_llm = TensorRTLLM(model_dir="/tmp/test_model", load_model=False)
@@ -791,15 +785,13 @@ def test_tensorrt_llm_unload_engine():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     trt_llm = TensorRTLLM(model_dir="/tmp/test_model")
 
     # Mock the unload_engine function
-    with patch('nemo_export.tensorrt_llm.unload_engine') as mock_unload:
+    with patch("nemo_export.tensorrt_llm.unload_engine") as mock_unload:
         trt_llm.unload_engine()
         mock_unload.assert_called_once()
 
@@ -811,15 +803,13 @@ def test_tensorrt_llm_get_hf_model_type():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     trt_llm = TensorRTLLM(model_dir="/tmp/test_model")
 
     # Mock AutoConfig
-    with patch('transformers.AutoConfig.from_pretrained') as mock_config:
+    with patch("transformers.AutoConfig.from_pretrained") as mock_config:
         mock_config.return_value.architectures = ["LlamaForCausalLM"]
         model_type = trt_llm.get_hf_model_type("/tmp/model")
         assert model_type == "LlamaForCausalLM"
@@ -832,15 +822,13 @@ def test_tensorrt_llm_get_hf_model_type_ambiguous():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     trt_llm = TensorRTLLM(model_dir="/tmp/test_model")
 
     # Mock AutoConfig with multiple architectures
-    with patch('transformers.AutoConfig.from_pretrained') as mock_config:
+    with patch("transformers.AutoConfig.from_pretrained") as mock_config:
         mock_config.return_value.architectures = ["Model1", "Model2"]
         with pytest.raises(ValueError) as exc_info:
             trt_llm.get_hf_model_type("/tmp/model")
@@ -854,9 +842,7 @@ def test_tensorrt_llm_get_hf_model_dtype():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     trt_llm = TensorRTLLM(model_dir="/tmp/test_model")
@@ -868,8 +854,10 @@ def test_tensorrt_llm_get_hf_model_dtype():
         "bf16": False,
     }
 
-    with patch('pathlib.Path.exists', return_value=True), \
-         patch('builtins.open', mock_open(read_data=json.dumps(mock_config))):
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("builtins.open", mock_open(read_data=json.dumps(mock_config))),
+    ):
         dtype = trt_llm.get_hf_model_dtype("/tmp/model")
         assert dtype == "float16"
 
@@ -881,14 +869,12 @@ def test_tensorrt_llm_get_hf_model_dtype_not_found():
     try:
         from nemo_export.tensorrt_llm import TensorRTLLM
     except ImportError:
-        pytest.skip(
-            "Could not import TRTLLM helpers. tensorrt_llm is likely not installed"
-        )
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
     trt_llm = TensorRTLLM(model_dir="/tmp/test_model")
 
-    with patch('pathlib.Path.exists', return_value=False):
+    with patch("pathlib.Path.exists", return_value=False):
         with pytest.raises(FileNotFoundError) as exc_info:
             trt_llm.get_hf_model_dtype("/tmp/model")
         assert "Config file not found" in str(exc_info.value)
