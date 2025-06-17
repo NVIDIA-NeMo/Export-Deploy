@@ -161,6 +161,8 @@ select = [
 
 ignore = [
     "E501", # Line too long - handled by formatter
+    "D101",
+    "D103",
 ]
 
 [tool.ruff.lint.pydocstyle]
