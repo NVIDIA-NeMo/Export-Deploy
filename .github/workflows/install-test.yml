@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.12"]
         inference-framework: ["trtllm", "vllm"]
     steps:
       - name: Checkout repository
