@@ -36,7 +36,6 @@ from nemo_deploy.utils import (
     str_ndarray2list,
 )
 
-logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("NeMo")
 
 
