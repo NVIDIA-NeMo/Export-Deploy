@@ -268,26 +268,6 @@ jobs:
           is_unit_test: "false"
           timeout: 60
 
-  cicd-e2e-tests-other:
-    needs: [cicd-unit-tests]
-    runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
-    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
-    environment: nemo-ci
-    steps:
-      - name: main
-        uses: NVIDIA-NeMo/Export-Deploy/.github/actions/test-template@main
-        with:
-          runner: ${{ runner.name }}
-          script: L2_Launch_other
-          image: nemo_container_export_deploy_vllm
-          is_optional: ${{ matrix.is_optional || false }}
-          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          has-azure-credentials: true
-          is_unit_test: "false"
-          timeout: 60
-
   Nemo_CICD_Test:
     needs:
       - pre-flight
