@@ -25,7 +25,7 @@ from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import broadcast_list, cast_output, str_ndarray2list
 from nemo_export_deploy_common.import_utils import UnavailableError, null_decorator, safe_import_from
 
-Tensor, HAVE_TRITON = safe_import_from("pytriton.model_config", "Tensor", alt=null_decorator)
+Tensor, HAVE_TRITON = safe_import_from("pytriton.model_config", "Tensor")
 batch, HAVE_TRITON = safe_import_from("pytriton.decorators", "batch", alt=null_decorator)
 
 LOGGER = logging.getLogger("NeMo")
