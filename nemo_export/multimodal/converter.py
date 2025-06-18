@@ -14,13 +14,19 @@
 
 
 import torch
-from nemo import lightning as nl
-from nemo.collections import vlm
 from transformers import AutoProcessor, MllamaConfig
 from transformers.models.mllama.configuration_mllama import (
     MllamaTextConfig,
     MllamaVisionConfig,
 )
+
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from nemo import lightning as nl
+    from nemo.collections import vlm
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
 
 
 def split_qkv_weight(qkv_weight, model_config):
