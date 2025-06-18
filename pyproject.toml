@@ -59,7 +59,7 @@ te = ["transformer-engine[pytorch]==2.4.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools"]
+build = ["setuptools", "torch"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
