@@ -72,8 +72,8 @@ class ImportChecker:
             tb = traceback.format_exc()
             if "UnavailableError" in tb:
                 pass
-
-            raise Exception(f"Could not import package '{self.package_name}': {e}") from e
+            else:
+                raise Exception(f"Could not import package '{self.package_name}': {e}") from e
 
         package_path = package.__path__[0]
 
