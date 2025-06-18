@@ -16,13 +16,13 @@
 import logging
 
 from nemo_deploy.deploy_base import DeployBase
-from nemo_export_deploy_common.import_utils import UnavailableError, safe_import
+from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
 
 MISSING_TRITON_MSG = "pytriton is not available. Please install it with `pip install nvidia-pytriton`."
 
-ModelConfig, HAVE_TRITON = safe_import("pytriton.model_config", "ModelConfig")
-Triton, HAVE_TRITON = safe_import("pytriton.triton", "Triton")
-TritonConfig, HAVE_TRITON = safe_import("pytriton.triton", "TritonConfig")
+ModelConfig, HAVE_TRITON = safe_import_from("pytriton.model_config", "ModelConfig")
+Triton, HAVE_TRITON = safe_import_from("pytriton.triton", "Triton")
+TritonConfig, HAVE_TRITON = safe_import_from("pytriton.triton", "TritonConfig")
 
 LOGGER = logging.getLogger("NeMo")
 
