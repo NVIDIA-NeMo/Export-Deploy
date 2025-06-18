@@ -27,8 +27,14 @@ from megatron.core.distributed import (
 )
 from megatron.core.enums import ModelType
 from megatron.core.transformer.module import Float16Module, MegatronModule
-from nemo.collections.llm.gpt.model.base import GPTConfig
-from nemo.collections.llm.t5.model.t5 import T5Config
+
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from nemo.collections.llm.gpt.model.base import GPTConfig
+    from nemo.collections.llm.t5.model.t5 import T5Config
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
 
 LOGGER = logging.getLogger("NeMo")
 

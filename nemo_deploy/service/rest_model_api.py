@@ -12,11 +12,16 @@ import os
 
 import requests
 from fastapi import FastAPI, HTTPException
-from nemo.utils import logging
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
 from nemo_deploy.nlp import NemoQueryLLM
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from nemo.utils import logging
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
 
 
 class TritonSettings(BaseSettings):
