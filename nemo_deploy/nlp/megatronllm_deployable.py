@@ -36,6 +36,7 @@ from nemo_deploy.utils import (
     str_ndarray2list,
 )
 
+logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("NeMo")
 
 
@@ -218,8 +219,8 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
                 inference_params = CommonInferenceParams(
                     temperature=temperature,
-                    top_k=top_k,
-                    top_p=top_p,
+                    top_k=int(top_k),
+                    top_p=float(top_p),
                     num_tokens_to_generate=num_tokens_to_generate,
                     return_log_probs=log_probs,
                 )
