@@ -16,7 +16,13 @@
 import logging
 
 from nemo_deploy.deploy_base import DeployBase
-from nemo_export_deploy_common.import_utils import UnavailableError
+from nemo_export_deploy_common.import_utils import UnavailableError, safe_import
+
+MISSING_TRITON_MSG = "pytriton is not available. Please install it with `pip install nvidia-pytriton`."
+
+ModelConfig, HAVE_TRITON = safe_import("pytriton.model_config", "ModelConfig", message=MISSING_TRITON_MSG)
+Triton, HAVE_TRITON = safe_import("pytriton.triton", "Triton", message=MISSING_TRITON_MSG)
+TritonConfig, HAVE_TRITON = safe_import("pytriton.triton", "TritonConfig", message=MISSING_TRITON_MSG)
 
 try:
     from pytriton.model_config import ModelConfig
@@ -87,6 +93,9 @@ class DeployPyTriton(DeployBase):
             port (int) : port for the Triton server
             address (str): http address for Triton server to bind.
         """
+        if not HAVE_TRITON:
+            raise UnavailableError(MISSING_TRITON_MSG)
+
         super().__init__(
             triton_model_name=triton_model_name,
             triton_model_version=triton_model_version,
