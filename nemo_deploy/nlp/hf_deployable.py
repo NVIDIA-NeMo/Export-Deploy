@@ -19,12 +19,14 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import torch
 from peft import PeftModel
-from pytriton.decorators import batch
-from pytriton.model_config import Tensor
 from transformers import AutoModel, AutoModelForCausalLM, AutoTokenizer
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import broadcast_list, cast_output, str_ndarray2list
+from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
+
+Tensor, HAVE_TRITON = safe_import_from("pytriton.model_config", "Tensor")
+batch, HAVE_TRITON = safe_import_from("pytriton.decorators", "batch")
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -67,6 +69,9 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         task: Optional[str] = "text-generation",
         **hf_kwargs,
     ):
+        if not HAVE_TRITON:
+            raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
+
         if hf_model_id_path is None and model is None:
             raise ValueError("hf_model_id_path or model parameters has to be passed.")
         elif hf_model_id_path is not None and model is not None:
