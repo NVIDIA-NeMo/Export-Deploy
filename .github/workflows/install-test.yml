@@ -1,3 +1,20 @@
+# Copyright (c) 2025, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This workflow verifies that the basic install works across all supported platforms.
+# For basic install, all imports need to either be successful or appropriately guarded.
+
 name: Installation Test
 
 on:
@@ -5,16 +22,18 @@ on:
     branches:
       - main
       - "pull-request/[0-9]+"
+env:
+  UV_PROJECT_ENVIRONMENT: "./venv"
 
 jobs:
   pip-test:
     runs-on: ${{ matrix.arch }}
-    name: (CPU) Python ${{ matrix.python-version }} on ${{ matrix.arch }}
+    name: Pip - Python${{ matrix.python-version }} - ${{ matrix.arch == 'ubuntu-latest' && 'AMD64/Linux' || 'ARM64/Darwin' }} - No CUDA
     strategy:
       fail-fast: false
       matrix:
         arch: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,11 +49,15 @@ jobs:
 
       - name: Install project
         run: |
-          pip install "."
+          pip install .
+
+      - name: Run import checks
+        run: |
+          python .github/scripts/check_imports.py
 
   ngc-cuda-test:
     runs-on: linux-amd64-cpu16
-    name: (GPU) Python ${{ matrix.python-version }} (${{ matrix.inference-framework }})
+    name: UV - Python${{ matrix.python-version }} - AMD64/Linux - NGC CUDA
     container:
       image: nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
     environment: nemo-ci
@@ -42,7 +65,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.12"]
-        inference-framework: ["trtllm", "vllm"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -78,27 +100,31 @@ jobs:
       - name: Install project
         env:
           PAT: ${{ secrets.PAT }}
-          UV_PROJECT_ENVIRONMENT: ./venv
         shell: bash
         run: |
           echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
           chmod 600 ~/.netrc 
-          python -m venv ./venv
+
+          uv venv ${UV_PROJECT_ENVIRONMENT}
           source ./venv/bin/activate
 
           export PATH="./bin/:$PATH"
 
-          pip install ".[${{ matrix.inference-framework }}]"
+          uv sync --link-mode copy --locked --all-groups
 
           bash ./docker/common/install_conflicting_deps.sh
 
+          uv pip install --no-deps -e .
+          python .github/scripts/check_imports.py
+
   uv-test:
     runs-on: ${{ matrix.arch }}
-    name: UV on ${{ matrix.arch }}
+    name: UV - Python ${{ matrix.python-version }} - ${{ matrix.arch == 'ubuntu-latest' && 'AMD64/Linux' || 'ARM64/Darwin' }} - No CUDA
     strategy:
       fail-fast: false
       matrix:
         arch: ["ubuntu-latest", "macos-latest"]
+        python-version: ["3.12"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -108,20 +134,22 @@ jobs:
         with:
           version: 0.7.2
 
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
       - name: Install dependencies with UV
-        env:
-          UV_PROJECT_ENVIRONMENT: ./venv
-          PAT: ${{ secrets.PAT }}
         run: |
 
-          echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
-          chmod 600 ~/.netrc 
-
-          export PATH=".bin/:$PATH"
+          export PATH="${UV_PROJECT_ENVIRONMENT}/bin/:$PATH"
 
           uv venv ${UV_PROJECT_ENVIRONMENT}
 
           uv sync --link-mode copy --locked --all-groups
+
+          uv pip install --no-deps -e .
+          uv run python .github/scripts/check_imports.py
 
   install-test-summary:
     needs: [pip-test, uv-test, ngc-cuda-test]
