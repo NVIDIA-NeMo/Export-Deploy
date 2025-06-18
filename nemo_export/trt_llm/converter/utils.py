@@ -16,12 +16,12 @@
 from typing import List, Optional, Tuple, Union
 
 import numpy as np
-import tensorrt_llm
 import torch
 
 from nemo_export_deploy_common.import_utils import UnavailableError
 
 try:
+    import tensorrt_llm
     from tensorrt_llm._utils import mpi_comm, torch_to_numpy
 except (ImportError, ModuleNotFoundError) as e:
     raise UnavailableError("tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`.") from e

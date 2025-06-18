@@ -23,7 +23,6 @@ import wrapt
 from nemo.collections.llm.modelopt.quantization.quant_cfg_choices import (
     get_quant_cfg_choices,
 )
-from nemo.utils import logging
 from transformers import AutoModel, AutoTokenizer
 
 from nemo_deploy import ITritonDeployable
@@ -34,6 +33,11 @@ from nemo_export.utils import (
     validate_fp8_network,
 )
 from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from nemo.utils import logging
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
 
 try:
     import tensorrt as trt
