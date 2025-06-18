@@ -178,7 +178,7 @@ class ImportChecker:
                     if line.strip():
                         print(f"  {line}")
 
-        return 1 if self.failure_count > 0 else 0
+        return 0 if self.failure_count > 0 else 1
 
 
 def main():
