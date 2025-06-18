@@ -15,10 +15,14 @@
 
 import logging
 
-from pytriton.model_config import ModelConfig
-from pytriton.triton import Triton, TritonConfig
-
 from nemo_deploy.deploy_base import DeployBase
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from pytriton.model_config import ModelConfig
+    from pytriton.triton import Triton, TritonConfig
+except (ImportError, ModuleNotFoundError) as e:
+    raise UnavailableError("pytriton is not available. Please install it with `pip install pytriton`.") from e
 
 LOGGER = logging.getLogger("NeMo")
 
