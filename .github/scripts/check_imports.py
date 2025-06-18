@@ -68,12 +68,12 @@ class ImportChecker:
         try:
             # Import the main package first
             package = importlib.import_module(self.package_name)
-        except ImportError as e:
+        except Exception as e:
             tb = traceback.format_exc()
             if "UnavailableError" in tb:
                 pass
 
-            raise ImportError(f"Could not import package '{self.package_name}': {e}") from e
+            raise Exception(f"Could not import package '{self.package_name}': {e}") from e
 
         package_path = package.__path__[0]
 
