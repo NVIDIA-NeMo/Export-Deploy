@@ -18,24 +18,7 @@ import os.path
 from typing import Iterable, List, Optional, Union
 
 import numpy
-import vllm.envs as envs
 import wrapt
-from vllm import RequestOutput, SamplingParams
-from vllm.config import (
-    CacheConfig,
-    DeviceConfig,
-    LoadConfig,
-    LoadFormat,
-    LoRAConfig,
-    ObservabilityConfig,
-    ParallelConfig,
-    SchedulerConfig,
-    VllmConfig,
-)
-from vllm.executor.ray_utils import initialize_ray_cluster
-from vllm.lora.request import LoRARequest
-from vllm.v1.core.sched.scheduler import Scheduler as V1Scheduler
-from vllm.v1.engine.llm_engine import LLMEngine
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output
@@ -46,6 +29,28 @@ from nemo_export.utils import (
 )
 from nemo_export.vllm.model_config import NemoModelConfig
 from nemo_export.vllm.model_loader import NemoModelLoader
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    import vllm.envs as envs
+    from vllm import RequestOutput, SamplingParams
+    from vllm.config import (
+        CacheConfig,
+        DeviceConfig,
+        LoadConfig,
+        LoadFormat,
+        LoRAConfig,
+        ObservabilityConfig,
+        ParallelConfig,
+        SchedulerConfig,
+        VllmConfig,
+    )
+    from vllm.executor.ray_utils import initialize_ray_cluster
+    from vllm.lora.request import LoRARequest
+    from vllm.v1.core.sched.scheduler import Scheduler as V1Scheduler
+    from vllm.v1.engine.llm_engine import LLMEngine
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("vllm is not installed. Please install it with `pip install vllm`.")
 
 LOGGER = logging.getLogger("NeMo")
 

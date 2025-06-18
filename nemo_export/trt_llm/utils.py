@@ -14,7 +14,13 @@
 
 from typing import Optional
 
-import tensorrt_llm
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    import tensorrt_llm
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("tensorrt_llm is not installed. Please install it with `pip install tensorrt-llm`.")
+
 
 
 def is_rank(rank: Optional[int]) -> bool:

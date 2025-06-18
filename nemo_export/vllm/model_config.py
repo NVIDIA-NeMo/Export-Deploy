@@ -21,18 +21,27 @@ import yaml
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
 from transformers import AutoConfig
-from vllm.config import (
-    ModelConfig,
-    ModelImpl,
-    PoolerConfig,
-    _get_and_verify_dtype,
-    _get_and_verify_max_len,
-)
-from vllm.transformers_utils.config import get_hf_text_config
 
-from nemo_export.tarutils import TarPath
-from nemo_export.utils import is_nemo2_checkpoint
-from nemo_export.vllm.model_converters import get_model_converter
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from vllm.config import (
+        ModelConfig,
+        ModelImpl,
+        PoolerConfig,
+        _get_and_verify_dtype,
+        _get_and_verify_max_len,
+    )
+    from vllm.transformers_utils.config import get_hf_text_config
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("vllm is not installed. Please install it with `pip install vllm`.")
+
+try:
+    from nemo_export.tarutils import TarPath
+    from nemo_export.utils import is_nemo2_checkpoint
+    from nemo_export.vllm.model_converters import get_model_converter
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("nemo_export is not installed. Please install it with `pip install nemo_export`.")
 
 
 class NemoModelConfig(ModelConfig):

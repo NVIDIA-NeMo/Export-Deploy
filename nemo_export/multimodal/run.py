@@ -29,11 +29,15 @@ import torch
 import yaml
 from PIL import Image
 from torch.nn import functional as F
-from torchvision import transforms
 from transformers import AutoProcessor, CLIPImageProcessor
 
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
 from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from torchvision import transforms
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("torchvision is not installed. Please install it with `pip install torchvision`.")
 
 try:
     import tensorrt as trt
