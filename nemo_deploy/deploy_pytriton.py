@@ -20,15 +20,9 @@ from nemo_export_deploy_common.import_utils import UnavailableError, safe_import
 
 MISSING_TRITON_MSG = "pytriton is not available. Please install it with `pip install nvidia-pytriton`."
 
-ModelConfig, HAVE_TRITON = safe_import("pytriton.model_config", "ModelConfig", message=MISSING_TRITON_MSG)
-Triton, HAVE_TRITON = safe_import("pytriton.triton", "Triton", message=MISSING_TRITON_MSG)
-TritonConfig, HAVE_TRITON = safe_import("pytriton.triton", "TritonConfig", message=MISSING_TRITON_MSG)
-
-try:
-    from pytriton.model_config import ModelConfig
-    from pytriton.triton import Triton, TritonConfig
-except (ImportError, ModuleNotFoundError) as e:
-    raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.") from e
+ModelConfig, HAVE_TRITON = safe_import("pytriton.model_config", "ModelConfig")
+Triton, HAVE_TRITON = safe_import("pytriton.triton", "Triton")
+TritonConfig, HAVE_TRITON = safe_import("pytriton.triton", "TritonConfig")
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -36,7 +30,7 @@ LOGGER = logging.getLogger("NeMo")
 class DeployPyTriton(DeployBase):
     """Deploys any models to Triton Inference Server that implements ITritonDeployable interface in nemo_deploy.
 
-    Example:
+    Example:`
         from nemo_deploy import DeployPyTriton, NemoQueryLLM
         from nemo_export.tensorrt_llm import TensorRTLLM
 
