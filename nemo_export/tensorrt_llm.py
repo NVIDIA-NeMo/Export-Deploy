@@ -32,7 +32,6 @@ from megatron.core.export.model_type import ModelType
 from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
     DEFAULT_CONVERSION_DICT,
 )
-from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
 from transformers import AutoConfig, PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
@@ -77,6 +76,7 @@ except (ImportError, ModuleNotFoundError) as e:
 
 try:
     import tensorrt_llm
+    from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
     from tensorrt_llm._common import check_max_num_tokens
     from tensorrt_llm._utils import numpy_to_torch
     from tensorrt_llm.builder import BuildConfig
