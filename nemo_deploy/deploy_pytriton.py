@@ -22,7 +22,7 @@ try:
     from pytriton.model_config import ModelConfig
     from pytriton.triton import Triton, TritonConfig
 except (ImportError, ModuleNotFoundError) as e:
-    raise UnavailableError("pytriton is not available. Please install it with `pip install pytriton`.") from e
+    raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.") from e
 
 LOGGER = logging.getLogger("NeMo")
 
