@@ -16,7 +16,6 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import tensorrt_llm
 import torch
 
 from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import (
@@ -27,6 +26,7 @@ from nemo_export.trt_llm.converter.utils import DECODER_MODEL_TYPE, split
 from nemo_export_deploy_common.import_utils import UnavailableError
 
 try:
+    import tensorrt_llm
     from tensorrt_llm._utils import pad_vocab_size
     from tensorrt_llm.functional import non_gated_version
     from tensorrt_llm.layers import MoeConfig

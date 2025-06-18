@@ -24,12 +24,7 @@ from typing import List, Optional
 
 import numpy as np
 import tensorrt as trt
-import tensorrt_llm
 import torch
-from mpi4py.futures import MPIPoolExecutor
-from tensorrt_llm.builder import Engine
-from tensorrt_llm.lora_manager import LoraManager
-from tensorrt_llm.quantization import QuantMode
 from transformers import PreTrainedTokenizer
 
 from nemo_export_deploy_common.import_utils import UnavailableError
@@ -37,6 +32,15 @@ from nemo_export_deploy_common.import_utils import UnavailableError
 LOGGER = logging.getLogger("NeMo")
 
 try:
+    from mpi4py.futures import MPIPoolExecutor
+except (ImportError, ModuleNotFoundError) as e:
+    raise UnavailableError("mpi4py is not available. Please install it with `pip install mpi4py`.") from e
+
+try:
+    import tensorrt_llm
+    from tensorrt_llm.builder import Engine
+    from tensorrt_llm.lora_manager import LoraManager
+    from tensorrt_llm.quantization import QuantMode
     from tensorrt_llm.runtime import (
         ModelConfig,
         ModelRunner,

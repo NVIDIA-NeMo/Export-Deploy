@@ -16,13 +16,22 @@
 from typing import List
 
 import numpy as np
-from pytriton.decorators import batch, first_value
-from pytriton.model_config import Tensor
-from vllm import LLM, SamplingParams
-from vllm.lora.request import LoRARequest
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from pytriton.decorators import batch, first_value
+    from pytriton.model_config import Tensor
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("pytriton is not installed. Please install it with `pip install nvidia-pytriton`.")
+
+try:
+    from vllm import LLM, SamplingParams
+    from vllm.lora.request import LoRARequest
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("vllm is not installed. Please install it with `pip install vllm`.")
 
 
 class vLLMHFExporter(ITritonDeployable):

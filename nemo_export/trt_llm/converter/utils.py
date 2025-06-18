@@ -18,7 +18,13 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 import tensorrt_llm
 import torch
-from tensorrt_llm._utils import mpi_comm, torch_to_numpy
+
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from tensorrt_llm._utils import mpi_comm, torch_to_numpy
+except (ImportError, ModuleNotFoundError) as e:
+    raise UnavailableError("tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`.") from e
 
 # A global dicts to store exported weights.
 # This is set to be a global variable to avoid extra code modification from tensorrt_llm.

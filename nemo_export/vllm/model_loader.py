@@ -18,12 +18,17 @@ from typing import Any, Dict
 
 import safetensors.torch
 import torch
-from vllm.config import ModelConfig
-from vllm.model_executor.model_loader import BaseModelLoader, get_model
-from vllm.model_executor.model_loader.utils import set_default_torch_dtype
 
 from nemo_export.utils import load_model_weights
 from nemo_export.vllm.model_config import NemoModelConfig
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from vllm.config import ModelConfig
+    from vllm.model_executor.model_loader import BaseModelLoader, get_model
+    from vllm.model_executor.model_loader.utils import set_default_torch_dtype
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("vllm is not installed. Please install it with `pip install vllm`.")
 
 LOGGER = logging.getLogger("NeMo")
 
