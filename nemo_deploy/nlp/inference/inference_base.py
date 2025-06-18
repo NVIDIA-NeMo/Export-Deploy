@@ -37,13 +37,8 @@ from megatron.core.inference.text_generation_controllers.text_generation_control
 )
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
-from nemo.collections.llm.gpt.model.base import GPTConfig
-from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
-from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
-from nemo.collections.llm.t5.model.t5 import T5Config
-from nemo.lightning import io
-from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
-from nemo.lightning.io.pl import ckpt_to_weights_subdir
+
+from nemo_export_deploy_common.import_utils import UnavailableError
 
 from .tron_utils import (
     DistributedInitConfig,
@@ -54,6 +49,17 @@ from .tron_utils import (
     get_world_size_safe,
     initialize_distributed,
 )
+
+try:
+    from nemo.collections.llm.gpt.model.base import GPTConfig
+    from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
+    from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
+    from nemo.collections.llm.t5.model.t5 import T5Config
+    from nemo.lightning import io
+    from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
+    from nemo.lightning.io.pl import ckpt_to_weights_subdir
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
 
 LOGGER = logging.getLogger("NeMo")
 
