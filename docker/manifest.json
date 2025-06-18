@@ -2,6 +2,9 @@
   "vcs-dependencies": {
     "megatron-lm": {
       "ref": "4a91173d3e5a109b290e5367443432d79615492b"
+    },
+    "nemo": {
+      "ref": "5f86c1bd760684de80da6c779d89ea4a013a6c91"
     }
   }
 }
