@@ -181,8 +181,9 @@ class ImportChecker:
 def main():
     """Main entry point."""
 
-    checker = ImportChecker(package_name="megatron.hub")
-    return checker.check_all_imports()
+    checker_nemo_deploy = ImportChecker(package_name="nemo_deploy")
+    checker_nemo_export = ImportChecker(package_name="nemo_export")
+    return checker_nemo_deploy.check_all_imports() and checker_nemo_export.check_all_imports()
 
 
 if __name__ == "__main__":
