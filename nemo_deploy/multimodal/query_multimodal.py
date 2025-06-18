@@ -17,16 +17,12 @@ from io import BytesIO
 import numpy as np
 import requests
 from PIL import Image
-from pytriton.client import ModelClient
 
 from nemo_deploy.utils import str_list2numpy
+from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
 
-try:
-    from decord import VideoReader
-except Exception:
-    import logging
-
-    logging.warning("The package `decord` was not installed in this environment.")
+ModelClient, HAVE_TRITON = safe_import_from("pytriton.client", "ModelClient")
+VideoReader, HAVE_VIDEO_READER = safe_import_from("decord", "VideoReader")
 
 
 class NemoQueryMultimodal:
@@ -57,10 +53,15 @@ class NemoQueryMultimodal:
     def setup_media(self, input_media):
         """Setup input media."""
         if self.model_type == "video-neva":
+            if not HAVE_VIDEO_READER:
+                raise UnavailableError("decord is not available. Please install it with `pip install decord`.")
             vr = VideoReader(input_media)
             frames = [f.asnumpy() for f in vr]
             return np.array(frames)
         elif self.model_type == "lita" or self.model_type == "vita":
+            if not HAVE_VIDEO_READER:
+                raise UnavailableError("decord is not available. Please install it with `pip install decord`.")
+
             vr = VideoReader(input_media)
             frames = [f.asnumpy() for f in vr]
             subsample_len = self.frame_len(frames)
@@ -106,6 +107,9 @@ class NemoQueryMultimodal:
         lora_uids=None,
     ):
         """Run query."""
+        if not HAVE_TRITON:
+            raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
+
         prompts = str_list2numpy([input_text])
         inputs = {"input_text": prompts}
 
