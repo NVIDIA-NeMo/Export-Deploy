@@ -65,18 +65,6 @@ class ImportChecker:
         """Discover all Python modules in the given package path."""
         modules = []
 
-        try:
-            # Import the main package first
-            package = importlib.import_module(self.package_name)
-        except Exception as e:
-            tb = traceback.format_exc()
-            if "UnavailableError" in tb:
-                pass
-            else:
-                raise Exception(f"Could not import package '{self.package_name}': {e}") from e
-
-        package_path = package.__path__[0]
-
         # Walk through all Python files
         for root, dirs, files in os.walk(package_path):
             # Skip hidden directories and __pycache__
