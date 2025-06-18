@@ -18,7 +18,11 @@ class TestVLLMExportLlama:
         # Update HF model
         subprocess.run(
             [
-                "python",
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
                 "tests/functional_tests/utils/create_hf_model.py",
                 "--model_name_or_path",
                 "/home/TestData/nlp/megatron_llama/llama-ci-hf",
@@ -43,7 +47,11 @@ class TestVLLMExportLlama:
         # HF to NeMo2
         subprocess.run(
             [
-                "python",
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
                 "tests/functional_tests/utils/test_hf_import.py",
                 "--hf_model",
                 f"{cls.testdir}/llama_head64",
@@ -61,7 +69,11 @@ class TestVLLMExportLlama:
     def test_vllm_export_llama(self):
         subprocess.run(
             [
-                "python",
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
                 "tests/functional_tests/utils/run_nemo_export.py",
                 "--min_tps",
                 "1",

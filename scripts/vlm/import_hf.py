@@ -14,6 +14,7 @@
 
 import argparse
 from pathlib import Path
+from typing import Optional
 
 from nemo.collections import vlm
 from nemo.collections.llm import import_ckpt
@@ -30,6 +31,21 @@ HF_MODEL_ID_TO_NEMO_CLASS = {
     "OpenGVLab/InternViT-6B-448px-V2_5": vlm.InternViTModel,
     "openai/clip-vit-large-patch14": vlm.CLIPViTModel,
 }
+
+
+def main(input_name_or_path: str, output_path: Optional[str] = None, nemo_class: Optional[str] = None):
+    model_name_or_path = input_name_or_path
+    local_path = Path(model_name_or_path)
+
+    if local_path.exists():
+        try:
+            model_class = eval(nemo_class)
+        except Exception as e:
+            raise ValueError(f"Could not import the specified NeMo class '{nemo_class}': {e}")
+    else:
+        model_class = HF_MODEL_ID_TO_NEMO_CLASS[model_name_or_path]
+
+    import_ckpt(model_class(), f"hf://{model_name_or_path}", output_path=output_path)
 
 
 if __name__ == "__main__":
@@ -54,14 +70,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    model_name_or_path = args.input_name_or_path
-    local_path = Path(model_name_or_path)
-    if local_path.exists():
-        try:
-            model_class = eval(args.nemo_class)
-        except Exception as e:
-            raise ValueError(f"Could not import the specified NeMo class '{args.nemo_class}': {e}")
-    else:
-        model_class = HF_MODEL_ID_TO_NEMO_CLASS[model_name_or_path]
-
-    import_ckpt(model_class(), f"hf://{model_name_or_path}", output_path=args.output_path)
+    main(args.input_name_or_path, args.output_path, args.nemo_class)

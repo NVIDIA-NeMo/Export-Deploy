@@ -24,7 +24,11 @@ class TestVLLMExportLlama:
     def test_finetune_llava_next_InternVIT(self):
         subprocess.run(
             [
-                "python",
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
                 "tests/functional_tests/utils/test_llava_next_InternVIT.py",
                 "--devices",
                 "1",
@@ -49,7 +53,16 @@ class TestVLLMExportLlama:
         logger.info(f"Testing import of model: {model}")
 
         result = subprocess.run(
-            ["python", "scripts/vlm/import_hf.py", "--input_name_or_path", model],
+            [
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
+                "scripts/vlm/import_hf.py",
+                "--input_name_or_path",
+                model,
+            ],
             capture_output=True,
             text=True,
             cwd="/workspace",
