@@ -19,9 +19,13 @@ import subprocess
 import warnings
 from typing import List, Optional
 
-from tensorrt_llm.models import PretrainedConfig
-
 from nemo_export.trt_llm.qnemo.utils import CONFIG_NAME, WEIGHTS_NAME
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from tensorrt_llm.models import PretrainedConfig
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("tensorrt_llm is not installed. Please install it with `pip install tensorrt-llm`.")
 
 
 def qnemo_to_tensorrt_llm(

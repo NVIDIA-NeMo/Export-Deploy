@@ -21,17 +21,26 @@ from typing import List
 
 import numpy as np
 import wrapt
-from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
 
-from nemo_deploy import ITritonDeployable
-from nemo_export.multimodal.build import (
-    build_mllama_engine,
-    build_trtllm_engine,
-    build_visual_engine,
-    extract_lora_ckpt,
-)
-from nemo_export.multimodal.run import MultimodalModelRunner
-from nemo_export.tarutils import unpack_tarball
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("tensorrt_llm is not installed. Please install it with `pip install tensorrt-llm`.")
+
+try:
+    from nemo_deploy import ITritonDeployable
+    from nemo_export.multimodal.build import (
+        build_mllama_engine,
+        build_trtllm_engine,
+        build_visual_engine,
+        extract_lora_ckpt,
+    )
+    from nemo_export.multimodal.run import MultimodalModelRunner
+    from nemo_export.tarutils import unpack_tarball
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
 
 use_deploy = True
 try:

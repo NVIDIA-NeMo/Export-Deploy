@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
-import tensorrt as trt
 import torch
 import wrapt
 from nemo.collections.llm.modelopt.quantization.quant_cfg_choices import (
@@ -35,6 +34,11 @@ from nemo_export.utils import (
     validate_fp8_network,
 )
 from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    import tensorrt as trt
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("tensorrt is not installed. Please install it with `pip install nvidia-tensorrt`.")
 
 try:
     import modelopt.torch.quantization as mtq

@@ -19,7 +19,6 @@ from collections import defaultdict
 from pathlib import Path
 
 import torch
-from tensorrt_llm._utils import pad_vocab_size, str_dtype_to_torch
 from tqdm import tqdm
 
 from nemo_export.trt_llm.converter.utils import (
@@ -29,6 +28,12 @@ from nemo_export.trt_llm.converter.utils import (
     weights_dict,
 )
 from nemo_export.utils import torch_dtype_from_precision
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    from tensorrt_llm._utils import pad_vocab_size, str_dtype_to_torch
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("tensorrt_llm is not installed. Please install it with `pip install tensorrt-llm`.")
 
 LOGGER = logging.getLogger("NeMo")
 

@@ -21,13 +21,11 @@ import torch
 import torch.distributed as dist
 from megatron.core import parallel_state
 from megatron.core.transformer.module import Float16Module
-from nemo.collections.nlp.models.language_modeling.megatron_gpt_model import (
-    MegatronGPTModel,
-)
 
 from nemo_export_deploy_common.import_utils import UnavailableError
 
 try:
+    from nemo.collections.nlp.models.language_modeling.megatron_gpt_model import MegatronGPTModel
     from nemo.collections.nlp.parts.utils_funcs import torch_dtype_from_precision
     from nemo.utils import logging
     from nemo.utils.distributed import temporary_directory
