@@ -182,7 +182,8 @@ def main():
 
     checker_nemo_deploy = ImportChecker(package_name="nemo_deploy")
     checker_nemo_export = ImportChecker(package_name="nemo_export")
-    return checker_nemo_deploy.check_all_imports() and checker_nemo_export.check_all_imports()
+    successful = checker_nemo_deploy.check_all_imports() and checker_nemo_export.check_all_imports()
+    return 0 if successful else 1
 
 
 if __name__ == "__main__":
