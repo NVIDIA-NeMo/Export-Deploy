@@ -111,7 +111,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                         inference_params=CommonInferenceParams(
                             temperature=0.1,
                             top_k=1,
-                            top_p=0,
+                            top_p=0.0,
                             num_tokens_to_generate=1,
                             return_log_probs=False,
                         ),
