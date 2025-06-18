@@ -62,18 +62,6 @@ def parse_args():
         help="Maximum memory allocation when using balanced device map",
     )
     parser.add_argument(
-        "--max_batch_size",
-        type=int,
-        default=8,
-        help="Maximum number of requests to batch together",
-    )
-    parser.add_argument(
-        "--batch_wait_timeout_s",
-        type=float,
-        default=0.3,
-        help="Maximum time to wait for batching requests in seconds",
-    )
-    parser.add_argument(
         "--model_id",
         type=str,
         default="nemo-model",
@@ -163,9 +151,7 @@ def main():
     )
 
     # Set up signal handlers
-    signal.signal(
-        signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer)
-    )
+    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
     signal.signal(
         signal.SIGTERM,
         lambda signum, frame: signal_handler(signum, frame, ray_deployer),
@@ -189,8 +175,6 @@ def main():
             model_id=args.model_id,
             device_map=args.device_map,
             max_memory=args.max_memory,
-            max_batch_size=args.max_batch_size,
-            batch_wait_timeout_s=args.batch_wait_timeout_s,
         )
 
         # Deploy the model

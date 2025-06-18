@@ -14,20 +14,22 @@
 
 import argparse
 import os
+from functools import partial
 
 import tensorrt as trt
+import torch
 from nemo.collections.llm.gpt.model.hf_llama_embedding import (
     get_llama_bidirectional_hf_model,
 )
+from nemo.collections.llm.modelopt.quantization.quantizer import get_calib_data_iter
 from nemo.utils import logging
+from tqdm import tqdm
 
 from nemo_export.onnx_llm_exporter import OnnxLLMExporter
 
 
 def get_args():
-    parser = argparse.ArgumentParser(
-        description="Test ONNX and TensorRT export for LLM embedding models."
-    )
+    parser = argparse.ArgumentParser(description="Test ONNX and TensorRT export for LLM embedding models.")
     parser.add_argument(
         "--hf_model_path",
         type=str,
@@ -52,9 +54,7 @@ def get_args():
         default="/tmp/onnx_model/",
         help="Path to store ONNX model.",
     )
-    parser.add_argument(
-        "--onnx_opset", type=int, default=17, help="ONNX version to use for export."
-    )
+    parser.add_argument("--onnx_opset", type=int, default=17, help="ONNX version to use for export.")
     parser.add_argument(
         "--trt_model_path",
         type=str,
@@ -66,6 +66,29 @@ def get_args():
         default=False,
         action="store_true",
         help="Whether to generate version compatible TensorRT models.",
+    )
+    parser.add_argument(
+        "--quant_cfg",
+        type=str,
+        help="Quantization type to apply for the model (optional).",
+    )
+    parser.add_argument(
+        "--calibration_dataset",
+        type=str,
+        default="cnn_dailymail",
+        help="Calibration dataset to be used. Should be 'wikitext', 'cnn_dailymail' or path to a local .json file",
+    )
+    parser.add_argument(
+        "--calibration_batch_size",
+        type=int,
+        default=64,
+        help="Calibration batch size",
+    )
+    parser.add_argument(
+        "--calibration_dataset_size",
+        type=int,
+        default=512,
+        help="Size of calibration dataset",
     )
 
     return parser.parse_args()
@@ -100,6 +123,25 @@ def export_onnx_trt(args):
         model=model,
         tokenizer=tokenizer,
     )
+
+    # Apply quantization (optional).
+    if args.quant_cfg is not None:
+
+        def forward_loop(model, data, tokenizer):
+            for inputs in tqdm(data):
+                batch = tokenizer(inputs, padding=True, truncation=True, return_tensors="pt")
+                batch = {k: v.to(model.device) for k, v in batch.items()}
+                with torch.no_grad():
+                    model(**batch)
+
+        data = get_calib_data_iter(
+            data=args.calibration_dataset,
+            batch_size=args.calibration_batch_size,
+            calib_size=args.calibration_dataset_size,
+        )
+        forward_loop = partial(forward_loop, data=data, tokenizer=onnx_exporter.tokenizer)
+
+        onnx_exporter.quantize(quant_cfg=args.quant_cfg, forward_loop=forward_loop)
 
     # Export ONNX model.
     onnx_exporter.export(
@@ -152,11 +194,14 @@ def export_onnx_trt(args):
     prompt = ["hello", "world"]
 
     prompt = onnx_exporter.get_tokenizer(prompt)
-    prompt["dimensions"] = [[2]]
+    prompt["dimensions"] = [2, 4]
+    prompt = dict(prompt)
 
     output = onnx_exporter.forward(prompt)
     if output is None:
         logging.warning("Output is None because ONNX runtime is not installed.")
+    else:
+        print("Output:", output)
 
 
 if __name__ == "__main__":

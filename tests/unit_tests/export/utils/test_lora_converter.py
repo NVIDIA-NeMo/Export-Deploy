@@ -26,16 +26,10 @@ def test_replace_number_add_offset():
     assert replace_number_add_offset(key, 0) == key
 
     # Test with positive offset
-    assert (
-        replace_number_add_offset(key, 1)
-        == "layers.1.self_attention.lora_kqv_adapter.linear_in.weight"
-    )
+    assert replace_number_add_offset(key, 1) == "layers.1.self_attention.lora_kqv_adapter.linear_in.weight"
 
     # Test with negative offset
-    assert (
-        replace_number_add_offset(key, -1)
-        == "layers.-1.self_attention.lora_kqv_adapter.linear_in.weight"
-    )
+    assert replace_number_add_offset(key, -1) == "layers.-1.self_attention.lora_kqv_adapter.linear_in.weight"
 
     # Test with key that doesn't contain layer number
     key = "embedding.word_embeddings.weight"
@@ -50,18 +44,9 @@ def test_rename_qkv_keys():
     new_keys = rename_qkv_keys(key)
 
     assert len(new_keys) == 3
-    assert (
-        new_keys[0]
-        == "layers.0.self_attention.lora_unfused_kqv_adapter.q_adapter.linear_in.weight"
-    )
-    assert (
-        new_keys[1]
-        == "layers.0.self_attention.lora_unfused_kqv_adapter.k_adapter.linear_in.weight"
-    )
-    assert (
-        new_keys[2]
-        == "layers.0.self_attention.lora_unfused_kqv_adapter.v_adapter.linear_in.weight"
-    )
+    assert new_keys[0] == "layers.0.self_attention.lora_unfused_kqv_adapter.q_adapter.linear_in.weight"
+    assert new_keys[1] == "layers.0.self_attention.lora_unfused_kqv_adapter.k_adapter.linear_in.weight"
+    assert new_keys[2] == "layers.0.self_attention.lora_unfused_kqv_adapter.v_adapter.linear_in.weight"
 
 
 @pytest.mark.run_only_on("GPU")
@@ -116,12 +101,8 @@ def test_convert_lora_weights_to_canonical():
 
     # Create sample fused QKV weights
     lora_weights = {
-        "layers.0.self_attention.lora_kqv_adapter.linear_in.weight": torch.randn(
-            16, 1024
-        ),
-        "layers.0.self_attention.lora_kqv_adapter.linear_out.weight": torch.randn(
-            1024, 16
-        ),
+        "layers.0.self_attention.lora_kqv_adapter.linear_in.weight": torch.randn(16, 1024),
+        "layers.0.self_attention.lora_kqv_adapter.linear_out.weight": torch.randn(1024, 16),
         "layers.0.lora_hto4h_adapter.linear_in.weight": torch.randn(16, 1024),
         "layers.0.lora_hto4h_adapter.linear_out.weight": torch.randn(2048, 16),
     }
@@ -129,25 +110,10 @@ def test_convert_lora_weights_to_canonical():
     converted_weights = convert_lora_weights_to_canonical(config, lora_weights)
 
     # Check that QKV weights were unfused
-    assert (
-        "layers.0.self_attention.lora_unfused_kqv_adapter.q_adapter.linear_in.weight"
-        in converted_weights
-    )
-    assert (
-        "layers.0.self_attention.lora_unfused_kqv_adapter.k_adapter.linear_in.weight"
-        in converted_weights
-    )
-    assert (
-        "layers.0.self_attention.lora_unfused_kqv_adapter.v_adapter.linear_in.weight"
-        in converted_weights
-    )
+    assert "layers.0.self_attention.lora_unfused_kqv_adapter.q_adapter.linear_in.weight" in converted_weights
+    assert "layers.0.self_attention.lora_unfused_kqv_adapter.k_adapter.linear_in.weight" in converted_weights
+    assert "layers.0.self_attention.lora_unfused_kqv_adapter.v_adapter.linear_in.weight" in converted_weights
 
     # Check that H-to-4H weights were unfused
-    assert (
-        "layers.0.lora_unfused_hto4h_adapter.gate_adapter.linear_in.weight"
-        in converted_weights
-    )
-    assert (
-        "layers.0.lora_unfused_hto4h_adapter.up_adapter.linear_in.weight"
-        in converted_weights
-    )
+    assert "layers.0.lora_unfused_hto4h_adapter.gate_adapter.linear_in.weight" in converted_weights
+    assert "layers.0.lora_unfused_hto4h_adapter.up_adapter.linear_in.weight" in converted_weights

@@ -59,13 +59,9 @@ def build_trtllm_engine(
     lora_ckpt_list: List[str] = None,
 ):
     """Build TRTLLM engine by nemo export."""
-    trt_llm_exporter = TensorRTLLM(
-        model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False
-    )
+    trt_llm_exporter = TensorRTLLM(model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False)
     trt_llm_exporter.export(
-        nemo_checkpoint_path=visual_checkpoint_path
-        if llm_checkpoint_path is None
-        else llm_checkpoint_path,
+        nemo_checkpoint_path=visual_checkpoint_path if llm_checkpoint_path is None else llm_checkpoint_path,
         model_type=llm_model_type,
         tensor_parallelism_size=tensor_parallelism_size,
         max_input_len=max_input_len,
@@ -78,7 +74,6 @@ def build_trtllm_engine(
         use_lora_plugin=use_lora_plugin,
         lora_target_modules=lora_target_modules,
         max_lora_rank=max_lora_rank,
-        use_mcore_path=False,
     )
 
 
@@ -98,10 +93,7 @@ def build_mllama_trtllm_engine(
 ):
     """Build mllama TRTLLM engine from HF."""
     if max_batch_size < 4:
-        print(
-            "TensorRT LLM may hit a runtime issue with batch size is smaller than 4 on some models."
-            " Force set to 4"
-        )
+        print("TensorRT LLM may hit a runtime issue with batch size is smaller than 4 on some models. Force set to 4")
         max_batch_size = 4
 
     plugin_config = PluginConfig()
@@ -226,9 +218,7 @@ def build_trt_engine(
     logger.log(trt.Logger.INFO, "Building TRT engine for %s" % part_name)
 
     builder = trt.Builder(logger)
-    network = builder.create_network(
-        1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
-    )
+    network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
     profile = builder.create_optimization_profile()
 
     config_args = {"precision": str(dtype).split(".")[-1], "model_type": model_type}
@@ -294,9 +284,7 @@ def build_trt_engine(
             )
             profile.set_shape(input_name, min_size, opt_size, max_size)
     else:
-        profile.set_shape(
-            inputT.name, [nMinBS, *min_size], [nOptBS, *opt_size], [nMaxBS, *max_size]
-        )
+        profile.set_shape(inputT.name, [nMinBS, *min_size], [nOptBS, *opt_size], [nMaxBS, *max_size])
 
     config.add_optimization_profile(profile)
 
@@ -306,9 +294,7 @@ def build_trt_engine(
     if engine_string is None:
         raise RuntimeError("Failed building %s" % (engine_file))
     else:
-        logger.log(
-            trt.Logger.INFO, "Succeeded building %s in %d s" % (engine_file, t1 - t0)
-        )
+        logger.log(trt.Logger.INFO, "Succeeded building %s in %d s" % (engine_file, t1 - t0))
         with open(engine_file, "wb") as f:
             f.write(engine_string)
 
@@ -333,17 +319,13 @@ def build_neva_engine(
             weights_path = os.path.join(visual_checkpoint_path, "model_weights.ckpt")
             mp0_weights = torch.load(weights_path, map_location=device)
         except FileNotFoundError:
-            weights_path = os.path.join(
-                visual_checkpoint_path, "mp_rank_00/model_weights.ckpt"
-            )
+            weights_path = os.path.join(visual_checkpoint_path, "mp_rank_00/model_weights.ckpt")
             mp0_weights = torch.load(weights_path, map_location=device)
     else:
         # extract NeMo checkpoint
         with tempfile.TemporaryDirectory() as temp:
             temp_path = Path(temp)
-            mp0_weights, nemo_config, _ = load_nemo_model(
-                visual_checkpoint_path, temp_path
-            )
+            mp0_weights, nemo_config, _ = load_nemo_model(visual_checkpoint_path, temp_path)
 
     vision_config = nemo_config["mm_cfg"]["vision_encoder"]
 
@@ -354,22 +336,16 @@ def build_neva_engine(
             h = w = int(vit_embeds.shape[1] ** 0.5)
             vit_embeds = vit_embeds.reshape(vit_embeds.shape[0], h, w, -1)
             vit_embeds = self.flat_square(vit_embeds)
-            vit_embeds = vit_embeds.reshape(
-                vit_embeds.shape[0], -1, vit_embeds.shape[-1]
-            )
+            vit_embeds = vit_embeds.reshape(vit_embeds.shape[0], -1, vit_embeds.shape[-1])
             return vit_embeds
 
         def flat_square(self, x):
             n, w, h, c = x.size()
             if w % 2 == 1:
-                x = torch.cat(
-                    [x, torch.zeros((n, 1, h, c), dtype=x.dtype).to(x.device)], dim=1
-                ).contiguous()
+                x = torch.cat([x, torch.zeros((n, 1, h, c), dtype=x.dtype).to(x.device)], dim=1).contiguous()
                 n, w, h, c = x.size()
             if h % 2 == 1:
-                x = torch.cat(
-                    [x, torch.zeros((n, w, 1, c), dtype=x.dtype).to(x.device)], dim=2
-                ).contiguous()
+                x = torch.cat([x, torch.zeros((n, w, 1, c), dtype=x.dtype).to(x.device)], dim=2).contiguous()
                 n, w, h, c = x.size()
             x = x.view(n, w, int(h / 2), int(c * 2))
             x = x.permute(0, 2, 1, 3).contiguous()
@@ -402,13 +378,9 @@ def build_neva_engine(
     # connector
     if nemo_config["mm_cfg"]["mm_mlp_adapter_type"] == "mlp2x_gelu":
         vision_connector = torch.nn.Sequential(
-            torch.nn.Linear(
-                vision_config["hidden_size"], nemo_config["hidden_size"], bias=True
-            ),
+            torch.nn.Linear(vision_config["hidden_size"], nemo_config["hidden_size"], bias=True),
             torch.nn.GELU(),
-            torch.nn.Linear(
-                nemo_config["hidden_size"], nemo_config["hidden_size"], bias=True
-            ),
+            torch.nn.Linear(nemo_config["hidden_size"], nemo_config["hidden_size"], bias=True),
         ).to(dtype=dtype)
 
         key_prefix = "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector"
@@ -420,9 +392,7 @@ def build_neva_engine(
                 }
             )
     elif nemo_config["mm_cfg"]["mm_mlp_adapter_type"] == "linear":
-        vision_connector = torch.nn.Linear(
-            vision_config["hidden_size"], nemo_config["hidden_size"], bias=True
-        )
+        vision_connector = torch.nn.Linear(vision_config["hidden_size"], nemo_config["hidden_size"], bias=True)
         key_prefix = "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector"
         vision_connector.load_state_dict(
             {
@@ -434,13 +404,9 @@ def build_neva_engine(
         vision_connector = torch.nn.Sequential(
             DownSampleBlock(),
             torch.nn.LayerNorm(vision_config["hidden_size"] * 4),
-            torch.nn.Linear(
-                vision_config["hidden_size"] * 4, nemo_config["hidden_size"], bias=True
-            ),
+            torch.nn.Linear(vision_config["hidden_size"] * 4, nemo_config["hidden_size"], bias=True),
             torch.nn.GELU(),
-            torch.nn.Linear(
-                nemo_config["hidden_size"], nemo_config["hidden_size"], bias=True
-            ),
+            torch.nn.Linear(nemo_config["hidden_size"], nemo_config["hidden_size"], bias=True),
         ).to(dtype=dtype)
         key_prefix = "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector"
         for layer in [1, 2, 4]:
@@ -452,9 +418,7 @@ def build_neva_engine(
             )
 
     else:
-        raise ValueError(
-            f"Unknown projector type: {nemo_config['mm_cfg']['mm_mlp_adapter_type']}"
-        )
+        raise ValueError(f"Unknown projector type: {nemo_config['mm_cfg']['mm_mlp_adapter_type']}")
 
     # export the whole wrapper
     lita_num_frames = None
@@ -479,9 +443,7 @@ def build_neva_engine(
         vision_max_batch_size,
         dtype,
         image_size=image_size,
-        num_frames=lita_num_frames
-        if model_type == "lita" or model_type == "vita"
-        else None,
+        num_frames=lita_num_frames if model_type == "lita" or model_type == "vita" else None,
         nemo_config=nemo_config,
     )
 
@@ -498,14 +460,10 @@ def build_video_neva_engine(
         nemo_config = yaml.safe_load(tar.extractfile("./model_config.yaml"))
         try:
             # trained without TP
-            mp0_weights = torch.load(
-                tar.extractfile("./model_weights.ckpt"), map_location=device
-            )
+            mp0_weights = torch.load(tar.extractfile("./model_weights.ckpt"), map_location=device)
         except KeyError:
             # trained with TP
-            mp0_weights = torch.load(
-                tar.extractfile("./mp_rank_00/model_weights.ckpt"), map_location=device
-            )
+            mp0_weights = torch.load(tar.extractfile("./mp_rank_00/model_weights.ckpt"), map_location=device)
 
     vision_config = nemo_config["mm_cfg"]["vision_encoder"]
 
@@ -519,9 +477,7 @@ def build_video_neva_engine(
         def forward(self, images):
             b, num_frames, c, h, w = images.shape
             images = images.view(b * num_frames, c, h, w)
-            vision_x = self.encoder(
-                pixel_values=images, output_hidden_states=True
-            )  # [(B num_frames), C, H, W]
+            vision_x = self.encoder(pixel_values=images, output_hidden_states=True)  # [(B num_frames), C, H, W]
             vision_x = vision_x.hidden_states[-2]
             vision_x = vision_x[:, 1:]
 
@@ -543,9 +499,7 @@ def build_video_neva_engine(
 
     # connector
     assert nemo_config["mm_cfg"]["mm_mlp_adapter_type"] == "linear"
-    vision_connector = torch.nn.Linear(
-        vision_config["hidden_size"], nemo_config["hidden_size"], bias=True
-    )
+    vision_connector = torch.nn.Linear(vision_config["hidden_size"], nemo_config["hidden_size"], bias=True)
 
     key_prefix = "model.embedding.word_embeddings.adapter_layer.mm_projector_adapter.mm_projector"
     vision_connector.load_state_dict(
@@ -559,9 +513,7 @@ def build_video_neva_engine(
     wrapper = VisionEncoderWrapper(vision_encoder, vision_connector).to(device, dtype)
     image_size = hf_config.vision_config.image_size
     num_frames = nemo_config["data"]["num_frames"]
-    dummy_video = torch.empty(
-        1, num_frames, 3, image_size, image_size, dtype=dtype, device=device
-    )  # dummy image
+    dummy_video = torch.empty(1, num_frames, 3, image_size, image_size, dtype=dtype, device=device)  # dummy image
     export_visual_wrapper_onnx(wrapper, dummy_video, model_dir)
     build_trt_engine(
         "video-neva",
@@ -581,9 +533,7 @@ def build_mllama_visual_engine(
     vision_max_batch_size: int = 1,
 ):
     """Build mllama visual engine."""
-    hf_model = MllamaForConditionalGeneration.from_pretrained(
-        hf_model_path, torch_dtype="auto", device_map="auto"
-    )
+    hf_model = MllamaForConditionalGeneration.from_pretrained(hf_model_path, torch_dtype="auto", device_map="auto")
     model_dtype = hf_model.dtype
 
     class MLLaMAVisionWrapper(torch.nn.Module):
@@ -594,9 +544,7 @@ def build_mllama_visual_engine(
             self.output_proj = output_proj
 
         def forward(self, pixel_values, aspect_ratio_ids, aspect_ratio_mask):
-            out = self.vision_model(
-                pixel_values, aspect_ratio_ids, aspect_ratio_mask
-            ).last_hidden_state
+            out = self.vision_model(pixel_values, aspect_ratio_ids, aspect_ratio_mask).last_hidden_state
             out = self.output_proj(out)
             return out
 
@@ -629,13 +577,9 @@ def build_visual_engine(
     """Build visual engine."""
     model_list = ["neva", "lita", "vila", "vita"]
     if model_type in model_list:
-        build_neva_engine(
-            model_type, model_dir, visual_checkpoint_path, vision_max_batch_size
-        )
+        build_neva_engine(model_type, model_dir, visual_checkpoint_path, vision_max_batch_size)
     elif model_type == "video-neva":
-        build_video_neva_engine(
-            model_dir, visual_checkpoint_path, vision_max_batch_size
-        )
+        build_video_neva_engine(model_dir, visual_checkpoint_path, vision_max_batch_size)
     else:
         raise RuntimeError(f"Invalid model type {model_type}")
 
@@ -648,9 +592,7 @@ def extract_lora_ckpt(
     if os.path.exists(os.path.join(lora_ckpt, "model_weights.ckpt")):
         model_weight = torch.load(os.path.join(lora_ckpt, "model_weights.ckpt"))
     elif os.path.exists(os.path.join(lora_ckpt, "mp_rank_00", "model_weights.ckpt")):
-        model_weight = torch.load(
-            os.path.join(lora_ckpt, "mp_rank_00", "model_weights.ckpt")
-        )
+        model_weight = torch.load(os.path.join(lora_ckpt, "mp_rank_00", "model_weights.ckpt"))
     else:
         raise RuntimeError("Imcompatible lora checkpoint format")
 

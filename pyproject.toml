@@ -1,27 +1,36 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=42", "wheel", "cython"]
 build-backend = "setuptools.build_meta"
 
-
 [tool.setuptools]
-packages = ["nemo_export", "nemo_deploy"]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = [
+    "nemo_export",
+    "nemo_export.*",
+    "nemo_deploy",
+    "nemo_deploy.*",
+    "nemo_export_deploy_common",
+    "nemo_export_deploy_common.*",
+]
 
 [tool.setuptools.dynamic]
-version = { attr = "package_info.__version__" }                 # any module attribute compatible with ast.literal_eval
+version = { attr = "nemo_export_deploy_common.package_info.__version__" } # any module attribute compatible with ast.literal_eval
 readme = { file = "README.md", content-type = "text/markdown" }
 
+
 [project]
-name = "nemo-export-deploy"
+name = "NeMo-Export-Deploy"
 dynamic = ["version", "readme"]
 description = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
-requires-python = ">=3.10"
+requires-python = ">=3.12,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]",
+    # "megatron-hub", add here after the release of Megatron-Hub
     "megatron-core>=0.12.0",
     "accelerate",
     "fastapi",
-    "nvidia-pytriton; platform_system != 'Darwin' ",
     "pydantic-settings",
     "ray",
     "ray[serve]",
@@ -36,34 +45,21 @@ dependencies = [
     "omegaconf<=2.3",
     "peft",
     "torchmetrics>=0.11.0",
-    "transformers",
+    "transformers>=4.49.0",
     "wandb",
     "webdataset>=0.2.86",
+    "nvidia-pytriton ; platform_system != 'Darwin' ",
+    "flashinfer-python==0.2.5",
 ]
 
 [project.optional-dependencies]
-vllm = [
-    "vllm==0.8.5.post1",
-    "transformers==4.51.3",
-    "nvidia-modelopt[torch]>=0.29.0",
-]
-trtllm = ["tensorrt-llm~=0.18.2"]
-te = ["transformer-engine[pytorch]==2.2.0"]
+vllm = ["vllm==0.9.0.1", "pandas", "timm"]
+trtllm = ["tensorrt-llm~=0.20.0rc3"]
+te = ["transformer-engine[pytorch]==2.4.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = [
-    # Build requirement for TE
-    "torch==2.6.0",
-    # Build requirement for TE
-    "setuptools",
-    "packaging",
-    # Build requirement for nemo_run
-    "hatchling",
-    # Build requirement for mcore
-    "pybind11",
-    "Cython>=3.0.0",
-]
+build = []
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
@@ -74,11 +70,21 @@ docs = [
 ]
 linting = ["ruff~=0.9.0"]
 test = ["pytest", "pytest-mock", "coverage"]
+nemo-legacy = [
+    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]",
+]
+megatron-hub-pre = ["megatron-hub"]
 
 [tool.uv.sources]
-nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "259d684e73c45091f0b6144342133e6ceb7e824c" }
-
-[tool.uv.workspace]
+xformers = [{ index = "pytorch-cu128" }]
+vllm = [
+    { index = "pytorch-cu128", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
+    { index = "pypi", marker = "platform_machine == 'aarch64'" },
+]
+# Remove this
+megatron-hub = { git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git", rev = "cc2a60c3be11549f070fe1d7b6324a3dae51c6e0" }
+nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "5e63ca3c1631bb156187705f9c4cf643a67f9c05" }
+megatron-core = { git = "https://github.com/NVIDIA/Megatron-LM.git", rev = "c40f31f307221a8458c0775658d19da89303c26b" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
@@ -93,17 +99,24 @@ default-groups = ["linting", "build", "test"]
 #  --link-mode=symlink (fastest option when uv cache and venv on different file-system; caveat: venv is brittle since it depends on the environment/container)
 link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }]]
+override-dependencies = [
+    "urllib3>1.27.0",
+    "torch; sys_platform == 'never'",
+    "torchvision; sys_platform == 'never'",
+    "triton; sys_platform == 'never'",
+    "tiktoken>=0.9.0",                      # because nemo-toolkit and megatron-hub disagree on tiktoken, we need to pin it here
+]
+prerelease = "allow"
 
-[tool.black]
-line-length = 120
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.venv
-  | build
-)/
-'''
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
 
 [tool.pytest.ini_options]
 addopts = "--durations=15 -s -rA -x"
@@ -112,21 +125,45 @@ python_files = "test_*.py"
 
 [tool.coverage.run]
 concurrency = ["thread", "multiprocessing"]
-omit = ["/tmp/*", "/workspace/tests/*"]
+omit = [
+    "/tmp/*",
+    "/workspace/tests/*",
+    "/workspace/nemo_export_deploy_common/*",
+    "/workspace/*.py",
+    "*_ray.py",
+]
 
 [tool.coverage.paths]
-source = ["/workspace/nemo_export/", "/workspace/nemo_deploy/"]
+source = [".", "/workspace", "/home/runner/work/Export-Deploy/Export-Deploy"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.ruff.lint]
 # Enable all `pydocstyle` rules, limiting to those that adhere to the
 # Google convention via `convention = "google"`, below.
-select = ["D", "F"]
+select = [
+    "F541", # f-string without any placeholders
+    "F841", # local variable assigned but never used
+    "F401", # imported but unused
+    "E741", # ambiguous variable name
+    "F821", # undefined name
+    "E266", # too many leading '#' for block comment
+    "I",    # isort
+    "D101", # docstring
+    "D103",
+]
 
-# - On top of the Google convention, disable `D417`, which requires
-#   documentation for every function parameter.
-# - F841: local variable assigned but never used (exluced to favor readability)
-# TODO: Remove D10 once we are about to release to get all the docstrings written
-ignore = ["D417", "D10", "F841"]
+ignore = [
+    "E501", # Line too long - handled by formatter
+    "D101",
+    "D103",
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 
-MAJOR = 2
-MINOR = 4
+MAJOR = 0
+MINOR = 2
 PATCH = 0
 PRE_RELEASE = "rc0"
 
@@ -33,3 +33,13 @@ __download_url__ = "https://github.com/NVIDIA/NeMo/releases"
 __description__ = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
 __license__ = "Apache2"
 __keywords__ = "deep learning, machine learning, gpu, NLP, NeMo, nvidia, pytorch, torch"
+
+__all__ = [
+    "__version__",
+    "__package_name__",
+    "__contact_names__",
+    "__contact_emails__",
+    "__homepage__",
+    "__repository_url__",
+    "__download_url__",
+]

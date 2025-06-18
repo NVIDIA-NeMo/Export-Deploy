@@ -13,14 +13,14 @@
 # limitations under the License.
 
 
-use_pytriton = True
-try:
-    from pytriton.model_config import ModelConfig
-    from pytriton.triton import Triton, TritonConfig
-except Exception:
-    use_pytriton = False
+import logging
+
+from pytriton.model_config import ModelConfig
+from pytriton.triton import Triton, TritonConfig
 
 from nemo_deploy.deploy_base import DeployBase
+
+LOGGER = logging.getLogger("NeMo")
 
 
 class DeployPyTriton(DeployBase):
@@ -62,7 +62,6 @@ class DeployPyTriton(DeployBase):
         self,
         triton_model_name: str,
         triton_model_version: int = 1,
-        checkpoint_path: str = None,
         model=None,
         max_batch_size: int = 128,
         http_port: int = 8000,
@@ -87,7 +86,6 @@ class DeployPyTriton(DeployBase):
         super().__init__(
             triton_model_name=triton_model_name,
             triton_model_version=triton_model_version,
-            checkpoint_path=checkpoint_path,
             model=model,
             max_batch_size=max_batch_size,
             http_port=http_port,
@@ -96,16 +94,13 @@ class DeployPyTriton(DeployBase):
             allow_grpc=allow_grpc,
             allow_http=allow_http,
             streaming=streaming,
-            pytriton_log_verbose=pytriton_log_verbose,
         )
+        self.pytriton_log_verbose = pytriton_log_verbose
 
     def deploy(self):
         """Deploys any models to Triton Inference Server."""
-        self._init_nemo_model()
-
         try:
             if self.streaming:
-                # TODO: can't set allow_http=True due to a bug in pytriton, will fix in latest pytriton
                 triton_config = TritonConfig(
                     log_verbose=self.pytriton_log_verbose,
                     allow_grpc=self.allow_grpc,
@@ -141,7 +136,7 @@ class DeployPyTriton(DeployBase):
                 )
         except Exception as e:
             self.triton = None
-            print(e)
+            LOGGER.error(e)
 
     def serve(self):
         """Starts serving the model and waits for the requests."""
@@ -152,7 +147,7 @@ class DeployPyTriton(DeployBase):
             self.triton.serve()
         except Exception as e:
             self.triton = None
-            print(e)
+            LOGGER.error(e)
 
     def run(self):
         """Starts serving the model asynchronously."""
