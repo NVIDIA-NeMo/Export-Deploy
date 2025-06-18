@@ -20,13 +20,10 @@ from transformers.models.mllama.configuration_mllama import (
     MllamaVisionConfig,
 )
 
-from nemo_export_deploy_common.import_utils import UnavailableError
+from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
 
-try:
-    from nemo import lightning as nl
-    from nemo.collections import vlm
-except (ImportError, ModuleNotFoundError):
-    raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
+nl, HAVE_NEMO = safe_import_from("nemo", "lightning")
+vlm, HAVE_NEMO = safe_import_from("nemo.collections", "vlm")
 
 
 def split_qkv_weight(qkv_weight, model_config):
@@ -121,6 +118,9 @@ def convert_mllama_config(source_vision, source_text):
 
 def convert_mllama_nemo_to_hf(checkpoint_path, processor_name):
     """Convert nemo mllama to hf state dict and config."""
+    if not HAVE_NEMO:
+        raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
+
     processor = AutoProcessor.from_pretrained(processor_name)
 
     strategy = nl.MegatronStrategy(

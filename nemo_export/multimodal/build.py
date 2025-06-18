@@ -39,8 +39,8 @@ try:
     from tensorrt_llm.models import MLLaMAForCausalLM
     from tensorrt_llm.plugin import PluginConfig
     from transformers import AutoModel, AutoProcessor, MllamaForConditionalGeneration
-except (ImportError, ModuleNotFoundError) as e:
-    raise UnavailableError("tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`.") from e
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRT_LLM = False
 
 try:
     import tensorrt as trt
@@ -67,6 +67,9 @@ def build_trtllm_engine(
     max_lora_rank: int = 64,
     lora_ckpt_list: List[str] = None,
 ):
+    if not HAVE_TRT_LLM:
+        raise UnavailableError("tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`.")
+
     """Build TRTLLM engine by nemo export."""
     trt_llm_exporter = TensorRTLLM(model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False)
     trt_llm_exporter.export(
