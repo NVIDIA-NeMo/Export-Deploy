@@ -151,25 +151,20 @@ class TensorRTLLMAPIDeployable(ITritonDeployable):
     def triton_infer_fn(self, **inputs: np.ndarray):
         output_infer = {}
 
-        try:
-            prompts = str_ndarray2list(inputs.pop("prompts"))
-            temperature = inputs.pop("temperature", None)
-            top_k = inputs.pop("top_k", None)
-            top_p = inputs.pop("top_p", None)
-            max_length = inputs.pop("max_length", 256)
+        prompts = str_ndarray2list(inputs.pop("prompts"))
+        temperature = inputs.pop("temperature", None)
+        top_k = inputs.pop("top_k", None)
+        top_p = inputs.pop("top_p", None)
+        max_length = inputs.pop("max_length", 256)
 
-            output = self.generate(
-                prompts=prompts,
-                temperature=temperature,
-                top_k=top_k,
-                top_p=top_p,
-                max_length=max_length,
-            )
+        output = self.generate(
+            prompts=prompts,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+            max_length=max_length,
+        )
 
-            output_infer = {"sentences": cast_output(output, np.bytes_)}
-
-        except Exception as error:
-            err_msg = "An error occurred: {0}".format(str(error))
-            output_infer["sentences"] = cast_output([err_msg] * len(prompts), np.bytes_)
+        output_infer = {"sentences": cast_output(output, np.bytes_)}
 
         return output_infer
