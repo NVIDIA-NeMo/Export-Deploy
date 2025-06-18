@@ -34,58 +34,11 @@ from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict 
     DEFAULT_CONVERSION_DICT,
 )
 from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
-from pytriton.decorators import batch, first_value
-from pytriton.model_config import Tensor
-from tensorrt_llm._common import check_max_num_tokens
-from tensorrt_llm._utils import numpy_to_torch
-from tensorrt_llm.builder import BuildConfig
-from tensorrt_llm.commands.build import build as build_trtllm
-from tensorrt_llm.layers import MoeConfig
-from tensorrt_llm.mapping import Mapping
-from tensorrt_llm.models import (
-    BaichuanForCausalLM,
-    BertForQuestionAnswering,
-    BertForSequenceClassification,
-    BertModel,
-    BloomForCausalLM,
-    ChatGLMForCausalLM,
-    CogVLMForCausalLM,
-    CohereForCausalLM,
-    DbrxForCausalLM,
-    DeciLMForCausalLM,
-    DecoderModel,
-    DeepseekForCausalLM,
-    DeepseekV2ForCausalLM,
-    DiT,
-    EagleForCausalLM,
-    EncoderModel,
-    FalconForCausalLM,
-    GemmaForCausalLM,
-    GPTForCausalLM,
-    GPTJForCausalLM,
-    GPTNeoXForCausalLM,
-    GrokForCausalLM,
-    LLaMAForCausalLM,
-    MambaForCausalLM,
-    MedusaForCausalLm,
-    MLLaMAForCausalLM,
-    MPTForCausalLM,
-    OPTForCausalLM,
-    Phi3ForCausalLM,
-    PhiForCausalLM,
-    QWenForCausalLM,
-    RecurrentGemmaForCausalLM,
-    ReDrafterForCausalLM,
-    RobertaForQuestionAnswering,
-    RobertaForSequenceClassification,
-    RobertaModel,
-    WhisperEncoder,
-)
-from tensorrt_llm.plugin import PluginConfig
 from transformers import AutoConfig, PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
+from nemo_export.exceptions import UnavailableError
 from nemo_export.tarutils import unpack_tarball
 from nemo_export.trt_llm.converter.model_converter import (
     determine_quantization_settings,
@@ -116,6 +69,62 @@ from nemo_export.utils import (
     prepare_directory_for_export,
 )
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
+
+try:
+    from pytriton.decorators import batch, first_value
+    from pytriton.model_config import Tensor
+except (ImportError, ModuleNotFoundError) as e:
+    raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.") from e
+
+try:
+    from tensorrt_llm._common import check_max_num_tokens
+    from tensorrt_llm._utils import numpy_to_torch
+    from tensorrt_llm.builder import BuildConfig
+    from tensorrt_llm.commands.build import build as build_trtllm
+    from tensorrt_llm.layers import MoeConfig
+    from tensorrt_llm.mapping import Mapping
+    from tensorrt_llm.models import (
+        BaichuanForCausalLM,
+        BertForQuestionAnswering,
+        BertForSequenceClassification,
+        BertModel,
+        BloomForCausalLM,
+        ChatGLMForCausalLM,
+        CogVLMForCausalLM,
+        CohereForCausalLM,
+        DbrxForCausalLM,
+        DeciLMForCausalLM,
+        DecoderModel,
+        DeepseekForCausalLM,
+        DeepseekV2ForCausalLM,
+        DiT,
+        EagleForCausalLM,
+        EncoderModel,
+        FalconForCausalLM,
+        GemmaForCausalLM,
+        GPTForCausalLM,
+        GPTJForCausalLM,
+        GPTNeoXForCausalLM,
+        GrokForCausalLM,
+        LLaMAForCausalLM,
+        MambaForCausalLM,
+        MedusaForCausalLm,
+        MLLaMAForCausalLM,
+        MPTForCausalLM,
+        OPTForCausalLM,
+        Phi3ForCausalLM,
+        PhiForCausalLM,
+        QWenForCausalLM,
+        RecurrentGemmaForCausalLM,
+        ReDrafterForCausalLM,
+        RobertaForQuestionAnswering,
+        RobertaForSequenceClassification,
+        RobertaModel,
+        WhisperEncoder,
+    )
+    from tensorrt_llm.plugin import PluginConfig
+except (ImportError, ModuleNotFoundError) as e:
+    raise UnavailableError("tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`.") from e
 
 LOGGER = logging.getLogger("NeMo")
 
