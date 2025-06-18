@@ -23,8 +23,6 @@ import torch.distributed
 from jinja2 import Template
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 from megatron.core.inference.inference_request import InferenceRequest
-from pytriton.decorators import batch, first_value
-from pytriton.model_config import Tensor
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
