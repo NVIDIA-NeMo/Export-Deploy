@@ -53,6 +53,7 @@ RUN --mount=type=bind,source=pyproject.toml,target=/workspace/pyproject.toml \
         --extra te \
         --no-install-package torch \
         --no-install-package torchvision \
+        --no-install-package triton \
         --all-groups \
         ${INFERENCE_FRAMEWORK:+--extra $INFERENCE_FRAMEWORK}
     
