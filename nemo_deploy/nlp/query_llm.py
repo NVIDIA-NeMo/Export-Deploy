@@ -18,9 +18,11 @@ from abc import ABC
 from typing import List, Optional
 
 import numpy as np
-from pytriton.client import ModelClient
 
 from nemo_deploy.utils import str_list2numpy
+from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
+
+ModelClient, HAVE_TRITON = safe_import_from("pytriton.client", "ModelClient")
 
 
 class NemoQueryLLMBase(ABC):
@@ -100,6 +102,9 @@ class NemoQueryLLMPyTorch(NemoQueryLLMBase):
             apply_chat_template (bool): applies chat template if its a chat model. Default: False
             init_timeout (flat): timeout for the connection.
         """
+        if not HAVE_TRITON:
+            raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
+
         prompts = str_list2numpy(prompts)
         inputs = {
             "prompts": prompts,
@@ -240,6 +245,9 @@ class NemoQueryLLMHF(NemoQueryLLMBase):
             max_length (Optional[int]): max generated tokens.
             init_timeout (float): timeout for the connection.
         """
+        if not HAVE_TRITON:
+            raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
+
         prompts = str_list2numpy(prompts)
         inputs = {
             "prompts": prompts,
@@ -361,6 +369,9 @@ class NemoQueryLLM(NemoQueryLLMBase):
             openai_format_response: return response similar to OpenAI API format
             output_generation_logits: return generation logits from model on PyTriton
         """
+        if not HAVE_TRITON:
+            raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
+
         prompts = str_list2numpy(prompts)
         inputs = {"prompts": prompts}
 

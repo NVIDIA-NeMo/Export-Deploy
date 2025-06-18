@@ -19,9 +19,12 @@ from pathlib import Path
 import numpy as np
 import torch
 from PIL import Image
-from pytriton.model_config import Tensor
 
 from nemo_export.tarutils import TarPath
+from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
+
+Tensor, HAVE_TRITON = safe_import_from("pytriton.model_config", "Tensor")
+
 
 NEMO2 = "NEMO 2.0"
 NEMO1 = "NEMO 1.0"
@@ -48,6 +51,9 @@ def typedict2tensor(
     Raises:
         Exception: If an unsupported type is encountered during type mapping
     """
+
+    if not HAVE_TRITON:
+        raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
 
     def _map_type(type_):
         if type_ is int:
