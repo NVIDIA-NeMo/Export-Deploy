@@ -24,7 +24,6 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import safetensors
-import tensorrt_llm
 import torch
 import torch.nn.functional as F
 from megatron.core.export.data_type import DataType
@@ -77,6 +76,7 @@ except (ImportError, ModuleNotFoundError) as e:
     raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.") from e
 
 try:
+    import tensorrt_llm
     from tensorrt_llm._common import check_max_num_tokens
     from tensorrt_llm._utils import numpy_to_torch
     from tensorrt_llm.builder import BuildConfig
