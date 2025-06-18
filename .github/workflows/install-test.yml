@@ -120,6 +120,7 @@ jobs:
   uv-test:
     runs-on: ${{ matrix.arch }}
     name: UV - Python ${{ matrix.python-version }} - ${{ matrix.arch == 'ubuntu-latest' && 'AMD64/Linux' || 'ARM64/Darwin' }} - No CUDA
+    environment: nemo-ci
     strategy:
       fail-fast: false
       matrix:
@@ -140,7 +141,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies with UV
+        env:
+          PAT: ${{ secrets.PAT }}
+        shell: bash
         run: |
+          echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
+          chmod 600 ~/.netrc 
 
           export PATH="${UV_PROJECT_ENVIRONMENT}/bin/:$PATH"
 
