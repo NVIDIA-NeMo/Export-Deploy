@@ -17,5 +17,5 @@ set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
 export CUDA_VISIBLE_DEVICES="0"
 
-pytest -o log_cli=true -o log_cli_level=INFO -vs -m "not pleasefixme" --tb=short tests/functional_tests/tests_vllm
+pytest -o log_cli=true -o log_cli_level=INFO -vs -m "not pleasefixme" --tb=short tests/functional_tests/tests_other
 coverage combine
