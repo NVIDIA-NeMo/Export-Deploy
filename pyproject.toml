@@ -24,7 +24,7 @@ readme = { file = "README.md", content-type = "text/markdown" }
 name = "NeMo-Export-Deploy"
 dynamic = ["version", "readme"]
 description = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
     # "megatron-hub", add here after the release of Megatron-Hub
