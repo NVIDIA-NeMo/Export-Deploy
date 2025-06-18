@@ -68,33 +68,37 @@ class ImportChecker:
         try:
             # Import the main package first
             package = importlib.import_module(self.package_name)
-            package_path = package.__path__[0]
+        except ImportError as e:
+            tb = traceback.format_exc()
+            if "UnavailableError" in tb:
+                pass
 
-            # Walk through all Python files
-            for root, dirs, files in os.walk(package_path):
-                # Skip hidden directories and __pycache__
-                dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
+            raise ImportError(f"Could not import package '{self.package_name}': {e}") from e
 
-                for file in files:
-                    if file.endswith(".py") and not file.startswith("."):
-                        # Convert file path to module name
-                        rel_path = os.path.relpath(os.path.join(root, file), package_path)
-                        module_parts = rel_path.replace(os.sep, ".").replace(".py", "")
+        package_path = package.__path__[0]
 
-                        # Handle __init__.py files
-                        if module_parts.endswith(".__init__"):
-                            module_parts = module_parts[:-9]  # Remove .__init__
+        # Walk through all Python files
+        for root, dirs, files in os.walk(package_path):
+            # Skip hidden directories and __pycache__
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
 
-                        full_module_name = f"{self.package_name}.{module_parts}" if module_parts else self.package_name
+            for file in files:
+                if file.endswith(".py") and not file.startswith("."):
+                    # Convert file path to module name
+                    rel_path = os.path.relpath(os.path.join(root, file), package_path)
+                    module_parts = rel_path.replace(os.sep, ".").replace(".py", "")
 
-                        if not self.should_skip_module(full_module_name):
-                            modules.append(full_module_name)
+                    # Handle __init__.py files
+                    if module_parts.endswith(".__init__"):
+                        module_parts = module_parts[:-9]  # Remove .__init__
+
+                    full_module_name = f"{self.package_name}.{module_parts}" if module_parts else self.package_name
+
+                    if not self.should_skip_module(full_module_name):
+                        modules.append(full_module_name)
 
             # Remove duplicates and sort
             modules = sorted(list(set(modules)))
-
-        except ImportError as e:
-            raise ImportError(f"Could not import package '{self.package_name}': {e}") from e
 
         return modules
 
