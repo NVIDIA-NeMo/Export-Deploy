@@ -17,7 +17,6 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
-import modelopt.torch.quantization as mtq
 import numpy as np
 import tensorrt as trt
 import torch
@@ -35,6 +34,12 @@ from nemo_export.utils import (
     is_nemo2_checkpoint,
     validate_fp8_network,
 )
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    import modelopt.torch.quantization as mtq
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("modelopt is not installed. Please install it with `pip install nvidia-modelopt[torch]`.")
 
 QUANT_CFG_CHOICES = get_quant_cfg_choices()
 

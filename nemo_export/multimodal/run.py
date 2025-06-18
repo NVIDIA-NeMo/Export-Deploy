@@ -25,20 +25,25 @@ except Exception:
 
 import einops
 import numpy as np
-import tensorrt as trt
-import tensorrt_llm
-import tensorrt_llm.profiler as profiler
 import torch
 import yaml
 from PIL import Image
-from tensorrt_llm import logger
-from tensorrt_llm._utils import str_dtype_to_trt
-from tensorrt_llm.runtime import ModelRunner, Session, TensorInfo
 from torch.nn import functional as F
 from torchvision import transforms
 from transformers import AutoProcessor, CLIPImageProcessor
 
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    import tensorrt as trt
+    import tensorrt_llm
+    import tensorrt_llm.profiler as profiler
+    from tensorrt_llm import logger
+    from tensorrt_llm._utils import str_dtype_to_trt
+    from tensorrt_llm.runtime import ModelRunner, Session, TensorInfo
+except (ImportError, ModuleNotFoundError):
+    raise UnavailableError("tensorrt_llm is not installed. Please install it with `pip install tensorrt-llm`.")
 
 
 def trt_dtype_to_torch(dtype):
