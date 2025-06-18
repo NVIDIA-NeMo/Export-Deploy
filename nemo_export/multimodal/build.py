@@ -21,7 +21,6 @@ from pathlib import Path
 from time import time
 from typing import List
 
-import tensorrt as trt
 import torch
 import yaml
 from PIL import Image
@@ -35,8 +34,14 @@ from transformers import AutoModel, AutoProcessor, MllamaForConditionalGeneratio
 
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
+from nemo_export_deploy_common.import_utils import UnavailableError
 
 from .converter import convert_mllama_nemo_to_hf
+
+try:
+    import tensorrt as trt
+except (ImportError, ModuleNotFoundError) as e:
+    raise UnavailableError("tensorrt is not available. Please install it with `pip install nvidia-tensorrt`.") from e
 
 logger = trt.Logger(trt.Logger.INFO)
 
