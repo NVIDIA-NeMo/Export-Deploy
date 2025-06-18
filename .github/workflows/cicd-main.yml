@@ -266,6 +266,7 @@ jobs:
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           has-azure-credentials: true
           is_unit_test: "false"
+          timeout: 60
 
   Nemo_CICD_Test:
     needs:
