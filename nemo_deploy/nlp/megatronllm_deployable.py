@@ -218,8 +218,8 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
                 inference_params = CommonInferenceParams(
                     temperature=temperature,
-                    top_k=top_k,
-                    top_p=top_p,
+                    top_k=int(top_k),
+                    top_p=float(top_p),
                     num_tokens_to_generate=num_tokens_to_generate,
                     return_log_probs=log_probs,
                 )
@@ -410,6 +410,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                     src=0,
                 )
         # cast top_k,top_p to native int, float since typecheck assert statements added in MCore0.13 error otherwise
+        # return_prompt_top_n_logprobs returns top_logprobs for prompt tokens too when top_logprobs>0.
         inference_params = CommonInferenceParams(
             temperature=temperature,
             top_k=int(top_k),
@@ -417,6 +418,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             num_tokens_to_generate=num_tokens_to_generate,
             return_log_probs=log_probs,
             top_n_logprobs=top_logprobs,
+            return_prompt_top_n_logprobs=bool(top_logprobs),
         )
 
         results = self.generate(prompts, inference_params)
