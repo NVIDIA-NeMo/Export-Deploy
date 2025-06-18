@@ -1,9 +1,8 @@
-import subprocess
 import json
-import tempfile
-import shutil
-
 import logging
+import shutil
+import subprocess
+import tempfile
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
