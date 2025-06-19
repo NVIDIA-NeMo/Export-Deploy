@@ -53,6 +53,15 @@ try:
         SamplingConfig,
     )
 except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    Engine = MagicMock()
+    LoraManager = MagicMock()
+    QuantMode = MagicMock()
+    ModelConfig = MagicMock()
+    ModelRunner = MagicMock()
+    ModelRunnerCpp = MagicMock()
+    SamplingConfig = MagicMock()
     HAVE_TRT_LLM = False
 
 LOGGER = logging.getLogger("NeMo")
@@ -61,6 +70,9 @@ use_trtllm_bindings = True
 try:
     from tensorrt_llm.bindings import GptJsonConfig
 except Exception:
+    from unittest.mock import MagicMock
+
+    GptJsonConfig = MagicMock()
     use_trtllm_bindings = False
 
 TRTLLM_SUPPORTS_DEVICE_DISABLE = True
