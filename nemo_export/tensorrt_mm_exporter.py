@@ -61,6 +61,11 @@ try:
     from pytriton.decorators import batch, first_value
     from pytriton.model_config import Tensor
 except Exception:
+    from unittest.mock import MagicMock
+
+    batch = noop_decorator
+    first_value = noop_decorator
+    Tensor = MagicMock()
     use_pytriton = False
 
 

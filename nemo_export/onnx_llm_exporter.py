@@ -42,7 +42,6 @@ except ImportError:
     import logging
 
     logging = logging.getLogger(__name__)
-    HAVE_NEMO = False
 
 try:
     import modelopt.torch.quantization as mtq
