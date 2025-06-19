@@ -20,8 +20,8 @@ import numpy as np
 from pytriton.decorators import batch, first_value
 from pytriton.model_config import Tensor
 from tensorrt_llm import SamplingParams
-from tensorrt_llm.llmapi.llm import LLM, TokenizerBase
 from tensorrt_llm._torch.pyexecutor.config import PyTorchConfig
+from tensorrt_llm.llmapi.llm import LLM, TokenizerBase
 from transformers import PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable

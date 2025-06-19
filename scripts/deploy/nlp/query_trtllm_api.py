@@ -20,7 +20,7 @@ from nemo_deploy.nlp import NemoQueryTRTLLMAPI
 def get_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description=f"Queries Triton server running a TensorRT-LLM PyTorch backend model",
+        description="Queries Triton server running a TensorRT-LLM PyTorch backend model",
     )
     parser.add_argument("-u", "--url", default="0.0.0.0", type=str, help="url for the triton server")
     parser.add_argument("-mn", "--model_name", required=True, type=str, help="Name of the triton model")
@@ -37,7 +37,7 @@ def get_args():
     return args
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = get_args()
 
     if args.prompt_file is not None:

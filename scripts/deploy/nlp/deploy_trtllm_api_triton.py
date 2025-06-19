@@ -24,7 +24,7 @@ LOGGER = logging.getLogger("NeMo")
 def get_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description=f"Deploy TensorRT-LLM PyTorch models to Triton",
+        description="Deploy TensorRT-LLM PyTorch models to Triton",
     )
     parser.add_argument(
         "-hp", "--hf_model_id_path", required=True, type=str, help="Path to the HuggingFace model or model identifier"
@@ -40,12 +40,8 @@ def get_args():
     )
     parser.add_argument("-tps", "--tensor_parallel_size", default=1, type=int, help="Tensor parallelism size")
     parser.add_argument("-pps", "--pipeline_parallel_size", default=1, type=int, help="Pipeline parallelism size")
-    parser.add_argument(
-        "-meps", "--moe_expert_parallel_size", default=-1, type=int, help="MOE expert parallelism size"
-    )
-    parser.add_argument(
-        "-mtps", "--moe_tensor_parallel_size", default=-1, type=int, help="MOE tensor parallelism size"
-    )
+    parser.add_argument("-meps", "--moe_expert_parallel_size", default=-1, type=int, help="MOE expert parallelism size")
+    parser.add_argument("-mtps", "--moe_tensor_parallel_size", default=-1, type=int, help="MOE tensor parallelism size")
     parser.add_argument("-mbs", "--max_batch_size", default=8, type=int, help="Max batch size of the model")
     parser.add_argument(
         "-mnt", "--max_num_tokens", default=8192, type=int, help="Maximum total tokens across all sequences in a batch"
@@ -115,5 +111,5 @@ def trtllm_deploy():
     nm.stop()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     trtllm_deploy()

@@ -484,15 +484,11 @@ class TestNemoQueryTRTLLMAPI:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {
-            "sentences": np.array([b"test response"])
-        }
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test basic query
-        response = query.query_llm(
-            prompts=["test prompt"], max_length=100, temperature=0.7, top_k=1, top_p=0.9
-        )
+        response = query.query_llm(prompts=["test prompt"], max_length=100, temperature=0.7, top_k=1, top_p=0.9)
 
         assert isinstance(response[0], str)
         assert response[0] == "test response"
@@ -502,9 +498,7 @@ class TestNemoQueryTRTLLMAPI:
         # Setup mock
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {
-            "sentences": np.array([b"default response"])
-        }
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"default response"])}
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test query with default parameters
@@ -518,9 +512,7 @@ class TestNemoQueryTRTLLMAPI:
         # Setup mock for non-bytes output
         mock_instance = MagicMock()
         mock_client.return_value.__enter__.return_value = mock_instance
-        mock_instance.infer_batch.return_value = {
-            "sentences": ["non-bytes response"]
-        }
+        mock_instance.infer_batch.return_value = {"sentences": ["non-bytes response"]}
         mock_instance.model_config.outputs = [MagicMock(dtype=np.float32)]
 
         # Test query with non-bytes output

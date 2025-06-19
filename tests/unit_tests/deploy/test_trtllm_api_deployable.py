@@ -70,7 +70,7 @@ class TestTensorRTLLMAPIDeployable:
                 max_batch_size=16,
                 max_num_tokens=4096,
                 backend="torch",
-                dtype="float16"
+                dtype="float16",
             )
 
             assert deployer.model == mock_llm_instance
@@ -111,22 +111,11 @@ class TestTensorRTLLMAPIDeployable:
             mock_llm_class.return_value = mock_llm
 
             deployer = TensorRTLLMAPIDeployable(hf_model_id_path="test/model")
-            output = deployer.generate(
-                prompts=["test prompt"],
-                max_length=100,
-                temperature=0.8,
-                top_k=50,
-                top_p=0.95
-            )
+            output = deployer.generate(prompts=["test prompt"], max_length=100, temperature=0.8, top_k=50, top_p=0.95)
 
             assert output == ["Generated text"]
             mock_llm.generate.assert_called_once()
-            mock_sampling_params.assert_called_once_with(
-                max_tokens=100,
-                temperature=0.8,
-                top_k=50,
-                top_p=0.95
-            )
+            mock_sampling_params.assert_called_once_with(max_tokens=100, temperature=0.8, top_k=50, top_p=0.95)
 
     def test_triton_input_output_config(self, mock_pytorch_config):
         with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM"):

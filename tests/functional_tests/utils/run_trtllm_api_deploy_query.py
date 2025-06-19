@@ -18,6 +18,7 @@ from nemo_deploy import DeployPyTriton
 from nemo_deploy.nlp import NemoQueryTRTLLMAPI
 from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
+
 def get_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -86,6 +87,7 @@ def get_args():
 
     return parser.parse_args()
 
+
 def test_trtllm_api_deploy_query(args):
     """Test the TensorRT-LLM API query interface."""
     model_name = "test_model"
@@ -126,6 +128,7 @@ def test_trtllm_api_deploy_query(args):
     assert len(output_deployed) > 0, "Output should not be empty."
     assert isinstance(output_deployed[0][0], str), "Output should be a string."
     assert len(output_deployed[0][0]) > 0, "Output string should not be empty."
+
 
 if __name__ == "__main__":
     args = get_args()
