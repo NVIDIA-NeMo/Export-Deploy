@@ -42,6 +42,7 @@ except (ImportError, ModuleNotFoundError):
     HAVE_VLLM = False
     ModelConfig = None
     ModelImpl = MagicMock()
+    PoolerConfig = MagicMock()
 
 
 class NemoModelConfig(ModelConfig):
