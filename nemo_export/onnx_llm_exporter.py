@@ -55,6 +55,9 @@ except ImportError:
 try:
     import tensorrt as trt
 except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    trt = MagicMock()
     HAVE_TENSORRT = False
 
 try:
