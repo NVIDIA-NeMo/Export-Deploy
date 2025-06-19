@@ -22,8 +22,20 @@ from types import MethodType
 from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import torch
-from nemo.utils.export_utils import add_casts_around_norms, replace_for_export
-from nemo.utils.import_utils import safe_import
+
+from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
+
+try:
+    from nemo.utils.export_utils import add_casts_around_norms, replace_for_export
+    from nemo.utils.import_utils import safe_import
+except ImportError:
+    from unittest.mock import MagicMock
+
+    HAVE_NEMO = False
+    add_casts_around_norms = MagicMock()
+    replace_for_export = MagicMock()
+    safe_import = MagicMock()
+
 
 polygraphy, polygraphy_imported = safe_import("polygraphy")
 if polygraphy_imported:
@@ -523,6 +535,9 @@ class TrtCompiler:
         Args:
              input_example: passed to onnx.export()
         """
+        if not HAVE_NEMO:
+            raise UnavailableError(MISSING_NEMO_MSG)
+
         if self.engine is not None:
             return
 

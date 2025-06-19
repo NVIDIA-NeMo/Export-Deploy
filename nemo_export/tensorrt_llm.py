@@ -66,12 +66,22 @@ from nemo_export.utils import (
     prepare_directory_for_export,
 )
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
-from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, MISSING_TRITON_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import (
+    MISSING_TENSORRT_LLM_MSG,
+    MISSING_TRITON_MSG,
+    UnavailableError,
+    null_decorator,
+)
 
 try:
     from pytriton.decorators import batch, first_value
     from pytriton.model_config import Tensor
 except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    batch = null_decorator
+    first_value = null_decorator
+    Tensor = MagicMock()
     HAVE_PYTRITON = False
 
 try:
