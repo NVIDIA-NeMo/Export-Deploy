@@ -1,3 +1,7 @@
 {
-  "vcs-dependencies": {}
+  "vcs-dependencies": {
+    "megatron-lm": {
+      "ref": "6a6cd478839d90cf09a837adf8c79cbc844bc920"
+    }
+  }
 }
