@@ -32,7 +32,11 @@ try:
     from tensorrt_llm.layers import MoeConfig
     from tensorrt_llm.models.modeling_utils import PretrainedConfig
 except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
     HAVE_TRT_LLM = False
+    MoeConfig = MagicMock()
+    PretrainedConfig = MagicMock()
 
 LOGGER = logging.getLogger("NeMo")
 
