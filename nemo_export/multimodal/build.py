@@ -23,14 +23,23 @@ from typing import List
 
 import torch
 import yaml
-from PIL import Image
 from transformers import AutoModel, AutoProcessor, MllamaForConditionalGeneration
 
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
-from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, MISSING_TENSORRT_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import (
+    MISSING_PIL_MSG,
+    MISSING_TENSORRT_LLM_MSG,
+    MISSING_TENSORRT_MSG,
+    UnavailableError,
+)
 
 from .converter import convert_mllama_nemo_to_hf
+
+try:
+    from PIL import Image
+except ImportError:
+    HAVE_PIL = False
 
 try:
     import tensorrt as trt
@@ -551,6 +560,9 @@ def build_mllama_visual_engine(
     vision_max_batch_size: int = 1,
 ):
     """Build mllama visual engine."""
+    if not HAVE_PIL:
+        raise UnavailableError(MISSING_PIL_MSG)
+
     hf_model = MllamaForConditionalGeneration.from_pretrained(hf_model_path, torch_dtype="auto", device_map="auto")
     model_dtype = hf_model.dtype
 

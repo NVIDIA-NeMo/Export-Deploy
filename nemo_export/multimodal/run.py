@@ -25,7 +25,6 @@ import einops
 import numpy as np
 import torch
 import yaml
-from PIL import Image
 from torch.nn import functional as F
 from torchvision import transforms
 from transformers import AutoProcessor, CLIPImageProcessor
@@ -33,10 +32,16 @@ from transformers import AutoProcessor, CLIPImageProcessor
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
 from nemo_export_deploy_common.import_utils import (
     MISSING_DECORD_MSG,
+    MISSING_PIL_MSG,
     MISSING_TENSORRT_LLM_MSG,
     MISSING_TENSORRT_MSG,
     UnavailableError,
 )
+
+try:
+    from PIL import Image
+except Exception:
+    HAVE_PIL = False
 
 try:
     import tensorrt as trt
@@ -206,6 +211,9 @@ class MultimodalModelRunner:
         from decord import VideoReader
 
         if isinstance(video_path, str):
+            if not HAVE_PIL:
+                raise UnavailableError(MISSING_PIL_MSG)
+
             vr = VideoReader(video_path)
             num_frames = self.num_frames
             if num_frames == -1:
@@ -219,6 +227,8 @@ class MultimodalModelRunner:
                 if len(frames) < num_frames:
                     frames += [frames[-1]] * (num_frames - len(frames))
         elif isinstance(video_path, np.ndarray):
+            if not HAVE_PIL:
+                raise UnavailableError(MISSING_PIL_MSG)
             num_frames = self.num_frames
             if num_frames == -1:
                 frames = [Image.fromarray(frame).convert("RGB") for frame in video_path]
@@ -715,7 +725,11 @@ class MultimodalModelRunner:
 
     def process_image(self, image_file, image_processor, nemo_config, image_folder):
         if isinstance(image_file, str):
+            if not HAVE_PIL:
+                raise UnavailableError(MISSING_PIL_MSG)
             if image_folder is not None:
+                if not HAVE_PIL:
+                    raise UnavailableError(MISSING_PIL_MSG)
                 image = Image.open(os.path.join(image_folder, image_file)).convert("RGB")
             else:
                 image = Image.open(image_file).convert("RGB")

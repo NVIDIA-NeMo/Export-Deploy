@@ -18,10 +18,14 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from PIL import Image
 
 from nemo_export.tarutils import TarPath
-from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_PIL_MSG, MISSING_TRITON_MSG, UnavailableError
+
+try:
+    from PIL import Image
+except ImportError:
+    HAVE_PIL = False
 
 try:
     from pytriton.model_config import Tensor
@@ -157,6 +161,9 @@ def ndarray2img(img_ndarray: np.ndarray) -> typing.List[Image.Image]:
     Returns:
         List[Image.Image]: List of PIL Image objects created from the input array
     """
+    if not HAVE_PIL:
+        raise UnavailableError(MISSING_PIL_MSG)
+
     img_list = [Image.fromarray(i) for i in img_ndarray]
     return img_list
 

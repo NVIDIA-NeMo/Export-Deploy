@@ -16,10 +16,14 @@ from io import BytesIO
 
 import numpy as np
 import requests
-from PIL import Image
 
 from nemo_deploy.utils import str_list2numpy
 from nemo_export_deploy_common.import_utils import MISSING_DECORD_MSG, MISSING_TRITON_MSG, UnavailableError
+
+try:
+    from PIL import Image
+except ImportError:
+    HAVE_PIL = False
 
 try:
     from decord import VideoReader
@@ -76,6 +80,9 @@ class NemoQueryMultimodal:
             sub_frames = self.get_subsampled_frames(frames, subsample_len)
             return np.array(sub_frames)
         elif self.model_type in ["neva", "vila", "mllama"]:
+            if not HAVE_PIL:
+                raise UnavailableError(MISSING_PIL_MSG)
+
             if input_media.startswith("http") or input_media.startswith("https"):
                 response = requests.get(input_media, timeout=5)
                 media = Image.open(BytesIO(response.content)).convert("RGB")
