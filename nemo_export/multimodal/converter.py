@@ -27,7 +27,7 @@ try:
     from nemo.collections import vlm
 
     HAVE_NEMO = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     nl = MagicMock()

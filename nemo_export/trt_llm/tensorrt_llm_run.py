@@ -37,7 +37,7 @@ try:
     from mpi4py.futures import MPIPoolExecutor
 
     HAVE_MPI = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     MPIPoolExecutor = MagicMock()
@@ -47,7 +47,7 @@ try:
     import tensorrt as trt
 
     HAVE_TRT = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     HAVE_TRT = False
 
 try:

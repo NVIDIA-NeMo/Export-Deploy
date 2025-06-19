@@ -40,14 +40,14 @@ try:
     from PIL import Image
 
     HAVE_PIL = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     HAVE_PIL = False
 
 try:
     import tensorrt as trt
 
     HAVE_TRT = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     HAVE_TRT = False
 
 try:
@@ -59,7 +59,7 @@ try:
     from tensorrt_llm.plugin import PluginConfig
 
     HAVE_TRT_LLM = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     HAVE_TRT_LLM = False
 
 if HAVE_TRT:

@@ -42,7 +42,7 @@ try:
     from torchvision import transforms
 
     HAVE_TORCHVISION = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     transforms = MagicMock()

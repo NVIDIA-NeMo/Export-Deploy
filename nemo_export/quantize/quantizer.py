@@ -35,7 +35,7 @@ try:
     from omegaconf.omegaconf import DictConfig, open_dict
 
     HAVE_NEMO = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     MegatronGPTModel = MagicMock()

@@ -29,7 +29,7 @@ try:
     from nemo.utils.export_utils import add_casts_around_norms, replace_for_export
 
     HAVE_NEMO = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     HAVE_NEMO = False

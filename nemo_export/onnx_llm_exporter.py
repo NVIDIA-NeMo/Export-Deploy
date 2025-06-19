@@ -38,7 +38,7 @@ from nemo_export_deploy_common.import_utils import (
 
 try:
     from nemo.utils import logging
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     import logging
 
     logging = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ try:
     import modelopt.torch.quantization as mtq
 
     HAVE_MODELOPT = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     mtq = MagicMock()
