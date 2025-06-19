@@ -60,6 +60,10 @@ try:
     from nemo.lightning.io.pl import ckpt_to_weights_subdir
 except ImportError:
     HAVE_NEMO = False
+    from typing import Any
+
+    GPTConfig = Any
+    T5Config = Any
 
 LOGGER = logging.getLogger("NeMo")
 
