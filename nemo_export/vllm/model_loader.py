@@ -28,6 +28,13 @@ try:
     from vllm.model_executor.model_loader import BaseModelLoader, get_model
     from vllm.model_executor.model_loader.utils import set_default_torch_dtype
 except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    ModelConfig = MagicMock()
+    BaseModelLoader = MagicMock()
+    get_model = MagicMock()
+    set_default_torch_dtype = MagicMock()
+
     HAVE_VLLM = False
 
 LOGGER = logging.getLogger("NeMo")
