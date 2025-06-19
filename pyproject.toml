@@ -50,8 +50,8 @@ dependencies = [
     "webdataset>=0.2.86",
     "nvidia-pytriton ; platform_system != 'Darwin' ",
     "flashinfer-python==0.2.5",
-    "Pillow ; platform_machine != 'Darwin'",
-    "decord ; platform_machine != 'Darwin'",
+    "Pillow ; platform_system != 'Darwin'",
+    "decord ; platform_system != 'Darwin'",
 ]
 
 [project.optional-dependencies]
