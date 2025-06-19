@@ -64,6 +64,7 @@ except ImportError:
 
     GPTConfig = Any
     T5Config = Any
+    MCoreTokenizerWrappper = Any
 
 LOGGER = logging.getLogger("NeMo")
 
