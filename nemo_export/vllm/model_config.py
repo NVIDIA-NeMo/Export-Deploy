@@ -37,8 +37,11 @@ try:
     )
     from vllm.transformers_utils.config import get_hf_text_config
 except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
     HAVE_VLLM = False
     ModelConfig = None
+    ModelImpl = MagicMock()
 
 
 class NemoModelConfig(ModelConfig):
