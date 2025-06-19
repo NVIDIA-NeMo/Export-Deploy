@@ -32,8 +32,6 @@ try:
 except ImportError:
     from unittest.mock import MagicMock
 
-    safe_import = MagicMock()
-
     HAVE_NEMO = False
     add_casts_around_norms = MagicMock()
     replace_for_export = MagicMock()

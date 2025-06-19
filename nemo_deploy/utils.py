@@ -24,6 +24,8 @@ from nemo_export_deploy_common.import_utils import MISSING_PIL_MSG, MISSING_TRIT
 
 try:
     from PIL import Image
+
+    HAVE_PIL = True
 except ImportError:
     HAVE_PIL = False
     from typing import Any
@@ -34,7 +36,9 @@ except ImportError:
 
 try:
     from pytriton.model_config import Tensor
-except ImportError:
+
+    HAVE_TRITON = True
+except (ImportError, ModuleNotFoundError):
     HAVE_TRITON = False
 
 
