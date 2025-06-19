@@ -32,7 +32,6 @@ from megatron.core.export.model_type import ModelType
 from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
     DEFAULT_CONVERSION_DICT,
 )
-from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
 from transformers import AutoConfig, PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
@@ -123,8 +122,13 @@ try:
         WhisperEncoder,
     )
     from tensorrt_llm.plugin import PluginConfig
+
+    HAVE_TENSORRT_LLM = True
 except (ImportError, ModuleNotFoundError):
     HAVE_TENSORRT_LLM = False
+
+if HAVE_TENSORRT_LLM:
+    from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
 
 LOGGER = logging.getLogger("NeMo")
 

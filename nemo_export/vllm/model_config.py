@@ -38,6 +38,7 @@ try:
     from vllm.transformers_utils.config import get_hf_text_config
 except (ImportError, ModuleNotFoundError):
     HAVE_VLLM = False
+    ModelConfig = None
 
 
 class NemoModelConfig(ModelConfig):
