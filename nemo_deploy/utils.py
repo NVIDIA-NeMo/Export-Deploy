@@ -26,6 +26,11 @@ try:
     from PIL import Image
 except ImportError:
     HAVE_PIL = False
+    from typing import Any
+    from unittest.mock import MagicMock
+
+    Image = MagicMock()
+    Image.Image = Any
 
 try:
     from pytriton.model_config import Tensor
