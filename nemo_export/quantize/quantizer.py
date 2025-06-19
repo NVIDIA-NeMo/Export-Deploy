@@ -22,6 +22,8 @@ import torch.distributed as dist
 from megatron.core import parallel_state
 from megatron.core.transformer.module import Float16Module
 
+from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
+
 try:
     from nemo.collections.nlp.models.language_modeling.megatron_gpt_model import (
         MegatronGPTModel,
@@ -42,6 +44,7 @@ except ImportError:
     unwrap_model = MagicMock()
     DictConfig = MagicMock()
     open_dict = MagicMock()
+    HAVE_NEMO = False
 
 try:
     import modelopt.torch.quantization as mtq
@@ -115,6 +118,9 @@ class Quantizer:
             - inference_pipeline_parallel: int
             - save_path: str
         """
+        if not HAVE_NEMO:
+            raise UnavailableError(MISSING_NEMO_MSG)
+
         if not HAVE_MODELOPT:
             raise RuntimeError("nvidia-modelopt is needed to use Quantizer") from HAVE_MODELOPT_ERROR
 
