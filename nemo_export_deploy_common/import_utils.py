@@ -44,6 +44,7 @@ MISSING_TORCHVISION_MSG = "torchvision is not available. Please install it with 
 MISSING_MODELOPT_MSG = "modelopt is not available. Please install it with `pip install nvidia-modelopt[torch]`."
 MISSING_RAY_MSG = "ray is not available. Please install it with `pip install ray`."
 MISSING_VLLM_MSG = "vllm is not available. Please install it with `pip install vllm`."
+MISSING_DECORD_MSG = "decord is not available. Please install it with from https://github.com/dmlc/decord?tab=readme-ov-file#installation."
 
 
 class UnavailableError(Exception):

@@ -16,11 +16,15 @@ from io import BytesIO
 
 import numpy as np
 import requests
-from decord import VideoReader
 from PIL import Image
 
 from nemo_deploy.utils import str_list2numpy
-from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_DECORD_MSG, MISSING_TRITON_MSG, UnavailableError
+
+try:
+    from decord import VideoReader
+except ImportError:
+    HAVE_DECORD = False
 
 try:
     from pytriton.client import ModelClient
@@ -56,10 +60,16 @@ class NemoQueryMultimodal:
     def setup_media(self, input_media):
         """Setup input media."""
         if self.model_type == "video-neva":
+            if not HAVE_DECORD:
+                raise UnavailableError(MISSING_DECORD_MSG)
+
             vr = VideoReader(input_media)
             frames = [f.asnumpy() for f in vr]
             return np.array(frames)
         elif self.model_type == "lita" or self.model_type == "vita":
+            if not HAVE_DECORD:
+                raise UnavailableError(MISSING_DECORD_MSG)
+
             vr = VideoReader(input_media)
             frames = [f.asnumpy() for f in vr]
             subsample_len = self.frame_len(frames)

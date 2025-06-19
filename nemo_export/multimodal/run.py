@@ -19,9 +19,7 @@ import os
 try:
     import decord
 except Exception:
-    import logging
-
-    logging.warning("The package `decord` was not installed in this environment.")
+    HAVE_DECORD = False
 
 import einops
 import numpy as np
@@ -33,7 +31,12 @@ from torchvision import transforms
 from transformers import AutoProcessor, CLIPImageProcessor
 
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
-from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, MISSING_TRT_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import (
+    MISSING_DECORD_MSG,
+    MISSING_TENSORRT_LLM_MSG,
+    MISSING_TENSORRT_MSG,
+    UnavailableError,
+)
 
 try:
     import tensorrt as trt
@@ -52,7 +55,7 @@ except (ImportError, ModuleNotFoundError):
 
 def trt_dtype_to_torch(dtype):
     if not HAVE_TRT:
-        raise UnavailableError(MISSING_TRT_MSG)
+        raise UnavailableError(MISSING_TENSORRT_MSG)
 
     if dtype == trt.float16:
         return torch.float16
@@ -653,6 +656,9 @@ class MultimodalModelRunner:
     def load_video(self, config, video_path, processor, num_frames=None):
         frames = None
         if isinstance(video_path, str):
+            if not HAVE_DECORD:
+                raise UnavailableError(MISSING_DECORD_MSG)
+
             decord.bridge.set_bridge("torch")
             video_reader = decord.VideoReader(uri=video_path)
             if num_frames is not None:
@@ -689,6 +695,9 @@ class MultimodalModelRunner:
     def process_lita_video(self, nemo_config, video_path, image_processor):
         image = None
         if isinstance(video_path, str):
+            if not HAVE_DECORD:
+                raise UnavailableError(MISSING_DECORD_MSG)
+
             vid_len = len(decord.VideoReader(video_path))
             num_sample_frames = self.get_num_sample_frames(nemo_config, vid_len)
             image = (
