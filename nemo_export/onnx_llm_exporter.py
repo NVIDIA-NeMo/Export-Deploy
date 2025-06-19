@@ -20,7 +20,6 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import numpy as np
 import torch
 import wrapt
-from nemo.utils import logging
 from transformers import AutoModel, AutoTokenizer
 
 from nemo_deploy import ITritonDeployable
@@ -36,6 +35,14 @@ from nemo_export_deploy_common.import_utils import (
     MISSING_TENSORRT_MSG,
     UnavailableError,
 )
+
+try:
+    from nemo.utils import logging
+except ImportError:
+    import logging
+
+    logging = logging.getLogger(__name__)
+    HAVE_NEMO = False
 
 try:
     import modelopt.torch.quantization as mtq

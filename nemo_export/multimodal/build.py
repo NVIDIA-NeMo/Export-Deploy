@@ -56,7 +56,12 @@ try:
 except ImportError:
     HAVE_TRT_LLM = False
 
-logger = trt.Logger(trt.Logger.INFO)
+if HAVE_TRT:
+    logger = trt.Logger(trt.Logger.INFO)
+else:
+    import logging
+
+    logger = logging.getLogger(__name__)
 
 
 def build_trtllm_engine(
