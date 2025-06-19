@@ -32,6 +32,10 @@ try:
     from nemo.collections.llm.gpt.model.base import GPTConfig
     from nemo.collections.llm.t5.model.t5 import T5Config
 except ImportError:
+    from typing import Any
+
+    GPTConfig = Any
+    T5Config = Any
     HAVE_NEMO = False
 
 LOGGER = logging.getLogger("NeMo")
