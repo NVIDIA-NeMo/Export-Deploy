@@ -20,8 +20,7 @@ import importlib
 import logging
 import traceback
 from contextlib import contextmanager
-from types import ModuleType
-from typing import Callable, Tuple
+from typing import Tuple
 
 import torch
 from packaging.version import Version as PkgVersion
