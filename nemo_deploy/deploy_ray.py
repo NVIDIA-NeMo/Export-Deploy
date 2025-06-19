@@ -24,7 +24,7 @@ try:
     from ray.serve import Application
 
     HAVE_RAY = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     ray = MagicMock()

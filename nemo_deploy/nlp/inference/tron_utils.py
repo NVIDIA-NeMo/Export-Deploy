@@ -33,7 +33,7 @@ try:
     from nemo.collections.llm.t5.model.t5 import T5Config
 
     HAVE_NEMO = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from typing import Any
 
     GPTConfig = Any
@@ -286,7 +286,7 @@ def _initialize_tp_communicators(model_config: Union[GPTConfig, T5Config], micro
         import yaml
         from transformer_engine.pytorch import module as te_module
 
-    except ImportError:
+    except (ImportError, ModuleNotFoundError):
         raise RuntimeError(
             "Tensor Parallel Communication/GEMM Overlap optimization needs 'yaml' and 'transformer_engine' packages"
         )

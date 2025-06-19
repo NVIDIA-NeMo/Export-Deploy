@@ -25,7 +25,7 @@ try:
     from pytriton.triton import Triton, TritonConfig
 
     HAVE_TRITON = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     HAVE_TRITON = False
 
 

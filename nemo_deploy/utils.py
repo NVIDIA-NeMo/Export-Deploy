@@ -26,7 +26,7 @@ try:
     from PIL import Image
 
     HAVE_PIL = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     HAVE_PIL = False
     from typing import Any
     from unittest.mock import MagicMock

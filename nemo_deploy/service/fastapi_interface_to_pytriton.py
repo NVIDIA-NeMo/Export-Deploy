@@ -21,7 +21,7 @@ from nemo_deploy.nlp import NemoQueryLLMPyTorch
 
 try:
     from nemo.utils import logging
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     import logging
 
     logging = logging.getLogger(__name__)

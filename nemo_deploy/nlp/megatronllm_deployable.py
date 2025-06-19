@@ -40,7 +40,7 @@ try:
     from pytriton.model_config import Tensor
 
     HAVE_TRITON = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     HAVE_TRITON = False

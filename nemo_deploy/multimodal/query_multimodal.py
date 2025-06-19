@@ -29,21 +29,21 @@ try:
     from PIL import Image
 
     HAVE_PIL = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     HAVE_PIL = False
 
 try:
     from decord import VideoReader
 
     HAVE_DECORD = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     HAVE_DECORD = False
 
 try:
     from pytriton.client import ModelClient
 
     HAVE_TRITON = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     ModelClient = MagicMock()

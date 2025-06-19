@@ -26,7 +26,7 @@ try:
     from pytriton.client import ModelClient
 
     HAVE_TRITON = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     HAVE_TRITON = False
 
 

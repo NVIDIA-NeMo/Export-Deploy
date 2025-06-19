@@ -60,7 +60,7 @@ try:
     from nemo.lightning.io.pl import ckpt_to_weights_subdir
 
     HAVE_NEMO = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     HAVE_NEMO = False
     from typing import Any
 
