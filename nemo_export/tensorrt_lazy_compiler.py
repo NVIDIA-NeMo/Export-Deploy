@@ -27,8 +27,12 @@ from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, Unavailable
 
 try:
     from nemo.utils.export_utils import add_casts_around_norms, replace_for_export
+
+    HAVE_NEMO = True
 except ImportError:
     from unittest.mock import MagicMock
+
+    safe_import = MagicMock()
 
     HAVE_NEMO = False
     add_casts_around_norms = MagicMock()

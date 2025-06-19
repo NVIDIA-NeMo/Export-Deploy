@@ -38,11 +38,15 @@ from .converter import convert_mllama_nemo_to_hf
 
 try:
     from PIL import Image
+
+    HAVE_PIL = True
 except ImportError:
     HAVE_PIL = False
 
 try:
     import tensorrt as trt
+
+    HAVE_TRT = True
 except ImportError:
     HAVE_TRT = False
 
@@ -53,6 +57,8 @@ try:
     from tensorrt_llm.mapping import Mapping
     from tensorrt_llm.models import MLLaMAForCausalLM
     from tensorrt_llm.plugin import PluginConfig
+
+    HAVE_TRT_LLM = True
 except ImportError:
     HAVE_TRT_LLM = False
 

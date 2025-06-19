@@ -27,17 +27,26 @@ from nemo_export_deploy_common.import_utils import (
 
 try:
     from PIL import Image
+
+    HAVE_PIL = True
 except ImportError:
     HAVE_PIL = False
 
 try:
     from decord import VideoReader
+
+    HAVE_DECORD = True
 except ImportError:
     HAVE_DECORD = False
 
 try:
     from pytriton.client import ModelClient
+
+    HAVE_TRITON = True
 except ImportError:
+    from unittest.mock import MagicMock
+
+    ModelClient = MagicMock()
     HAVE_TRITON = False
 
 

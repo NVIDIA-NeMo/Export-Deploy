@@ -33,6 +33,8 @@ try:
     from nemo.utils.distributed import temporary_directory
     from nemo.utils.model_utils import save_artifacts, unwrap_model
     from omegaconf.omegaconf import DictConfig, open_dict
+
+    HAVE_NEMO = True
 except ImportError:
     from unittest.mock import MagicMock
 

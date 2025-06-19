@@ -25,6 +25,8 @@ from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, Unavailable
 try:
     from nemo import lightning as nl
     from nemo.collections import vlm
+
+    HAVE_NEMO = True
 except ImportError:
     from unittest.mock import MagicMock
 

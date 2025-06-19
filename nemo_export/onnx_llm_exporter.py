@@ -45,6 +45,8 @@ except ImportError:
 
 try:
     import modelopt.torch.quantization as mtq
+
+    HAVE_MODELOPT = True
 except ImportError:
     from unittest.mock import MagicMock
 

@@ -58,6 +58,8 @@ try:
     from nemo.lightning import io
     from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
     from nemo.lightning.io.pl import ckpt_to_weights_subdir
+
+    HAVE_NEMO = True
 except ImportError:
     HAVE_NEMO = False
     from typing import Any

@@ -40,6 +40,8 @@ from nemo_export_deploy_common.import_utils import (
 
 try:
     from torchvision import transforms
+
+    HAVE_TORCHVISION = True
 except ImportError:
     from unittest.mock import MagicMock
 

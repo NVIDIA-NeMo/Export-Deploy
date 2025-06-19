@@ -22,7 +22,14 @@ try:
     import ray
     from ray import serve
     from ray.serve import Application
+
+    HAVE_RAY = True
 except ImportError:
+    from unittest.mock import MagicMock
+
+    ray = MagicMock()
+    serve = MagicMock()
+    Application = MagicMock()
     HAVE_RAY = False
 
 LOGGER = logging.getLogger("NeMo")

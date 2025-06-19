@@ -23,6 +23,8 @@ LOGGER = logging.getLogger("NeMo")
 try:
     from pytriton.model_config import ModelConfig
     from pytriton.triton import Triton, TritonConfig
+
+    HAVE_TRITON = True
 except ImportError:
     HAVE_TRITON = False
 

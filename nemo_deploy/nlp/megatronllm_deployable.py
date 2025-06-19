@@ -38,8 +38,15 @@ from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, Unavailab
 try:
     from pytriton.decorators import batch, first_value
     from pytriton.model_config import Tensor
+
+    HAVE_TRITON = True
 except ImportError:
+    from unittest.mock import MagicMock
+
     HAVE_TRITON = False
+    batch = MagicMock()
+    first_value = MagicMock()
+    Tensor = MagicMock()
 
     batch = null_decorator
     first_value = null_decorator

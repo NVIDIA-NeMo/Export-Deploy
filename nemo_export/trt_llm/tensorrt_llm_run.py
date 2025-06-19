@@ -35,6 +35,8 @@ from nemo_export_deploy_common.import_utils import (
 
 try:
     from mpi4py.futures import MPIPoolExecutor
+
+    HAVE_MPI = True
 except ImportError:
     from unittest.mock import MagicMock
 
@@ -43,6 +45,8 @@ except ImportError:
 
 try:
     import tensorrt as trt
+
+    HAVE_TRT = True
 except ImportError:
     HAVE_TRT = False
 

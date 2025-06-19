@@ -31,6 +31,8 @@ from megatron.core.transformer.module import Float16Module, MegatronModule
 try:
     from nemo.collections.llm.gpt.model.base import GPTConfig
     from nemo.collections.llm.t5.model.t5 import T5Config
+
+    HAVE_NEMO = True
 except ImportError:
     from typing import Any
 

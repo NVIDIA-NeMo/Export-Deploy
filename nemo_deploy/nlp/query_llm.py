@@ -24,6 +24,8 @@ from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, Unavailab
 
 try:
     from pytriton.client import ModelClient
+
+    HAVE_TRITON = True
 except ImportError:
     HAVE_TRITON = False
 
