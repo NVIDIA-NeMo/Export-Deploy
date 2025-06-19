@@ -87,6 +87,9 @@ class TensorRTLLMRayDeployable:
             ImportError: If Ray is not installed.
             Exception: If model initialization fails.
         """
+        if not HAVE_RAY:
+            raise UnavailableError(MISSING_RAY_MSG)
+
         try:
             self.model = TensorRTLLM(
                 model_dir=trt_llm_path,
