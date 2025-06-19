@@ -16,7 +16,7 @@
 import atexit
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
@@ -38,7 +38,7 @@ from megatron.core.inference.text_generation_controllers.text_generation_control
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
 
-from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
+from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
 
 from .tron_utils import (
     DistributedInitConfig,
@@ -50,16 +50,16 @@ from .tron_utils import (
     initialize_distributed,
 )
 
-set_modelopt_spec_if_exists_in_ckpt, HAVE_NEMO = safe_import_from(
-    "nemo.collections.llm.modelopt", "set_modelopt_spec_if_exists_in_ckpt"
-)
-GPTConfig, HAVE_NEMO = safe_import_from("nemo.collections.llm.gpt.model.base", "GPTConfig")
-MCoreTokenizerWrappper, HAVE_NEMO = safe_import_from("nemo.collections.llm.inference.base", "MCoreTokenizerWrappper")
-T5Config, HAVE_NEMO = safe_import_from("nemo.collections.llm.t5.model.t5", "T5Config")
-io, HAVE_NEMO = safe_import_from("nemo.lightning", "io")
-ckpt_to_context_subdir, HAVE_NEMO = safe_import_from("nemo.lightning.ckpt_utils", "ckpt_to_context_subdir")
-ckpt_to_weights_subdir, HAVE_NEMO = safe_import_from("nemo.lightning.io.pl", "ckpt_to_weights_subdir")
-
+try:
+    from nemo.collections.llm.gpt.model.base import GPTConfig
+    from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
+    from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
+    from nemo.collections.llm.t5.model.t5 import T5Config
+    from nemo.lightning import io
+    from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
+    from nemo.lightning.io.pl import ckpt_to_weights_subdir
+except ImportError:
+    HAVE_NEMO = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -177,8 +177,7 @@ def load_nemo_checkpoint_to_tron_model(model: List[MegatronModule], path: Path, 
         legacy_ckpt (bool): Whether to use legacy checkpoint format
     """
     if not HAVE_NEMO:
-        raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
-
+        raise UnavailableError(MISSING_NEMO_MSG)
     weights_dir = ckpt_to_weights_subdir(path, is_saving=False)
     LOGGER.info(f"Loading NeMo checkpoint from {weights_dir}")
 
@@ -219,7 +218,7 @@ def setup_model_and_tokenizer_for_inference(
         ValueError: If checkpoint_path is not a valid NeMo-2.0 checkpoint
     """
     if not HAVE_NEMO:
-        raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
+        raise UnavailableError(MISSING_NEMO_MSG)
 
     checkpoint_path = Path(checkpoint_path)
 
@@ -367,7 +366,7 @@ def create_mcore_engine(
             - MCoreTokenizerWrappper: Tokenizer wrapper
     """
     if not HAVE_NEMO:
-        raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
+        raise UnavailableError(MISSING_NEMO_MSG)
 
     # Load model context to get default parallelism settings from checkpoint
     checkpoint_path = Path(path)

@@ -42,6 +42,8 @@ MISSING_TENSORRT_MSG = "tensorrt is not available. Please install it with `pip i
 MISSING_NEMO_MSG = "nemo is not available. Please install it with `pip install nemo`."
 MISSING_TORCHVISION_MSG = "torchvision is not available. Please install it with `pip install torchvision`."
 MISSING_MODELOPT_MSG = "modelopt is not available. Please install it with `pip install nvidia-modelopt[torch]`."
+MISSING_RAY_MSG = "ray is not available. Please install it with `pip install ray`."
+MISSING_VLLM_MSG = "vllm is not available. Please install it with `pip install vllm`."
 
 
 class UnavailableError(Exception):

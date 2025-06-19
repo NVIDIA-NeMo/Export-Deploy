@@ -21,9 +21,12 @@ import torch
 from PIL import Image
 
 from nemo_export.tarutils import TarPath
-from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
+from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError
 
-Tensor, HAVE_TRITON = safe_import_from("pytriton.model_config", "Tensor")
+try:
+    from pytriton.model_config import Tensor
+except ImportError:
+    HAVE_TRITON = False
 
 
 NEMO2 = "NEMO 2.0"
@@ -51,9 +54,8 @@ def typedict2tensor(
     Raises:
         Exception: If an unsupported type is encountered during type mapping
     """
-
     if not HAVE_TRITON:
-        raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
+        raise UnavailableError(MISSING_TRITON_MSG)
 
     def _map_type(type_):
         if type_ is int:
@@ -176,6 +178,9 @@ def cast_output(data, required_dtype):
         np.ndarray: A numpy array containing the input data cast to the required dtype,
             with at least 2 dimensions.
     """
+    if not HAVE_TRITON:
+        raise UnavailableError(MISSING_TRITON_MSG)
+
     if isinstance(data, torch.Tensor):
         data = data.cpu().numpy()
     elif not isinstance(data, np.ndarray):

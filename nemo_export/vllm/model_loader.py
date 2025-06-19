@@ -21,14 +21,14 @@ import torch
 
 from nemo_export.utils import load_model_weights
 from nemo_export.vllm.model_config import NemoModelConfig
-from nemo_export_deploy_common.import_utils import UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_VLLM_MSG, UnavailableError
 
 try:
     from vllm.config import ModelConfig
     from vllm.model_executor.model_loader import BaseModelLoader, get_model
     from vllm.model_executor.model_loader.utils import set_default_torch_dtype
 except (ImportError, ModuleNotFoundError):
-    raise UnavailableError("vllm is not installed. Please install it with `pip install vllm`.")
+    HAVE_VLLM = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -54,6 +54,9 @@ class NemoModelLoader(BaseModelLoader):
         vllm_config: NemoModelConfig,
     ) -> torch.nn.Module:
         """Overrides the load_model function from BaseModelLoader to convert Nemo weights at load time."""
+        if not HAVE_VLLM:
+            raise UnavailableError(MISSING_VLLM_MSG)
+
         model_config = vllm_config.model_config
         device_config = vllm_config.device_config
 

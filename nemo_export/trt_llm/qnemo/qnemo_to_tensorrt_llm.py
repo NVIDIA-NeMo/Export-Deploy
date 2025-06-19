@@ -20,12 +20,12 @@ import warnings
 from typing import List, Optional
 
 from nemo_export.trt_llm.qnemo.utils import CONFIG_NAME, WEIGHTS_NAME
-from nemo_export_deploy_common.import_utils import UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, UnavailableError
 
 try:
     from tensorrt_llm.models import PretrainedConfig
 except (ImportError, ModuleNotFoundError):
-    raise UnavailableError("tensorrt_llm is not installed. Please install it with `pip install tensorrt-llm`.")
+    HAVE_TRT_LLM = False
 
 
 def qnemo_to_tensorrt_llm(
@@ -51,6 +51,9 @@ def qnemo_to_tensorrt_llm(
     reduce_fusion: bool = True,
 ):
     """Build TensorRT-LLM engine with trtllm-build command in a subprocess."""
+    if not HAVE_TRT_LLM:
+        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
     assert not lora_target_modules, f"LoRA is not supported for quantized checkpoints, got {lora_target_modules}"
 
     warnings.warn(

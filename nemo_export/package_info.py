@@ -1,4 +1,4 @@
-from nemo_export_deploy_common.package_info import (
+from package_info import (
     __contact_emails__,
     __contact_names__,
     __download_url__,

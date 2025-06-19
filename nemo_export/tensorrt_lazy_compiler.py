@@ -22,14 +22,8 @@ from types import MethodType
 from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import torch
-
-from nemo_export_deploy_common.import_utils import UnavailableError
-
-try:
-    from nemo.utils.export_utils import add_casts_around_norms, replace_for_export
-    from nemo.utils.import_utils import safe_import
-except (ImportError, ModuleNotFoundError):
-    raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
+from nemo.utils.export_utils import add_casts_around_norms, replace_for_export
+from nemo.utils.import_utils import safe_import
 
 polygraphy, polygraphy_imported = safe_import("polygraphy")
 if polygraphy_imported:

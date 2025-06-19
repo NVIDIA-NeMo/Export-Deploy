@@ -29,7 +29,7 @@ from nemo_export.utils import (
 )
 from nemo_export.vllm.model_config import NemoModelConfig
 from nemo_export.vllm.model_loader import NemoModelLoader
-from nemo_export_deploy_common.import_utils import UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_VLLM_MSG, UnavailableError
 
 try:
     import vllm.envs as envs
@@ -50,7 +50,7 @@ try:
     from vllm.v1.core.sched.scheduler import Scheduler as V1Scheduler
     from vllm.v1.engine.llm_engine import LLMEngine
 except (ImportError, ModuleNotFoundError):
-    raise UnavailableError("vllm is not installed. Please install it with `pip install vllm`.")
+    HAVE_VLLM = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -101,6 +101,8 @@ class vLLMExporter(ITritonDeployable):
     def __init__(self):
         self.request_id = 0
         assert envs.VLLM_USE_V1, "Only vLLM V1 is supported"
+        if not HAVE_VLLM:
+            raise UnavailableError(MISSING_VLLM_MSG)
 
     def export(
         self,

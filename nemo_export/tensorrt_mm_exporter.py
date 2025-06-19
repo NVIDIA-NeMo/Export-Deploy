@@ -22,25 +22,21 @@ from typing import List
 import numpy as np
 import wrapt
 
-from nemo_export_deploy_common.import_utils import UnavailableError
+from nemo_deploy import ITritonDeployable
+from nemo_export.multimodal.build import (
+    build_mllama_engine,
+    build_trtllm_engine,
+    build_visual_engine,
+    extract_lora_ckpt,
+)
+from nemo_export.multimodal.run import MultimodalModelRunner
+from nemo_export.tarutils import unpack_tarball
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, UnavailableError
 
 try:
     from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
 except (ImportError, ModuleNotFoundError):
-    raise UnavailableError("tensorrt_llm is not installed. Please install it with `pip install tensorrt-llm`.")
-
-try:
-    from nemo_deploy import ITritonDeployable
-    from nemo_export.multimodal.build import (
-        build_mllama_engine,
-        build_trtllm_engine,
-        build_visual_engine,
-        extract_lora_ckpt,
-    )
-    from nemo_export.multimodal.run import MultimodalModelRunner
-    from nemo_export.tarutils import unpack_tarball
-except (ImportError, ModuleNotFoundError):
-    raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
+    HAVE_TRT_LLM = False
 
 use_deploy = True
 try:
@@ -293,6 +289,8 @@ class TensorRTMMExporter(ITritonDeployable):
         "num_beams",
     )
     def triton_infer_fn(self, **inputs: np.ndarray):
+        if not HAVE_TRT_LLM:
+            raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
         try:
             if self.runner is None:
                 raise Exception(

@@ -15,11 +15,15 @@
 
 import logging
 
-import ray
-from ray import serve
-from ray.serve import Application
-
 from nemo_deploy.ray_utils import find_available_port
+from nemo_export_deploy_common.import_utils import MISSING_RAY_MSG, UnavailableError
+
+try:
+    import ray
+    from ray import serve
+    from ray.serve import Application
+except ImportError:
+    HAVE_RAY = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -61,6 +65,9 @@ class DeployRay:
         Raises:
             Exception: If Ray is not installed.
         """
+        if not HAVE_RAY:
+            raise UnavailableError(MISSING_RAY_MSG)
+
         # Initialize Ray with proper configuration
 
         try:

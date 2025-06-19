@@ -23,6 +23,8 @@ import torch.distributed
 from jinja2 import Template
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 from megatron.core.inference.inference_request import InferenceRequest
+from pytriton.decorators import batch, first_value
+from pytriton.model_config import Tensor
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
@@ -33,11 +35,6 @@ from nemo_deploy.utils import (
     nemo_checkpoint_version,
     str_ndarray2list,
 )
-from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
-
-Tensor, HAVE_TRITON = safe_import_from("pytriton.model_config", "Tensor")
-batch, HAVE_TRITON = safe_import_from("pytriton.decorators", "batch")
-first_value, HAVE_TRITON = safe_import_from("pytriton.decorators", "first_value")
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -144,9 +141,6 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         random_seed: Optional[int] = None,
         legacy_ckpt: bool = False,
     ):
-        if not HAVE_TRITON:
-            raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
-
         self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = create_mcore_engine(
             num_devices=num_devices,
             num_nodes=num_nodes,
@@ -283,9 +277,6 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
     @property
     def get_triton_input(self):
-        if not HAVE_TRITON:
-            raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
-
         inputs = (
             Tensor(name="prompts", shape=(-1,), dtype=bytes),
             Tensor(name="max_length", shape=(-1,), dtype=np.int_, optional=True),
@@ -303,9 +294,6 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
     @property
     def get_triton_output(self):
-        if not HAVE_TRITON:
-            raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
-
         return (
             Tensor(name="sentences", shape=(-1,), dtype=bytes),
             Tensor(name="log_probs", shape=(-1,), dtype=np.single),

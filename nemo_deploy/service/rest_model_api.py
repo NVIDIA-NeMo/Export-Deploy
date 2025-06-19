@@ -16,9 +16,13 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
 from nemo_deploy.nlp import NemoQueryLLM
-from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
 
-logging, HAVE_NEMO = safe_import_from("nemo.utils", "logging")
+try:
+    from nemo.utils import logging
+except ImportError:
+    import logging
+
+    logging = logging.getLogger(__name__)
 
 
 class TritonSettings(BaseSettings):
@@ -28,10 +32,6 @@ class TritonSettings(BaseSettings):
 
     def __init__(self):
         super(TritonSettings, self).__init__()
-
-        if not HAVE_NEMO:
-            raise UnavailableError("nemo is not installed. Please install it with `pip install nemo`.")
-
         try:
             self._triton_service_port = int(os.environ.get("TRITON_PORT", 8080))
             self._triton_service_ip = os.environ.get("TRITON_HTTP_ADDRESS", "0.0.0.0")

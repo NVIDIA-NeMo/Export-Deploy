@@ -14,13 +14,12 @@
 
 from typing import Optional
 
-from nemo_export_deploy_common.import_utils import UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, UnavailableError
 
 try:
     import tensorrt_llm
 except (ImportError, ModuleNotFoundError):
-    raise UnavailableError("tensorrt_llm is not installed. Please install it with `pip install tensorrt-llm`.")
-
+    HAVE_TRT_LLM = False
 
 
 def is_rank(rank: Optional[int]) -> bool:
@@ -32,6 +31,9 @@ def is_rank(rank: Optional[int]) -> bool:
     Returns:
         bool: True if the current rank matches the specified rank or if rank is None.
     """
+    if not HAVE_TRT_LLM:
+        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
     current_rank = tensorrt_llm.mpi_rank()
     if rank is None:
         return True

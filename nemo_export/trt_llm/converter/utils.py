@@ -18,13 +18,13 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 import torch
 
-from nemo_export_deploy_common.import_utils import UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, UnavailableError
 
 try:
     import tensorrt_llm
     from tensorrt_llm._utils import mpi_comm, torch_to_numpy
-except (ImportError, ModuleNotFoundError) as e:
-    raise UnavailableError("tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`.") from e
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRT_LLM = False
 
 # A global dicts to store exported weights.
 # This is set to be a global variable to avoid extra code modification from tensorrt_llm.
@@ -364,6 +364,9 @@ def split_and_save_weight(
     config,
     scaling_factors={},
 ):
+    if not HAVE_TRT_LLM:
+        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
     use_attention_nemo_shape = config.get("use_attention_nemo_shape", False)
     split_gated_activation = config.get("split_gated_activation", False)
     num_attention_heads = config.get("num_attention_heads", 0)
@@ -618,6 +621,9 @@ def split(v: Union[np.ndarray, torch.Tensor], tp_size: int, idx: int, dim: int =
 
 
 def init_model_parallel_from_nemo(reshard_model):
+    if not HAVE_TRT_LLM:
+        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
     from megatron.core import parallel_state
 
     pp_size = parallel_state.get_pipeline_model_parallel_world_size()

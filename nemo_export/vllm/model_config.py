@@ -22,7 +22,10 @@ from hydra.utils import instantiate
 from omegaconf import OmegaConf
 from transformers import AutoConfig
 
-from nemo_export_deploy_common.import_utils import UnavailableError
+from nemo_export.tarutils import TarPath
+from nemo_export.utils import is_nemo2_checkpoint
+from nemo_export.vllm.model_converters import get_model_converter
+from nemo_export_deploy_common.import_utils import MISSING_VLLM_MSG, UnavailableError
 
 try:
     from vllm.config import (
@@ -34,14 +37,7 @@ try:
     )
     from vllm.transformers_utils.config import get_hf_text_config
 except (ImportError, ModuleNotFoundError):
-    raise UnavailableError("vllm is not installed. Please install it with `pip install vllm`.")
-
-try:
-    from nemo_export.tarutils import TarPath
-    from nemo_export.utils import is_nemo2_checkpoint
-    from nemo_export.vllm.model_converters import get_model_converter
-except (ImportError, ModuleNotFoundError):
-    raise UnavailableError("nemo_export is not installed. Please install it with `pip install nemo_export`.")
+    HAVE_VLLM = False
 
 
 class NemoModelConfig(ModelConfig):
@@ -77,6 +73,9 @@ class NemoModelConfig(ModelConfig):
         enable_sleep_mode: bool = False,
         model_impl: Union[str, ModelImpl] = ModelImpl.AUTO,
     ) -> None:
+        if not HAVE_VLLM:
+            raise UnavailableError(MISSING_VLLM_MSG)
+
         # Don't call ModelConfig.__init__ because we don't want it to call
         # transformers.AutoConfig.from_pretrained(...)
 

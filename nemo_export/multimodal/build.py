@@ -23,31 +23,31 @@ from typing import List
 
 import torch
 import yaml
-from nemo_automodel.shared.import_utils import UnavailableError, safe_import_from
 from PIL import Image
+from transformers import AutoModel, AutoProcessor, MllamaForConditionalGeneration
 
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
-from nemo_export_deploy_common.import_utils import UnavailableError, safe_import
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, MISSING_TENSORRT_MSG, UnavailableError
 
 from .converter import convert_mllama_nemo_to_hf
 
-_, HAVE_TENSORRT_LLM = safe_import("tensorrt_llm")
-_, HAVE_TRT = safe_import_from("tensorrt")
+try:
+    import tensorrt as trt
+except ImportError:
+    HAVE_TRT = False
 
-if HAVE_TENSORRT_LLM:
+try:
     from tensorrt_llm._common import check_max_num_tokens
     from tensorrt_llm.builder import BuildConfig, Builder
     from tensorrt_llm.commands.build import build as build_trtllm
     from tensorrt_llm.mapping import Mapping
     from tensorrt_llm.models import MLLaMAForCausalLM
     from tensorrt_llm.plugin import PluginConfig
-    from transformers import AutoModel, AutoProcessor, MllamaForConditionalGeneration
+except ImportError:
+    HAVE_TRT_LLM = False
 
-if HAVE_TRT:
-    import tensorrt as trt
-
-    logger = trt.Logger(trt.Logger.INFO)
+logger = trt.Logger(trt.Logger.INFO)
 
 
 def build_trtllm_engine(
@@ -67,10 +67,10 @@ def build_trtllm_engine(
     max_lora_rank: int = 64,
     lora_ckpt_list: List[str] = None,
 ):
-    if not HAVE_TENSORRT_LLM:
-        raise UnavailableError("tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`.")
-
     """Build TRTLLM engine by nemo export."""
+    if not HAVE_TRT_LLM:
+        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
     trt_llm_exporter = TensorRTLLM(model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False)
     trt_llm_exporter.export(
         nemo_checkpoint_path=visual_checkpoint_path if llm_checkpoint_path is None else llm_checkpoint_path,
@@ -104,6 +104,9 @@ def build_mllama_trtllm_engine(
     lora_ckpt_list: List[str] = None,
 ):
     """Build mllama TRTLLM engine from HF."""
+    if not HAVE_TRT_LLM:
+        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
     if max_batch_size < 4:
         print("TensorRT LLM may hit a runtime issue with batch size is smaller than 4 on some models. Force set to 4")
         max_batch_size = 4
@@ -166,9 +169,6 @@ def export_visual_wrapper_onnx(
     input_names=["input"],
     dynamic_axes={"input": {0: "batch"}},
 ):
-    if not HAVE_TRT:
-        raise UnavailableError("tensorrt is not available. Please install it with `pip install nvidia-tensorrt`.")
-
     """Export visual wrapper to ONNX."""
     logger.log(trt.Logger.INFO, "Exporting onnx")
     os.makedirs(f"{output_dir}/onnx", exist_ok=True)
@@ -196,9 +196,6 @@ def export_perception_wrapper_onnx(
         "encoded_length": {0: "batch"},
     },
 ):
-    if not HAVE_TRT:
-        raise UnavailableError("tensorrt is not available. Please install it with `pip install nvidia-tensorrt`.")
-
     """Export perception wrapper to ONNX."""
     logger.log(trt.Logger.INFO, "Exporting onnx")
     os.makedirs(f"{output_dir}/onnx", exist_ok=True)
@@ -226,7 +223,7 @@ def build_trt_engine(
 ):
     """Build TRT engine from onnx."""
     if not HAVE_TRT:
-        raise UnavailableError("tensorrt is not available. Please install it with `pip install nvidia-tensorrt`.")
+        raise UnavailableError(MISSING_TENSORRT_MSG)
 
     onnx_file = "%s/onnx/%s.onnx" % (output_dir, part_name)
     engine_file = "%s/%s.engine" % (output_dir, part_name)

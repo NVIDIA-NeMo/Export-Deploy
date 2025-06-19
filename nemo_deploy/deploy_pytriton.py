@@ -16,21 +16,21 @@
 import logging
 
 from nemo_deploy.deploy_base import DeployBase
-from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
-
-MISSING_TRITON_MSG = "pytriton is not available. Please install it with `pip install nvidia-pytriton`."
-
-ModelConfig, HAVE_TRITON = safe_import_from("pytriton.model_config", "ModelConfig")
-Triton, HAVE_TRITON = safe_import_from("pytriton.triton", "Triton")
-TritonConfig, HAVE_TRITON = safe_import_from("pytriton.triton", "TritonConfig")
+from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError
 
 LOGGER = logging.getLogger("NeMo")
+
+try:
+    from pytriton.model_config import ModelConfig
+    from pytriton.triton import Triton, TritonConfig
+except ImportError:
+    HAVE_TRITON = False
 
 
 class DeployPyTriton(DeployBase):
     """Deploys any models to Triton Inference Server that implements ITritonDeployable interface in nemo_deploy.
 
-    Example:`
+    Example:
         from nemo_deploy import DeployPyTriton, NemoQueryLLM
         from nemo_export.tensorrt_llm import TensorRTLLM
 
@@ -87,9 +87,6 @@ class DeployPyTriton(DeployBase):
             port (int) : port for the Triton server
             address (str): http address for Triton server to bind.
         """
-        if not HAVE_TRITON:
-            raise UnavailableError(MISSING_TRITON_MSG)
-
         super().__init__(
             triton_model_name=triton_model_name,
             triton_model_version=triton_model_version,
@@ -106,6 +103,9 @@ class DeployPyTriton(DeployBase):
 
     def deploy(self):
         """Deploys any models to Triton Inference Server."""
+        if not HAVE_TRITON:
+            raise UnavailableError(MISSING_TRITON_MSG)
+
         try:
             if self.streaming:
                 triton_config = TritonConfig(

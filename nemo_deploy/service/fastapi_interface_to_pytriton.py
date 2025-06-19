@@ -14,11 +14,17 @@ import os
 import numpy as np
 import requests
 from fastapi import FastAPI, HTTPException
-from nemo.utils import logging
 from pydantic import BaseModel, model_validator
 from pydantic_settings import BaseSettings
 
 from nemo_deploy.nlp import NemoQueryLLMPyTorch
+
+try:
+    from nemo.utils import logging
+except ImportError:
+    import logging
+
+    logging = logging.getLogger(__name__)
 
 
 class TritonSettings(BaseSettings):

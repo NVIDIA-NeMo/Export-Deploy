@@ -23,20 +23,15 @@ from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
+import tensorrt as trt
+import tensorrt_llm
 import torch
+from mpi4py.futures import MPIPoolExecutor
 from transformers import PreTrainedTokenizer
 
-from nemo_export_deploy_common.import_utils import UnavailableError
-
-LOGGER = logging.getLogger("NeMo")
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, UnavailableError
 
 try:
-    from mpi4py.futures import MPIPoolExecutor
-except (ImportError, ModuleNotFoundError) as e:
-    raise UnavailableError("mpi4py is not available. Please install it with `pip install mpi4py`.") from e
-
-try:
-    import tensorrt_llm
     from tensorrt_llm.builder import Engine
     from tensorrt_llm.lora_manager import LoraManager
     from tensorrt_llm.quantization import QuantMode
@@ -46,8 +41,10 @@ try:
         ModelRunnerCpp,
         SamplingConfig,
     )
-except (ImportError, ModuleNotFoundError) as e:
-    raise UnavailableError("tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`.") from e
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRT_LLM = False
+
+LOGGER = logging.getLogger("NeMo")
 
 use_trtllm_bindings = True
 try:
@@ -482,6 +479,9 @@ def forward(
 
 def load_distributed(engine_dir, model_parallel_rank, gpus_per_node):
     """Loads TRTLLM engines in a distributed gpu environment, in particular this function creates a custom mapping of device_id to WorldConfig."""
+    if not HAVE_TRT_LLM:
+        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
     global tensorrt_llm_worker_context
     if isinstance(tensorrt_llm_worker_context.decoder, ModelRunner):
         return
