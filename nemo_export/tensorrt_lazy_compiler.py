@@ -33,7 +33,6 @@ except ImportError:
     HAVE_NEMO = False
     add_casts_around_norms = MagicMock()
     replace_for_export = MagicMock()
-    safe_import = MagicMock()
 
 
 polygraphy, polygraphy_imported = safe_import("polygraphy")
