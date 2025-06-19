@@ -16,13 +16,16 @@ from io import BytesIO
 
 import numpy as np
 import requests
+from decord import VideoReader
 from PIL import Image
 
 from nemo_deploy.utils import str_list2numpy
-from nemo_export_deploy_common.import_utils import UnavailableError, safe_import_from
+from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError
 
-ModelClient, HAVE_TRITON = safe_import_from("pytriton.client", "ModelClient")
-VideoReader, HAVE_VIDEO_READER = safe_import_from("decord", "VideoReader")
+try:
+    from pytriton.client import ModelClient
+except ImportError:
+    HAVE_TRITON = False
 
 
 class NemoQueryMultimodal:
@@ -53,15 +56,10 @@ class NemoQueryMultimodal:
     def setup_media(self, input_media):
         """Setup input media."""
         if self.model_type == "video-neva":
-            if not HAVE_VIDEO_READER:
-                raise UnavailableError("decord is not available. Please install it with `pip install decord`.")
             vr = VideoReader(input_media)
             frames = [f.asnumpy() for f in vr]
             return np.array(frames)
         elif self.model_type == "lita" or self.model_type == "vita":
-            if not HAVE_VIDEO_READER:
-                raise UnavailableError("decord is not available. Please install it with `pip install decord`.")
-
             vr = VideoReader(input_media)
             frames = [f.asnumpy() for f in vr]
             subsample_len = self.frame_len(frames)
@@ -107,9 +105,6 @@ class NemoQueryMultimodal:
         lora_uids=None,
     ):
         """Run query."""
-        if not HAVE_TRITON:
-            raise UnavailableError("pytriton is not available. Please install it with `pip install nvidia-pytriton`.")
-
         prompts = str_list2numpy([input_text])
         inputs = {"input_text": prompts}
 
@@ -143,6 +138,9 @@ class NemoQueryMultimodal:
         if lora_uids is not None:
             lora_uids = np.char.encode(lora_uids, "utf-8")
             inputs["lora_uids"] = np.full((prompts.shape[0], len(lora_uids)), lora_uids)
+
+        if not HAVE_TRITON:
+            raise UnavailableError(MISSING_TRITON_MSG)
 
         with ModelClient(self.url, self.model_name, init_timeout_s=init_timeout) as client:
             result_dict = client.infer_batch(**inputs)

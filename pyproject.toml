@@ -51,6 +51,7 @@ dependencies = [
     "nvidia-pytriton ; platform_system != 'Darwin' ",
     "flashinfer-python==0.2.5",
     "Pillow",
+    "decord",
 ]
 
 [project.optional-dependencies]

@@ -20,7 +20,8 @@ import importlib
 import logging
 import traceback
 from contextlib import contextmanager
-from typing import Tuple
+from types import ModuleType
+from typing import Callable, Tuple
 
 import torch
 from packaging.version import Version as PkgVersion
@@ -39,6 +40,8 @@ MISSING_TRITON_MSG = "pytriton is not available. Please install it with `pip ins
 MISSING_TENSORRT_LLM_MSG = "tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`."
 MISSING_TENSORRT_MSG = "tensorrt is not available. Please install it with `pip install nvidia-tensorrt`."
 MISSING_NEMO_MSG = "nemo is not available. Please install it with `pip install nemo`."
+MISSING_TORCHVISION_MSG = "torchvision is not available. Please install it with `pip install torchvision`."
+MISSING_MODELOPT_MSG = "modelopt is not available. Please install it with `pip install nvidia-modelopt[torch]`."
 
 
 class UnavailableError(Exception):
@@ -261,7 +264,7 @@ class UnavailableNullContext:
         pass
 
 
-def safe_import(module, *, msg=None, alt=None) -> Tuple[object, bool]:
+def safe_import(module, msg=None, *, alt=None):
     """A function used to import modules that may not be available.
 
     This function will attempt to import a module with the given name, but it
@@ -306,7 +309,7 @@ def safe_import(module, *, msg=None, alt=None) -> Tuple[object, bool]:
         return alt, False
 
 
-def safe_import_from(module, symbol, *, msg=None, alt=None, fallback_module=None) -> Tuple[object, bool]:
+def safe_import_from(module, symbol, msg=None, *, alt=None, fallback_module=None):
     """A function used to import symbols from modules that may not be available.
 
     This function will attempt to import a symbol with the given name from
