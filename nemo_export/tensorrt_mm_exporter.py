@@ -63,8 +63,8 @@ try:
 except Exception:
     from unittest.mock import MagicMock
 
-    batch = noop_decorator
-    first_value = noop_decorator
+    batch = MagicMock()
+    first_value = MagicMock()
     Tensor = MagicMock()
     use_pytriton = False
 
