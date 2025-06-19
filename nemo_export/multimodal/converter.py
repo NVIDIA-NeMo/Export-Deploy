@@ -14,13 +14,23 @@
 
 
 import torch
-from nemo import lightning as nl
-from nemo.collections import vlm
 from transformers import AutoProcessor, MllamaConfig
 from transformers.models.mllama.configuration_mllama import (
     MllamaTextConfig,
     MllamaVisionConfig,
 )
+
+from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
+
+try:
+    from nemo import lightning as nl
+    from nemo.collections import vlm
+except ImportError:
+    from unittest.mock import MagicMock
+
+    nl = MagicMock()
+    vlm = MagicMock()
+    HAVE_NEMO = False
 
 
 def split_qkv_weight(qkv_weight, model_config):
@@ -115,6 +125,9 @@ def convert_mllama_config(source_vision, source_text):
 
 def convert_mllama_nemo_to_hf(checkpoint_path, processor_name):
     """Convert nemo mllama to hf state dict and config."""
+    if not HAVE_NEMO:
+        raise UnavailableError(MISSING_NEMO_MSG)
+
     processor = AutoProcessor.from_pretrained(processor_name)
 
     strategy = nl.MegatronStrategy(
