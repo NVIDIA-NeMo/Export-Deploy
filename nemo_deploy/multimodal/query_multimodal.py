@@ -18,7 +18,12 @@ import numpy as np
 import requests
 
 from nemo_deploy.utils import str_list2numpy
-from nemo_export_deploy_common.import_utils import MISSING_DECORD_MSG, MISSING_TRITON_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import (
+    MISSING_DECORD_MSG,
+    MISSING_PIL_MSG,
+    MISSING_TRITON_MSG,
+    UnavailableError,
+)
 
 try:
     from PIL import Image
