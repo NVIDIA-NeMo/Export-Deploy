@@ -23,15 +23,19 @@ from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
-import tensorrt as trt
-import tensorrt_llm
 import torch
 from mpi4py.futures import MPIPoolExecutor
 from transformers import PreTrainedTokenizer
 
-from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, MISSING_TRT_MSG, UnavailableError
 
 try:
+    import tensorrt as trt
+except ImportError:
+    HAVE_TRT = False
+
+try:
+    import tensorrt_llm
     from tensorrt_llm.builder import Engine
     from tensorrt_llm.lora_manager import LoraManager
     from tensorrt_llm.quantization import QuantMode
@@ -573,6 +577,9 @@ def maybe_cast_to_trt_dtype(dtype):
     Returns:
         trt.DataType: Corresponding TensorRT dtype
     """
+    if not HAVE_TRT:
+        raise UnavailableError(MISSING_TRT_MSG)
+
     if isinstance(dtype, trt.DataType):
         return dtype
     elif isinstance(dtype, torch.dtype):
@@ -587,6 +594,10 @@ def refit(weights_dict: dict):
     Args:
         weights_dict: Dictionary containing new weights
     """
+
+    if not HAVE_TRT:
+        raise UnavailableError(MISSING_TRT_MSG)
+
     global tensorrt_llm_worker_context
     decoder = tensorrt_llm_worker_context.decoder
     if not isinstance(decoder, ModelRunner):

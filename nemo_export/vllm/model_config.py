@@ -40,7 +40,7 @@ except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     HAVE_VLLM = False
-    ModelConfig = None
+    ModelConfig = MagicMock()
     ModelImpl = MagicMock()
     PoolerConfig = MagicMock()
 
