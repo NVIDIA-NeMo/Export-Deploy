@@ -23,11 +23,10 @@ from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import torch
 
-from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError, safe_import
 
 try:
     from nemo.utils.export_utils import add_casts_around_norms, replace_for_export
-    from nemo.utils.import_utils import safe_import
 except ImportError:
     from unittest.mock import MagicMock
 

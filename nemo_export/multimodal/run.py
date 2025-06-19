@@ -26,7 +26,6 @@ import numpy as np
 import torch
 import yaml
 from torch.nn import functional as F
-from torchvision import transforms
 from transformers import AutoProcessor, CLIPImageProcessor
 
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
@@ -35,8 +34,18 @@ from nemo_export_deploy_common.import_utils import (
     MISSING_PIL_MSG,
     MISSING_TENSORRT_LLM_MSG,
     MISSING_TENSORRT_MSG,
+    MISSING_TORCHVISION_MSG,
     UnavailableError,
 )
+
+try:
+    from torchvision import transforms
+except ImportError:
+    from unittest.mock import MagicMock
+
+    transforms = MagicMock()
+    HAVE_TORCHVISION = False
+
 
 try:
     from PIL import Image
@@ -755,6 +764,9 @@ class MultimodalModelRunner:
         return new_images
 
     def setup_inputs(self, input_text, raw_image, batch_size):
+        if not HAVE_TORCHVISION:
+            raise UnavailableError(MISSING_TORCHVISION_MSG)
+
         attention_mask = None
         image = None
 

@@ -17,7 +17,6 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
-import modelopt.torch.quantization as mtq
 import numpy as np
 import torch
 import wrapt
@@ -31,7 +30,21 @@ from nemo_export.utils import (
     is_nemo2_checkpoint,
     validate_fp8_network,
 )
-from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, MISSING_TENSORRT_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import (
+    MISSING_MODELOPT_MSG,
+    MISSING_NEMO_MSG,
+    MISSING_TENSORRT_MSG,
+    UnavailableError,
+)
+
+try:
+    import modelopt.torch.quantization as mtq
+except ImportError:
+    from unittest.mock import MagicMock
+
+    mtq = MagicMock()
+    HAVE_MODELOPT = False
+
 
 try:
     import tensorrt as trt
@@ -472,6 +485,9 @@ class OnnxLLMExporter(ITritonDeployable):
         """
         if not HAVE_NEMO:
             raise UnavailableError(MISSING_NEMO_MSG)
+
+        if not HAVE_MODELOPT:
+            raise UnavailableError(MISSING_MODELOPT_MSG)
 
         if isinstance(quant_cfg, str):
             assert quant_cfg in QUANT_CFG_CHOICES, (
