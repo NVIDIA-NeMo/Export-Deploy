@@ -50,6 +50,20 @@ try:
     from vllm.v1.core.sched.scheduler import Scheduler as V1Scheduler
     from vllm.v1.engine.llm_engine import LLMEngine
 except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    envs = MagicMock()
+    RequestOutput = MagicMock()
+    SamplingParams = MagicMock()
+    CacheConfig = MagicMock()
+    DeviceConfig = MagicMock()
+    LoRAConfig = MagicMock()
+    ObservabilityConfig = MagicMock()
+    ParallelConfig = MagicMock()
+    SchedulerConfig = MagicMock()
+    VllmConfig = MagicMock()
+    initialize_ray_cluster = MagicMock()
+    LoRARequest = MagicMock()
     HAVE_VLLM = False
 
 LOGGER = logging.getLogger("NeMo")

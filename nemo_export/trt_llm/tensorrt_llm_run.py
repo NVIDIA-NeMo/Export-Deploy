@@ -24,10 +24,17 @@ from typing import List, Optional
 
 import numpy as np
 import torch
-from mpi4py.futures import MPIPoolExecutor
 from transformers import PreTrainedTokenizer
 
-from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, MISSING_TRT_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, MISSING_TENSORRT_MSG, UnavailableError
+
+try:
+    from mpi4py.futures import MPIPoolExecutor
+except ImportError:
+    from unittest.mock import MagicMock
+
+    MPIPoolExecutor = MagicMock()
+    HAVE_MPI = False
 
 try:
     import tensorrt as trt
@@ -369,6 +376,9 @@ def load(
         executor = None
         tensorrt_llm.mpi_barrier()
     else:
+        if not HAVE_MPI:
+            raise UnavailableError(MISSING_MPI_MSG)
+
         executor = MPIPoolExecutor(max_workers=world_size)
         futures = []
         for _ in range(world_size):
@@ -578,7 +588,7 @@ def maybe_cast_to_trt_dtype(dtype):
         trt.DataType: Corresponding TensorRT dtype
     """
     if not HAVE_TRT:
-        raise UnavailableError(MISSING_TRT_MSG)
+        raise UnavailableError(MISSING_TENSORRT_MSG)
 
     if isinstance(dtype, trt.DataType):
         return dtype
@@ -596,7 +606,7 @@ def refit(weights_dict: dict):
     """
 
     if not HAVE_TRT:
-        raise UnavailableError(MISSING_TRT_MSG)
+        raise UnavailableError(MISSING_TENSORRT_MSG)
 
     global tensorrt_llm_worker_context
     decoder = tensorrt_llm_worker_context.decoder
