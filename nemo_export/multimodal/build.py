@@ -23,15 +23,19 @@ from typing import List
 
 import torch
 import yaml
+from nemo_automodel.shared.import_utils import UnavailableError, safe_import_from
 from PIL import Image
 
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
-from nemo_export_deploy_common.import_utils import UnavailableError
+from nemo_export_deploy_common.import_utils import UnavailableError, safe_import
 
 from .converter import convert_mllama_nemo_to_hf
 
-try:
+_, HAVE_TENSORRT_LLM = safe_import("tensorrt_llm")
+_, HAVE_TRT = safe_import_from("tensorrt")
+
+if HAVE_TENSORRT_LLM:
     from tensorrt_llm._common import check_max_num_tokens
     from tensorrt_llm.builder import BuildConfig, Builder
     from tensorrt_llm.commands.build import build as build_trtllm
@@ -39,15 +43,11 @@ try:
     from tensorrt_llm.models import MLLaMAForCausalLM
     from tensorrt_llm.plugin import PluginConfig
     from transformers import AutoModel, AutoProcessor, MllamaForConditionalGeneration
-except (ImportError, ModuleNotFoundError):
-    HAVE_TRT_LLM = False
 
-try:
+if HAVE_TRT:
     import tensorrt as trt
-except (ImportError, ModuleNotFoundError) as e:
-    raise UnavailableError("tensorrt is not available. Please install it with `pip install nvidia-tensorrt`.") from e
 
-logger = trt.Logger(trt.Logger.INFO)
+    logger = trt.Logger(trt.Logger.INFO)
 
 
 def build_trtllm_engine(
@@ -67,7 +67,7 @@ def build_trtllm_engine(
     max_lora_rank: int = 64,
     lora_ckpt_list: List[str] = None,
 ):
-    if not HAVE_TRT_LLM:
+    if not HAVE_TENSORRT_LLM:
         raise UnavailableError("tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`.")
 
     """Build TRTLLM engine by nemo export."""
@@ -166,6 +166,9 @@ def export_visual_wrapper_onnx(
     input_names=["input"],
     dynamic_axes={"input": {0: "batch"}},
 ):
+    if not HAVE_TRT:
+        raise UnavailableError("tensorrt is not available. Please install it with `pip install nvidia-tensorrt`.")
+
     """Export visual wrapper to ONNX."""
     logger.log(trt.Logger.INFO, "Exporting onnx")
     os.makedirs(f"{output_dir}/onnx", exist_ok=True)
@@ -193,6 +196,9 @@ def export_perception_wrapper_onnx(
         "encoded_length": {0: "batch"},
     },
 ):
+    if not HAVE_TRT:
+        raise UnavailableError("tensorrt is not available. Please install it with `pip install nvidia-tensorrt`.")
+
     """Export perception wrapper to ONNX."""
     logger.log(trt.Logger.INFO, "Exporting onnx")
     os.makedirs(f"{output_dir}/onnx", exist_ok=True)
@@ -219,6 +225,9 @@ def build_trt_engine(
     part_name="visual_encoder",
 ):
     """Build TRT engine from onnx."""
+    if not HAVE_TRT:
+        raise UnavailableError("tensorrt is not available. Please install it with `pip install nvidia-tensorrt`.")
+
     onnx_file = "%s/onnx/%s.onnx" % (output_dir, part_name)
     engine_file = "%s/%s.engine" % (output_dir, part_name)
     config_file = "%s/%s" % (output_dir, "config.json")
