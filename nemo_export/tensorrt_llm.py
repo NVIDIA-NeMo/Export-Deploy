@@ -76,6 +76,8 @@ from nemo_export_deploy_common.import_utils import (
 try:
     from pytriton.decorators import batch, first_value
     from pytriton.model_config import Tensor
+
+    HAVE_PYTRITON = True
 except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
