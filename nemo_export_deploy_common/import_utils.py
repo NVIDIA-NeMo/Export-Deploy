@@ -25,7 +25,6 @@ from typing import Tuple
 import torch
 from packaging.version import Version as PkgVersion
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
@@ -35,6 +34,11 @@ GPU_INSTALL_STRING = (
     """https://pypi.nvidia.com nemo-curator[cuda12x]`
 or use `pip install --extra-index-url https://pypi.nvidia.com ".[cuda12x]"` if installing from source"""
 )
+
+MISSING_TRITON_MSG = "pytriton is not available. Please install it with `pip install nvidia-pytriton`."
+MISSING_TENSORRT_LLM_MSG = "tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`."
+MISSING_TENSORRT_MSG = "tensorrt is not available. Please install it with `pip install nvidia-tensorrt`."
+MISSING_NEMO_MSG = "nemo is not available. Please install it with `pip install nemo`."
 
 
 class UnavailableError(Exception):
@@ -86,14 +90,14 @@ class UnavailableMeta(type):
     def __call__(cls, *args, **kwargs):
         if hasattr(cls, "_original_exception"):
             # Re-raise the original exception with its traceback
-            raise cls._original_exception
+            raise UnavailableError(cls._msg) from cls._original_exception
         else:
             raise UnavailableError(cls._msg)
 
     def __getattr__(cls, name):
         if hasattr(cls, "_original_exception"):
             # Re-raise the original exception with its traceback
-            raise cls._original_exception
+            raise UnavailableError(cls._msg) from cls._original_exception
         else:
             raise UnavailableError(cls._msg)
 
