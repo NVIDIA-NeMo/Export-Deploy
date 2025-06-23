@@ -175,7 +175,6 @@ jobs:
           repository: NVIDIA-NeMo/FW-CI-templates
           ref: ko3n1g/feat/check-import-action
           path: check-import-action
-          token: ${{ secrets.PAT }}
 
       - name: Check imports for nemo_deploy
         uses: ./check-import-action/.github/actions/check-import-action
