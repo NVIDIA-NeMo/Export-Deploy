@@ -169,13 +169,22 @@ jobs:
 
           uv pip install --no-deps -e .
 
-      - name: Run import checks for nemo_deploy
-        run: |
-          python .github/scripts/check_imports.py --package-name nemo_deploy
+      - name: Checkout check-import-action
+        uses: actions/checkout@v4
+        with:
+          repository: NVIDIA-NeMo/FW-CI-templates
+          ref: ko3n1g/feat/check-import-action
+          path: check-import-action
 
-      - name: Run import checks for nemo_export
-        run: |
-          python .github/scripts/check_imports.py --package-name nemo_export
+      - name: Check imports
+        uses: ./check-import-action/.github/actions/check-import-action
+        with:
+          package-name: nemo_deploy
+
+      - name: Check imports
+        uses: ./check-import-action/.github/actions/check-import-action
+        with:
+          package-name: nemo_export
 
   install-test-summary:
     needs: [pip-test, uv-test, ngc-cuda-test]
