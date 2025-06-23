@@ -214,6 +214,8 @@ jobs:
         include:
           - script: L2_NeMo_2_Export_HF_TRT_LLM
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
+          - script: L2_NeMo_2_Export_Deploy_TRTLLM
+            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Deploy_Query_In_Framework
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Deploy_Query_Ray
