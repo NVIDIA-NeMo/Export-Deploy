@@ -51,9 +51,13 @@ jobs:
         run: |
           pip install .
 
-      - name: Run import checks
+      - name: Run import checks for nemo_deploy
         run: |
-          python .github/scripts/check_imports.py
+          python .github/scripts/check_imports.py --package-name nemo_deploy
+
+      - name: Run import checks for nemo_export
+        run: |
+          python .github/scripts/check_imports.py --package-name nemo_export
 
   ngc-cuda-test:
     runs-on: linux-amd64-cpu16
@@ -115,7 +119,14 @@ jobs:
           bash ./docker/common/install_conflicting_deps.sh
 
           uv pip install --no-deps -e .
-          python .github/scripts/check_imports.py
+
+      - name: Run import checks for nemo_deploy
+        run: |
+          python .github/scripts/check_imports.py --package-name nemo_deploy
+
+      - name: Run import checks for nemo_export
+        run: |
+          python .github/scripts/check_imports.py --package-name nemo_export
 
   uv-test:
     runs-on: ${{ matrix.arch }}
@@ -157,7 +168,14 @@ jobs:
           uv sync --link-mode copy --locked --all-groups
 
           uv pip install --no-deps -e .
-          uv run python .github/scripts/check_imports.py
+
+      - name: Run import checks for nemo_deploy
+        run: |
+          python .github/scripts/check_imports.py --package-name nemo_deploy
+
+      - name: Run import checks for nemo_export
+        run: |
+          python .github/scripts/check_imports.py --package-name nemo_export
 
   install-test-summary:
     needs: [pip-test, uv-test, ngc-cuda-test]

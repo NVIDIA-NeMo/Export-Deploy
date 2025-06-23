@@ -25,6 +25,8 @@ import sys
 import traceback
 from typing import Dict, List, Tuple
 
+import click
+
 
 class ImportChecker:
     """Check imports for all modules in a package."""
@@ -111,7 +113,7 @@ class ImportChecker:
                 return "graceful", "UnavailableError detected during import"
             return "failed", f"{str(tb)}"
 
-    def check_all_imports(self) -> None:
+    def check_all_imports(self):
         """Check imports for all discovered modules."""
         print(f"Discovering modules in package '{self.package_name}'...")
         modules = self.discover_modules(self.package_name)
@@ -169,12 +171,16 @@ class ImportChecker:
         return 0 if self.failure_count > 0 else 1
 
 
-def main():
+@click.command()
+@click.option(
+    "--package-name",
+    required=True,
+    help="Package name to check imports for",
+)
+def main(package_name: str):
     """Main entry point."""
-
-    checker_nemo_deploy = ImportChecker(package_name="nemo_deploy")
-    checker_nemo_export = ImportChecker(package_name="nemo_export")
-    successful = checker_nemo_deploy.check_all_imports() and checker_nemo_export.check_all_imports()
+    checker = ImportChecker(package_name=package_name)
+    successful = checker.check_all_imports()
     return 0 if successful else 1
 
 
