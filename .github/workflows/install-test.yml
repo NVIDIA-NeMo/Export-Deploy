@@ -169,20 +169,20 @@ jobs:
 
           uv pip install --no-deps -e .
 
-      - name: Checkout check-import-action
+      - name: Checkout check-imports
         uses: actions/checkout@v4
         with:
           repository: NVIDIA-NeMo/FW-CI-templates
           ref: ko3n1g/feat/check-import-action
-          path: check-import-action
+          path: FW-CI-templates
 
       - name: Check imports for nemo_deploy
-        uses: ./check-import-action/.github/actions/check-import-action
+        uses: ./FW-CI-templates/.github/actions/check-imports
         with:
           package-name: nemo_deploy
 
       - name: Check imports for nemo_export
-        uses: ./check-import-action/.github/actions/check-import-action
+        uses: ./FW-CI-templates/.github/actions/check-imports
         with:
           package-name: nemo_export
 
