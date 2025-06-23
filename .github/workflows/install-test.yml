@@ -180,11 +180,13 @@ jobs:
         uses: ./FW-CI-templates/.github/actions/check-imports
         with:
           package-name: nemo_deploy
+          python-binary: ./venv/bin/python
 
       - name: Check imports for nemo_export
         uses: ./FW-CI-templates/.github/actions/check-imports
         with:
           package-name: nemo_export
+          python-binary: ./venv/bin/python
 
   install-test-summary:
     needs: [pip-test, uv-test, ngc-cuda-test]
