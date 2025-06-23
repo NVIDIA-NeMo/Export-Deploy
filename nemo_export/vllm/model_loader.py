@@ -27,6 +27,8 @@ try:
     from vllm.config import ModelConfig
     from vllm.model_executor.model_loader import BaseModelLoader, get_model
     from vllm.model_executor.model_loader.utils import set_default_torch_dtype
+
+    HAVE_VLLM = True
 except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 

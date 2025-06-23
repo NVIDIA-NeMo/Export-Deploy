@@ -49,6 +49,8 @@ try:
     from vllm.lora.request import LoRARequest
     from vllm.v1.core.sched.scheduler import Scheduler as V1Scheduler
     from vllm.v1.engine.llm_engine import LLMEngine
+
+    HAVE_VLLM = True
 except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 

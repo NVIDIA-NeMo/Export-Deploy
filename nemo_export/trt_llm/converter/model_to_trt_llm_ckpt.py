@@ -32,6 +32,8 @@ from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, Una
 
 try:
     from tensorrt_llm._utils import pad_vocab_size, str_dtype_to_torch
+
+    HAVE_TRT_LLM = True
 except (ImportError, ModuleNotFoundError):
     HAVE_TRT_LLM = False
 

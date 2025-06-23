@@ -31,6 +31,8 @@ try:
     from tensorrt_llm.functional import non_gated_version
     from tensorrt_llm.layers import MoeConfig
     from tensorrt_llm.models.modeling_utils import PretrainedConfig
+
+    HAVE_TRT_LLM = True
 except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 

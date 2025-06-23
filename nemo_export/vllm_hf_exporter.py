@@ -24,12 +24,16 @@ from nemo_export_deploy_common.import_utils import MISSING_PYTRITON_MSG, MISSING
 try:
     from pytriton.decorators import batch, first_value
     from pytriton.model_config import Tensor
+
+    HAVE_PYTRITON = True
 except (ImportError, ModuleNotFoundError):
     HAVE_PYTRITON = False
 
 try:
     from vllm import LLM, SamplingParams
     from vllm.lora.request import LoRARequest
+
+    HAVE_VLLM = True
 except (ImportError, ModuleNotFoundError):
     HAVE_VLLM = False
 

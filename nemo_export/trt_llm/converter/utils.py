@@ -23,6 +23,8 @@ from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, Una
 try:
     import tensorrt_llm
     from tensorrt_llm._utils import mpi_comm, torch_to_numpy
+
+    HAVE_TRT_LLM = True
 except (ImportError, ModuleNotFoundError):
     HAVE_TRT_LLM = False
 

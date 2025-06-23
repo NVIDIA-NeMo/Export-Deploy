@@ -35,6 +35,8 @@ from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, Una
 
 try:
     from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
+
+    HAVE_TRT_LLM = True
 except (ImportError, ModuleNotFoundError):
     HAVE_TRT_LLM = False
 

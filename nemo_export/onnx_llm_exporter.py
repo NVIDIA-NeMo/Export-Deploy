@@ -56,6 +56,8 @@ except (ImportError, ModuleNotFoundError):
 
 try:
     import tensorrt as trt
+
+    HAVE_TENSORRT = True
 except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
@@ -68,6 +70,8 @@ try:
     )
 
     QUANT_CFG_CHOICES = get_quant_cfg_choices()
+
+    HAVE_NEMO = True
 except (ImportError, ModuleNotFoundError):
     HAVE_NEMO = False
 

@@ -18,6 +18,8 @@ import os
 
 try:
     import decord
+
+    HAVE_DECORD = True
 except Exception:
     HAVE_DECORD = False
 
@@ -51,11 +53,15 @@ except (ImportError, ModuleNotFoundError):
 
 try:
     from PIL import Image
+
+    HAVE_PIL = True
 except Exception:
     HAVE_PIL = False
 
 try:
     import tensorrt as trt
+
+    HAVE_TRT = True
 except (ImportError, ModuleNotFoundError):
     HAVE_TRT = False
 
@@ -65,6 +71,8 @@ try:
     from tensorrt_llm import logger
     from tensorrt_llm._utils import str_dtype_to_trt
     from tensorrt_llm.runtime import ModelRunner, Session, TensorInfo
+
+    HAVE_TRT_LLM = True
 except (ImportError, ModuleNotFoundError):
     HAVE_TRT_LLM = False
 

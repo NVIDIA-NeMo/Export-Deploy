@@ -23,6 +23,8 @@ from nemo_export_deploy_common.import_utils import MISSING_RAY_MSG, UnavailableE
 
 try:
     from ray import serve
+
+    HAVE_RAY = True
 except (ImportError, ModuleNotFoundError):
     HAVE_RAY = False
 

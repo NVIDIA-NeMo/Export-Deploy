@@ -36,6 +36,8 @@ try:
         _get_and_verify_max_len,
     )
     from vllm.transformers_utils.config import get_hf_text_config
+
+    HAVE_VLLM = True
 except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
