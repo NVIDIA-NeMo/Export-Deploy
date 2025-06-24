@@ -342,4 +342,4 @@ We welcome contributions to NeMo RL! Please see our [Contributing Guidelines](CO
 
 ## License
 
-NeMo Export-Deploy is licensed under the [Apache License 2.0](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/LICENSE).
+NeMo Export-Deploy is licensed under the [Apache License 2.0](https://github.com/NVIDIA-NeMo/Export-Deploy?tab=Apache-2.0-1-ov-file).
