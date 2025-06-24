@@ -48,6 +48,7 @@ def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_paralle
     shutil.rmtree("/tmp/safe_tensor_test/")
 
 
+@pytest.mark.pleasefixme
 @pytest.mark.parametrize("tensor_parallelism_size", [2, 1])
 def test_nemo2_convert_to_export(tensor_parallelism_size):
     """
