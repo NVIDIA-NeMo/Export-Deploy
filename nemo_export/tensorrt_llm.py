@@ -23,7 +23,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-import safetensors
 import tensorrt_llm
 import torch
 import torch.nn.functional as F
@@ -37,7 +36,6 @@ from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
 from pytriton.decorators import batch, first_value
 from pytriton.model_config import Tensor
 from tensorrt_llm._common import check_max_num_tokens
-from tensorrt_llm._utils import numpy_to_torch
 from tensorrt_llm.builder import BuildConfig
 from tensorrt_llm.commands.build import build as build_trtllm
 from tensorrt_llm.layers import MoeConfig
@@ -88,7 +86,6 @@ from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
 from nemo_export.tarutils import unpack_tarball
 from nemo_export.trt_llm.utils import determine_quantization_settings
-
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
     get_model_type,
     get_tokenizer,

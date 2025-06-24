@@ -14,7 +14,6 @@
 
 import json
 import os
-import re
 from unittest.mock import (
     mock_open,
     patch,
