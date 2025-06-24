@@ -17,9 +17,6 @@ import shutil
 import pytest
 
 
-@pytest.mark.pleasefixme  # disabled since it required data
-@pytest.mark.run_only_on("GPU")
-@pytest.mark.unit
 @pytest.mark.parametrize("tensor_parallelism_size,pipeline_parallelism_size", [(2, 1), (1, 2)])
 def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_parallelism_size):
     """
@@ -51,10 +48,9 @@ def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_paralle
     shutil.rmtree("/tmp/safe_tensor_test/")
 
 
-@pytest.mark.pleasefixme  # disabled since it required data
-@pytest.mark.run_only_on("GPU")
-@pytest.mark.unit
-def test_nemo2_convert_to_export():
+@pytest.mark.pleasefixme
+@pytest.mark.parametrize("tensor_parallelism_size", [2, 1])
+def test_nemo2_convert_to_export(tensor_parallelism_size):
     """
     Test safe tensor exporter. This tests the whole nemo export until engine building.
     """
@@ -67,11 +63,11 @@ def test_nemo2_convert_to_export():
         nemo_checkpoint_path="/home/TestData/llm/models/llama32_1b_nemo2",
         model_type="llama",
         delete_existing_files=True,
-        tensor_parallelism_size=1,
+        tensor_parallelism_size=tensor_parallelism_size,
         pipeline_parallelism_size=1,
         max_input_len=1024,
         max_output_len=256,
-        max_batch_size=4,
+        max_batch_size=3,
         use_parallel_embedding=False,
         paged_kv_cache=True,
         remove_input_padding=True,
