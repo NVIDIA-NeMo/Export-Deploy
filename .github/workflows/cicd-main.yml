@@ -158,7 +158,7 @@ jobs:
       )
       && !cancelled()
     with:
-      image-name: nemo_container_export_deploy_${{ matrix.inference-framework }}
+      image-name: nemo_container_export_deploy${{ matrix.inference-framework != '' && '_' || '' }}${{ matrix.inference-framework }}
       dockerfile: docker/Dockerfile.ci
       inference-framework: ${{ matrix.inference-framework }}
     strategy:
@@ -167,6 +167,7 @@ jobs:
         include:
           - inference-framework: trtllm
           - inference-framework: vllm
+          - inference-framework: ""
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -214,8 +215,6 @@ jobs:
         include:
           - script: L2_Launch_TRTLLM
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_Export_Deploy_Query_In_Framework
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Deploy_Query_Ray
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Deploy_Query_TRTLLM_Ray
@@ -260,6 +259,26 @@ jobs:
           runner: ${{ runner.name }}
           script: L2_Launch_vLLM
           image: nemo_container_export_deploy_vllm
+          is_optional: ${{ matrix.is_optional || false }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          has-azure-credentials: true
+          is_unit_test: "false"
+          timeout: 60
+
+  cicd-e2e-tests-inframework:
+    needs: [cicd-unit-tests]
+    runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
+    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    environment: nemo-ci
+    steps:
+      - name: main
+        uses: NVIDIA-NeMo/Export-Deploy/.github/actions/test-template@main
+        with:
+          runner: ${{ runner.name }}
+          script: L2_Launch_In_Framework
+          image: nemo_container_export_deploy
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
