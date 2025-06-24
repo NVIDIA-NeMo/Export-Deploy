@@ -215,6 +215,7 @@ jobs:
         include:
           - script: L2_Launch_TRTLLM
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
+            timeout: 60
           - script: L2_NeMo_2_Export_Deploy_Query_Ray
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Deploy_Query_TRTLLM_Ray
@@ -246,6 +247,7 @@ jobs:
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           has-azure-credentials: true
           is_unit_test: "false"
+          timeout: ${{ matrix.timeout || 10 }}
 
   cicd-e2e-tests-vllm:
     needs: [cicd-unit-tests]
