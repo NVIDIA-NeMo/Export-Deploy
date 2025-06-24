@@ -46,6 +46,7 @@ def mock_pytorch_config():
         yield mock
 
 
+@pytest.mark.run_only_on("GPU")
 class TestTensorRTLLMAPIDeployable:
     def test_initialization_with_defaults(self, mock_pytorch_config):
         with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM") as mock_llm_class:
