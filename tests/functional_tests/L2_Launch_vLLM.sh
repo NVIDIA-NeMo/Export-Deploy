@@ -1,4 +1,4 @@
-# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .quantizer import Quantizer
+#!/bin/bash
+set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
-__all__ = ["Quantizer"]
+export CUDA_VISIBLE_DEVICES="0"
+
+pytest -o log_cli=true -o log_cli_level=INFO -vs -m "not pleasefixme" --tb=short tests/functional_tests/tests_vllm
+coverage combine

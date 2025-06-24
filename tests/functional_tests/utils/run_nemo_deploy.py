@@ -21,7 +21,7 @@ from pathlib import Path
 
 import torch
 
-from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployable
+from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 
 run_export_tests = True
 try:
@@ -32,7 +32,7 @@ except Exception:
     run_export_tests = False
 
 
-def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=None):
+def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path=None):
     # lambada dataset based accuracy test, which includes more than 5000 sentences.
     # Use generated last token with original text's last token for accuracy comparison.
     # If the generated last token start with the original token, trtllm_correct make an increment.
@@ -61,7 +61,6 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=Non
                 top_k=1,
                 top_p=0,
                 temperature=0.1,
-                task_ids=task_ids,
                 lora_uids=lora_uids,
             )
             trtllm_output = trtllm_output[0][0].strip().lower()
@@ -88,7 +87,6 @@ def get_accuracy_with_lambada(model, nq, task_ids, lora_uids, test_data_path=Non
                     top_k=1,
                     top_p=0,
                     temperature=0.1,
-                    task_id=task_ids,
                 )
                 trtllm_deployed_output = trtllm_deployed_output[0][0].strip().lower()
 
@@ -131,7 +129,11 @@ def run_in_framework_inference(
     max_input_len=None,
     max_output_len=None,
 ):
-    model = MegatronLLMDeployable(checkpoint_path, n_gpu)
+    model = MegatronLLMDeployableNemo2(
+        nemo_checkpoint_filepath=checkpoint_path,
+        num_devices=n_gpu,
+        num_nodes=1,
+    )
     nm = DeployPyTriton(
         model=model,
         triton_model_name=model_name,
@@ -160,12 +162,9 @@ def run_trt_llm_inference(
     trt_llm_model_dir,
     n_gpu=1,
     max_batch_size=8,
-    use_embedding_sharing=False,
     max_input_len=128,
     max_output_len=128,
     max_num_tokens=None,
-    ptuning=False,
-    p_tuning_checkpoint=None,
     lora=False,
     lora_checkpoint=None,
     tp_size=None,
@@ -175,7 +174,6 @@ def run_trt_llm_inference(
     temperature=1.0,
     run_accuracy=False,
     debug=True,
-    streaming=False,
     stop_words_list=None,
     test_deployment=False,
     test_data_path=None,
@@ -201,21 +199,6 @@ def run_trt_llm_inference(
             print("")
 
             print("Path: {0} and model: {1} with {2} gpus will be tested".format(checkpoint_path, model_name, n_gpu))
-
-        prompt_embeddings_checkpoint_path = None
-        task_ids = None
-        max_prompt_embedding_table_size = 0
-
-        if ptuning:
-            if Path(p_tuning_checkpoint).exists():
-                prompt_embeddings_checkpoint_path = p_tuning_checkpoint
-                max_prompt_embedding_table_size = 8192
-                task_ids = ["0"]
-                if debug:
-                    print("---- PTuning enabled.")
-            else:
-                print("---- PTuning could not be enabled and skipping the test.")
-                return None, None, None, None, None
 
         lora_ckpt_list = None
         lora_uids = None
@@ -244,19 +227,11 @@ def run_trt_llm_inference(
             max_input_len=max_input_len,
             max_output_len=max_output_len,
             max_batch_size=max_batch_size,
-            max_prompt_embedding_table_size=max_prompt_embedding_table_size,
             use_lora_plugin=use_lora_plugin,
             lora_target_modules=lora_target_modules,
             max_num_tokens=max_num_tokens,
             opt_num_tokens=60,
-            use_embedding_sharing=use_embedding_sharing,
         )
-
-        if ptuning:
-            trt_llm_exporter.add_prompt_table(
-                task_name="0",
-                prompt_embeddings_checkpoint_path=prompt_embeddings_checkpoint_path,
-            )
 
         output = trt_llm_exporter.forward(
             input_texts=prompt,
@@ -264,13 +239,11 @@ def run_trt_llm_inference(
             top_k=top_k,
             top_p=top_p,
             temperature=temperature,
-            task_ids=task_ids,
             lora_uids=lora_uids,
-            streaming=streaming,
             stop_words_list=stop_words_list,
         )
 
-        if not use_lora_plugin and not ptuning:
+        if not use_lora_plugin:
             test_cpp_runtime(
                 engine_path=trt_llm_model_dir,
                 prompt=prompt,
@@ -312,7 +285,7 @@ def run_trt_llm_inference(
 
         if run_accuracy:
             print("Start model accuracy testing ...")
-            result = get_accuracy_with_lambada(trt_llm_exporter, nq, task_ids, lora_uids, test_data_path)
+            result = get_accuracy_with_lambada(trt_llm_exporter, nq, lora_uids, test_data_path)
             if test_deployment:
                 nm.stop()
 
@@ -384,6 +357,7 @@ def get_args():
     )
     parser.add_argument(
         "--trt_llm_model_dir",
+        default="/tmp/trt_llm_model_dir/",
         type=str,
     )
     parser.add_argument(
@@ -404,15 +378,6 @@ def get_args():
     parser.add_argument(
         "--max_num_tokens",
         type=int,
-    )
-    parser.add_argument(
-        "--p_tuning_checkpoint",
-        type=str,
-    )
-    parser.add_argument(
-        "--ptuning",
-        default=False,
-        action="store_true",
     )
     parser.add_argument(
         "--lora_checkpoint",
@@ -453,7 +418,11 @@ def get_args():
         type=str,
         default="False",
     )
-    parser.add_argument("--streaming", default=False, action="store_true")
+    parser.add_argument(
+        "--accuracy_threshold",
+        type=float,
+        default=0.5,
+    )
     parser.add_argument(
         "--test_deployment",
         type=str,
@@ -465,22 +434,14 @@ def get_args():
         action="store_true",
     )
     parser.add_argument(
-        "--ci_upload_test_results_to_cloud",
-        default=False,
-        action="store_true",
-    )
-    parser.add_argument(
         "--test_data_path",
         type=str,
         default=None,
     )
     parser.add_argument(
-        "-b",
         "--backend",
-        nargs="?",
-        const=None,
         default="TensorRT-LLM",
-        choices=["TensorRT-LLM", "vLLM", "In-Framework"],
+        choices=["TensorRT-LLM", "In-Framework"],
         help="Different options to deploy nemo model.",
     )
     parser.add_argument(
@@ -508,9 +469,8 @@ def run_inference_tests(args):
     else:
         args.run_accuracy = False
 
-    if args.run_accuracy:
-        if args.test_data_path is None:
-            raise Exception("test_data_path param cannot be None.")
+    if args.run_accuracy and args.test_data_path is None:
+        raise Exception("test_data_path param cannot be None.")
 
     result_dic = {}
 
@@ -532,8 +492,6 @@ def run_inference_tests(args):
                 max_input_len=args.max_input_len,
                 max_output_len=args.max_output_len,
                 max_num_tokens=args.max_num_tokens,
-                ptuning=args.ptuning,
-                p_tuning_checkpoint=args.p_tuning_checkpoint,
                 lora=args.lora,
                 lora_checkpoint=args.lora_checkpoint,
                 tp_size=args.tp_size,
@@ -543,7 +501,6 @@ def run_inference_tests(args):
                 temperature=args.temperature,
                 run_accuracy=args.run_accuracy,
                 debug=args.debug,
-                streaming=args.streaming,
                 test_deployment=args.test_deployment,
                 test_data_path=args.test_data_path,
                 save_engine=args.save_engine,
@@ -577,13 +534,13 @@ def run_inference_tests(args):
                 "Evaluation Time [s]:             {:.2f}".format(i, *results)
             )
             print_separator = True
-            if results[1] < 0.5:
+            if results[1] < args.accuracy_threshold:
                 test_result = "FAIL"
 
     print("=======================================")
     print("TEST: " + test_result)
     if test_result == "FAIL":
-        raise Exception("Model accuracy is below 0.5")
+        raise Exception(f"Model accuracy is below {args.accuracy_threshold}")
 
 
 if __name__ == "__main__":

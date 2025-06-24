@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -214,6 +214,8 @@ jobs:
         include:
           - script: L2_NeMo_2_Export_HF_TRT_LLM
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
+          - script: L2_NeMo_2_Export_Deploy_TRTLLM
+            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Deploy_Query_In_Framework
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Deploy_Query_Ray
@@ -251,18 +253,8 @@ jobs:
           is_unit_test: "false"
 
   cicd-e2e-tests-vllm:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - script: L2_NeMo_2_VLLM_VISION
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_vLLM_Export_Mixtral
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_vLLM_Export_Llama
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
     needs: [cicd-unit-tests]
-    runs-on: ${{ matrix.runner }}
+    runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     steps:
@@ -270,7 +262,7 @@ jobs:
         uses: NVIDIA-NeMo/Export-Deploy/.github/actions/test-template@main
         with:
           runner: ${{ runner.name }}
-          script: ${{ matrix.script }}
+          script: L2_Launch_vLLM
           image: nemo_container_export_deploy_vllm
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -278,6 +270,7 @@ jobs:
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           has-azure-credentials: true
           is_unit_test: "false"
+          timeout: 60
 
   Nemo_CICD_Test:
     needs:

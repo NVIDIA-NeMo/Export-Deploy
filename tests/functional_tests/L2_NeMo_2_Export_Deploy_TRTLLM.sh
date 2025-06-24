@@ -15,7 +15,15 @@
 #!/bin/bash
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
-CUDA_VISIBLE_DEVICES="" NEMO_NUMBA_MINVER=0.53 coverage run -a \
-    --data-file=/workspace/.coverage \
-    --source=/workspace/ \
-    -m pytest -sv tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme" --cpu
+coverage run --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/run_nemo_deploy.py \
+  --model_name test_model \
+  --checkpoint_dir /home/TestData/llm/models/llama32_1b_nemo2 \
+  --backend TensorRT-LLM \
+  --min_gpus 1 \
+  --max_gpus 2 \
+  --run_accuracy True \
+  --test_data_path tests/functional_tests/data/lambada.json \
+  --test_deployment True \
+  --debug
+
+coverage combine
