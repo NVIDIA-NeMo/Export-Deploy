@@ -12,22 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from package_info import (
-    __contact_emails__,
-    __contact_names__,
-    __download_url__,
-    __homepage__,
-    __package_name__,
-    __repository_url__,
-    __version__,
-)
+name: Copyright check
 
-__all__ = [
-    "__version__",
-    "__package_name__",
-    "__contact_names__",
-    "__contact_emails__",
-    "__homepage__",
-    "__repository_url__",
-    "__download_url__",
-]
+on:
+  pull_request:
+
+jobs:
+  copyright-check:
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_copyright_check.yml@v0.2.0
