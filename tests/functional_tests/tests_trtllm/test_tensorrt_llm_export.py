@@ -17,8 +17,6 @@ import shutil
 import pytest
 
 
-@pytest.mark.run_only_on("GPU")
-@pytest.mark.unit
 @pytest.mark.parametrize("tensor_parallelism_size,pipeline_parallelism_size", [(2, 1), (1, 2)])
 def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_parallelism_size):
     """
@@ -50,8 +48,6 @@ def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_paralle
     shutil.rmtree("/tmp/safe_tensor_test/")
 
 
-@pytest.mark.run_only_on("GPU")
-@pytest.mark.unit
 @pytest.mark.parametrize("tensor_parallelism_size", [2, 1])
 def test_nemo2_convert_to_export(tensor_parallelism_size):
     """
