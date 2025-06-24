@@ -26,58 +26,6 @@ import torch
 
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
-def test_get_nemo_to_trtllm_conversion_dict_on_nemo_model():
-    """Test conversion dict generation for NeMo model format."""
-    try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
-        return
-
-    dummy_state = object()
-    model_state_dict = {
-        "model.embedding.word_embeddings.weight": dummy_state,
-        "model.decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
-    }
-    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
-
-    # Check that every key starts with 'model.' and not 'model..' by using a regex
-    # This pattern ensures:
-    #   - The key starts with 'model.'
-    #   - Immediately after 'model.', there must be at least one character that is NOT a '.'
-    #     (preventing the 'model..' scenario)
-    pattern = re.compile(r"^model\.[^.].*")
-    for key in nemo_model_conversion_dict.keys():
-        assert pattern.match(key), f"Key '{key}' does not properly start with 'model.'"
-
-
-@pytest.mark.run_only_on("GPU")
-@pytest.mark.unit
-def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
-    """Test conversion dict generation for mcore model format."""
-    try:
-        from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
-            DEFAULT_CONVERSION_DICT,
-        )
-
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
-        return
-
-    dummy_state = object()
-    model_state_dict = {
-        "embedding.word_embeddings.weight": dummy_state,
-        "decoder.layers.0.self_attention.linear_proj.weight": dummy_state,
-    }
-    nemo_model_conversion_dict = TensorRTLLM.get_nemo_to_trtllm_conversion_dict(model_state_dict)
-
-    # This is essentially a no-op
-    assert nemo_model_conversion_dict == DEFAULT_CONVERSION_DICT
-
-
-@pytest.mark.run_only_on("GPU")
-@pytest.mark.unit
 def test_tensorrt_llm_initialization():
     """Test TensorRTLLM class initialization with various parameters."""
     try:
@@ -136,33 +84,6 @@ def test_tensorrt_llm_supported_models():
     hf_mapping = trt_llm.get_supported_hf_model_mapping
     assert isinstance(hf_mapping, dict)
     assert len(hf_mapping) > 0
-
-
-@pytest.mark.run_only_on("GPU")
-@pytest.mark.unit
-def test_tensorrt_llm_input_dtype():
-    """Test input dtype conversion functionality."""
-    try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
-    except ImportError:
-        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
-        return
-
-    model_dir = "/tmp/test_model_dir"
-    trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
-
-    from megatron.core.export.data_type import DataType
-
-    # Test different storage dtypes
-    test_cases = [
-        (torch.float32, DataType.float32),
-        (torch.float16, DataType.float16),
-        (torch.bfloat16, DataType.bfloat16),
-    ]
-
-    for storage_dtype, expected_dtype in test_cases:
-        input_dtype = trt_llm.get_input_dtype(storage_dtype)
-        assert input_dtype == expected_dtype, f"Expected {expected_dtype} for {storage_dtype}, got {input_dtype}"
 
 
 @pytest.mark.run_only_on("GPU")
@@ -377,7 +298,6 @@ def test_ray_infer_fn_with_task_ids_and_lora():
 
         inputs = {
             "prompts": ["Test prompt"],
-            "task_ids": ["task1"],
             "lora_uids": ["lora_uid_1"],
             "random_seed": 42,
             "no_repeat_ngram_size": 3,
@@ -391,7 +311,6 @@ def test_ray_infer_fn_with_task_ids_and_lora():
         # Verify forward was called with all parameters
         mock_forward.assert_called_once()
         call_kwargs = mock_forward.call_args[1]
-        assert call_kwargs["task_ids"] == ["task1"]
         assert call_kwargs["lora_uids"] == ["lora_uid_1"]
         assert call_kwargs["random_seed"] == 42
         assert call_kwargs["no_repeat_ngram_size"] == 3
@@ -486,7 +405,6 @@ def test_ray_infer_fn_all_parameters():
             "stop_words_list": [["stop"], ["end"]],  # Already in correct format
             "bad_words_list": [["bad"], ["inappropriate"]],  # Already in correct format
             "no_repeat_ngram_size": 4,
-            "task_ids": ["comprehensive_task"],
             "lora_uids": ["comprehensive_lora"],
             "output_log_probs": True,
         }
@@ -509,7 +427,6 @@ def test_ray_infer_fn_all_parameters():
             "stop_words_list",
             "bad_words_list",
             "no_repeat_ngram_size",
-            "task_ids",
             "lora_uids",
             "output_log_probs",
         ]
@@ -527,7 +444,6 @@ def test_ray_infer_fn_all_parameters():
         assert call_kwargs["stop_words_list"] == [["stop"], ["end"]]
         assert call_kwargs["bad_words_list"] == [["bad"], ["inappropriate"]]
         assert call_kwargs["no_repeat_ngram_size"] == 4
-        assert call_kwargs["task_ids"] == ["comprehensive_task"]
         assert call_kwargs["lora_uids"] == ["comprehensive_lora"]
         assert call_kwargs["output_log_probs"] is True
 
@@ -671,7 +587,6 @@ def test__infer_fn_with_all_parameters():
             "stop_words_list": ["stop", "end"],
             "bad_words_list": ["bad", "inappropriate"],
             "no_repeat_ngram_size": 4,
-            "task_ids": ["comprehensive_task"],
             "lora_uids": ["comprehensive_lora"],
             "output_log_probs": True,
         }
@@ -694,7 +609,6 @@ def test__infer_fn_with_all_parameters():
             "stop_words_list",
             "bad_words_list",
             "no_repeat_ngram_size",
-            "task_ids",
             "lora_uids",
             "output_log_probs",
         ]
@@ -712,7 +626,6 @@ def test__infer_fn_with_all_parameters():
         assert call_kwargs["stop_words_list"] == [["stop"], ["end"]]
         assert call_kwargs["bad_words_list"] == [["bad"], ["inappropriate"]]
         assert call_kwargs["no_repeat_ngram_size"] == 4
-        assert call_kwargs["task_ids"] == ["comprehensive_task"]
         assert call_kwargs["lora_uids"] == ["comprehensive_lora"]
         assert call_kwargs["output_log_probs"] is True
 

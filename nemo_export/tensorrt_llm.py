@@ -87,13 +87,8 @@ from transformers import AutoConfig, PreTrainedTokenizerBase
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
 from nemo_export.tarutils import unpack_tarball
-from nemo_export.trt_llm.converter.model_converter import (
-    determine_quantization_settings,
-    model_to_trtllm_ckpt,
-)
-from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import (
-    get_layer_prefix,
-)
+from nemo_export.trt_llm.utils import determine_quantization_settings
+
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
     get_model_type,
     get_tokenizer,
@@ -746,119 +741,6 @@ class TensorRTLLM(ITritonDeployable):
         )
         return conf
 
-    def convert_to_safe_tensors(
-        self,
-        nemo_checkpoint_path: str,
-        model_type: Optional[str] = None,
-        delete_existing_files: bool = True,
-        tensor_parallelism_size: int = 1,
-        pipeline_parallelism_size: int = 1,
-        gpus_per_node: int = None,
-        use_parallel_embedding: bool = False,
-        use_embedding_sharing: bool = False,
-        dtype: str = "bfloat16",
-    ):
-        """Convert to safe tensor."""
-        gpus_per_node = tensor_parallelism_size if gpus_per_node is None else gpus_per_node
-
-        if Path(self.model_dir).exists():
-            if delete_existing_files and len(os.listdir(self.model_dir)) > 0:
-                for files in os.listdir(self.model_dir):
-                    path = os.path.join(self.model_dir, files)
-                    try:
-                        shutil.rmtree(path)
-                    except OSError:
-                        os.remove(path)
-
-                if len(os.listdir(self.model_dir)) > 0:
-                    raise Exception("Couldn't delete all files.")
-            elif len(os.listdir(self.model_dir)) > 0:
-                raise Exception("There are files in this folder. Try setting delete_existing_files=True.")
-        else:
-            Path(self.model_dir).mkdir(parents=True, exist_ok=True)
-
-        if model_type == "gpt" or model_type == "starcoder":
-            model_type = "gptnext"
-
-        if model_type == "mixtral":
-            model_type = "llama"
-
-        if tensorrt_llm.mpi_rank() == 0:
-            tmp_dir = tempfile.TemporaryDirectory()
-            nemo_export_dir = Path(tmp_dir.name)
-
-            model, model_config, self.tokenizer = load_nemo_model(nemo_checkpoint_path, nemo_export_dir)
-            weights_dicts, model_configs = model_to_trtllm_ckpt(
-                model=model,
-                nemo_model_config=model_config,
-                nemo_export_dir=nemo_export_dir,
-                decoder_type=model_type,
-                dtype=dtype,
-                tensor_parallel_size=tensor_parallelism_size,
-                pipeline_parallel_size=pipeline_parallelism_size,
-                gpus_per_node=gpus_per_node,
-                use_parallel_embedding=use_parallel_embedding,
-                use_embedding_sharing=use_embedding_sharing,
-            )
-
-            for weight_dict, model_config in zip(weights_dicts, model_configs):
-                rank = model_config.mapping.tp_rank
-                for k, v in weight_dict.items():
-                    if isinstance(v, np.ndarray):
-                        weight_dict[k] = numpy_to_torch(v)
-                    else:
-                        weight_dict[k] = v
-
-                safetensors.torch.save_file(weight_dict, os.path.join(self.model_dir, f"rank{rank}.safetensors"))
-            model_configs[0].to_json_file(os.path.join(self.model_dir, "config.json"))
-
-            tokenizer_path = os.path.join(nemo_export_dir, "tokenizer.model")
-            if os.path.exists(tokenizer_path):
-                shutil.copy(tokenizer_path, self.model_dir)
-            else:
-                if self.tokenizer is not None:
-                    self.tokenizer.save_pretrained(self.model_dir)
-
-            nemo_model_config = os.path.join(nemo_export_dir, "model_config.yaml")
-            if os.path.exists(nemo_model_config):
-                shutil.copy(nemo_model_config, self.model_dir)
-
-            tmp_dir.cleanup()
-
-        if tensorrt_llm.mpi_world_size() > 1:
-            tensorrt_llm.mpi_barrier()
-
-    def get_input_dtype(self, storage_dtype):
-        """Return mcore export dtype given torch dtype."""
-        from megatron.core.export.data_type import DataType
-
-        if storage_dtype == torch.bfloat16:
-            return DataType.bfloat16
-        elif storage_dtype == torch.float32:
-            return DataType.float32
-        elif storage_dtype == torch.float16:
-            return DataType.float16
-
-    @staticmethod
-    def get_nemo_to_trtllm_conversion_dict(model_state_dict):
-        """MCore export supports some default conversion dictionaries.
-
-        All Mcore conversion dicts start with "decoder.layers.4.blah.blah" , while nemo models sometimes start with "model.decoder.layers.4.blahblah". so we append model prefix. to the keys
-        """
-        from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
-            DEFAULT_CONVERSION_DICT,
-        )
-
-        model_prefix, _ = get_layer_prefix(layer_names=model_state_dict.keys(), is_mcore=True)
-
-        nemo_model_conversion_dict = {}
-        for key, value in DEFAULT_CONVERSION_DICT.items():
-            if model_prefix:
-                nemo_model_conversion_dict[f"{model_prefix}{key}"] = value
-            else:
-                nemo_model_conversion_dict[key] = value
-        return nemo_model_conversion_dict
-
     def forward(
         self,
         input_texts: List[str],
@@ -1101,8 +983,6 @@ class TensorRTLLM(ITritonDeployable):
                     infer_input["bad_words_list"] = bad_words_list
         if "no_repeat_ngram_size" in inputs:
             infer_input["no_repeat_ngram_size"] = inputs["no_repeat_ngram_size"]
-        if "task_ids" in inputs:
-            infer_input["task_ids"] = inputs["task_ids"]
         if "lora_uids" in inputs:
             infer_input["lora_uids"] = inputs["lora_uids"]
         if "output_log_probs" in inputs:
@@ -1167,7 +1047,6 @@ class TensorRTLLM(ITritonDeployable):
                 - stop_words_list: List of stop words (optional)
                 - bad_words_list: List of bad words (optional)
                 - no_repeat_ngram_size: No repeat ngram size (optional)
-                - task_ids: Task IDs (optional)
                 - lora_uids: LoRA UIDs (optional)
                 - apply_chat_template: Whether to apply chat template (optional)
                 - compute_logprob: Whether to compute log probabilities (optional)

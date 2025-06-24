@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
+from typing import Optional, Dict, Any, Tuple
 
 import tensorrt_llm
 
@@ -32,3 +32,30 @@ def is_rank(rank: Optional[int]) -> bool:
     if isinstance(rank, int):
         return current_rank == rank
     raise ValueError(f"Invalid rank argument {rank} of type {type(rank)}.")
+
+
+def determine_quantization_settings(
+    nemo_model_config: Dict[str, Any],
+    fp8_quantized: Optional[bool] = None,
+    fp8_kvcache: Optional[bool] = None,
+) -> Tuple[bool, bool]:
+    """Determines the exported models quantization settings.
+
+    Reads from NeMo config, with optional override.
+
+    Args:
+        nemo_model_config (dict): NeMo model configuration
+        fp8_quantized (optional, bool): User-specified quantization flag
+        fp8_kvcache (optional, bool): User-specified cache quantization flag
+    Returns:
+        Tuple[bool, bool]:
+            - Model quantization flag
+            - Model kv-cache quantization flag
+    """
+    is_nemo_quantized: bool = nemo_model_config.get("fp8", False)
+    if fp8_quantized is None:
+        fp8_quantized = is_nemo_quantized
+    if fp8_kvcache is None:
+        fp8_kvcache = is_nemo_quantized
+
+    return fp8_quantized, fp8_kvcache
