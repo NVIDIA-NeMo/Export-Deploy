@@ -277,7 +277,7 @@ jobs:
         uses: NVIDIA-NeMo/Export-Deploy/.github/actions/test-template@main
         with:
           runner: ${{ runner.name }}
-          script: L2_Launch_In_Framework
+          script: L2_Launch_InFramework
           image: nemo_container_export_deploy
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
