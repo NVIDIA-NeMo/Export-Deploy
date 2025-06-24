@@ -52,9 +52,7 @@ def test_nemo2_convert_to_safe_tensors(tensor_parallelism_size, pipeline_paralle
 
 @pytest.mark.run_only_on("GPU")
 @pytest.mark.unit
-@pytest.mark.parametrize(
-    "tensor_parallelism_size", [2, 1]
-)
+@pytest.mark.parametrize("tensor_parallelism_size", [2, 1])
 def test_nemo2_convert_to_export(tensor_parallelism_size):
     """
     Test safe tensor exporter. This tests the whole nemo export until engine building.

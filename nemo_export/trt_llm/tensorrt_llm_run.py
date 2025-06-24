@@ -38,7 +38,6 @@ from transformers import PreTrainedTokenizer
 LOGGER = logging.getLogger("NeMo")
 
 
-
 @dataclass
 class TensorrtLLMHostContext:
     """The host side context for TRT LLM inference."""
@@ -173,14 +172,10 @@ def _forward(
         max_input_len = tensorrt_llm_worker_context.max_input_len
 
         batch_size = len(input_tensors)
-        assert batch_size <= max_batch_size, (
-            f"batch size {batch_size} exceedng max batch size {max_batch_size}"
-        )
+        assert batch_size <= max_batch_size, f"batch size {batch_size} exceedng max batch size {max_batch_size}"
         input_lengths = [t.shape[0] for t in input_tensors]
         max_length = max(input_lengths)
-        assert max_length <= max_input_len, (
-            f"input length {max_length} exceedng max input length {max_input_len}"
-        )
+        assert max_length <= max_input_len, f"input length {max_length} exceedng max input length {max_input_len}"
         pad_id = sampling_config.pad_id
         end_id = sampling_config.end_id
         num_beams = sampling_config.num_beams
@@ -338,14 +333,10 @@ def forward(
     """Run the loaded model with the host_context provided from the `load` API."""
     batch_size = len(input_tensors)
     max_batch_size = host_context.max_batch_size
-    assert batch_size <= max_batch_size, (
-        f"batch size {batch_size} exceedng max batch size {max_batch_size}"
-    )
+    assert batch_size <= max_batch_size, f"batch size {batch_size} exceedng max batch size {max_batch_size}"
     max_length = max([t.shape[0] for t in input_tensors])
     max_input_len = host_context.max_input_len
-    assert max_length <= max_input_len, (
-        f"input length {max_length} exceedng max input length {max_input_len}"
-    )
+    assert max_length <= max_input_len, f"input length {max_length} exceedng max input length {max_input_len}"
 
     world_size = host_context.world_size
     if world_size == 1 or multiprocessed_env:
@@ -410,9 +401,7 @@ def maybe_cast_to_trt_dtype(dtype):
     elif isinstance(dtype, torch.dtype):
         return tensorrt_llm._utils.torch_dtype_to_trt(dtype)
     else:
-        raise NotImplementedError(
-            f"Expects the type to be a tensorrt.DataType or torch.dtype, but got {type(dtype)=}"
-        )
+        raise NotImplementedError(f"Expects the type to be a tensorrt.DataType or torch.dtype, but got {type(dtype)=}")
 
 
 def unload_engine():
