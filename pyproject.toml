@@ -52,6 +52,8 @@ dependencies = [
     "webdataset>=0.2.86",
     "nvidia-pytriton ; platform_system != 'Darwin' ",
     "flashinfer-python==0.2.5",
+    "Pillow ; platform_system != 'Darwin'",
+    "decord ; platform_system != 'Darwin'",
 ]
 
 [project.optional-dependencies]
@@ -70,7 +72,7 @@ docs = [
     "nvidia-sphinx-theme", # Our NVIDIA theme
 ]
 linting = ["ruff~=0.9.0"]
-test = ["pytest", "pytest-mock", "coverage"]
+test = ["pytest", "pytest-mock", "coverage", "click"]
 nemo-legacy = [
     "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]",
 ]
