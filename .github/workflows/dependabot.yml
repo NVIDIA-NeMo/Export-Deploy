@@ -11,6 +11,7 @@ permissions:
 jobs:
   get-release-branch-names:
     runs-on: ubuntu-latest
+    environment: nemo-ci
     outputs:
       mcore: ${{ steps.get-branch.outputs.mcore_release_branch }}
       nemo: ${{ steps.get-branch.outputs.nemo_release_branch }}
@@ -31,7 +32,7 @@ jobs:
             tail -n1)
           echo "nemo_release_branch=$latest_branch" >> $GITHUB_OUTPUT
 
-          latest_branch=$(git ls-remote --heads https://github.com/NVIDIA-NeMo/Export-Deploy.git 'refs/heads/r*' | 
+          latest_branch=$(git ls-remote --heads https://token:${{ secrets.PAT }}@github.com/NVIDIA-NeMo/Export-Deploy.git 'refs/heads/r*' | 
             grep -o 'r[0-9]\+\.[0-9]\+\.[0-9]\+' | 
             sort -V | 
             tail -n1)
