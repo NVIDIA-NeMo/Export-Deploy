@@ -21,18 +21,30 @@ import yaml
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
 from transformers import AutoConfig
-from vllm.config import (
-    ModelConfig,
-    ModelImpl,
-    PoolerConfig,
-    _get_and_verify_dtype,
-    _get_and_verify_max_len,
-)
-from vllm.transformers_utils.config import get_hf_text_config
 
 from nemo_export.tarutils import TarPath
 from nemo_export.utils import is_nemo2_checkpoint
 from nemo_export.vllm.model_converters import get_model_converter
+from nemo_export_deploy_common.import_utils import MISSING_VLLM_MSG, UnavailableError
+
+try:
+    from vllm.config import (
+        ModelConfig,
+        ModelImpl,
+        PoolerConfig,
+        _get_and_verify_dtype,
+        _get_and_verify_max_len,
+    )
+    from vllm.transformers_utils.config import get_hf_text_config
+
+    HAVE_VLLM = True
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    HAVE_VLLM = False
+    ModelConfig = MagicMock()
+    ModelImpl = MagicMock()
+    PoolerConfig = MagicMock()
 
 
 class NemoModelConfig(ModelConfig):
@@ -68,6 +80,9 @@ class NemoModelConfig(ModelConfig):
         enable_sleep_mode: bool = False,
         model_impl: Union[str, ModelImpl] = ModelImpl.AUTO,
     ) -> None:
+        if not HAVE_VLLM:
+            raise UnavailableError(MISSING_VLLM_MSG)
+
         # Don't call ModelConfig.__init__ because we don't want it to call
         # transformers.AutoConfig.from_pretrained(...)
 
