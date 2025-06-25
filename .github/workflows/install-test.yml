@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: ["ubuntu-latest", "macos-latest", "ubuntu-24.04-arm"]
+        arch: ["ubuntu-latest", "macos-latest"] # After setting the repo to public: "ubuntu-24.04-arm"]
         python-version: ["3.10", "3.11", "3.12"]
     steps:
       - name: Checkout repository
@@ -192,8 +192,7 @@ jobs:
             apt-get install -y libopenmpi-dev
           fi
 
-          export PATH="./venv/bin/:$PATH"
-
+          source ./venv/bin/activate
           ./venv/bin/python -m pip install ${PIP_ARGS[@]} .$EXTRA
 
       - name: Checkout check-imports
