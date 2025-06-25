@@ -216,10 +216,6 @@ jobs:
           - script: L2_Launch_TRTLLM
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
             timeout: 60
-          - script: L2_NeMo_2_Export_Deploy_Query_Ray
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_Export_Deploy_Query_TRTLLM_Ray
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_ONNX_TRT_LLM_Embedding_Export
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_ONNX_TRT_LLM_Embedding_Export_INT8
