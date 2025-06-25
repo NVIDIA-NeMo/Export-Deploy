@@ -17,9 +17,16 @@ from typing import Any, Dict, List
 
 import numpy as np
 from fastapi import FastAPI, HTTPException
-from ray import serve
 
 from nemo_export.tensorrt_llm import TensorRTLLM
+from nemo_export_deploy_common.import_utils import MISSING_RAY_MSG, UnavailableError
+
+try:
+    from ray import serve
+
+    HAVE_RAY = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_RAY = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -82,6 +89,9 @@ class TensorRTLLMRayDeployable:
             ImportError: If Ray is not installed.
             Exception: If model initialization fails.
         """
+        if not HAVE_RAY:
+            raise UnavailableError(MISSING_RAY_MSG)
+
         try:
             self.model = TensorRTLLM(
                 model_dir=trt_llm_path,
