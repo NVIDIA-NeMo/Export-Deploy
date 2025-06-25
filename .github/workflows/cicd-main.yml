@@ -143,6 +143,37 @@ jobs:
         run: |
           echo "Running CI tests"
 
+  cicd-container-build:
+    uses: ./.github/workflows/_build_container.yml
+    needs: [pre-flight, cicd-wait-in-queue]
+    if: |
+      needs.pre-flight.outputs.test_to_run != '[]' 
+      && needs.pre-flight.outputs.components_to_run != '[]'
+      && (
+        success() 
+        || (
+          needs.cicd-wait-in-queue.result == 'skipped'
+          && needs.pre-flight.outputs.is_ci_workload == 'true'
+        )
+      )
+      && !cancelled()
+    with:
+      image-name: nemo_container_export_deploy${{ matrix.inference-framework != '' && '_' || '' }}${{ matrix.inference-framework }}
+      dockerfile: docker/Dockerfile.ci
+      inference-framework: ${{ matrix.inference-framework }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - inference-framework: trtllm
+          - inference-framework: vllm
+          - inference-framework: ""
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      PAT: ${{ secrets.PAT }}
+
   cicd-unit-tests:
     strategy:
       fail-fast: false
@@ -180,10 +211,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - script: L2_NeMo_2_Export_HF_TRT_LLM
+          - script: L2_Launch_TRTLLM
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_Export_Deploy_Query_In_Framework
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
+            timeout: 60
           - script: L2_NeMo_2_Export_Deploy_Query_Ray
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Deploy_Query_TRTLLM_Ray
@@ -216,8 +246,6 @@ jobs:
           has-azure-credentials: true
           is_unit_test: "false"
           timeout: ${{ matrix.timeout || 10 }}
-          PAT: ${{ secrets.PAT }}
-          inference-framework: trtllm
 
   cicd-e2e-tests-vllm:
     strategy:
@@ -272,6 +300,26 @@ jobs:
           timeout: 60
           PAT: ${{ secrets.PAT }}
           inference-framework: inframework
+
+  cicd-e2e-tests-inframework:
+    needs: [cicd-unit-tests]
+    runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
+    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    environment: nemo-ci
+    steps:
+      - name: main
+        uses: NVIDIA-NeMo/Export-Deploy/.github/actions/test-template@main
+        with:
+          runner: ${{ runner.name }}
+          script: L2_Launch_InFramework
+          image: nemo_container_export_deploy
+          is_optional: ${{ matrix.is_optional || false }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          has-azure-credentials: true
+          is_unit_test: "false"
+          timeout: 60
 
   Nemo_CICD_Test:
     needs:
