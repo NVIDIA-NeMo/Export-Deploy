@@ -182,7 +182,7 @@ jobs:
           PIP_ARGS=()
 
           if [[ $EXTRA == *"te"* ]]; then
-            pip install torch setuptools pybind11
+            pip install torch setuptools pybind11 wheel
             PIP_ARGS=(--no-build-isolation)
           fi
 
