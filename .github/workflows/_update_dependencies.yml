@@ -71,13 +71,13 @@ jobs:
           git push -u origin $SOURCE_BRANCH
 
   mcore:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.36.1
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_tomlfile.yml@ko3n1g/feat/bump-tomlfile'
     needs: [update-branch]
     name: Bump Megatron-LM
     with:
       source-repository: NVIDIA/Megatron-LM
       source-ref: ${{ inputs.mcore-target-branch }}
-      yaml-path: '."vcs-dependencies"."megatron-lm".ref'
+      toml-path: 'tool.uv.sources."megatron-core".rev'
       file: docker/manifest.json
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
       pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
@@ -89,13 +89,13 @@ jobs:
       GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
 
   nemo:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.36.1
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_tomlfile.yml@ko3n1g/feat/bump-tomlfile'
     needs: [update-branch, mcore]
     name: Bump NeMo
     with:
       source-repository: NVIDIA/NeMo
       source-ref: ${{ inputs.nemo-target-branch }}
-      yaml-path: '."vcs-dependencies"."nemo".ref'
+      toml-path: 'tool.uv.sources."nemo-toolkit".rev'
       file: docker/manifest.json
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
       pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
