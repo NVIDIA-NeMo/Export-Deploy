@@ -22,23 +22,45 @@ from time import time
 from types import SimpleNamespace
 from typing import List
 
-import tensorrt as trt
 import torch
 import yaml
 from nemo.collections import llm
-from tensorrt_llm._common import check_max_num_tokens
-from tensorrt_llm.builder import BuildConfig, Builder
-from tensorrt_llm.commands.build import build as build_trtllm
-from tensorrt_llm.mapping import Mapping
-from tensorrt_llm.models import MLLaMAForCausalLM
-from tensorrt_llm.plugin import PluginConfig
 from tensorrt_llm.tools.multimodal_builder import VisionEngineBuilder
 from transformers import AutoModel, AutoProcessor
 
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
+from nemo_export_deploy_common.import_utils import (
+    MISSING_TENSORRT_LLM_MSG,
+    MISSING_TENSORRT_MSG,
+    UnavailableError,
+)
 
-logger = trt.Logger(trt.Logger.INFO)
+try:
+    import tensorrt as trt
+
+    HAVE_TRT = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRT = False
+
+try:
+    from tensorrt_llm._common import check_max_num_tokens
+    from tensorrt_llm.builder import BuildConfig, Builder
+    from tensorrt_llm.commands.build import build as build_trtllm
+    from tensorrt_llm.mapping import Mapping
+    from tensorrt_llm.models import MLLaMAForCausalLM
+    from tensorrt_llm.plugin import PluginConfig
+
+    HAVE_TRT_LLM = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRT_LLM = False
+
+if HAVE_TRT:
+    logger = trt.Logger(trt.Logger.INFO)
+else:
+    import logging
+
+    logger = logging.getLogger(__name__)
 
 
 def build_trtllm_engine(
@@ -59,6 +81,9 @@ def build_trtllm_engine(
     lora_ckpt_list: List[str] = None,
 ):
     """Build TRTLLM engine by nemo export."""
+    if not HAVE_TRT_LLM:
+        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
     trt_llm_exporter = TensorRTLLM(model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False)
     trt_llm_exporter.export(
         nemo_checkpoint_path=visual_checkpoint_path if llm_checkpoint_path is None else llm_checkpoint_path,
@@ -176,6 +201,9 @@ def build_trt_engine(
     part_name="visual_encoder",
 ):
     """Build TRT engine from onnx."""
+    if not HAVE_TRT:
+        raise UnavailableError(MISSING_TENSORRT_MSG)
+
     onnx_file = "%s/onnx/%s.onnx" % (output_dir, part_name)
     engine_file = "%s/%s.engine" % (output_dir, part_name)
     config_file = "%s/%s" % (output_dir, "config.json")

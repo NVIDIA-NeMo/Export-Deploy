@@ -18,24 +18,7 @@ import os.path
 from typing import Iterable, List, Optional, Union
 
 import numpy
-import vllm.envs as envs
 import wrapt
-from vllm import RequestOutput, SamplingParams
-from vllm.config import (
-    CacheConfig,
-    DeviceConfig,
-    LoadConfig,
-    LoadFormat,
-    LoRAConfig,
-    ObservabilityConfig,
-    ParallelConfig,
-    SchedulerConfig,
-    VllmConfig,
-)
-from vllm.executor.ray_utils import initialize_ray_cluster
-from vllm.lora.request import LoRARequest
-from vllm.v1.core.sched.scheduler import Scheduler as V1Scheduler
-from vllm.v1.engine.llm_engine import LLMEngine
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output
@@ -46,6 +29,44 @@ from nemo_export.utils import (
 )
 from nemo_export.vllm.model_config import NemoModelConfig
 from nemo_export.vllm.model_loader import NemoModelLoader
+from nemo_export_deploy_common.import_utils import MISSING_VLLM_MSG, UnavailableError
+
+try:
+    import vllm.envs as envs
+    from vllm import RequestOutput, SamplingParams
+    from vllm.config import (
+        CacheConfig,
+        DeviceConfig,
+        LoadConfig,
+        LoadFormat,
+        LoRAConfig,
+        ObservabilityConfig,
+        ParallelConfig,
+        SchedulerConfig,
+        VllmConfig,
+    )
+    from vllm.executor.ray_utils import initialize_ray_cluster
+    from vllm.lora.request import LoRARequest
+    from vllm.v1.core.sched.scheduler import Scheduler as V1Scheduler
+    from vllm.v1.engine.llm_engine import LLMEngine
+
+    HAVE_VLLM = True
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    envs = MagicMock()
+    RequestOutput = MagicMock()
+    SamplingParams = MagicMock()
+    CacheConfig = MagicMock()
+    DeviceConfig = MagicMock()
+    LoRAConfig = MagicMock()
+    ObservabilityConfig = MagicMock()
+    ParallelConfig = MagicMock()
+    SchedulerConfig = MagicMock()
+    VllmConfig = MagicMock()
+    initialize_ray_cluster = MagicMock()
+    LoRARequest = MagicMock()
+    HAVE_VLLM = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -96,6 +117,8 @@ class vLLMExporter(ITritonDeployable):
     def __init__(self):
         self.request_id = 0
         assert envs.VLLM_USE_V1, "Only vLLM V1 is supported"
+        if not HAVE_VLLM:
+            raise UnavailableError(MISSING_VLLM_MSG)
 
     def export(
         self,

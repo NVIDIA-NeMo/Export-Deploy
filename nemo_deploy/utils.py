@@ -18,10 +18,29 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from PIL import Image
-from pytriton.model_config import Tensor
 
 from nemo_export.tarutils import TarPath
+from nemo_export_deploy_common.import_utils import MISSING_PIL_MSG, MISSING_TRITON_MSG, UnavailableError
+
+try:
+    from PIL import Image
+
+    HAVE_PIL = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_PIL = False
+    from typing import Any
+    from unittest.mock import MagicMock
+
+    Image = MagicMock()
+    Image.Image = Any
+
+try:
+    from pytriton.model_config import Tensor
+
+    HAVE_TRITON = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRITON = False
+
 
 NEMO2 = "NEMO 2.0"
 NEMO1 = "NEMO 1.0"
@@ -48,6 +67,8 @@ def typedict2tensor(
     Raises:
         Exception: If an unsupported type is encountered during type mapping
     """
+    if not HAVE_TRITON:
+        raise UnavailableError(MISSING_TRITON_MSG)
 
     def _map_type(type_):
         if type_ is int:
@@ -149,6 +170,9 @@ def ndarray2img(img_ndarray: np.ndarray) -> typing.List[Image.Image]:
     Returns:
         List[Image.Image]: List of PIL Image objects created from the input array
     """
+    if not HAVE_PIL:
+        raise UnavailableError(MISSING_PIL_MSG)
+
     img_list = [Image.fromarray(i) for i in img_ndarray]
     return img_list
 
@@ -170,6 +194,9 @@ def cast_output(data, required_dtype):
         np.ndarray: A numpy array containing the input data cast to the required dtype,
             with at least 2 dimensions.
     """
+    if not HAVE_TRITON:
+        raise UnavailableError(MISSING_TRITON_MSG)
+
     if isinstance(data, torch.Tensor):
         data = data.cpu().numpy()
     elif not isinstance(data, np.ndarray):

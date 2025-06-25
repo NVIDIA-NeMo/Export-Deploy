@@ -21,7 +21,6 @@ from typing import List
 
 import numpy as np
 import wrapt
-from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
 
 from nemo_deploy import ITritonDeployable
 from nemo_export.multimodal.build import (
@@ -32,6 +31,14 @@ from nemo_export.multimodal.build import (
 )
 from nemo_export.multimodal.run import MultimodalModelRunner
 from nemo_export.tarutils import unpack_tarball
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, UnavailableError
+
+try:
+    from tensorrt_llm.runtime import MultimodalModelRunner as TRTLLMRunner
+
+    HAVE_TRT_LLM = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRT_LLM = False
 
 use_deploy = True
 try:
@@ -56,6 +63,11 @@ try:
     from pytriton.decorators import batch, first_value
     from pytriton.model_config import Tensor
 except Exception:
+    from unittest.mock import MagicMock
+
+    batch = MagicMock()
+    first_value = MagicMock()
+    Tensor = MagicMock()
     use_pytriton = False
 
 
@@ -284,6 +296,8 @@ class TensorRTMMExporter(ITritonDeployable):
         "num_beams",
     )
     def triton_infer_fn(self, **inputs: np.ndarray):
+        if not HAVE_TRT_LLM:
+            raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
         try:
             if self.runner is None:
                 raise Exception(

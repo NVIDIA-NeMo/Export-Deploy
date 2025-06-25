@@ -27,8 +27,18 @@ from megatron.core.distributed import (
 )
 from megatron.core.enums import ModelType
 from megatron.core.transformer.module import Float16Module, MegatronModule
-from nemo.collections.llm.gpt.model.base import GPTConfig
-from nemo.collections.llm.t5.model.t5 import T5Config
+
+try:
+    from nemo.collections.llm.gpt.model.base import GPTConfig
+    from nemo.collections.llm.t5.model.t5 import T5Config
+
+    HAVE_NEMO = True
+except (ImportError, ModuleNotFoundError):
+    from typing import Any
+
+    GPTConfig = Any
+    T5Config = Any
+    HAVE_NEMO = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -276,7 +286,7 @@ def _initialize_tp_communicators(model_config: Union[GPTConfig, T5Config], micro
         import yaml
         from transformer_engine.pytorch import module as te_module
 
-    except ImportError:
+    except (ImportError, ModuleNotFoundError):
         raise RuntimeError(
             "Tensor Parallel Communication/GEMM Overlap optimization needs 'yaml' and 'transformer_engine' packages"
         )
