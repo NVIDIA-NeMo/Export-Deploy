@@ -77,7 +77,7 @@ jobs:
     with:
       source-repository: NVIDIA/Megatron-LM
       source-ref: ${{ inputs.mcore-target-branch }}
-      toml-path: 'tool.uv.sources."megatron-core".rev'
+      toml-path: tool.uv.sources."megatron-core".rev
       file: pyproject.toml
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
       pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
@@ -95,7 +95,7 @@ jobs:
     with:
       source-repository: NVIDIA/NeMo
       source-ref: ${{ inputs.nemo-target-branch }}
-      toml-path: 'tool.uv.sources."nemo-toolkit".rev'
+      toml-path: tool.uv.sources."nemo-toolkit".rev
       file: pyproject.toml
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
       pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
