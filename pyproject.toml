@@ -52,6 +52,7 @@ dependencies = [
     "flashinfer-python==0.2.5",
     "Pillow ; platform_system != 'Darwin'",
     "decord ; platform_system != 'Darwin'",
+    "pyparsing>2.0.2",
 ]
 
 [project.optional-dependencies]

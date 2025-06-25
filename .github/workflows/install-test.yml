@@ -172,13 +172,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install venv
+        run: |
+          apt update
+          apt install -y python3-venv
+          python3 -m venv ./venv
+
       - name: Upgrade pip
         run: |
-          python -m pip install --upgrade pip
+          ./venv/bin/python -m pip install --upgrade pip
 
       - name: Install project
         shell: bash -x -e -u -o pipefail {0}
         run: |
+          source ./venv/bin/activate
+
           PIP_ARGS=()
 
           if [[ $EXTRA == *"te"* ]]; then
@@ -204,13 +212,13 @@ jobs:
         uses: ./FW-CI-templates/.github/actions/check-imports
         with:
           package-name: nemo_deploy
-          python-binary: python
+          python-binary: ./venv/bin/python
 
       - name: Check imports for nemo_export
         uses: ./FW-CI-templates/.github/actions/check-imports
         with:
           package-name: nemo_export
-          python-binary: python
+          python-binary: ./venv/bin/python
 
   uv-test:
     runs-on: ${{ matrix.arch }}
