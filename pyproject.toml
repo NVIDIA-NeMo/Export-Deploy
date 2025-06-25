@@ -54,7 +54,7 @@ dependencies = [
 
 [project.optional-dependencies]
 vllm = ["vllm==0.9.0.1", "pandas", "timm"]
-trtllm = ["tensorrt-llm~=0.20.0rc3"]
+trtllm = ["tensorrt-llm~=0.20.0"]
 te = ["transformer-engine[pytorch]==2.4.0"]
 
 [dependency-groups]
