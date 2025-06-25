@@ -307,19 +307,27 @@ git clone https://github.com/NVIDIA-NeMo/Export-Deploy
 cd Export-Deploy
 
 pip install torch pybind11 setuptools
-pip install -e --build-isolation '.[te]'
+pip install -e --no-build-isolation '.[te]'
 ```
 
 ### Installation with TRT-LLM or vLLM support
 
 Additionally to Megatron-Core/TransformerEngine, users may also add TRT-LLM or vLLM support. Note that TRT-LLM and vLLM are mutually exclusive, attempting to install both together will likely result in an error.
 
-For TRT-LLM, make sure to `sudo apt install libopenmpi-dev` before.
+For TRT-LLM/TE, make sure to install `libopenmpi-dev` before.
+
+```bash
+sudo apt-get update
+sudo apt-get install -y libopenmpi-dev
+```
+
+Now, proceed with the actuall installation:
 
 ```bash
 git clone https://github.com/NVIDIA-NeMo/Export-Deploy
 cd Export-Deploy
-pip install -e '.[trtllm]'
+pip install torch pybind11 setuptools
+pip install -e --no-build-isolation '.[te,trllm]'
 ```
 
 For vLLM:

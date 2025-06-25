@@ -177,6 +177,7 @@ jobs:
           python -m pip install --upgrade pip
 
       - name: Install project
+        shell: bash -x -e -u -o pipefail {0}
         run: |
           PIP_ARGS=()
 
