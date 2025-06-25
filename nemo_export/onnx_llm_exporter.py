@@ -17,15 +17,9 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
-import modelopt.torch.quantization as mtq
 import numpy as np
-import tensorrt as trt
 import torch
 import wrapt
-from nemo.collections.llm.modelopt.quantization.quant_cfg_choices import (
-    get_quant_cfg_choices,
-)
-from nemo.utils import logging
 from transformers import AutoModel, AutoTokenizer
 
 from nemo_deploy import ITritonDeployable
@@ -35,8 +29,51 @@ from nemo_export.utils import (
     is_nemo2_checkpoint,
     validate_fp8_network,
 )
+from nemo_export_deploy_common.import_utils import (
+    MISSING_MODELOPT_MSG,
+    MISSING_NEMO_MSG,
+    MISSING_TENSORRT_MSG,
+    UnavailableError,
+)
 
-QUANT_CFG_CHOICES = get_quant_cfg_choices()
+try:
+    from nemo.utils import logging
+except (ImportError, ModuleNotFoundError):
+    import logging
+
+    logging = logging.getLogger(__name__)
+
+try:
+    import modelopt.torch.quantization as mtq
+
+    HAVE_MODELOPT = True
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    mtq = MagicMock()
+    HAVE_MODELOPT = False
+
+
+try:
+    import tensorrt as trt
+
+    HAVE_TENSORRT = True
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    trt = MagicMock()
+    HAVE_TENSORRT = False
+
+try:
+    from nemo.collections.llm.modelopt.quantization.quant_cfg_choices import (
+        get_quant_cfg_choices,
+    )
+
+    QUANT_CFG_CHOICES = get_quant_cfg_choices()
+
+    HAVE_NEMO = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_NEMO = False
 
 
 @wrapt.decorator
@@ -247,6 +284,9 @@ class OnnxLLMExporter(ITritonDeployable):
             profiling_verbosity (str): Profiling verbosity. Default is "layer_names_only".
             trt_builder_flags (List[trt.BuilderFlag]): TRT specific flags.
         """
+        if not HAVE_TENSORRT:
+            raise UnavailableError(MISSING_TENSORRT_MSG)
+
         logging.info(f"Building TRT engine from ONNX model ({self.onnx_model_path})")
         trt_logger = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(trt_logger)
@@ -322,10 +362,16 @@ class OnnxLLMExporter(ITritonDeployable):
         logging.info(f"Successfully exported ONNX model ({self.onnx_model_path}) to TRT engine ({trt_model_path})")
 
     def _override_layer_precision_to_fp32(self, layer: trt.ILayer) -> None:
+        if not HAVE_TENSORRT:
+            raise UnavailableError(MISSING_TENSORRT_MSG)
+
         layer.precision = trt.float32
         layer.set_output_type(0, trt.float32)
 
     def _override_layers_to_fp32(self, network: trt.INetworkDefinition, fp32_layer_patterns: list[str]) -> None:
+        if not HAVE_TENSORRT:
+            raise UnavailableError(MISSING_TENSORRT_MSG)
+
         for i in range(network.num_layers):
             layer = network.get_layer(i)
             layer_name = layer.name
@@ -360,6 +406,9 @@ class OnnxLLMExporter(ITritonDeployable):
         """
         # Logic originally from OSS T5 HF export script:
         # https://gitlab-master.nvidia.com/TensorRT/Public/oss/-/blob/77495ec/demo/HuggingFace/T5/export.py
+        if not HAVE_TENSORRT:
+            raise UnavailableError(MISSING_TENSORRT_MSG)
+
         pow_ops = {}
         for layer_index, layer in enumerate(network):
             if layer.type == trt.LayerType.IDENTITY:
@@ -383,6 +432,8 @@ class OnnxLLMExporter(ITritonDeployable):
             # Iterate from few layers before pow to include residual add and cast op.
             # Iterate till 10 layers after pow op to include all
             # operations included in layer norm.
+            if not HAVE_TENSORRT:
+                raise UnavailableError(MISSING_TENSORRT_MSG)
             START_OFFSET = 4
             END_OFFSET = 12
             for i in range(index - START_OFFSET, index + END_OFFSET):
@@ -447,6 +498,12 @@ class OnnxLLMExporter(ITritonDeployable):
             forward_loop (callable): A function that accepts the model as a single parameter
                 and runs sample data through it. This is used for calibration during quantization.
         """
+        if not HAVE_NEMO:
+            raise UnavailableError(MISSING_NEMO_MSG)
+
+        if not HAVE_MODELOPT:
+            raise UnavailableError(MISSING_MODELOPT_MSG)
+
         if isinstance(quant_cfg, str):
             assert quant_cfg in QUANT_CFG_CHOICES, (
                 f"Quantization config {quant_cfg} is not supported. Supported configs: {list(QUANT_CFG_CHOICES)}"

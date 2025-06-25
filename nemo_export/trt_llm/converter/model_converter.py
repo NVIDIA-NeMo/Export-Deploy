@@ -16,23 +16,37 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import tensorrt_llm
 import torch
-from tensorrt_llm._utils import pad_vocab_size
-from tensorrt_llm.functional import non_gated_version
-from tensorrt_llm.layers import MoeConfig
-from tensorrt_llm.models.modeling_utils import PretrainedConfig
 
 from nemo_export.trt_llm.converter.model_to_trt_llm_ckpt import (
     convert_model_to_trt_llm_ckpt,
     dist_model_to_trt_llm_ckpt,
 )
 from nemo_export.trt_llm.converter.utils import DECODER_MODEL_TYPE, split
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, UnavailableError
+
+try:
+    import tensorrt_llm
+    from tensorrt_llm._utils import pad_vocab_size
+    from tensorrt_llm.functional import non_gated_version
+    from tensorrt_llm.layers import MoeConfig
+    from tensorrt_llm.models.modeling_utils import PretrainedConfig
+
+    HAVE_TRT_LLM = True
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    HAVE_TRT_LLM = False
+    MoeConfig = MagicMock()
+    PretrainedConfig = MagicMock()
 
 LOGGER = logging.getLogger("NeMo")
 
 
 def get_config(decoder_type, config):
+    if not HAVE_TRT_LLM:
+        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
     DECODER_CONFIG = {
         "llama": tensorrt_llm.models.llama.config.LLaMAConfig,
         "gpt": tensorrt_llm.models.gpt.config.GPTConfig,

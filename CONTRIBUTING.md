@@ -48,6 +48,7 @@ pip install ruff
 Format:
 
 ```bash
+ruff check --fix .
 ruff format .
 ```
 
