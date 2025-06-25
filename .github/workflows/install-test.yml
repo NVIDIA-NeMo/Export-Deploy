@@ -180,12 +180,10 @@ jobs:
       - name: Install project
         shell: bash -x -e -u -o pipefail {0}
         run: |
-          source ./venv/bin/activate
-
           PIP_ARGS=()
 
           if [[ $EXTRA == *"te"* ]]; then
-            pip install torch setuptools pybind11 wheel_stub
+            ./venv/bin/python -m pip install torch setuptools pybind11 wheel_stub
             PIP_ARGS=(--no-build-isolation)
           fi
 
@@ -194,7 +192,7 @@ jobs:
             apt-get install -y libopenmpi-dev
           fi
 
-          pip install ${PIP_ARGS[@]} .$EXTRA
+          ./venv/bin/python -m pip install ${PIP_ARGS[@]} .$EXTRA
 
       - name: Checkout check-imports
         uses: actions/checkout@v4
