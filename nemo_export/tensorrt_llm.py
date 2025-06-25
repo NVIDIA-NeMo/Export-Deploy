@@ -85,7 +85,6 @@ from transformers import AutoConfig, PreTrainedTokenizerBase
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
 from nemo_export.tarutils import unpack_tarball
-from nemo_export.trt_llm.utils import determine_quantization_settings
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
     get_model_type,
     get_tokenizer,
@@ -99,7 +98,7 @@ from nemo_export.trt_llm.tensorrt_llm_run import (
     load,
     unload_engine,
 )
-from nemo_export.trt_llm.utils import is_rank
+from nemo_export.trt_llm.utils import determine_quantization_settings, is_rank
 from nemo_export.utils import (
     prepare_directory_for_export,
 )
