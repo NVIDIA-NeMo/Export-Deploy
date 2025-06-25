@@ -306,7 +306,7 @@ CUDA Toolkit with cuDNN and NVCC (NVIDIA CUDA Compiler) installed
 git clone https://github.com/NVIDIA-NeMo/Export-Deploy
 cd Export-Deploy
 
-pip install torch pybind11 setuptools
+pip install torch setuptools pybind11 wheel_stub
 pip install -e --no-build-isolation '.[te]'
 ```
 
@@ -326,7 +326,7 @@ Now, proceed with the actuall installation:
 ```bash
 git clone https://github.com/NVIDIA-NeMo/Export-Deploy
 cd Export-Deploy
-pip install torch pybind11 setuptools
+pip install torch setuptools pybind11 wheel_stub
 pip install -e --no-build-isolation '.[te,trllm]'
 ```
 

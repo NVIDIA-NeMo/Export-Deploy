@@ -167,7 +167,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install]
+      - name: Install nemo-export-deploy${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }}
         shell: bash -x -e -u -o pipefail {0}
         run: |
           apt-get update
