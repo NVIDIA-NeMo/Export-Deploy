@@ -109,7 +109,7 @@ jobs:
   update-lockfile:
     environment: nemo-ci
     runs-on: linux-amd64-cpu16
-    needs: [nemo]
+    needs: [nemo, update-branch]
     steps:
       - name: Install Azure CLI
         run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
@@ -139,7 +139,7 @@ jobs:
       - name: Upload lock file
         uses: actions/upload-artifact@v4
         with:
-          name: lock-file
+          name: lock-file-${{ needs.update-branch.outputs.bump-branch }}
           path: uv.lock
 
   create-pr:
@@ -167,7 +167,7 @@ jobs:
       - name: Download lock file
         uses: actions/download-artifact@v4
         with:
-          name: lock-file
+          name: lock-file-${{ needs.update-branch.outputs.bump-branch }}
 
       - name: Commit changes
         run: |
