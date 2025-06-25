@@ -167,33 +167,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install venv
+      - name: Install
         run: |
           apt update
           apt install -y python3 python3-pip python3-venv
           python3 -m venv ./venv
 
-      - name: Upgrade pip
-        run: |
-          ./venv/bin/python -m pip install --upgrade pip
+          source ./venv/bin/activate
 
-      - name: Install project
-        shell: bash -x -e -u -o pipefail {0}
-        run: |
+          pip install --upgrade pip
+
           PIP_ARGS=()
 
           if [[ $EXTRA == *"te"* ]]; then
-            ./venv/bin/python -m pip install torch setuptools pybind11 wheel_stub
+            pip install torch setuptools pybind11 wheel_stub
             PIP_ARGS=(--no-build-isolation)
           fi
 
           if [[ $EXTRA == *"trtllm"* ]]; then
-            apt-get update 
             apt-get install -y libopenmpi-dev
           fi
 
-          source ./venv/bin/activate
-          ./venv/bin/python -m pip install ${PIP_ARGS[@]} .$EXTRA
+          pip install ${PIP_ARGS[@]} .$EXTRA
 
       - name: Checkout check-imports
         uses: actions/checkout@v4
