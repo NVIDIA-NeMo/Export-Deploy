@@ -19,12 +19,25 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import torch
 from peft import PeftModel
-from pytriton.decorators import batch
-from pytriton.model_config import Tensor
 from transformers import AutoModel, AutoModelForCausalLM, AutoTokenizer
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import broadcast_list, cast_output, str_ndarray2list
+from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError, null_decorator
+
+try:
+    from pytriton.decorators import batch
+    from pytriton.model_config import Tensor
+
+    HAVE_TRITON = True
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    HAVE_TRITON = False
+    batch = MagicMock()
+    Tensor = MagicMock()
+    batch = null_decorator
+
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -67,6 +80,9 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         task: Optional[str] = "text-generation",
         **hf_kwargs,
     ):
+        if not HAVE_TRITON:
+            raise UnavailableError(MISSING_TRITON_MSG)
+
         if hf_model_id_path is None and model is None:
             raise ValueError("hf_model_id_path or model parameters has to be passed.")
         elif hf_model_id_path is not None and model is not None:
