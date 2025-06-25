@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       source-branch: ${{ steps.merge-branch.outputs.source-branch }}
-      bump-branch: bump-ci-container-${{ steps.ref.outputs.date }}
+      bump-branch: bump-ci-container-${{ steps.ref.outputs.date }}-${{ steps.merge-branch.outputs.source-branch }}
       date: ${{ steps.ref.outputs.date }}
     steps:
       - uses: actions/checkout@v2
