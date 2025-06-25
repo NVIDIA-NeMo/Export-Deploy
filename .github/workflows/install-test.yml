@@ -192,6 +192,8 @@ jobs:
             apt-get install -y libopenmpi-dev
           fi
 
+          export PATH="./venv/bin/:$PATH"
+
           ./venv/bin/python -m pip install ${PIP_ARGS[@]} .$EXTRA
 
       - name: Checkout check-imports
