@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "cython"]
+requires = ["setuptools>=42", "wheel", "cython>=3.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -44,6 +44,7 @@ dependencies = [
     "lightning",
     "omegaconf>=2.3.0",
     "peft",
+    "torch",
     "torchmetrics>=0.11.0",
     "transformers>=4.49.0",
     "wandb",
@@ -62,7 +63,7 @@ te = ["transformer-engine[pytorch]==2.4.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch"]
+build = ["setuptools", "torch==2.6.0", "pybind11", "Cython>=3.0.0"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
@@ -104,7 +105,8 @@ link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }]]
 override-dependencies = [
     "urllib3>1.27.0",
-    "tiktoken>=0.9.0", # because nemo-toolkit and megatron-hub disagree on tiktoken, we need to pin it here
+    "tiktoken>=0.9.0", # because nemo-toolkit and megatron-hub disagree on tiktoken, we need to pin it here,
+    "torch==2.6.0",
 ]
 prerelease = "allow"
 

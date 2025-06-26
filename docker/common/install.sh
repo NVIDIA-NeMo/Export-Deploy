@@ -46,8 +46,9 @@ main() {
     fi
 
     # Install dependencies
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install -y curl git libopenmpi-dev
+    apt-get install -y curl git libopenmpi-dev libpython3.12
 
     # Install uv
     UV_VERSION="0.7.2"
@@ -56,6 +57,7 @@ main() {
     export UV_PROJECT_ENVIRONMENT=/opt/venv
     export PATH="$UV_PROJECT_ENVIRONMENT/bin:$PATH"
     export UV_LINK_MODE=copy
+    export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 
     UV_ARGS=()
     if [[ "$BASE_IMAGE" == "pytorch" ]]; then
@@ -63,6 +65,7 @@ main() {
             "--system-site-packages"
             "--no-install-package" "torch"
             "--no-install-package" "torchvision"
+            "--no-install-package" "triton"
             "--no-install-package" "nvidia-cublas-cu12"
             "--no-install-package" "nvidia-cuda-cupti-cu12"
             "--no-install-package" "nvidia-cuda-nvrtc-cu12"
@@ -75,10 +78,6 @@ main() {
             "--no-install-package" "nvidia-cusparse-cu12"
             "--no-install-package" "nvidia-cusparselt-cu12"
             "--no-install-package" "nvidia-nccl-cu12"
-        )
-    else
-        UV_ARGS=(
-            "--no-install-package" "triton"
         )
     fi
 
