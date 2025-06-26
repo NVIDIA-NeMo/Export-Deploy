@@ -3615,7 +3615,7 @@ requires-dist = [
     { name = "torch", specifier = "==2.7.0" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
     { name = "torchvision" },
-    { name = "transformer-engine", extras = ["pytorch"], marker = "extra == 'te'", specifier = "==2.4.0" },
+    { name = "transformer-engine", extras = ["pytorch"], marker = "extra == 'te'", specifier = "==2.2.0" },
     { name = "transformers", specifier = ">=4.49.0" },
     { name = "uvicorn" },
     { name = "vllm", marker = "platform_machine == 'aarch64' and extra == 'vllm'", specifier = "==0.9.0.1", index = "https://pypi.org/simple" },
@@ -7485,13 +7485,13 @@ wheels = [
 
 [[package]]
 name = "transformer-engine"
-version = "2.4.0"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "transformer-engine-cu12" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9a/51/858766e10b825937153427e2101bf1006be30602c60b700b8493732f20af/transformer_engine-2.4.0-py3-none-any.whl", hash = "sha256:c2a845e433fcf81497cbc53334c99725bd2faa361e7548342e95398acb06e8ce", size = 515181, upload-time = "2025-06-06T17:50:22.965Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/c3/2964ca14ec0351d8ec806d48cb4ea8d5be8e214e56df7c138b5a5e501a54/transformer_engine-2.2.0-py3-none-any.whl", hash = "sha256:bc2c2c275c630680e9733c225b47e689b9f954a030200202393e7ed1d6444d2e", size = 432135, upload-time = "2025-04-25T16:08:56.309Z" },
 ]
 
 [package.optional-dependencies]
@@ -7501,7 +7501,7 @@ pytorch = [
 
 [[package]]
 name = "transformer-engine-cu12"
-version = "2.4.0"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "importlib-metadata" },
@@ -7509,18 +7509,18 @@ dependencies = [
     { name = "pydantic" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f9/e5/008f377a3675f79625744d9d50cafd06c3983ec9cd158a6d1eea029e18dc/transformer_engine_cu12-2.4.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:5a11faa4b7caa54bc5562cf430f8dd232addf0130696a823eade02048d56e2c1", size = 269999074, upload-time = "2025-06-06T17:48:55.49Z" },
-    { url = "https://files.pythonhosted.org/packages/ad/6a/c650f4afe791162e68b8e446ba4583aa47acf0c30eb135998353ee2f3845/transformer_engine_cu12-2.4.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:7fcf40db5782bf51370b93aec0ff74397982f2fd68c3b3d793783fc9c9888bf8", size = 270364240, upload-time = "2025-06-06T17:49:53.216Z" },
+    { url = "https://files.pythonhosted.org/packages/84/1c/bb8f39957f8ac015ed1c6b5e02a8d9a1a1a6312aa05df966aaf94afee773/transformer_engine_cu12-2.2.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:f15c0341bacead776ece29d917871fa7790b0b7e73ae860c78a60b07f1c5e9e2", size = 218492242, upload-time = "2025-04-25T16:09:44.97Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/36/ef3f7469070d7cc3839d9252068847129b48151acf0a76511b677aab877d/transformer_engine_cu12-2.2.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:7e033ff2cd12f1e0773faf5be4cf90670c8a61cecee854a7dd49b1cc66475168", size = 218806192, upload-time = "2025-04-25T16:08:28.232Z" },
 ]
 
 [[package]]
 name = "transformer-engine-torch"
-version = "2.4.0"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "torch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/06/ed/3428af305ea9c5756b94300f0b00fbc7e8f0b85833b00607697aa8f3e371/transformer_engine_torch-2.4.0.tar.gz", hash = "sha256:026b133737e3434dc4e9218aedd03d77f240e351347af5a7af45601c300bf3e6", size = 156462, upload-time = "2025-06-06T17:50:57.64Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fa/ed/364385edd4fc2d0611b2d212c812fa755e2ed2d7685415080944132c2a22/transformer_engine_torch-2.2.0.tar.gz", hash = "sha256:5a786a80e2d6400632d74d1f7148b7b5cca173fa697c23bc990e3b3f7881ae5c", size = 160922, upload-time = "2025-04-25T16:10:55.999Z" }
 
 [[package]]
 name = "transformers"
