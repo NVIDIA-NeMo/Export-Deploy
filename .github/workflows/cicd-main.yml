@@ -161,8 +161,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          path: ${{ github.run_id }}
       - name: main
         uses: ./.github/actions/test-template
         with:
@@ -205,6 +203,8 @@ jobs:
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: main
         uses: ./.github/actions/test-template
         with:
@@ -226,6 +226,8 @@ jobs:
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: main
         uses: ./.github/actions/test-template
         with:
@@ -247,6 +249,8 @@ jobs:
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: main
         uses: ./.github/actions/test-template
         with:
