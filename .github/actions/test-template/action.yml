@@ -160,7 +160,7 @@ runs:
           --rm \
           -d \
           --name nemo_container_${{ github.run_id }} ${ARG[@]} \
-          --shm-size=64g \adcl
+          --shm-size=64g \
           --env TRANSFORMERS_OFFLINE=0 \
           --env HYDRA_FULL_ERROR=1 \
           --env HF_HOME=/home/TestData/HF_HOME \
