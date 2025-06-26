@@ -44,7 +44,8 @@ dependencies = [
     "lightning",
     "omegaconf>=2.3.0",
     "peft",
-    "torch",
+    "torch==2.6.0",
+    "torchvision==0.21.0",
     "torchmetrics>=0.11.0",
     "transformers>=4.49.0",
     "wandb",
@@ -58,7 +59,7 @@ dependencies = [
 
 [project.optional-dependencies]
 vllm = ["vllm==0.9.0.1", "pandas", "timm"]
-trtllm = ["tensorrt-llm~=0.20.0rc3"]
+trtllm = ["tensorrt-llm~=0.20.0"]
 te = ["transformer-engine[pytorch]==2.4.0"]
 
 [dependency-groups]
@@ -105,8 +106,9 @@ link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }]]
 override-dependencies = [
     "urllib3>1.27.0",
-    "tiktoken>=0.9.0", # because nemo-toolkit and megatron-hub disagree on tiktoken, we need to pin it here,
+    "tiktoken>=0.9.0",     # because nemo-toolkit and megatron-hub disagree on tiktoken, we need to pin it here,
     "torch==2.6.0",
+    "torchvision==0.21.0",
 ]
 prerelease = "allow"
 
