@@ -30,10 +30,6 @@ inputs:
     description: "Upload coverage as unit test"
     required: false
     default: "false"
-  image:
-    description: "Image to use for test"
-    required: false
-    default: "nemo_container"
   cpu-only:
     description: "Run tests on CPU only"
     required: false
@@ -135,15 +131,17 @@ runs:
 
         ls -al $MNT_PATH/TestData
 
-    - name: Docker pull image
-      shell: bash
-      run: |
-        docker pull ${{ inputs.image }}
-
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
         path: Export-Deploy
+
+    - name: Build container
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.PAT }}
+      run: |
+        docker build -f docker/Dockerfile.ci --build-arg INFERENCE_FRAMEWORK=${{ inputs.inference-framework }} --secret id=GH_TOKEN -t export-deploy .
 
     - name: Start container
       shell: bash
@@ -162,7 +160,7 @@ runs:
           --rm \
           -d \
           --name nemo_container_${{ github.run_id }} ${ARG[@]} \
-          --shm-size=64g \
+          --shm-size=64g \adcl
           --env TRANSFORMERS_OFFLINE=0 \
           --env HYDRA_FULL_ERROR=1 \
           --env HF_HOME=/home/TestData/HF_HOME \
@@ -170,7 +168,7 @@ runs:
           --workdir /workspace \
           --volume $(pwd)/Export-Deploy:/workspace \
           --volume $MNT_PATH/TestData:/home/TestData \
-          ${{ inputs.image }} \
+          export-deploy \
           bash -c "sleep $(( ${{ inputs.timeout }} * 60 + 60 ))"
         RUN_TEST_EOF
         )

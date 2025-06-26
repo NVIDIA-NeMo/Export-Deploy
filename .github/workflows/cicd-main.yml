@@ -167,7 +167,6 @@ jobs:
           script: ${{ matrix.script }}
           timeout: ${{ matrix.timeout || 10 }}
           is_unit_test: "true"
-          image: nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
           cpu-only: ${{ matrix.cpu-only || false }}
           has-azure-credentials: "true"
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -209,7 +208,6 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: ${{ matrix.script }}
-          image: nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -232,7 +230,6 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: L2_Launch_vLLM
-          image: nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -255,7 +252,6 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: L2_Launch_InFramework
-          image: nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
