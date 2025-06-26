@@ -175,6 +175,7 @@ jobs:
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           PAT: ${{ secrets.PAT }}
+          inference-framework: inframework
 
   cicd-e2e-tests-trtllm:
     strategy:
@@ -219,6 +220,7 @@ jobs:
           is_unit_test: "false"
           timeout: ${{ matrix.timeout || 10 }}
           PAT: ${{ secrets.PAT }}
+          inference-framework: trtllm
 
   cicd-e2e-tests-vllm:
     needs: [cicd-unit-tests]
@@ -242,6 +244,7 @@ jobs:
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ secrets.PAT }}
+          inference-framework: vllm
 
   cicd-e2e-tests-inframework:
     needs: [cicd-unit-tests]
@@ -265,6 +268,7 @@ jobs:
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ secrets.PAT }}
+          inference-framework: inframework
 
   Nemo_CICD_Test:
     needs:
