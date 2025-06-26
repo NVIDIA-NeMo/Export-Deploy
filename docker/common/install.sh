@@ -60,7 +60,7 @@ main() {
     export UV_LINK_MODE=copy
 
     # Create virtual environment and install dependencies
-    uv venv ${UV_PROJECT_ENVIRONMENT}
+    uv venv ${UV_PROJECT_ENVIRONMENT} $([[ "$BASE_IMAGE" == "pytorch" ]] && echo "--system-site-packages")
 
     UV_ARGS=()
     if [[ "$BASE_IMAGE" == "pytorch" ]]; then
@@ -88,6 +88,7 @@ main() {
         UV_ARGS+=("--extra" "$INFERENCE_FRAMEWORK")
     fi
 
+    uv sync --only-group build
     uv sync \
         --link-mode copy \
         --locked \
