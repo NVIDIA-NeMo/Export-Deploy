@@ -15,7 +15,8 @@
 FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
 WORKDIR /workspace
 COPY . .
+ARG INFERENCE_FRAMEWORK
 RUN --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
     export PAT=$(cat /run/secrets/GH_TOKEN)
-    bash docker/common/install.sh --base-image cuda
+    bash docker/common/install.sh --base-image cuda --inference-framework $INFERENCE_FRAMEWORK
 EOF
