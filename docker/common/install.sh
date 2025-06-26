@@ -39,7 +39,7 @@ main() {
 
     # Install dependencies
     apt-get update
-    apt-get install -y curl git
+    apt-get install -y curl git libopenmpi-dev
 
     # Install uv
     UV_VERSION="0.7.2"
