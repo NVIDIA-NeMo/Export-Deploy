@@ -40,8 +40,6 @@ if [[ "$INFERENCE_FRAMEWORK" != "trtllm" && "$INFERENCE_FRAMEWORK" != "vllm" && 
 fi
 
 main() {
-    echo "Installing dependencies for base image: $BASE_IMAGE"
-
     if [[ -n "${PAT:-}" ]]; then
         echo -e "machine github.com\n  login token\n  password $PAT" >~/.netrc
         chmod 600 ~/.netrc
@@ -59,16 +57,12 @@ main() {
     export PATH="$UV_PROJECT_ENVIRONMENT/bin:$PATH"
     export UV_LINK_MODE=copy
 
-    # Create virtual environment and install dependencies
-    uv venv ${UV_PROJECT_ENVIRONMENT} $([[ "$BASE_IMAGE" == "pytorch" ]] && echo "--system-site-packages")
-
     UV_ARGS=()
     if [[ "$BASE_IMAGE" == "pytorch" ]]; then
         UV_ARGS=(
             "--system-site-packages"
             "--no-install-package" "torch"
             "--no-install-package" "torchvision"
-            "--no-install-package" "triton"
             "--no-install-package" "nvidia-cublas-cu12"
             "--no-install-package" "nvidia-cuda-cupti-cu12"
             "--no-install-package" "nvidia-cuda-nvrtc-cu12"
@@ -82,23 +76,31 @@ main() {
             "--no-install-package" "nvidia-cusparselt-cu12"
             "--no-install-package" "nvidia-nccl-cu12"
         )
+    else
+        UV_ARGS=(
+            "--no-install-package" "triton"
+        )
     fi
 
     if [[ "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
         UV_ARGS+=("--extra" "$INFERENCE_FRAMEWORK")
     fi
 
-    uv sync --only-group build
+    # Create virtual environment and install dependencies
+    uv venv ${UV_PROJECT_ENVIRONMENT} $([[ "$BASE_IMAGE" == "pytorch" ]] && echo "--system-site-packages")
+
+    # Install dependencies
+    uv sync --only-group build ${UV_ARGS[@]}
     uv sync \
         --link-mode copy \
         --locked \
         --extra te \
         --all-groups ${UV_ARGS[@]}
 
-    # Run install overrides if the file exists
-    echo "Running install conflicting dependencies..."
+    # Run install overrides
     bash docker/common/install_conflicting_deps.sh
 
+    # Install the package
     uv pip install --no-deps -e .
 
     # Write environment variables to a file for later sourcing
