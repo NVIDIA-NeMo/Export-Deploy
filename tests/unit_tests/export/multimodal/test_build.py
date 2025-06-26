@@ -238,7 +238,7 @@ class TestBuild(unittest.TestCase):
         mock_build_trt.assert_called_once()
 
     @pytest.mark.run_only_on("GPU")
-    @patch("nemo_export.multimodal.build.VisionEngineBuilder")
+    @patch("nemo_export.multimodal.build.MultimodalEngineBuilder")
     @patch("nemo_export.multimodal.build.AutoProcessor.from_pretrained")
     @patch("nemo_export.multimodal.build.shutil.copy2")
     @patch("nemo_export.multimodal.build.os.listdir")

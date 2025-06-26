@@ -25,7 +25,7 @@ from typing import List
 import torch
 import yaml
 from nemo.collections import llm
-from tensorrt_llm.tools.multimodal_builder import VisionEngineBuilder
+from tensorrt_llm.tools.multimodal_builder import MultimodalEngineBuilder
 from transformers import AutoModel, AutoProcessor
 
 from nemo_export.tensorrt_llm import TensorRTLLM
@@ -545,7 +545,7 @@ def build_mllama_visual_engine(
         max_batch_size=vision_max_batch_size,
         model_type="mllama",
     )
-    builder = VisionEngineBuilder(args)
+    builder = MultimodalEngineBuilder(args)
     builder.build()
 
 
