@@ -181,7 +181,7 @@ runs:
       shell: bash
       run: |
         docker exec -e PAT=${{ inputs.PAT }} nemo_container_${{ github.run_id }} \
-          bash docker/common/install.sh --base-image pytorch
+          bash docker/common/install.sh --base-image cuda
 
     - name: Create run-script
       id: create
