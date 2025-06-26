@@ -91,6 +91,7 @@ main() {
     uv sync \
         --link-mode copy \
         --locked \
+        --extra te \
         --all-groups ${UV_ARGS[@]}
 
     # Run install overrides if the file exists
