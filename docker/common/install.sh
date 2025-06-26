@@ -8,6 +8,10 @@ while [[ $# -gt 0 ]]; do
         BASE_IMAGE="$2"
         shift 2
         ;;
+    --inference-framework)
+        INFERENCE_FRAMEWORK="$2"
+        shift 2
+        ;;
     *)
         echo "Unknown option: $1"
         echo "Usage: $0 --base-image {pytorch|cuda}"
@@ -17,15 +21,21 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate base image argument
-if [[ -z "${BASE_IMAGE:-}" ]]; then
-    echo "Error: --base-image argument is required"
-    echo "Usage: $0 --base-image {pytorch|cuda}"
+if [[ -z "${BASE_IMAGE:-}" || -z "${INFERENCE_FRAMEWORK:-}" ]]; then
+    echo "Error: --base-image and --inference-framework arguments are required"
+    echo "Usage: $0 --base-image {pytorch|cuda} --inference-framework {trtllm|vllm|inframework}"
     exit 1
 fi
 
 if [[ "$BASE_IMAGE" != "pytorch" && "$BASE_IMAGE" != "cuda" ]]; then
     echo "Error: --base-image must be either 'pytorch' or 'cuda'"
     echo "Usage: $0 --base-image {pytorch|cuda}"
+    exit 1
+fi
+
+if [[ "$INFERENCE_FRAMEWORK" != "trtllm" && "$INFERENCE_FRAMEWORK" != "vllm" && "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
+    echo "Error: --inference-framework must be either 'trtllm' or 'vllm' or 'inframework'"
+    echo "Usage: $0 --inference-framework {trtllm|vllm|inframework}"
     exit 1
 fi
 
@@ -55,6 +65,7 @@ main() {
     UV_ARGS=()
     if [[ "$BASE_IMAGE" == "pytorch" ]]; then
         UV_ARGS=(
+            "--system-site-packages"
             "--no-install-package" "torch"
             "--no-install-package" "torchvision"
             "--no-install-package" "triton"
@@ -71,6 +82,10 @@ main() {
             "--no-install-package" "nvidia-cusparselt-cu12"
             "--no-install-package" "nvidia-nccl-cu12"
         )
+    fi
+
+    if [[ "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
+        UV_ARGS+=("--extra" "$INFERENCE_FRAMEWORK")
     fi
 
     uv sync \
