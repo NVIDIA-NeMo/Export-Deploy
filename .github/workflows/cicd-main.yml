@@ -143,37 +143,6 @@ jobs:
         run: |
           echo "Running CI tests"
 
-  cicd-container-build:
-    uses: ./.github/workflows/_build_container.yml
-    needs: [pre-flight, cicd-wait-in-queue]
-    if: |
-      needs.pre-flight.outputs.test_to_run != '[]' 
-      && needs.pre-flight.outputs.components_to_run != '[]'
-      && (
-        success() 
-        || (
-          needs.cicd-wait-in-queue.result == 'skipped'
-          && needs.pre-flight.outputs.is_ci_workload == 'true'
-        )
-      )
-      && !cancelled()
-    with:
-      image-name: nemo_container_export_deploy${{ matrix.inference-framework != '' && '_' || '' }}${{ matrix.inference-framework }}
-      dockerfile: docker/Dockerfile.ci
-      inference-framework: ${{ matrix.inference-framework }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - inference-framework: trtllm
-          - inference-framework: vllm
-          - inference-framework: ""
-    secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      PAT: ${{ secrets.PAT }}
-
   cicd-unit-tests:
     strategy:
       fail-fast: false
@@ -185,7 +154,7 @@ jobs:
           - script: L0_Unit_Tests_CPU_Export_Deploy
             runner: linux-amd64-cpu16
             cpu-only: true
-    needs: [cicd-container-build]
+    needs: [pre-flight, cicd-wait-in-queue]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.script }}
     environment: nemo-ci
@@ -195,7 +164,7 @@ jobs:
         with:
           path: ${{ github.run_id }}
       - name: main
-        uses: NVIDIA-NeMo/Export-Deploy/.github/actions/test-template@main
+        uses: ./.github/actions/test-template
         with:
           runner: ${{ runner.name }}
           script: ${{ matrix.script }}
@@ -207,6 +176,7 @@ jobs:
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          PAT: ${{ secrets.PAT }}
 
   cicd-e2e-tests-trtllm:
     strategy:
@@ -236,11 +206,11 @@ jobs:
     environment: nemo-ci
     steps:
       - name: main
-        uses: NVIDIA-NeMo/Export-Deploy/.github/actions/test-template@main
+        uses: ./.github/actions/test-template
         with:
           runner: ${{ runner.name }}
           script: ${{ matrix.script }}
-          image: nemo_container_export_deploy_trtllm
+          image: nvcr.io/nvidia/pytorch:25.05-py3
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -248,6 +218,7 @@ jobs:
           has-azure-credentials: true
           is_unit_test: "false"
           timeout: ${{ matrix.timeout || 10 }}
+          PAT: ${{ secrets.PAT }}
 
   cicd-e2e-tests-vllm:
     needs: [cicd-unit-tests]
@@ -256,11 +227,11 @@ jobs:
     environment: nemo-ci
     steps:
       - name: main
-        uses: NVIDIA-NeMo/Export-Deploy/.github/actions/test-template@main
+        uses: ./.github/actions/test-template
         with:
           runner: ${{ runner.name }}
           script: L2_Launch_vLLM
-          image: nemo_container_export_deploy_vllm
+          image: nvcr.io/nvidia/pytorch:25.05-py3
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -268,6 +239,7 @@ jobs:
           has-azure-credentials: true
           is_unit_test: "false"
           timeout: 60
+          PAT: ${{ secrets.PAT }}
 
   cicd-e2e-tests-inframework:
     needs: [cicd-unit-tests]
@@ -276,11 +248,11 @@ jobs:
     environment: nemo-ci
     steps:
       - name: main
-        uses: NVIDIA-NeMo/Export-Deploy/.github/actions/test-template@main
+        uses: ./.github/actions/test-template
         with:
           runner: ${{ runner.name }}
           script: L2_Launch_InFramework
-          image: nemo_container_export_deploy
+          image: nvcr.io/nvidia/pytorch:25.05-py3
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -288,6 +260,7 @@ jobs:
           has-azure-credentials: true
           is_unit_test: "false"
           timeout: 60
+          PAT: ${{ secrets.PAT }}
 
   Nemo_CICD_Test:
     needs:

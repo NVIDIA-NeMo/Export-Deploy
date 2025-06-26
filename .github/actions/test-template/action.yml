@@ -54,6 +54,9 @@ inputs:
     description: "Has Azure credentials"
     required: false
     default: "false"
+  PAT:
+    description: "GitHub Personal Access Token"
+    required: true
 
 runs:
   using: "composite"
@@ -135,7 +138,7 @@ runs:
     - name: Docker pull image
       shell: bash
       run: |
-        docker pull nemoci.azurecr.io/${{ inputs.image }}:${{ github.run_id }}
+        docker pull ${{ inputs.image }}
 
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -166,13 +169,19 @@ runs:
           --env RUN_ID=${{ github.run_id }} \
           --volume $(pwd)/Export-Deploy:/workspace \
           --volume $MNT_PATH/TestData:/home/TestData \
-          nemoci.azurecr.io/${{ inputs.image }}:${{ github.run_id }} \
+          ${{ inputs.image }} \
           bash -c "sleep $(( ${{ inputs.timeout }} * 60 + 60 ))"
         RUN_TEST_EOF
         )
 
         echo "$cmd" | tee "retry_job.sh"
         bash retry_job.sh
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        docker exec -e PAT=${{ inputs.PAT }} nemo_container_${{ github.run_id }} \
+          bash docker/common/install.sh --base-image pytorch
 
     - name: Create run-script
       id: create
@@ -181,15 +190,18 @@ runs:
         COVERAGE_PREFIX=$([[ "${{ inputs.is_unit_test }}" == "true" ]] && echo "unit-test" || echo "e2e")
         echo "coverage-prefix=$COVERAGE_PREFIX" | tee -a "$GITHUB_OUTPUT"
 
-        cmd=$(cat <<RUN_TEST_EOF
+        cmd=$(cat <<'RUN_TEST_EOF'
         #!/bin/bash
 
         (
           set -e
 
           docker exec -t nemo_container_${{ github.run_id }} bash -c '\
-            uv pip install --no-deps -e . && \
-            bash tests/${{ inputs.is_unit_test == 'true' && 'unit_tests' || 'functional_tests' }}/${{ inputs.script }}.sh && \
+            set -e
+            
+            . /opt/venv/env.sh
+
+            bash tests/${{ inputs.is_unit_test == 'true' && 'unit_tests' || 'functional_tests' }}/${{ inputs.script }}.sh
             echo "Finished successfully." || echo "Did not finish."'
         ) 2>&1 | tee err.log
 
