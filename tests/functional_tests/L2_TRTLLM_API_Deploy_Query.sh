@@ -13,5 +13,5 @@
 # limitations under the License.
 
 coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_trtllm_api_deploy_query.py \
-  --hf_model_path /home/TestData/llm/models/llama3.2-1B-hf/ \
+  --hf_model_path /home/TestData/hf/llama3.1-8b-hf \
   --tensor_parallel_size 2
