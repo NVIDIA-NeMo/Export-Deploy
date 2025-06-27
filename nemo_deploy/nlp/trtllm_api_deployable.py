@@ -21,7 +21,7 @@ from transformers import PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
-from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, MISSING_TRITON_MSG
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, MISSING_TRITON_MSG, null_decorator
 
 try:
     from pytriton.decorators import batch, first_value
@@ -29,8 +29,11 @@ try:
 
     HAVE_TRITON = True
 except ImportError:
-    batch = first_value = None
-    Tensor = None
+    from unittest.mock import MagicMock
+
+    Tensor = MagicMock()
+    batch = null_decorator
+    first_value = null_decorator
     HAVE_TRITON = False
 
 try:
