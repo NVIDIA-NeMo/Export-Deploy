@@ -230,6 +230,8 @@ jobs:
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Qnemo_TRT_LLM
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
+          - script: L2_TRTLLM_API_Deploy_Query
+            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
     needs: [cicd-unit-tests]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
