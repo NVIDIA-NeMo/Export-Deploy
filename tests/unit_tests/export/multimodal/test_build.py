@@ -21,6 +21,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 import torch
 
+try:
+    import trtllm  # noqa: F401
+
+    HAVE_TRTLLM = True
+except ImportError:
+    HAVE_TRTLLM = False
+
 
 @pytest.mark.run_only_on("GPU")
 class TestBuild(unittest.TestCase):
@@ -55,6 +62,7 @@ class TestBuild(unittest.TestCase):
                     os.rmdir(os.path.join(root, name))
             os.rmdir(self.temp_dir)
 
+    @pytest.mark.skipif(not HAVE_TRTLLM, reason="trtllm is not installed")
     @pytest.mark.run_only_on("GPU")
     @patch("nemo_export.multimodal.build.TensorRTLLM")
     def test_build_trtllm_engine(self, mock_trtllm):
@@ -78,6 +86,7 @@ class TestBuild(unittest.TestCase):
 
         mock_exporter.export.assert_called_once()
 
+    @pytest.mark.skipif(not HAVE_TRTLLM, reason="trtllm is not installed")
     @pytest.mark.run_only_on("GPU")
     @patch("nemo_export.multimodal.build.MLLaMAForCausalLM")
     @patch("nemo_export.multimodal.build.build_trtllm")
