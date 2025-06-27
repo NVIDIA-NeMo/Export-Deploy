@@ -153,3 +153,29 @@ class TestTRTLLMExport:
             shutil.rmtree(tmp_dir)
         except FileNotFoundError as e:
             logger.warning(f"Error removing temporary directory {tmp_dir}: {e}")
+
+    def test_export_nemo2(self):
+        tmp_dir = tempfile.mkdtemp()
+        subprocess.run(
+            [
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
+                "tests/functional_tests/utils/run_nemo_export.py",
+                "--model_name",
+                "test",
+                "--model_dir",
+                tmp_dir,
+                "--model_type",
+                "llama",
+                "--checkpoint_dir",
+                "/home/TestData/llm/models/llama32_1b_nemo2",
+                "--min_tps",
+                "1",
+                "--test_deployment",
+                "True",
+                "--debug",
+            ]
+        )
