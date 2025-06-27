@@ -66,6 +66,7 @@ def run_inference_tests(args):
 
     exporter.export(
         visual_checkpoint_path="/tmp/nemo2_ckpt",
+        processor_name=args.hf_model,
         model_type=args.model_type,
         llm_model_type=llm_model_type,
         max_multimodal_len=6404,

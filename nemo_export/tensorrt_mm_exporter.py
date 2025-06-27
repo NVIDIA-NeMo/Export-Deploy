@@ -113,6 +113,7 @@ class TensorRTMMExporter(ITritonDeployable):
         llm_checkpoint_path: str = None,
         model_type: str = "neva",
         llm_model_type: str = "llama",
+        processor_name: str = None,
         tensor_parallel_size: int = 1,
         max_input_len: int = 4096,
         max_output_len: int = 256,
@@ -148,6 +149,7 @@ class TensorRTMMExporter(ITritonDeployable):
             build_mllama_engine(
                 model_dir=self.model_dir,
                 checkpoint_path=visual_checkpoint_path,
+                processor_name=processor_name or "meta-llama/Llama-3.2-11B-Vision-Instruct",
                 tensor_parallelism_size=tensor_parallel_size,
                 max_input_len=max_input_len,
                 max_output_len=max_output_len,
