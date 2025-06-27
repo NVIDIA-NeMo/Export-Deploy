@@ -32,8 +32,6 @@ ENV UV_LINK_MODE=copy
 # Install all
 WORKDIR /workspace
 ARG INFERENCE_FRAMEWORK
-ARG NEMO_REF
-ARG MCORE_REF
 RUN --mount=type=bind,source=pyproject.toml,target=/workspace/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=nemo_export/__init__.py,target=/workspace/nemo_export/__init__.py \
