@@ -83,7 +83,7 @@ vllm = [
 ]
 # Remove this
 megatron-hub = { git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git", rev = "cc2a60c3be11549f070fe1d7b6324a3dae51c6e0" }
-nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "5e63ca3c1631bb156187705f9c4cf643a67f9c05" }
+nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "87b5b2a9f757a4dfdb8c7ed2afc0f228a61985c9" }
 megatron-core = { git = "https://github.com/NVIDIA/Megatron-LM.git", rev = "d8180ef8ed0bb6f305dcdedf1b27d91304f361a3" }
 
 [tool.uv]
