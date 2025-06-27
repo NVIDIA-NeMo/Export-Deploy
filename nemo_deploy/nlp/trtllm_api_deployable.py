@@ -17,15 +17,30 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 import numpy as np
-from pytriton.decorators import batch, first_value
-from pytriton.model_config import Tensor
-from tensorrt_llm import SamplingParams
-from tensorrt_llm._torch.pyexecutor.config import PyTorchConfig
-from tensorrt_llm.llmapi.llm import LLM, TokenizerBase
 from transformers import PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, MISSING_TRITON_MSG
+
+try:
+    from pytriton.decorators import batch, first_value
+    from pytriton.model_config import Tensor
+
+    HAVE_TRITON = True
+except ImportError:
+    batch = first_value = None
+    Tensor = None
+    HAVE_TRITON = False
+
+try:
+    from tensorrt_llm import SamplingParams
+    from tensorrt_llm._torch.pyexecutor.config import PyTorchConfig
+    from tensorrt_llm.llmapi.llm import LLM, TokenizerBase
+
+    HAVE_TENSORRT_LLM = True
+except ImportError:
+    HAVE_TENSORRT_LLM = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -55,7 +70,7 @@ class TensorRTLLMAPIDeployable(ITritonDeployable):
     def __init__(
         self,
         hf_model_id_path: str,
-        tokenizer: Optional[Union[str, Path, TokenizerBase, PreTrainedTokenizerBase]] = None,
+        tokenizer: Optional[Union[str, Path, "TokenizerBase", PreTrainedTokenizerBase]] = None,
         tensor_parallel_size: int = 1,
         pipeline_parallel_size: int = 1,
         moe_expert_parallel_size: int = -1,
@@ -66,6 +81,12 @@ class TensorRTLLMAPIDeployable(ITritonDeployable):
         dtype: str = "auto",
         **kwargs,
     ):
+        if not HAVE_TENSORRT_LLM:
+            raise ImportError(MISSING_TENSORRT_LLM_MSG)
+
+        if not HAVE_TRITON:
+            raise ImportError(MISSING_TRITON_MSG)
+
         config_args = {k: kwargs.pop(k) for k in PyTorchConfig.__annotations__.keys() & kwargs.keys()}
         pytorch_config = PyTorchConfig(**config_args)
 
