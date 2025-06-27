@@ -269,7 +269,7 @@ jobs:
           inference-framework: vllm
 
   cicd-e2e-tests-inframework:
-    needs: [cicd-unit-tests]
+    needs: [cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
     runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
