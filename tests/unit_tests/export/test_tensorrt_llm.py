@@ -236,10 +236,12 @@ def test_tensorrt_llm_triton_io():
 def test_tensorrt_llm_pad_logits():
     """Test logits padding functionality."""
     try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
+        import tensorrt_llm  # noqa: F401
     except ImportError:
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
+
+    from nemo_export.tensorrt_llm import TensorRTLLM
 
     model_dir = "/tmp/test_model_dir"
     trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
