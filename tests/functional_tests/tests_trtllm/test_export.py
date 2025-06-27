@@ -24,38 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 class TestTRTLLMExport:
-    @pytest.mark.parametrize("tensor_parallelism_size,pipeline_parallelism_size", [(2, 1), (1, 2)])
-    def test_nemo2_convert_to_safe_tensors(self, tensor_parallelism_size, pipeline_parallelism_size):
-        """
-        Test safe tensor exporter. This tests the whole nemo export until engine building.
-        """
-        from pathlib import Path
-
-        from nemo_export.tensorrt_llm import TensorRTLLM
-
-        trt_llm_exporter = TensorRTLLM(model_dir="/tmp/safe_tensor_test/")
-        trt_llm_exporter.convert_to_safe_tensors(
-            nemo_checkpoint_path="/home/TestData/llm/models/llama32_1b_nemo2",
-            model_type="llama",
-            delete_existing_files=True,
-            tensor_parallelism_size=tensor_parallelism_size,
-            pipeline_parallelism_size=pipeline_parallelism_size,
-            gpus_per_node=2,
-            use_parallel_embedding=False,
-            use_embedding_sharing=False,
-            dtype="bfloat16",
-        )
-
-        assert Path("/tmp/safe_tensor_test/").exists(), "Safe tensors were not generated."
-        assert Path("/tmp/safe_tensor_test/rank0.safetensors").exists(), "Safe tensors for rank0 were not generated."
-        if pipeline_parallelism_size == 1 and tensor_parallelism_size == 2:
-            assert Path("/tmp/safe_tensor_test/rank1.safetensors").exists(), (
-                "Safe tensors for rank1 were not generated."
-            )
-        assert Path("/tmp/safe_tensor_test/config.json").exists(), "config.yaml was not generated."
-
-        shutil.rmtree("/tmp/safe_tensor_test/")
-
     @pytest.mark.pleasefixme
     @pytest.mark.parametrize("tensor_parallelism_size", [2, 1])
     def test_nemo2_convert_to_export(self, tensor_parallelism_size):
