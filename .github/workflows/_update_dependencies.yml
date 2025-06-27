@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       source-branch: ${{ steps.merge-branch.outputs.source-branch }}
-      bump-branch: bump-ci-container-${{ steps.ref.outputs.date }}
+      bump-branch: bump-ci-container-${{ steps.ref.outputs.date }}-${{ steps.merge-branch.outputs.source-branch }}
       date: ${{ steps.ref.outputs.date }}
     steps:
       - uses: actions/checkout@v2
@@ -71,14 +71,14 @@ jobs:
           git push -u origin $SOURCE_BRANCH
 
   mcore:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.36.1
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_tomlfile.yml@v0.40.0
     needs: [update-branch]
     name: Bump Megatron-LM
     with:
       source-repository: NVIDIA/Megatron-LM
       source-ref: ${{ inputs.mcore-target-branch }}
-      yaml-path: '."vcs-dependencies"."megatron-lm".ref'
-      file: docker/manifest.json
+      toml-path: tool.uv.sources.megatron-core.rev
+      file: pyproject.toml
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
       pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
       pr-title: "chore(🤖): Bump dependencies (${{ needs.update-branch.outputs.date }})"
@@ -89,14 +89,14 @@ jobs:
       GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
 
   nemo:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_yamlfile.yml@v0.36.1
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_tomlfile.yml@v0.40.0
     needs: [update-branch, mcore]
     name: Bump NeMo
     with:
       source-repository: NVIDIA/NeMo
       source-ref: ${{ inputs.nemo-target-branch }}
-      yaml-path: '."vcs-dependencies"."nemo".ref'
-      file: docker/manifest.json
+      toml-path: tool.uv.sources.nemo-toolkit.rev
+      file: pyproject.toml
       base-branch: ${{ needs.update-branch.outputs.source-branch }}
       pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
       pr-title: "chore(🤖): Bump dependencies (${{ needs.update-branch.outputs.date }})"
@@ -109,7 +109,7 @@ jobs:
   update-lockfile:
     environment: nemo-ci
     runs-on: linux-amd64-cpu16
-    needs: [nemo]
+    needs: [nemo, update-branch]
     steps:
       - name: Install Azure CLI
         run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
@@ -139,7 +139,7 @@ jobs:
       - name: Upload lock file
         uses: actions/upload-artifact@v4
         with:
-          name: lock-file
+          name: lock-file-${{ needs.update-branch.outputs.bump-branch }}
           path: uv.lock
 
   create-pr:
@@ -167,7 +167,7 @@ jobs:
       - name: Download lock file
         uses: actions/download-artifact@v4
         with:
-          name: lock-file
+          name: lock-file-${{ needs.update-branch.outputs.bump-branch }}
 
       - name: Commit changes
         run: |
