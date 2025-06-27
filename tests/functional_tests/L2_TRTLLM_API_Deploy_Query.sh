@@ -1,4 +1,4 @@
-# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2020-2025, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from nemo_deploy.nlp.query_llm import NemoQueryLLM, NemoQueryLLMHF, NemoQueryLLMPyTorch, NemoQueryTRTLLMAPI
-
-__all__ = [
-    "NemoQueryLLM",
-    "NemoQueryLLMHF",
-    "NemoQueryLLMPyTorch",
-    "NemoQueryTRTLLMAPI",
-]
+coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_trtllm_api_deploy_query.py \
+  --hf_model_path /home/TestData/hf/llama3.1-8b-hf \
+  --tensor_parallel_size 2
