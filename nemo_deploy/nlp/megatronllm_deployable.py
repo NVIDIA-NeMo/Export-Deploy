@@ -136,6 +136,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         enable_flash_decode (bool): enable flash decode for inference. Defaults to False.
         enable_cuda_graphs (bool): enable CUDA graphs for inference. Defaults to False.`
         legacy_ckpt (bool): use legacy checkpoint format. Defaults to False.
+        stop_words (Optional[List[str]]): List of stop words to stop generation. Defaults to None.
     """
 
     def __init__(
@@ -155,6 +156,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         max_batch_size: int = 8,
         random_seed: Optional[int] = None,
         legacy_ckpt: bool = False,
+        stop_words: Optional[List[str]] = None
     ):
         if not HAVE_TRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
@@ -175,6 +177,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             enable_flash_decode=enable_flash_decode,
             enable_cuda_graphs=enable_cuda_graphs,
             legacy_ckpt=legacy_ckpt,
+            stop_words=stop_words
         )
         self.enable_cuda_graphs = enable_cuda_graphs
         self.max_batch_size = max_batch_size

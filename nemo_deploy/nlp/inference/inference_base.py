@@ -332,6 +332,80 @@ class MCoreEngineWithCleanup:
         # Delegate all attribute access to the underlying engine
         return getattr(self.mcore_engine, name)
 
+class StopWordsTextGenerationController(TextGenerationController):
+    """A TextGenerationController that stops generation when any stop word is produced.
+
+    This subclass extends the default TextGenerationController mechanism by
+    terminating generation not only when an end-of-document (EOD) token is
+    encountered, but also when the generated text ends with *any* string
+    contained in a user-provided list of stop words.
+    """
+
+    def __init__(
+        self,
+        inference_wrapped_model: GPTInferenceWrapper,
+        tokenizer: MCoreTokenizerWrappper,
+        stop_words: List[str],
+    ) -> None:
+        super().__init__(inference_wrapped_model=inference_wrapped_model, tokenizer=tokenizer)
+        self.stop_words_text = stop_words or []
+        # Track generated text per batch sequence (strings instead of tokens)
+        self.generated_text_per_sequence = {}
+
+    def update_generation_status(
+        self,
+        updated_prompts_tokens: torch.Tensor,
+        generation_started: torch.Tensor,
+        current_context_end_position: int,
+        is_generation_done_tensor: torch.Tensor,
+        generated_sequence_lengths: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Override to stop generation when a stop word has been generated.
+
+        In addition to the original EOD-based stopping criterion, this
+        implementation checks if the generated token sequence ends with
+        any of the pre-tokenized stop words.
+        """
+        # First apply the original EOD logic
+        latest_samples = updated_prompts_tokens[:, current_context_end_position]
+        reached_eod = (latest_samples == self.tokenizer.eod) & generation_started
+
+        # Determine which sequences have generated a stop word
+        reached_stop_word = torch.zeros_like(generation_started, dtype=torch.bool)
+        
+        if self.stop_words_text:
+            # Create masks for active sequences (started and not done)
+            active_mask = generation_started & ~is_generation_done_tensor
+            active_indices = torch.nonzero(active_mask, as_tuple=True)[0]
+            
+            if len(active_indices) > 0:
+                # Batch convert latest tokens to text for all active sequences
+                active_tokens = latest_samples[active_indices].cpu().tolist()
+                active_token_texts = [self.tokenizer.tokenizer.ids_to_text([token]) for token in active_tokens]
+                
+                # Process each active sequence
+                for idx, batch_idx in enumerate(active_indices.tolist()):
+                    # Initialize tracking for new sequences
+                    if batch_idx not in self.generated_text_per_sequence:
+                        self.generated_text_per_sequence[batch_idx] = ""
+                    
+                    # Append the new token text
+                    token_text = active_token_texts[idx]
+                    self.generated_text_per_sequence[batch_idx] += token_text
+                    
+                    # Check if any stop word is present in generated text
+                    for stop_word in self.stop_words_text:
+                        if stop_word in self.generated_text_per_sequence[batch_idx]:
+                            reached_stop_word[batch_idx] = True
+                            # Clean up completed sequence immediately
+                            del self.generated_text_per_sequence[batch_idx]
+                            break
+
+        # Combine stopping conditions
+        is_generation_done_tensor = is_generation_done_tensor | reached_eod | reached_stop_word
+        
+        generated_sequence_lengths += ~is_generation_done_tensor & generation_started
+        return is_generation_done_tensor, generated_sequence_lengths.int()
 
 def create_mcore_engine(
     path: Path,
@@ -349,6 +423,7 @@ def create_mcore_engine(
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
     legacy_ckpt: bool = False,
+    stop_words: Optional[List[str]] = None
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, MCoreTokenizerWrappper]:
     """Set up the model, tokenizer and MCoreEngine for inference.
 
@@ -366,6 +441,7 @@ def create_mcore_engine(
         enable_flash_decode (bool): Whether to enable flash attention decoding
         enable_cuda_graphs (bool): Whether to enable CUDA graphs optimization
         legacy_ckpt (bool): Whether to use legacy checkpoint format
+        stop_words (Optional[List[str]]): List of stop words to stop generation
     Returns:
         Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, MCoreTokenizerWrappper]: Tuple containing:
             - MCoreEngineWithCleanup: Engine for text generation with proper cleanup
@@ -450,9 +526,16 @@ def create_mcore_engine(
     )
 
     model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config)
-    text_generation_controller = TextGenerationController(
-        inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
-    )
+    if stop_words:
+        text_generation_controller = StopWordsTextGenerationController(
+            inference_wrapped_model=model_inference_wrapper,
+            tokenizer=tokenizer,
+            stop_words=stop_words
+        )
+    else:
+        text_generation_controller = TextGenerationController(
+            inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
+        )
     mcore_engine = MCoreEngine(
         text_generation_controller=text_generation_controller,
         max_batch_size=max_batch_size,
