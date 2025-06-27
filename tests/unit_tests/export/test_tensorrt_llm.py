@@ -81,7 +81,7 @@ def test_get_nemo_to_trtllm_conversion_dict_on_mcore_model():
 def test_tensorrt_llm_initialization():
     """Test TensorRTLLM class initialization with various parameters."""
     try:
-        from nemo_export.tensorrt_llm import TensorRTLLM
+        import tensorrt_llm  # noqa: F401
     except ImportError:
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
