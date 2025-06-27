@@ -17,7 +17,6 @@ import csv
 import json
 import logging
 import os
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
@@ -180,14 +179,9 @@ def _forward(
     top_k: int = 1,
     top_p: float = 0.0,
     temperature: float = 1.0,
-    prompt_table=None,
-    task_vocab_size=None,  # noqa: ARG001
-    task_ids: List[int] = None,
     lora_uids: List[str] = None,
     stop_words_list=None,
     bad_words_list=None,
-    no_repeat_ngram_size=None,  # noqa: ARG001
-    streaming: bool = False,
     multiprocessed_env=False,
     **sampling_kwargs,
 ) -> Optional[torch.IntTensor]:
@@ -219,15 +213,6 @@ def _forward(
                 raise TypeError(f"Unknown sampling args '{k}'")
 
         with torch.no_grad():
-            prompt_tasks = None if task_ids is None else ",".join(str(task) for task in task_ids)
-
-            if prompt_table is not None:
-                prompt_table = prompt_table.reshape(1, *prompt_table.shape)
-                tmp_dir = tempfile.TemporaryDirectory()
-                prompt_table_path = os.path.join(tmp_dir.name, "prompt_table.npy")
-                np.save(prompt_table_path, prompt_table.cpu().float().numpy())
-                prompt_table = prompt_table_path
-
             outputs = decoder.generate(
                 input_tensors,
                 max_new_tokens=max_output_len,
@@ -240,19 +225,12 @@ def _forward(
                 stop_words_list=stop_words_list,
                 bad_words_list=bad_words_list,
                 lora_uids=lora_uids,
-                prompt_table_path=prompt_table,
-                prompt_table=prompt_table,
-                prompt_tasks=prompt_tasks,
-                streaming=streaming,
                 output_sequence_lengths=True,
                 return_dict=True,
                 **sampling_kwargs,
             )
 
             torch.cuda.synchronize()
-
-            if prompt_table is not None:
-                tmp_dir.cleanup()
 
         runtime_rank = tensorrt_llm.mpi_rank()
         if runtime_rank == 0 or multiprocessed_env:
@@ -356,14 +334,9 @@ def forward(
     top_k: int = 1,
     top_p: float = 0.0,
     temperature: float = 1.0,
-    prompt_table=None,
-    task_vocab_size=None,  # noqa: ARG001
-    task_ids: List[int] = None,
     lora_uids: List[str] = None,
     stop_words_list=None,
     bad_words_list=None,
-    no_repeat_ngram_size=None,  # noqa: ARG001
-    streaming: bool = False,
     multiprocessed_env=False,
     **sampling_kwargs,
 ) -> Optional[torch.IntTensor]:
@@ -383,14 +356,9 @@ def forward(
             top_k=top_k,
             top_p=top_p,
             temperature=temperature,
-            prompt_table=prompt_table,
-            task_vocab_size=task_vocab_size,
-            task_ids=task_ids,
             lora_uids=lora_uids,
             stop_words_list=stop_words_list,
             bad_words_list=bad_words_list,
-            no_repeat_ngram_size=no_repeat_ngram_size,
-            streaming=streaming,
             multiprocessed_env=multiprocessed_env,
             **sampling_kwargs,
         )
@@ -405,14 +373,9 @@ def forward(
                 top_k=top_k,
                 top_p=top_p,
                 temperature=temperature,
-                prompt_table=prompt_table,
-                task_vocab_size=task_vocab_size,
-                task_ids=task_ids,
                 lora_uids=lora_uids,
                 stop_words_list=stop_words_list,
                 bad_words_list=bad_words_list,
-                no_repeat_ngram_size=no_repeat_ngram_size,
-                streaming=streaming,
                 **sampling_kwargs,
             )
             futures.append(future)
@@ -462,18 +425,12 @@ def unload_engine():
 def prepare_input_tensors(
     input_texts: List[str],
     host_context: TensorrtLLMHostContext,
-    prompt_table=None,
-    task_vtoken_counts: List[int] = None,
-    task_ids: List[int] = None,
 ):
     """Prepare input tensors from text input.
 
     Args:
         input_texts: List of input text strings
         host_context: Context containing tokenizer and configuration
-        prompt_table: a lookup table containing trained embeddings for vtoken used in p-tuning
-        task_vtoken_counts: Optional list of vtoken counts per task
-        task_ids: Optional list of task IDs
 
     Returns:
         dict: Prepared input tensors for model
@@ -486,24 +443,6 @@ def prepare_input_tensors(
         bos_tokens = []
 
     input_tokens = [bos_tokens + tokenizer.encode(t) for t in input_texts]
-
-    # If p-tuning is used, we need to prepend vtokens to each input.
-    if prompt_table is not None:
-        # Go over the tokenized prompts and prepend vtokens.
-        # The number of vtokens could be different for each task.
-        for prompt_index in range(len(input_texts)):
-            # Find out the number of vtokens to generate
-            task_id = task_ids[prompt_index]
-            num_vtokens = task_vtoken_counts[task_id]
-
-            # Create a tensor with vtokens, e.g. 32000, 32001, 32002... when vocab_size=32000
-            # TRT-LLM will convert each vtoken into its corresponding embedding row from the prompt table.
-            vocab_size = tokenizer.vocab_size
-            vtokens = list(range(vocab_size, vocab_size + num_vtokens))
-
-            # Concatenate the vtokens with the real tokens
-            real_tokens = input_tokens[prompt_index]
-            input_tokens[prompt_index] = vtokens + real_tokens
 
     # Convert input token lists to tensors
     input_tensors = [torch.IntTensor(token_list) for token_list in input_tokens]
@@ -518,15 +457,9 @@ def generate(
     top_k: int = 1,
     top_p: float = 0.0,
     temperature: float = 1.0,
-    prompt_table=None,
-    task_vocab_size=None,  # noqa: ARG001
-    task_vtoken_counts: List[int] = None,
-    task_ids: List[int] = None,
     lora_uids: List[str] = None,
     stop_words_list=None,
     bad_words_list=None,
-    no_repeat_ngram_size=None,  # noqa: ARG001
-    streaming: bool = False,
     output_log_probs=False,  # noqa: ARG001
     multiprocessed_env=False,
     output_context_logits=False,
@@ -538,7 +471,7 @@ def generate(
     Returns a 2D string list with shape [batch_size, num_beams].
     """
     tokenizer = host_context.tokenizer
-    input_tensors = prepare_input_tensors(input_texts, host_context, prompt_table, task_vtoken_counts, task_ids)
+    input_tensors = prepare_input_tensors(input_texts, host_context)
 
     stop_words_list_tensors = None
     if stop_words_list is not None:
@@ -554,9 +487,6 @@ def generate(
             torch.Tensor(bad_words_arrays).to(torch.int32).to(torch.cuda.current_device()).contiguous()
         )
 
-    if no_repeat_ngram_size is not None:
-        no_repeat_ngram_size = torch.IntTensor(no_repeat_ngram_size).to(torch.cuda.current_device())
-
     outputs = forward(
         input_tensors=input_tensors,
         max_output_len=max_output_len,
@@ -564,14 +494,9 @@ def generate(
         top_k=top_k,
         top_p=top_p,
         temperature=temperature,
-        prompt_table=prompt_table,
-        task_vocab_size=task_vocab_size,
-        task_ids=task_ids,
         lora_uids=lora_uids,
         stop_words_list=stop_words_list_tensors,
         bad_words_list=bad_words_list_tensors,
-        no_repeat_ngram_size=no_repeat_ngram_size,
-        streaming=False,
         output_log_probs=output_log_probs,
         multiprocessed_env=multiprocessed_env,
         **sampling_kwargs,
