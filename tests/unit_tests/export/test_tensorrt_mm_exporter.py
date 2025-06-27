@@ -33,6 +33,15 @@ def mock_runner():
     return runner
 
 
+try:
+    import trtllm  # noqa: F401
+
+    HAVE_TRTLLM = True
+except ImportError:
+    HAVE_TRTLLM = False
+
+
+@pytest.mark.skipif(not HAVE_TRTLLM, reason="Skipping TensorRTMMExporter tests due to lack of trtllm")
 class TestTensorRTMMExporter:
     @pytest.mark.run_only_on("GPU")
     def test_init(self, model_dir):
