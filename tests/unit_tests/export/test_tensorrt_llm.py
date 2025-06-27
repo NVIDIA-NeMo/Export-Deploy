@@ -86,6 +86,8 @@ def test_tensorrt_llm_initialization():
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
+    from nemo_export.tensorrt_llm import TensorRTLLM
+
     # Test basic initialization
     model_dir = "/tmp/test_model_dir"
     trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
