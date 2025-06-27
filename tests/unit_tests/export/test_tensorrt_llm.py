@@ -608,6 +608,8 @@ def test__infer_fn_with_stop_words():
         pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
         return
 
+    from nemo_export.tensorrt_llm import TensorRTLLM
+
     model_dir = "/tmp/test_model_dir"
     trt_llm = TensorRTLLM(model_dir=model_dir, load_model=False)
 
