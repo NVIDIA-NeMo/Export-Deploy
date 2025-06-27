@@ -60,8 +60,7 @@ trtllm = ["tensorrt-llm~=0.20.0"]
 te = ["transformer-engine[pytorch]==2.2.0"]
 
 [dependency-groups]
-
-build = []
+build = ["setuptools", "torch==2.7.0", "pybind11", "Cython>=3.0.0"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
