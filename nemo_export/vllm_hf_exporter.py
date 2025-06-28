@@ -16,13 +16,26 @@
 from typing import List
 
 import numpy as np
-from pytriton.decorators import batch, first_value
-from pytriton.model_config import Tensor
-from vllm import LLM, SamplingParams
-from vllm.lora.request import LoRARequest
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
+from nemo_export_deploy_common.import_utils import MISSING_PYTRITON_MSG, MISSING_VLLM_MSG, UnavailableError
+
+try:
+    from pytriton.decorators import batch, first_value
+    from pytriton.model_config import Tensor
+
+    HAVE_PYTRITON = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_PYTRITON = False
+
+try:
+    from vllm import LLM, SamplingParams
+    from vllm.lora.request import LoRARequest
+
+    HAVE_VLLM = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_VLLM = False
 
 
 class vLLMHFExporter(ITritonDeployable):
@@ -48,6 +61,10 @@ class vLLMHFExporter(ITritonDeployable):
     def __init__(self):
         self.model = None
         self.lora_models = None
+        if not HAVE_VLLM:
+            raise UnavailableError(MISSING_VLLM_MSG)
+        if not HAVE_PYTRITON:
+            raise UnavailableError(MISSING_PYTRITON_MSG)
 
     def export(self, model, enable_lora: bool = False):
         """Exports the HF checkpoint to vLLM and initializes the engine.

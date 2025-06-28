@@ -18,9 +18,16 @@ from abc import ABC
 from typing import List, Optional
 
 import numpy as np
-from pytriton.client import ModelClient
 
 from nemo_deploy.utils import str_list2numpy
+from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError
+
+try:
+    from pytriton.client import ModelClient
+
+    HAVE_TRITON = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRITON = False
 
 
 class NemoQueryLLMBase(ABC):
@@ -343,6 +350,9 @@ class NemoQueryLLM(NemoQueryLLMBase):
             openai_format_response: return response similar to OpenAI API format
             output_generation_logits: return generation logits from model on PyTriton
         """
+        if not HAVE_TRITON:
+            raise UnavailableError(MISSING_TRITON_MSG)
+
         prompts = str_list2numpy(prompts)
         inputs = {"prompts": prompts}
 

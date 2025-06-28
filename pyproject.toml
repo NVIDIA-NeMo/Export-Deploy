@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "cython"]
+requires = ["setuptools>=42", "wheel", "cython>=3.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -24,7 +24,7 @@ readme = { file = "README.md", content-type = "text/markdown" }
 name = "NeMo-Export-Deploy"
 dynamic = ["version", "readme"]
 description = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
     # "megatron-hub", add here after the release of Megatron-Hub
@@ -35,31 +35,36 @@ dependencies = [
     "ray",
     "ray[serve]",
     "uvicorn",
-    "tensorstore<0.1.72",
+    "tensorstore",
     "zarr>=2.18.2,<3.0.0",
     # Lightning deps
     "cloudpickle",
     "fiddle",
     "hydra-core>1.3,<=1.3.2",
-    "lightning>2.2.1,<=2.4.0",
-    "omegaconf<=2.3",
+    "lightning",
+    "omegaconf>=2.3.0",
     "peft",
+    "torch==2.7.0",
+    "torchvision",
     "torchmetrics>=0.11.0",
     "transformers>=4.49.0",
     "wandb",
     "webdataset>=0.2.86",
     "nvidia-pytriton ; platform_system != 'Darwin' ",
     "flashinfer-python==0.2.5",
+    "Pillow ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
+    "decord ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
+    "pyparsing>2.0.2",
 ]
 
 [project.optional-dependencies]
 vllm = ["vllm==0.9.0.1", "pandas", "timm"]
-trtllm = ["tensorrt-llm~=0.20.0rc3"]
-te = ["transformer-engine[pytorch]==2.4.0"]
+trtllm = ["tensorrt-llm~=0.20.0"]
+te = ["transformer-engine[pytorch]==2.2.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = []
+build = ["setuptools", "torch==2.7.0", "pybind11", "Cython>=3.0.0"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
@@ -69,7 +74,7 @@ docs = [
     "nvidia-sphinx-theme", # Our NVIDIA theme
 ]
 linting = ["ruff~=0.9.0"]
-test = ["pytest", "pytest-mock", "coverage"]
+test = ["pytest", "pytest-mock", "coverage", "click"]
 nemo-legacy = [
     "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]",
 ]
@@ -84,7 +89,7 @@ vllm = [
 # Remove this
 megatron-hub = { git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git", rev = "cc2a60c3be11549f070fe1d7b6324a3dae51c6e0" }
 nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "5e63ca3c1631bb156187705f9c4cf643a67f9c05" }
-megatron-core = { git = "https://github.com/NVIDIA/Megatron-LM.git", rev = "ad36348f397451dbc4a4b4adb5e40055c89fec2f" }
+megatron-core = { git = "https://github.com/NVIDIA/Megatron-LM.git", rev = "c40f31f307221a8458c0775658d19da89303c26b" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
@@ -101,10 +106,7 @@ link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }]]
 override-dependencies = [
     "urllib3>1.27.0",
-    "torch; sys_platform == 'never'",
-    "torchvision; sys_platform == 'never'",
-    "triton; sys_platform == 'never'",
-    "tiktoken>=0.9.0",                      # because nemo-toolkit and megatron-hub disagree on tiktoken, we need to pin it here
+    "tiktoken>=0.9.0", # because nemo-toolkit and megatron-hub disagree on tiktoken, we need to pin it here,
 ]
 prerelease = "allow"
 

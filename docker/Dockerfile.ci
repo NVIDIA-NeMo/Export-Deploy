@@ -11,64 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM nvcr.io/nvidia/pytorch:25.05-py3
-RUN apt-get update && apt-get install -y \
-    python3-pip \
-    python3-venv \
-    git \
-    curl \
-    libopenmpi-dev \
-    vim && \
-    rm -rf /var/lib/apt/lists/*
 
-# Install uv and python
-ARG UV_VERSION=0.7.2
-ENV PATH="/root/.local/bin:$PATH"
-RUN curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh
-ENV UV_PROJECT_ENVIRONMENT=/opt/venv
-ENV PATH="$UV_PROJECT_ENVIRONMENT/bin:$PATH"
-ENV UV_LINK_MODE=copy
-
-# Install all
+FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
 WORKDIR /workspace
+COPY . .
 ARG INFERENCE_FRAMEWORK
-RUN --mount=type=bind,source=pyproject.toml,target=/workspace/pyproject.toml \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=nemo_export/__init__.py,target=/workspace/nemo_export/__init__.py \
-    --mount=type=bind,source=nemo_deploy/__init__.py,target=/workspace/nemo_deploy/__init__.py \
-    --mount=type=bind,source=nemo_export_deploy_common/package_info.py,target=/workspace/nemo_export_deploy_common/package_info.py \
-    --mount=type=bind,source=docker/common/install_conflicting_deps.sh,target=/workspace/docker/common/install_conflicting_deps.sh \
-    --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
-    PAT=$(cat /run/secrets/GH_TOKEN)
-    echo -e "machine github.com\n  login token\n  password $PAT" > ~/.netrc
-    chmod 600 ~/.netrc 
-    
-    uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
-
-    uv sync \
-        --link-mode copy \
-        --locked \
-        --extra te \
-        --no-install-package torch \
-        --no-install-package torchvision \
-        --all-groups \
-        ${INFERENCE_FRAMEWORK:+--extra $INFERENCE_FRAMEWORK}
-    
-    bash /workspace/docker/common/install_conflicting_deps.sh
-    
-    rm ~/.netrc
+RUN --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
+    export PAT=$(cat /run/secrets/GH_TOKEN)
+    bash docker/common/install.sh --base-image cuda --inference-framework $INFERENCE_FRAMEWORK
 EOF
-
-# Fix for triton 3.3 (part of NGC PyT25.05, presumably until 25.07)
-COPY external/patches/triton-lang_triton_6570_lazy_init.patch /workspace/external/patches/triton-lang_triton_6570_lazy_init.patch
-RUN bash -exu <<"EOF"
-    patch \
-        -p1 \
-        --force \
-        $(python -c "import triton; print(triton.__path__[0])")/runtime/autotuner.py \
-        /workspace/external/patches/triton-lang_triton_6570_lazy_init.patch     
-EOF
-
-# For trt-llm
-ENV LD_LIBRARY_PATH=/opt/hpcx/ucx/lib:$LD_LIBRARY_PATH
-ENV LD_LIBRARY_PATH=/opt/hpcx/ompi/lib:$LD_LIBRARY_PATH

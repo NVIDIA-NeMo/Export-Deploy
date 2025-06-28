@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from package_info import (
+from nemo_export_deploy_common.package_info import (
     __contact_emails__,
     __contact_names__,
     __download_url__,
