@@ -344,9 +344,335 @@ For detailed documentation, please refer to:
 
 - [NeMo-Export-Deploy User Guide](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)
 
+## Deploy Models Using Ray Serve Scripts
+
+This section demonstrates how to deploy Large Language Models (LLMs) using Ray Serve with the deployment scripts provided in `/scripts/deploy/nlp`. Ray Serve provides scalable, distributed serving capabilities for machine learning models. This feature is only available in NeMo versions >= 25.07. Currently single node, multi-gpu deployment is supported. 
+
+### Prerequisites
+
+#### Using Docker Container
+
+The recommended way to run Ray Serve deployment scripts is using the pre-built Docker container that includes all necessary dependencies. Change the :vr tag to the version of the container you want to use.
+
+1. **Pull the NeMo Docker container:**
+
+   ```bash
+   docker pull nvcr.io/nvidia/nemo:vr
+   ```
+
+2. **Start an interactive container session:**
+
+   ```bash
+   docker run \
+       --gpus all \
+       -it \
+       --rm \
+       --shm-size=4g \
+       -p 8000:8000 \
+       -p 8265:8265 \
+       -v ${PWD}/checkpoints:/opt/checkpoints/ \
+       -w /opt/Export-Deploy \
+       nvcr.io/nvidia/nemo:vr
+   ```
+
+3. **Alternative: Build container from source**
+
+   If you prefer to build the container yourself:
+
+   ```bash
+   # For TensorRT-LLM support
+   docker build \
+       -f docker/Dockerfile.ci \
+       -t nemo-export-deploy \
+       --build-arg INFERENCE_FRAMEWORK=trtllm \
+       .
+
+   # For vLLM support
+   docker build \
+       -f docker/Dockerfile.ci \
+       -t nemo-export-deploy \
+       --build-arg INFERENCE_FRAMEWORK=vllm \
+       .
+   ```
+
+4. **Access models with Hugging Face token (if needed):**
+
+   If you plan to use models that require Hugging Face authentication (like Llama models), set up your token inside the container:
+
+   ```bash
+   # Inside the container
+   huggingface-cli login
+   # Or set the environment variable
+   export HF_TOKEN=your_token_here
+   ```
+
+### Deploy Hugging Face Models Using Ray Serve
+
+The `deploy_ray_hf.py` script allows you to deploy Hugging Face models directly using Ray Serve.
+
+> **Note:** All the following script examples should be executed inside the Docker container. Make sure you have started the container as described in the [Prerequisites](#prerequisites) section.
+
+#### Quick Example
+
+```bash
+python scripts/deploy/nlp/deploy_ray_hf.py \
+    --model_path "meta-llama/Llama-3.2-1B" \
+    --model_id "llama-3.2-1b" \
+    --host "0.0.0.0" \
+    --port 8000 \
+    --num_gpus 1 \
+    --num_replicas 1 \
+    --num_gpus_per_replica 1 \
+    --trust_remote_code
+```
+
+#### Parameters
+
+- `--model_path`: Path to the HuggingFace model or model identifier from HuggingFace Hub (required)
+- `--task`: HuggingFace task type (default: "text-generation")
+- `--trust_remote_code`: Whether to trust remote code when loading the model
+- `--device_map`: Device mapping strategy for model placement (default: "auto")
+- `--max_memory`: Maximum memory allocation when using balanced device map
+- `--model_id`: Identifier for the model in API responses (default: "nemo-model")
+- `--host`: Host address to bind the Ray Serve server to (default: "0.0.0.0")
+- `--port`: Port number for the Ray Serve server (default: 1024)
+- `--num_cpus`: Number of CPUs for the Ray cluster (default: all available)
+- `--num_gpus`: Number of GPUs for the Ray cluster (default: 1)
+- `--include_dashboard`: Whether to include the Ray dashboard
+- `--num_replicas`: Number of model replicas to deploy (default: 1)
+- `--num_gpus_per_replica`: Number of GPUs per model replica (default: 1)
+- `--num_cpus_per_replica`: Number of CPUs per model replica (default: 8)
+- `--cuda_visible_devices`: Comma-separated list of CUDA visible devices (default: "0,1")
+
+#### Example with Custom Configuration
+
+```bash
+python scripts/deploy/nlp/deploy_ray_hf.py \
+    --model_path "/path/to/local/hf/model" \
+    --model_id "custom-llama" \
+    --host "localhost" \
+    --port 9000 \
+    --num_gpus 2 \
+    --num_replicas 2 \
+    --num_gpus_per_replica 1 \
+    --device_map "balanced" \
+    --include_dashboard
+```
+
+### Deploy NeMo Models Using Ray Serve (In-Framework)
+
+The `deploy_ray_inframework.py` script deploys NeMo checkpoint files using Ray Serve with support for various parallelism strategies.
+
+#### Quick Example
+
+```bash
+python scripts/deploy/nlp/deploy_ray_inframework.py \
+    --nemo_checkpoint "/opt/checkpoints/hf_llama32_1B_nemo2" \
+    --model_id "nemo-llama" \
+    --host "0.0.0.0" \
+    --port 8000 \
+    --num_gpus 1 \
+    --tensor_model_parallel_size 1 \
+    --pipeline_model_parallel_size 1
+```
+
+#### Parameters
+
+- `--nemo_checkpoint`: Path to the .nemo checkpoint file (required)
+- `--num_gpus`: Number of GPUs to use per node (default: 1)
+- `--num_nodes`: Number of nodes to use for deployment (default: 1)
+- `--tensor_model_parallel_size`: Size of tensor model parallelism (default: 1)
+- `--pipeline_model_parallel_size`: Size of pipeline model parallelism (default: 1)
+- `--expert_model_parallel_size`: Size of expert model parallelism (default: 1)
+- `--context_parallel_size`: Size of context parallelism (default: 1)
+- `--model_id`: Identifier for the model in API responses (default: "nemo-model")
+- `--host`: Host address to bind the Ray Serve server to (default: "0.0.0.0")
+- `--port`: Port number for the Ray Serve server (default: 1024)
+- `--num_cpus`: Number of CPUs for the Ray cluster (default: all available)
+- `--num_cpus_per_replica`: Number of CPUs per model replica (default: 8)
+- `--include_dashboard`: Whether to include the Ray dashboard
+- `--cuda_visible_devices`: Comma-separated list of CUDA visible devices (default: "0,1")
+- `--enable_cuda_graphs`: Whether to enable CUDA graphs for faster inference
+- `--enable_flash_decode`: Whether to enable Flash Attention decode
+- `--num_replicas`: Number of replicas for the deployment (default: 1)
+- `--legacy_ckpt`: Whether to use legacy checkpoint format
+
+#### Example with Multi-GPU Parallelism
+
+```bash
+python scripts/deploy/nlp/deploy_ray_inframework.py \
+    --nemo_checkpoint "/opt/checkpoints/large_model.nemo" \
+    --model_id "large-nemo-model" \
+    --num_gpus 4 \
+    --tensor_model_parallel_size 2 \
+    --pipeline_model_parallel_size 2 \
+    --num_replicas 1 \
+    --enable_cuda_graphs \
+    --enable_flash_decode \
+    --include_dashboard
+```
+
+### Deploy TensorRT-LLM Models Using Ray Serve
+
+The `deploy_ray_trtllm.py` script provides deployment of TensorRT-LLM optimized models with Ray Serve. It supports both direct deployment of pre-built engines and on-the-fly conversion from NeMo or Hugging Face models.
+
+#### Deploy Pre-built TensorRT-LLM Engine
+
+```bash
+python scripts/deploy/nlp/deploy_ray_trtllm.py \
+    --trt_llm_path "/path/to/trtllm/engine" \
+    --model_type "llama" \
+    --model_id "trtllm-model" \
+    --host "0.0.0.0" \
+    --port 8000 \
+    --num_gpus 1 \
+    --tensor_parallelism_size 1
+```
+
+#### Export and Deploy NeMo Checkpoint to TensorRT-LLM
+
+```bash
+python scripts/deploy/nlp/deploy_ray_trtllm.py \
+    --nemo_checkpoint_path "/opt/checkpoints/hf_llama32_1B_nemo2" \
+    --model_type "llama" \
+    --model_id "trtllm-from-nemo" \
+    --tensor_parallelism_size 1 \
+    --max_batch_size 8 \
+    --max_input_len 2048 \
+    --max_output_len 1024 \
+    --host "0.0.0.0" \
+    --port 8000
+```
+
+#### Export and Deploy Hugging Face Model to TensorRT-LLM
+
+```bash
+python scripts/deploy/nlp/deploy_ray_trtllm.py \
+    --hf_model_path "/path/to/hf/model" \
+    --model_type "llama" \
+    --model_id "trtllm-from-hf" \
+    --tensor_parallelism_size 1 \
+    --max_batch_size 16 \
+    --max_input_len 4096 \
+    --max_output_len 2048 \
+    --use_cpp_runtime \
+    --enable_chunked_context
+```
+
+#### Parameters
+
+**Model Source (mutually exclusive - one required):**
+- `--trt_llm_path`: Path to pre-built TensorRT-LLM model directory
+- `--nemo_checkpoint_path`: Path to NeMo checkpoint file to export
+- `--hf_model_path`: Path to HuggingFace model to export
+
+**Model Configuration:**
+- `--model_type`: Model architecture (default: "llama")
+- `--tensor_parallelism_size`: Number of tensor parallelism (default: 1)
+- `--pipeline_parallelism_size`: Number of pipeline parallelism (default: 1)
+- `--max_batch_size`: Maximum batch size (default: 8)
+- `--max_input_len`: Maximum input sequence length (default: 2048)
+- `--max_output_len`: Maximum output sequence length (default: 1024)
+
+**Runtime Options:**
+- `--use_python_runtime`: Use Python runtime (default behavior)
+- `--use_cpp_runtime`: Use C++ runtime (overrides Python runtime)
+- `--enable_chunked_context`: Enable chunked context (C++ runtime only)
+- `--max_tokens_in_paged_kv_cache`: Maximum tokens in paged KV cache (C++ runtime only)
+- `--multi_block_mode`: Enable multi-block mode
+- `--lora_ckpt_list`: List of LoRA checkpoint paths
+
+**API Configuration:**
+- `--model_id`: Model identifier for API responses (default: "tensorrt-llm-model")
+- `--host`: Host address (default: "0.0.0.0")
+- `--port`: Port number (default: 1024)
+
+**Ray Cluster Configuration:**
+- `--num_cpus`: Number of CPUs for Ray cluster (default: all available)
+- `--num_gpus`: Number of GPUs for Ray cluster (default: 1)
+- `--include_dashboard`: Include Ray dashboard
+- `--num_replicas`: Number of model replicas (default: 1)
+- `--num_gpus_per_replica`: GPUs per replica (default: 1)
+- `--num_cpus_per_replica`: CPUs per replica (default: 8)
+- `--cuda_visible_devices`: CUDA visible devices (default: "0,1")
+
+#### Example with Advanced Configuration
+
+```bash
+python scripts/deploy/nlp/deploy_ray_trtllm.py \
+    --nemo_checkpoint_path "/opt/checkpoints/large_model.nemo" \
+    --model_type "llama" \
+    --model_id "optimized-large-model" \
+    --tensor_parallelism_size 2 \
+    --max_batch_size 32 \
+    --max_input_len 8192 \
+    --max_output_len 4096 \
+    --use_cpp_runtime \
+    --enable_chunked_context \
+    --multi_block_mode \
+    --num_replicas 2 \
+    --num_gpus_per_replica 2 \
+    --include_dashboard
+```
+
+### Querying Deployed Models
+
+After deploying a model using any of the Ray Serve scripts, you can query it using the provided query script or by making HTTP requests directly.
+
+#### Using HTTP Requests
+
+**Completions Endpoint:**
+```bash
+curl -X POST "http://localhost:8000/v1/completions/" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "model": "your-model-id",
+        "prompt": "What is the capital of France?",
+        "max_tokens": 100,
+        "temperature": 0.7
+    }'
+```
+
+**Chat Completions Endpoint:**
+```bash
+curl -X POST "http://localhost:8000/v1/chat/completions/" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "model": "your-model-id",
+        "messages": [{"role": "user", "content": "Hello, how are you?"}],
+        "max_tokens": 50,
+        "temperature": 0.7
+    }'
+```
+
+**Models Endpoint:**
+```bash
+curl "http://localhost:8000/v1/models"
+```
+
+**Health Check:**
+```bash
+curl "http://localhost:8000/v1/health"
+```
+
+### Advanced Deployment Scenarios
+
+#### Multi-Replica Deployment with Load Balancing
+
+Deploy multiple replicas for higher throughput:
+
+```bash
+python scripts/deploy/nlp/deploy_ray_hf.py \
+    --model_path "meta-llama/Llama-3.2-1B" \
+    --model_id "load-balanced-llama" \
+    --num_replicas 4 \
+    --num_gpus_per_replica 1 \
+    --num_gpus 4
+```
+
 ## Contributing
 
-We welcome contributions to NeMo RL! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more information on how to get involved.
+We welcome contributions to NeMo Export and Deploy! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more information on how to get involved.
 
 ## License
 
