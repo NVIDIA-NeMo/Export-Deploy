@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2025, NVIDIA CORPORATION.
+# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,14 @@
 #!/bin/bash
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
-coverage run --data-file=/workspace/.coverage --source=/workspace --parallel-mode tests/functional_tests/utils/run_nemo_export.py \
-  --model_name test \
-  --model_dir /tmp/trt_llm_model_dir/ \
-  --use_huggingface True \
-  --checkpoint_dir /home/TestData/llm/models/llama3.2-1B-hf/ \
-  --min_tps 1 \
-  --test_deployment True \
-  --debug
+export CUDA_VISIBLE_DEVICES="0"
+
+coverage run \
+    --data-file=/workspace/.coverage \
+    --source=/workspace/ \
+    --parallel-mode \
+    -m pytest \
+    -o log_cli=true \
+    -o log_cli_level=INFO \
+    -vs -m "not pleasefixme" --tb=short tests/functional_tests/tests_vllm
 coverage combine

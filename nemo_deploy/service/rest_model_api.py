@@ -12,11 +12,17 @@ import os
 
 import requests
 from fastapi import FastAPI, HTTPException
-from nemo.utils import logging
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
 from nemo_deploy.nlp import NemoQueryLLM
+
+try:
+    from nemo.utils import logging
+except (ImportError, ModuleNotFoundError):
+    import logging
+
+    logging = logging.getLogger(__name__)
 
 
 class TritonSettings(BaseSettings):

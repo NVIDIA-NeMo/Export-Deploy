@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,22 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from nemo_export_deploy_common.package_info import (
-    __contact_emails__,
-    __contact_names__,
-    __download_url__,
-    __homepage__,
-    __package_name__,
-    __repository_url__,
-    __version__,
-)
+#!/bin/bash
+set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
-__all__ = [
-    "__version__",
-    "__package_name__",
-    "__contact_names__",
-    "__contact_emails__",
-    "__homepage__",
-    "__repository_url__",
-    "__download_url__",
-]
+export CUDA_VISIBLE_DEVICES="0,1"
+
+coverage run \
+    --data-file=/workspace/.coverage \
+    --source=/workspace/ \
+    --parallel-mode \
+    -m pytest \
+    -o log_cli=true \
+    -o log_cli_level=INFO \
+    -vs -m "not pleasefixme" --tb=short tests/functional_tests/tests_inframework
+coverage combine

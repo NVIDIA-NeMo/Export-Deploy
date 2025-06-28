@@ -23,17 +23,51 @@ from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
-import tensorrt as trt
-import tensorrt_llm
 import torch
-from mpi4py.futures import MPIPoolExecutor
-from tensorrt_llm.lora_manager import LoraManager
-from tensorrt_llm.runtime import (
-    ModelRunner,
-    ModelRunnerCpp,
-    SamplingConfig,
-)
 from transformers import PreTrainedTokenizer
+
+from nemo_export_deploy_common.import_utils import (
+    MISSING_MPI_MSG,
+    MISSING_TENSORRT_MSG,
+    UnavailableError,
+)
+
+try:
+    from mpi4py.futures import MPIPoolExecutor
+
+    HAVE_MPI = True
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    MPIPoolExecutor = MagicMock()
+    HAVE_MPI = False
+
+try:
+    import tensorrt as trt
+
+    HAVE_TRT = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRT = False
+
+try:
+    import tensorrt_llm
+    from tensorrt_llm.lora_manager import LoraManager
+    from tensorrt_llm.runtime import (
+        ModelRunner,
+        ModelRunnerCpp,
+        SamplingConfig,
+    )
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    Engine = MagicMock()
+    LoraManager = MagicMock()
+    QuantMode = MagicMock()
+    ModelConfig = MagicMock()
+    ModelRunner = MagicMock()
+    ModelRunnerCpp = MagicMock()
+    SamplingConfig = MagicMock()
+    HAVE_TRT_LLM = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -275,6 +309,9 @@ def load(
         executor = None
         tensorrt_llm.mpi_barrier()
     else:
+        if not HAVE_MPI:
+            raise UnavailableError(MISSING_MPI_MSG)
+
         executor = MPIPoolExecutor(max_workers=world_size)
         futures = []
         for _ in range(world_size):
@@ -396,6 +433,9 @@ def maybe_cast_to_trt_dtype(dtype):
     Returns:
         trt.DataType: Corresponding TensorRT dtype
     """
+    if not HAVE_TRT:
+        raise UnavailableError(MISSING_TENSORRT_MSG)
+
     if isinstance(dtype, trt.DataType):
         return dtype
     elif isinstance(dtype, torch.dtype):

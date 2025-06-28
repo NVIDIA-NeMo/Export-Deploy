@@ -15,12 +15,18 @@
 
 import logging
 
-from pytriton.model_config import ModelConfig
-from pytriton.triton import Triton, TritonConfig
-
 from nemo_deploy.deploy_base import DeployBase
+from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError
 
 LOGGER = logging.getLogger("NeMo")
+
+try:
+    from pytriton.model_config import ModelConfig
+    from pytriton.triton import Triton, TritonConfig
+
+    HAVE_TRITON = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRITON = False
 
 
 class DeployPyTriton(DeployBase):
@@ -99,6 +105,9 @@ class DeployPyTriton(DeployBase):
 
     def deploy(self):
         """Deploys any models to Triton Inference Server."""
+        if not HAVE_TRITON:
+            raise UnavailableError(MISSING_TRITON_MSG)
+
         try:
             if self.streaming:
                 triton_config = TritonConfig(
