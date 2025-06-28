@@ -236,9 +236,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
                 inference_params = CommonInferenceParams(
                     temperature=temperature,
-                    top_k=top_k,
-                    top_p=top_p,
-                    num_tokens_to_generate=num_tokens_to_generate,
+                    top_k=int(top_k),
+                    top_p=float(top_p),
+                    num_tokens_to_generate=int(num_tokens_to_generate),
                     return_log_probs=log_probs,
                 )
 
