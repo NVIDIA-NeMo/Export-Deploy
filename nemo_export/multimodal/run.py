@@ -18,30 +18,69 @@ import os
 
 try:
     import decord
-except Exception:
-    import logging
 
-    logging.warning("The package `decord` was not installed in this environment.")
+    HAVE_DECORD = True
+except Exception:
+    HAVE_DECORD = False
 
 import einops
 import numpy as np
-import tensorrt as trt
-import tensorrt_llm
-import tensorrt_llm.profiler as profiler
 import torch
 import yaml
-from PIL import Image
-from tensorrt_llm import logger
-from tensorrt_llm._utils import str_dtype_to_trt
-from tensorrt_llm.runtime import ModelRunner, Session, TensorInfo
 from torch.nn import functional as F
-from torchvision import transforms
 from transformers import AutoProcessor, CLIPImageProcessor
 
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
+from nemo_export_deploy_common.import_utils import (
+    MISSING_DECORD_MSG,
+    MISSING_PIL_MSG,
+    MISSING_TENSORRT_LLM_MSG,
+    MISSING_TENSORRT_MSG,
+    MISSING_TORCHVISION_MSG,
+    UnavailableError,
+)
+
+try:
+    from torchvision import transforms
+
+    HAVE_TORCHVISION = True
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    transforms = MagicMock()
+    HAVE_TORCHVISION = False
+
+
+try:
+    from PIL import Image
+
+    HAVE_PIL = True
+except Exception:
+    HAVE_PIL = False
+
+try:
+    import tensorrt as trt
+
+    HAVE_TRT = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRT = False
+
+try:
+    import tensorrt_llm
+    import tensorrt_llm.profiler as profiler
+    from tensorrt_llm import logger
+    from tensorrt_llm._utils import str_dtype_to_trt
+    from tensorrt_llm.runtime import ModelRunner, Session, TensorInfo
+
+    HAVE_TRT_LLM = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRT_LLM = False
 
 
 def trt_dtype_to_torch(dtype):
+    if not HAVE_TRT:
+        raise UnavailableError(MISSING_TENSORRT_MSG)
+
     if dtype == trt.float16:
         return torch.float16
     elif dtype == trt.float32:
@@ -56,6 +95,9 @@ def trt_dtype_to_torch(dtype):
 
 class MultimodalModelRunner:
     def __init__(self, visual_engine_dir, llm_engine_dir, modality="vision"):
+        if not HAVE_TRT_LLM:
+            raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
         self.modality = modality
         self.runtime_rank = tensorrt_llm.mpi_rank()
         device_id = self.runtime_rank % torch.cuda.device_count()
@@ -172,6 +214,9 @@ class MultimodalModelRunner:
             raise ValueError(f"Invalid model type: {self.model_type}")
 
     def init_llm(self, llm_engine_dir):
+        if not HAVE_TRT_LLM:
+            raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
         self.model = ModelRunner.from_dir(
             llm_engine_dir,
             rank=tensorrt_llm.mpi_rank(),
@@ -185,6 +230,9 @@ class MultimodalModelRunner:
         from decord import VideoReader
 
         if isinstance(video_path, str):
+            if not HAVE_PIL:
+                raise UnavailableError(MISSING_PIL_MSG)
+
             vr = VideoReader(video_path)
             num_frames = self.num_frames
             if num_frames == -1:
@@ -198,6 +246,8 @@ class MultimodalModelRunner:
                 if len(frames) < num_frames:
                     frames += [frames[-1]] * (num_frames - len(frames))
         elif isinstance(video_path, np.ndarray):
+            if not HAVE_PIL:
+                raise UnavailableError(MISSING_PIL_MSG)
             num_frames = self.num_frames
             if num_frames == -1:
                 frames = [Image.fromarray(frame).convert("RGB") for frame in video_path]
@@ -385,6 +435,9 @@ class MultimodalModelRunner:
         num_beams,
         lora_uids=None,
     ):
+        if not HAVE_TRT_LLM:
+            raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
         if not warmup:
             profiler.start("Generate")
 
@@ -443,6 +496,9 @@ class MultimodalModelRunner:
             return None
 
     def get_visual_features(self, image, attention_mask):
+        if not HAVE_TRT_LLM:
+            raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
         visual_features = {"input": image.to(tensorrt_llm._utils.str_dtype_to_torch(self.vision_precision))}
         if attention_mask is not None:
             visual_features["attention_mask"] = attention_mask
@@ -629,6 +685,9 @@ class MultimodalModelRunner:
     def load_video(self, config, video_path, processor, num_frames=None):
         frames = None
         if isinstance(video_path, str):
+            if not HAVE_DECORD:
+                raise UnavailableError(MISSING_DECORD_MSG)
+
             decord.bridge.set_bridge("torch")
             video_reader = decord.VideoReader(uri=video_path)
             if num_frames is not None:
@@ -665,6 +724,9 @@ class MultimodalModelRunner:
     def process_lita_video(self, nemo_config, video_path, image_processor):
         image = None
         if isinstance(video_path, str):
+            if not HAVE_DECORD:
+                raise UnavailableError(MISSING_DECORD_MSG)
+
             vid_len = len(decord.VideoReader(video_path))
             num_sample_frames = self.get_num_sample_frames(nemo_config, vid_len)
             image = (
@@ -682,7 +744,11 @@ class MultimodalModelRunner:
 
     def process_image(self, image_file, image_processor, nemo_config, image_folder):
         if isinstance(image_file, str):
+            if not HAVE_PIL:
+                raise UnavailableError(MISSING_PIL_MSG)
             if image_folder is not None:
+                if not HAVE_PIL:
+                    raise UnavailableError(MISSING_PIL_MSG)
                 image = Image.open(os.path.join(image_folder, image_file)).convert("RGB")
             else:
                 image = Image.open(image_file).convert("RGB")
@@ -708,6 +774,9 @@ class MultimodalModelRunner:
         return new_images
 
     def setup_inputs(self, input_text, raw_image, batch_size):
+        if not HAVE_TORCHVISION:
+            raise UnavailableError(MISSING_TORCHVISION_MSG)
+
         attention_mask = None
         image = None
 

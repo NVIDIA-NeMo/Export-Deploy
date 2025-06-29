@@ -19,7 +19,6 @@ from collections import defaultdict
 from pathlib import Path
 
 import torch
-from tensorrt_llm._utils import pad_vocab_size, str_dtype_to_torch
 from tqdm import tqdm
 
 from nemo_export.trt_llm.converter.utils import (
@@ -29,6 +28,14 @@ from nemo_export.trt_llm.converter.utils import (
     weights_dict,
 )
 from nemo_export.utils import torch_dtype_from_precision
+from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, UnavailableError
+
+try:
+    from tensorrt_llm._utils import pad_vocab_size, str_dtype_to_torch
+
+    HAVE_TRT_LLM = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRT_LLM = False
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -128,6 +135,9 @@ def convert_model_to_trt_llm_ckpt(
     fp8_quantized=False,
     fp8_kvcache=False,
 ):
+    if not HAVE_TRT_LLM:
+        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+
     # if checkpoints files could be found - start preparing output dir
     out_dir = create_export_dir(nemo_export_dir)
     storage_type = str_dtype_to_torch(storage_type)

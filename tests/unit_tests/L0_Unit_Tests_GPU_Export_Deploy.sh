@@ -18,4 +18,4 @@ set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 CUDA_VISIBLE_DEVICES=0,1 NEMO_NUMBA_MINVER=0.53 coverage run -a \
     --data-file=/workspace/.coverage \
     --source=/workspace/ \
-    -m pytest tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme"
+    -m pytest -sv tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme"

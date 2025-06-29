@@ -23,8 +23,6 @@ import torch.distributed
 from jinja2 import Template
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 from megatron.core.inference.inference_request import InferenceRequest
-from pytriton.decorators import batch, first_value
-from pytriton.model_config import Tensor
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
@@ -35,6 +33,23 @@ from nemo_deploy.utils import (
     nemo_checkpoint_version,
     str_ndarray2list,
 )
+from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError, null_decorator
+
+try:
+    from pytriton.decorators import batch, first_value
+    from pytriton.model_config import Tensor
+
+    HAVE_TRITON = True
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    HAVE_TRITON = False
+    batch = MagicMock()
+    first_value = MagicMock()
+    Tensor = MagicMock()
+
+    batch = null_decorator
+    first_value = null_decorator
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -141,6 +156,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         random_seed: Optional[int] = None,
         legacy_ckpt: bool = False,
     ):
+        if not HAVE_TRITON:
+            raise UnavailableError(MISSING_TRITON_MSG)
+
         self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = create_mcore_engine(
             num_devices=num_devices,
             num_nodes=num_nodes,
@@ -218,9 +236,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
                 inference_params = CommonInferenceParams(
                     temperature=temperature,
-                    top_k=top_k,
-                    top_p=top_p,
-                    num_tokens_to_generate=num_tokens_to_generate,
+                    top_k=int(top_k),
+                    top_p=float(top_p),
+                    num_tokens_to_generate=int(num_tokens_to_generate),
                     return_log_probs=log_probs,
                 )
 

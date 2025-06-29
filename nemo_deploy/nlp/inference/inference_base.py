@@ -37,13 +37,8 @@ from megatron.core.inference.text_generation_controllers.text_generation_control
 )
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
-from nemo.collections.llm.gpt.model.base import GPTConfig
-from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
-from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
-from nemo.collections.llm.t5.model.t5 import T5Config
-from nemo.lightning import io
-from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
-from nemo.lightning.io.pl import ckpt_to_weights_subdir
+
+from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
 
 from .tron_utils import (
     DistributedInitConfig,
@@ -54,6 +49,24 @@ from .tron_utils import (
     get_world_size_safe,
     initialize_distributed,
 )
+
+try:
+    from nemo.collections.llm.gpt.model.base import GPTConfig
+    from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
+    from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
+    from nemo.collections.llm.t5.model.t5 import T5Config
+    from nemo.lightning import io
+    from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
+    from nemo.lightning.io.pl import ckpt_to_weights_subdir
+
+    HAVE_NEMO = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_NEMO = False
+    from typing import Any
+
+    GPTConfig = Any
+    T5Config = Any
+    MCoreTokenizerWrappper = Any
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -170,6 +183,8 @@ def load_nemo_checkpoint_to_tron_model(model: List[MegatronModule], path: Path, 
         path (Path): Path to NeMo checkpoint directory
         legacy_ckpt (bool): Whether to use legacy checkpoint format
     """
+    if not HAVE_NEMO:
+        raise UnavailableError(MISSING_NEMO_MSG)
     weights_dir = ckpt_to_weights_subdir(path, is_saving=False)
     LOGGER.info(f"Loading NeMo checkpoint from {weights_dir}")
 
@@ -209,6 +224,9 @@ def setup_model_and_tokenizer_for_inference(
     Raises:
         ValueError: If checkpoint_path is not a valid NeMo-2.0 checkpoint
     """
+    if not HAVE_NEMO:
+        raise UnavailableError(MISSING_NEMO_MSG)
+
     checkpoint_path = Path(checkpoint_path)
 
     # Load model context for config and tokenizer
@@ -354,6 +372,9 @@ def create_mcore_engine(
             - GPTInferenceWrapper: Inference-wrapped model
             - MCoreTokenizerWrappper: Tokenizer wrapper
     """
+    if not HAVE_NEMO:
+        raise UnavailableError(MISSING_NEMO_MSG)
+
     # Load model context to get default parallelism settings from checkpoint
     checkpoint_path = Path(path)
     model_context = io.load_context(path=ckpt_to_context_subdir(checkpoint_path), subpath="model")
