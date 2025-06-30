@@ -19,7 +19,7 @@ import numpy as np
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
-from nemo_export_deploy_common.import_utils import MISSING_PYTRITON_MSG, MISSING_VLLM_MSG, UnavailableError
+from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, MISSING_VLLM_MSG, UnavailableError
 
 try:
     from pytriton.decorators import batch, first_value
@@ -64,7 +64,7 @@ class vLLMHFExporter(ITritonDeployable):
         if not HAVE_VLLM:
             raise UnavailableError(MISSING_VLLM_MSG)
         if not HAVE_PYTRITON:
-            raise UnavailableError(MISSING_PYTRITON_MSG)
+            raise UnavailableError(MISSING_TRITON_MSG)
 
     def export(self, model, enable_lora: bool = False):
         """Exports the HF checkpoint to vLLM and initializes the engine.
