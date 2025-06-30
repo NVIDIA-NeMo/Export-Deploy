@@ -13,12 +13,14 @@
 # limitations under the License.
 
 
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
 import torch
 
 from nemo_export.onnx_llm_exporter import OnnxLLMExporter
+from nemo_export_deploy_common.import_utils import UnavailableError
 
 
 class DummyModel(torch.nn.Module):
@@ -64,3 +66,60 @@ class TestOnnxLLMExporter:
                 model_name_or_path="some/path",
                 load_runtime=False,
             )
+
+    def test_export_without_trt(self, temp_dir, dummy_model, dummy_tokenizer):
+        with mock.patch("nemo_export.onnx_llm_exporter.HAVE_TENSORRT", False), pytest.raises(UnavailableError):
+            OnnxLLMExporter(
+                onnx_model_dir=temp_dir,
+                model=dummy_model,
+                tokenizer=dummy_tokenizer,
+                load_runtime=False,
+            ).export_onnx_to_trt(trt_model_dir=temp_dir)
+
+    def test__override_layer_precision_to_fp32_without_trt(self, temp_dir, dummy_model, dummy_tokenizer):
+        with mock.patch("nemo_export.onnx_llm_exporter.HAVE_TENSORRT", True):
+            exporter = OnnxLLMExporter(
+                onnx_model_dir=temp_dir,
+                model=dummy_model,
+                tokenizer=dummy_tokenizer,
+                load_runtime=False,
+            )
+            exporter._override_layer_precision_to_fp32(layer=MagicMock())
+
+    def test__override_layers_to_fp32_without_trt(self, temp_dir, dummy_model, dummy_tokenizer):
+        with mock.patch("nemo_export.onnx_llm_exporter.HAVE_TENSORRT", True):
+            exporter = OnnxLLMExporter(
+                onnx_model_dir=temp_dir,
+                model=dummy_model,
+                tokenizer=dummy_tokenizer,
+                load_runtime=False,
+            )
+            exporter._override_layers_to_fp32(network=MagicMock(), fp32_layer_patterns=["linear"])
+
+    def test__override_layernorm_precision_to_fp32_without_trt(self, temp_dir, dummy_model, dummy_tokenizer):
+        with mock.patch("nemo_export.onnx_llm_exporter.HAVE_TENSORRT", True):
+            exporter = OnnxLLMExporter(
+                onnx_model_dir=temp_dir,
+                model=dummy_model,
+                tokenizer=dummy_tokenizer,
+                load_runtime=False,
+            )
+            exporter._override_layernorm_precision_to_fp32(network=MagicMock())
+
+    def test_quantize_without_nemo(self, temp_dir, dummy_model, dummy_tokenizer):
+        with mock.patch("nemo_export.onnx_llm_exporter.HAVE_NEMO", False), pytest.raises(UnavailableError):
+            OnnxLLMExporter(
+                onnx_model_dir=temp_dir,
+                model=dummy_model,
+                tokenizer=dummy_tokenizer,
+                load_runtime=False,
+            ).quantize(quant_cfg="int8", forward_loop=MagicMock())
+
+    def test_quantize_without_modelopt(self, temp_dir, dummy_model, dummy_tokenizer):
+        with mock.patch("nemo_export.onnx_llm_exporter.HAVE_MODELOPT", False), pytest.raises(UnavailableError):
+            OnnxLLMExporter(
+                onnx_model_dir=temp_dir,
+                model=dummy_model,
+                tokenizer=dummy_tokenizer,
+                load_runtime=False,
+            ).quantize(quant_cfg="int8", forward_loop=MagicMock())
