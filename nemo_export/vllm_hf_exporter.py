@@ -27,6 +27,10 @@ try:
 
     HAVE_PYTRITON = True
 except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    batch = MagicMock()
+    first_value = MagicMock()
     HAVE_PYTRITON = False
 
 try:
