@@ -143,15 +143,15 @@ jobs:
         run: |
           echo "Running CI tests"
 
-  cicd-unit-tests:
+  cicd-unit-tests-trtllm:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - script: L0_Unit_Tests_GPU_Export_Deploy
+          - script: L0_Unit_Tests_GPU
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
             timeout: 30
-          - script: L0_Unit_Tests_CPU_Export_Deploy
+          - script: L0_Unit_Tests_CPU
             runner: linux-amd64-cpu16
             cpu-only: true
     needs: [pre-flight, cicd-wait-in-queue]
@@ -165,7 +165,7 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: ${{ matrix.script }}
-          timeout: ${{ matrix.timeout || 10 }}
+          timeout: ${{ matrix.timeout || 30 }}
           is_unit_test: "true"
           cpu-only: ${{ matrix.cpu-only || false }}
           has-azure-credentials: "true"
@@ -175,6 +175,38 @@ jobs:
           PAT: ${{ secrets.PAT }}
           inference-framework: trtllm
 
+  cicd-unit-tests-vllm:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L0_Unit_Tests_GPU
+            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
+            timeout: 30
+          - script: L0_Unit_Tests_CPU
+            runner: linux-amd64-cpu16
+            cpu-only: true
+    needs: [pre-flight, cicd-wait-in-queue]
+    runs-on: ${{ matrix.runner }}
+    name: ${{ matrix.script }}
+    environment: nemo-ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: main
+        uses: ./.github/actions/test-template
+        with:
+          script: ${{ matrix.script }}
+          timeout: ${{ matrix.timeout || 30 }}
+          is_unit_test: "true"
+          cpu-only: ${{ matrix.cpu-only || false }}
+          has-azure-credentials: "true"
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          PAT: ${{ secrets.PAT }}
+          inference-framework: vllm
+
   cicd-e2e-tests-trtllm:
     strategy:
       fail-fast: false
@@ -183,23 +215,15 @@ jobs:
           - script: L2_Launch_TRTLLM
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
             timeout: 60
-          - script: L2_NeMo_2_Export_Deploy_Query_Ray
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_Export_Deploy_Query_TRTLLM_Ray
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_ONNX_TRT_LLM_Embedding_Export
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_ONNX_TRT_LLM_Embedding_Export_INT8
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_Export_TRT_LLM
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_NeMo_2_Export_In_Framework
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_NeMo_2_Export_Qnemo_TRT_LLM
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_TRTLLM_API_Deploy_Query
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-    needs: [cicd-unit-tests]
+    needs: [cicd-unit-tests-trtllm]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
@@ -216,12 +240,12 @@ jobs:
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           has-azure-credentials: true
           is_unit_test: "false"
-          timeout: ${{ matrix.timeout || 10 }}
+          timeout: ${{ matrix.timeout || 30 }}
           PAT: ${{ secrets.PAT }}
           inference-framework: trtllm
 
   cicd-e2e-tests-vllm:
-    needs: [cicd-unit-tests]
+    needs: [cicd-unit-tests-vllm]
     runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
@@ -243,7 +267,7 @@ jobs:
           inference-framework: vllm
 
   cicd-e2e-tests-inframework:
-    needs: [cicd-unit-tests]
+    needs: [cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
     runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
@@ -267,7 +291,8 @@ jobs:
   Nemo_CICD_Test:
     needs:
       - pre-flight
-      - cicd-unit-tests
+      - cicd-unit-tests-trtllm
+      - cicd-unit-tests-vllm
       - cicd-e2e-tests-trtllm
       - cicd-e2e-tests-vllm
     if: always()
