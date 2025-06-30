@@ -31,6 +31,7 @@ on:
 jobs:
   update-branch:
     runs-on: ubuntu-latest
+    environment: nemo-ci
     outputs:
       source-branch: ${{ steps.merge-branch.outputs.source-branch }}
       bump-branch: bump-ci-container-${{ steps.ref.outputs.date }}-${{ steps.merge-branch.outputs.source-branch }}
