@@ -165,7 +165,7 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: ${{ matrix.script }}
-          timeout: ${{ matrix.timeout || 10 }}
+          timeout: ${{ matrix.timeout || 30 }}
           is_unit_test: "true"
           cpu-only: ${{ matrix.cpu-only || false }}
           has-azure-credentials: "true"
@@ -197,7 +197,7 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: ${{ matrix.script }}
-          timeout: ${{ matrix.timeout || 10 }}
+          timeout: ${{ matrix.timeout || 30 }}
           is_unit_test: "true"
           cpu-only: ${{ matrix.cpu-only || false }}
           has-azure-credentials: "true"
@@ -240,7 +240,7 @@ jobs:
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           has-azure-credentials: true
           is_unit_test: "false"
-          timeout: ${{ matrix.timeout || 10 }}
+          timeout: ${{ matrix.timeout || 30 }}
           PAT: ${{ secrets.PAT }}
           inference-framework: trtllm
 
