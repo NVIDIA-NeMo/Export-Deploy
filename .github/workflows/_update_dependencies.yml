@@ -84,28 +84,10 @@ jobs:
       GPG_KEY: ${{ secrets.SSH_KEY }}
       GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
 
-  nemo:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_bump_tomlfile.yml@v0.40.0
-    needs: [update-branch, mcore]
-    name: Bump NeMo
-    with:
-      source-repository: NVIDIA/NeMo
-      source-ref: ${{ inputs.nemo-target-branch }}
-      toml-path: tool.uv.sources.nemo-toolkit.rev
-      file: pyproject.toml
-      base-branch: ${{ needs.update-branch.outputs.source-branch }}
-      pr-branch: ${{ needs.update-branch.outputs.bump-branch }}
-      pr-title: "chore(🤖): Bump dependencies (${{ needs.update-branch.outputs.date }})"
-      use-gpgkey: true
-    secrets:
-      PAT: ${{ secrets.PAT }}
-      GPG_KEY: ${{ secrets.SSH_KEY }}
-      GPG_PASSPHRASE: ${{ secrets.SSH_PWD }}
-
   update-lockfile:
     environment: nemo-ci
     runs-on: linux-amd64-cpu16
-    needs: [nemo, update-branch]
+    needs: [mcore, update-branch]
     steps:
       - name: Install Azure CLI
         run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
