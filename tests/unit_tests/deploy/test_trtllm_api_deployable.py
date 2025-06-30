@@ -44,6 +44,15 @@ def mock_pytorch_config():
         yield mock
 
 
+try:
+    import tensorrt_llm  # noqa: F401
+
+    HAVE_TENSORRT_LLM = True
+except ImportError:
+    HAVE_TENSORRT_LLM = False
+
+
+@pytest.mark.skipif(not HAVE_TENSORRT_LLM, reason="TensorRT-LLM is not installed")
 @pytest.mark.run_only_on("GPU")
 class TestTensorRTLLMAPIDeployable:
     def test_initialization_with_defaults(self, mock_pytorch_config):
