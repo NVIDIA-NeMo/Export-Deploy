@@ -15,7 +15,10 @@
 name: Copyright check
 
 on:
-  pull_request:
+  push:
+    branches:
+      - main
+      - "pull-request/[0-9]+"
 
 jobs:
   build-docs:
