@@ -6,10 +6,6 @@ on:
         required: true
         type: string
         description: "The target branch to bump"
-      nemo-target-branch:
-        required: true
-        type: string
-        description: "The target branch to bump"
       mcore-target-branch:
         required: true
         type: string
