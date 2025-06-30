@@ -55,7 +55,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAT }}
         run: |
-          docker build -f docker/Dockerfile.ci --secret id=GH_TOKEN -t export-deploy .
+          docker build -f docker/Dockerfile.ci --build-arg INFERENCE_FRAMEWORK=inframework --secret id=GH_TOKEN -t export-deploy .
 
       - name: Create bump branch if not exists
         env:
