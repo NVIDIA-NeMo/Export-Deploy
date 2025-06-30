@@ -155,6 +155,15 @@ jobs:
             runner: linux-amd64-cpu16
             cpu-only: true
     needs: [pre-flight, cicd-wait-in-queue]
+    if: |
+      (
+        success() 
+        || (
+          needs.cicd-wait-in-queue.result == 'skipped'
+          && needs.pre-flight.outputs.is_ci_workload == 'true'
+        )
+      )
+      && !cancelled()
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.script }}
     environment: nemo-ci
@@ -187,6 +196,15 @@ jobs:
             runner: linux-amd64-cpu16
             cpu-only: true
     needs: [pre-flight, cicd-wait-in-queue]
+    if: |
+      (
+        success() 
+        || (
+          needs.cicd-wait-in-queue.result == 'skipped'
+          && needs.pre-flight.outputs.is_ci_workload == 'true'
+        )
+      )
+      && !cancelled()
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.script }}
     environment: nemo-ci
@@ -226,6 +244,15 @@ jobs:
     needs: [cicd-unit-tests-trtllm]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    if: |
+      (
+        success() 
+        || (
+          needs.cicd-wait-in-queue.result == 'skipped'
+          && needs.pre-flight.outputs.is_ci_workload == 'true'
+        )
+      )
+      && !cancelled()
     environment: nemo-ci
     steps:
       - name: Checkout
@@ -249,6 +276,15 @@ jobs:
     runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
+    if: |
+      (
+        success() 
+        || (
+          needs.cicd-wait-in-queue.result == 'skipped'
+          && needs.pre-flight.outputs.is_ci_workload == 'true'
+        )
+      )
+      && !cancelled()
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -271,6 +307,15 @@ jobs:
     runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
+    if: |
+      (
+        success() 
+        || (
+          needs.cicd-wait-in-queue.result == 'skipped'
+          && needs.pre-flight.outputs.is_ci_workload == 'true'
+        )
+      )
+      && !cancelled()
     steps:
       - name: Checkout
         uses: actions/checkout@v4
