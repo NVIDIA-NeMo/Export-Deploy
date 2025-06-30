@@ -44,7 +44,7 @@ dependencies = [
     "lightning",
     "omegaconf>=2.3.0",
     "peft",
-    "torch==2.7.0",
+    "torch",
     "torchvision",
     "torchmetrics>=0.11.0",
     "transformers>=4.49.0",
@@ -58,13 +58,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-vllm = ["vllm==0.9.0.1", "pandas", "timm"]
+vllm = ["vllm==0.9.1", "pandas", "timm"]
 trtllm = ["tensorrt-llm~=0.20.0"]
 te = ["transformer-engine[pytorch]==2.2.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch==2.7.0", "pybind11", "Cython>=3.0.0"]
+build = ["setuptools", "torch", "pybind11", "Cython>=3.0.0"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
