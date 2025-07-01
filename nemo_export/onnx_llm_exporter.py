@@ -432,8 +432,6 @@ class OnnxLLMExporter(ITritonDeployable):
             # Iterate from few layers before pow to include residual add and cast op.
             # Iterate till 10 layers after pow op to include all
             # operations included in layer norm.
-            if not HAVE_TENSORRT:
-                raise UnavailableError(MISSING_TENSORRT_MSG)
             START_OFFSET = 4
             END_OFFSET = 12
             for i in range(index - START_OFFSET, index + END_OFFSET):

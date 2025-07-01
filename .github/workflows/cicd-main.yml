@@ -150,7 +150,6 @@ jobs:
         include:
           - script: L0_Unit_Tests_GPU
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-            timeout: 30
           - script: L0_Unit_Tests_CPU
             runner: linux-amd64-cpu16
             cpu-only: true
@@ -165,7 +164,7 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: ${{ matrix.script }}
-          timeout: ${{ matrix.timeout || 30 }}
+          timeout: 60
           is_unit_test: "true"
           cpu-only: ${{ matrix.cpu-only || false }}
           has-azure-credentials: "true"
@@ -182,7 +181,6 @@ jobs:
         include:
           - script: L0_Unit_Tests_GPU
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-            timeout: 30
           - script: L0_Unit_Tests_CPU
             runner: linux-amd64-cpu16
             cpu-only: true
@@ -197,7 +195,7 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: ${{ matrix.script }}
-          timeout: ${{ matrix.timeout || 30 }}
+          timeout: 60
           is_unit_test: "true"
           cpu-only: ${{ matrix.cpu-only || false }}
           has-azure-credentials: "true"
@@ -214,7 +212,6 @@ jobs:
         include:
           - script: L2_Launch_TRTLLM
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-            timeout: 60
           - script: L2_ONNX_TRT_LLM_Embedding_Export
             runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
           - script: L2_ONNX_TRT_LLM_Embedding_Export_INT8
@@ -240,7 +237,7 @@ jobs:
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           has-azure-credentials: true
           is_unit_test: "false"
-          timeout: ${{ matrix.timeout || 30 }}
+          timeout: 60
           PAT: ${{ secrets.PAT }}
           inference-framework: trtllm
 

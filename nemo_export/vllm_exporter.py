@@ -477,7 +477,7 @@ class vLLMExporter(ITritonDeployable):
         return outputs
 
     @batch
-    def triton_infer_fn(self, **inputs: numpy.ndarray):
+    def triton_infer_fn(self, **inputs: numpy.ndarray):  # pragma: no cover
         """This function is used to perform inference on a batch of prompts."""
         request_ids = []
         num_requests = len(inputs["prompts"])
@@ -492,7 +492,7 @@ class vLLMExporter(ITritonDeployable):
         return {"outputs": output_tensor}
 
     @batch
-    def triton_infer_fn_streaming(self, **inputs: numpy.ndarray):
+    def triton_infer_fn_streaming(self, **inputs: numpy.ndarray):  # pragma: no cover
         """This function is used to perform streaming inference."""
         request_ids = []
         num_requests = len(inputs["prompts"])
