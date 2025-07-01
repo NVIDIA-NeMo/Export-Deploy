@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2025, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,22 @@ import numpy as np
 import pytest
 import torch
 from PIL import Image
+
+from nemo_export_deploy_common.import_utils import UnavailableError
+
+try:
+    import tensorrt_llm  # noqa: F401
+
+    HAVE_TRT_LLM = True
+except ImportError:
+    HAVE_TRT_LLM = False
+
+
+def test_trt_dtype_to_torch_without_trt():
+    from nemo_export.multimodal.run import trt_dtype_to_torch
+
+    with patch("nemo_export.multimodal.run.HAVE_TRT", False), pytest.raises(UnavailableError):
+        trt_dtype_to_torch(dtype=MagicMock())
 
 
 @pytest.mark.run_only_on("GPU")
@@ -926,6 +942,75 @@ class TestMultimodalModelRunner(unittest.TestCase):
                 run_profiling=False,
                 check_accuracy=True,
             )
+
+    def test_init_without_trt_llm(self):
+        from nemo_export.multimodal.run import MultimodalModelRunner
+
+        with patch("nemo_export.multimodal.run.HAVE_TRT_LLM", False), pytest.raises(UnavailableError):
+            MultimodalModelRunner(visual_engine_dir="", llm_engine_dir="")
+
+    def test_init_llm_without_trt_llm(self):
+        from nemo_export.multimodal.run import MultimodalModelRunner
+
+        with patch.object(MultimodalModelRunner, "__init__", lambda self: None):
+            with patch("nemo_export.multimodal.run.HAVE_TRT_LLM", False), pytest.raises(UnavailableError):
+                MultimodalModelRunner().init_llm(llm_engine_dir="")
+
+    def test_generate_without_trt_llm(self):
+        from nemo_export.multimodal.run import MultimodalModelRunner
+
+        with patch.object(MultimodalModelRunner, "__init__", lambda self: None):
+            with patch("nemo_export.multimodal.run.HAVE_TRT_LLM", False), pytest.raises(UnavailableError):
+                MultimodalModelRunner().generate(
+                    pre_prompt="",
+                    post_prompt="",
+                    image="",
+                    decoder_input_ids="",
+                    max_new_tokens="",
+                    attention_mask="",
+                    warmup="",
+                    batch_size="",
+                    top_k="",
+                    top_p="",
+                    temperature="",
+                    repetition_penalty="",
+                    num_beams="",
+                )
+
+    def test_get_visual_features_without_trt_llm(self):
+        from nemo_export.multimodal.run import MultimodalModelRunner
+
+        with patch.object(MultimodalModelRunner, "__init__", lambda self: None):
+            with patch("nemo_export.multimodal.run.HAVE_TRT_LLM", False), pytest.raises(UnavailableError):
+                MultimodalModelRunner().get_visual_features(image="", attention_mask="")
+
+    def test_video_preprocess_without_pil_str(self):
+        from nemo_export.multimodal.run import MultimodalModelRunner
+
+        with patch.object(MultimodalModelRunner, "__init__", lambda self: None):
+            with patch("nemo_export.multimodal.run.HAVE_PIL", False), pytest.raises(UnavailableError):
+                MultimodalModelRunner().video_preprocess(video_path="")
+
+    def test_video_preprocess_without_pil_ndarray(self):
+        from nemo_export.multimodal.run import MultimodalModelRunner
+
+        with patch.object(MultimodalModelRunner, "__init__", lambda self: None):
+            with patch("nemo_export.multimodal.run.HAVE_PIL", False), pytest.raises(UnavailableError):
+                MultimodalModelRunner().video_preprocess(video_path=np.array(["hello"]))
+
+    def test_load_video_without_decord(self):
+        from nemo_export.multimodal.run import MultimodalModelRunner
+
+        with patch.object(MultimodalModelRunner, "__init__", lambda self: None):
+            with patch("nemo_export.multimodal.run.HAVE_DECORD", False), pytest.raises(UnavailableError):
+                MultimodalModelRunner().load_video(config="", video_path="", processor="")
+
+    def test_process_lita_video_without_decord(self):
+        from nemo_export.multimodal.run import MultimodalModelRunner
+
+        with patch.object(MultimodalModelRunner, "__init__", lambda self: None):
+            with patch("nemo_export.multimodal.run.HAVE_DECORD", False), pytest.raises(UnavailableError):
+                MultimodalModelRunner().process_lita_video(nemo_config="", video_path="", image_processor="")
 
 
 if __name__ == "__main__":

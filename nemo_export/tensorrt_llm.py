@@ -1029,7 +1029,7 @@ class TensorRTLLM(ITritonDeployable):
         "output_generation_logits",
         "output_context_logits",
     )
-    def triton_infer_fn(self, **inputs: np.ndarray):
+    def triton_infer_fn(self, **inputs: np.ndarray):  # pragma: no cover
         """Triton infer function for inference."""
         output_dict = {}
 

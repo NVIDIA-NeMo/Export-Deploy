@@ -297,7 +297,7 @@ class TensorRTMMExporter(ITritonDeployable):
         "repetition_penalty",
         "num_beams",
     )
-    def triton_infer_fn(self, **inputs: np.ndarray):
+    def triton_infer_fn(self, **inputs: np.ndarray):  # pragma: no cover
         if not HAVE_TRT_LLM:
             raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
         try:
