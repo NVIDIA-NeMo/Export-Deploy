@@ -199,39 +199,6 @@ def update_tokenizer_paths(tokenizer_config: Dict, unpacked_checkpoints_dir):
     return tokenizer_config
 
 
-def copy_tokenizer_files(config, out_dir):
-    """Copies tokenizer files to the output directory."""
-    basenames = {
-        "model": "tokenizer",
-        "vocab_file": "vocab",
-        "merge_file": "merges",
-    }
-
-    for key in basenames.keys():
-        if config.get(key, None) is None:
-            continue
-
-        path = config[key]
-
-        if isinstance(path, str):
-            path = Path(path)
-
-        if not path.exists():
-            LOGGER.debug(f"Tokenizer {key}: {path} file not found")
-            continue
-
-        dst_path = out_dir / f"{basenames[key]}{path.suffix}"
-        config[key] = str(dst_path)
-        LOGGER.debug(f"Copy tokenizer {key}: {path}->{dst_path}")
-
-        # Copy 'path' to 'dst_path' without shutil.copy(...) because 'path' may be a TarPath
-        with path.open("rb") as infile:
-            with open(dst_path, "wb") as outfile:
-                outfile.write(infile.read())
-
-    return config
-
-
 def get_tokenizer_from_nemo2_context(model_context_dir: Path):
     """Retrieve tokenizer configuration from NeMo 2.0 context and instantiate the tokenizer.
 
@@ -344,7 +311,6 @@ def load_nemo_config(nemo_ckpt: Union[str, Path]) -> Dict[Any, Any]:
 
     This function handles both NeMo 1.0 and NeMo 2.0 checkpoint structures.
     For NeMo 2.0, it reads the configuration from the 'context/model.yaml' file.
-    For NeMo 1.0, it uses the UnpackedNemoCheckpointDir to load the model configuration.
 
     Args:
         nemo_ckpt (Union[str, Path]): Path to the NeMo checkpoint file or directory.
@@ -360,9 +326,8 @@ def load_nemo_config(nemo_ckpt: Union[str, Path]) -> Dict[Any, Any]:
     if (nemo_ckpt / "weights").exists() and (nemo_ckpt / "context").exists():  # Stucture of NeMo 2.0 checkpoints
         with (nemo_ckpt / "context" / "model.yaml").open("r") as stream:
             config = yaml.safe_load(stream)
-    else:  # Assume NeMo 1.0 case
-        unpacked_checkpoint_dir = UnpackedNemoCheckpointDir(nemo_ckpt, load_checkpoints_to_cpu=True)
-        config = unpacked_checkpoint_dir.model_config
+    else:  # pragma: no cover
+        raise Exception("Not supported NeMo checkpoint format.")
 
     return config
 
@@ -485,24 +450,7 @@ def load_nemo_model(
 
     tokenizer = None
     try:
-        unpacked_checkpoint_dir = UnpackedNemoCheckpointDir(nemo_dir, load_checkpoints_to_cpu=True)
-
-        if (nemo_dir / "model_weights").exists():
-            model = load_distributed_model_weights(nemo_ckpt, mcore_scales_format)
-
-            nemo_model_config = unpacked_checkpoint_dir.model_config
-
-            if nemo_model_config["tokenizer"].get("library", None) == "huggingface":
-                tokenizer = AutoTokenizer.from_pretrained(
-                    nemo_model_config["tokenizer"]["type"],
-                    use_fast=nemo_model_config["tokenizer"].get("use_fast", False),
-                )
-            else:
-                tokenizer_config = update_tokenizer_paths(nemo_model_config["tokenizer"], unpacked_checkpoint_dir)
-                tokenizer_config = copy_tokenizer_files(tokenizer_config, nemo_export_dir)
-
-                tokenizer = build_tokenizer(tokenizer_config)
-        elif (nemo_dir / "weights").exists():
+        if (nemo_dir / "weights").exists():
             model = load_distributed_model_weights(nemo_ckpt, mcore_scales_format)
             io_folder = nemo_dir / "context"
 
@@ -556,167 +504,3 @@ def load_nemo_model(
             nemo_dir.tarobject.close()
 
     return model, nemo_model_config, tokenizer
-
-
-def cpu_map_location(storage, loc):
-    """Maps storage to CPU."""
-    return storage.cpu()
-
-
-def gpu_map_location(storage, loc):
-    """Maps storage to GPU."""
-    if loc.startswith("cuda"):
-        training_gpu_idx = int(loc.split(":")[1])
-        inference_gpu_idx = training_gpu_idx % torch.cuda.device_count()
-        return storage.cuda(inference_gpu_idx)
-    elif loc.startswith("cpu"):
-        return storage.cpu()
-    else:
-        raise ValueError(f"Not handled {loc}")
-
-
-class UnpackedNemoCheckpointDir:
-    """Caches model config and tokenizer file path when loading from a packed NeMo checkpoint directory."""
-
-    def __init__(
-        self,
-        checkpoints_dir: Union[Path, TarPath],
-        load_checkpoints_to_cpu: bool = False,
-    ):
-        assert isinstance(checkpoints_dir, (Path, TarPath))
-        self._checkpoints_dir = checkpoints_dir
-        self._load_checkpoints_to_cpu = load_checkpoints_to_cpu
-
-    @property
-    @functools.lru_cache
-    def model_config(self):
-        """Returns model config dictionary."""
-        model_config = None
-
-        model_config_filename = "model_config.yaml"
-        model_configs_paths = list(self._checkpoints_dir.rglob(model_config_filename))
-        if model_configs_paths:
-            if len(model_configs_paths) > 1:
-                LOGGER.debug(f"There are more than single {model_config_filename} in {self._checkpoints_dir}")
-            model_config_path = model_configs_paths[0]
-            LOGGER.debug("Loading model config from %s", model_config_path)
-            with model_config_path.open("r") as model_config_file:
-                model_config = yaml.load(model_config_file, Loader=yaml.SafeLoader)
-        else:
-            LOGGER.debug("Searching model config in checkpoints")
-            # try to obtain from checkpoint
-            checkpoint_name = self.checkpoint_name
-            checkpoints_paths = sorted(self._checkpoints_dir.rglob(checkpoint_name))
-            if checkpoints_paths:
-                # assume that parallel ranks 0 checkpoint should have model config embedded
-                checkpoint_path = checkpoints_paths[0]
-
-                map_location_fn = cpu_map_location if self._load_checkpoints_to_cpu else gpu_map_location
-
-                model_00 = torch.load(checkpoint_path, map_location=map_location_fn)
-                if "hyper_parameters" in model_00 and "cfg" in model_00["hyper_parameters"]:
-                    model_config = model_00["hyper_parameters"]["cfg"]
-                    LOGGER.debug("Loaded model config from checkpoint %s", checkpoint_path)
-                else:
-                    LOGGER.debug("Could not find model config in checkpoint %s", checkpoint_path)
-
-                del model_00
-
-        if model_config is None:
-            LOGGER.warning(
-                "Could not find checkpoint with NeMo model config in %s",
-                self._checkpoints_dir,
-            )
-
-        LOGGER.debug("Loaded model config %s", model_config)
-
-        return model_config
-
-    @property
-    def checkpoints_dir(self):
-        """Returns path to checkpoints directory."""
-        return self._checkpoints_dir
-
-    def get_checkpoints_paths(self, tensor_model_parallel_size=1, pipeline_model_parallel_size=1):
-        """Injects tensor/pipeline model parallel ranks into the filepath.
-
-        Does nothing if not using model parallelism.
-        """
-        checkpoint_path_without_rank = self.checkpoints_dir / self.checkpoint_name
-
-        def _inject_parallel_ranks(tp_rank, pp_rank):
-            if tensor_model_parallel_size > 1 or pipeline_model_parallel_size > 1:
-                if pipeline_model_parallel_size is None or pipeline_model_parallel_size == 1:
-                    checkpoint_path = (
-                        checkpoint_path_without_rank.parent
-                        / f"mp_rank_{tp_rank:02d}"
-                        / checkpoint_path_without_rank.name
-                    )
-                else:
-                    checkpoint_path = (
-                        checkpoint_path_without_rank.parent
-                        / f"tp_rank_{tp_rank:02d}_pp_rank_{pp_rank:03d}"
-                        / checkpoint_path_without_rank.name
-                    )
-                return checkpoint_path
-            else:
-                return checkpoint_path_without_rank
-
-        return [
-            [
-                _inject_parallel_ranks(tp_rank=tp_rank, pp_rank=pp_rank)
-                for pp_rank in range(pipeline_model_parallel_size)
-            ]
-            for tp_rank in range(tensor_model_parallel_size)
-        ]
-
-    @property
-    @functools.lru_cache
-    def checkpoint_name(self):
-        """Returns the name of the checkpoint file."""
-        patterns = [
-            "model_weights.ckpt",  # older megatron checkpoints
-            "*last.ckpt",  # newer format of checkpoints
-        ]
-        for pattern in patterns:
-            model_files = sorted(list(self._checkpoints_dir.rglob(pattern)))
-            if model_files:
-                return model_files[0].name
-
-        raise ValueError(f"Could not find checkpoint files in {self._checkpoints_dir}")
-
-    @functools.lru_cache
-    def get_tokenizer_file_path(self, tokenizer_key, file_key, default_filename_pattern):
-        """Returns path to tokenizer file."""
-        model_config = self.model_config
-        file_property = None
-        if tokenizer_key in model_config and file_key in model_config[tokenizer_key]:
-            file_property = model_config[tokenizer_key][file_key]
-        elif file_key in model_config:
-            file_property = model_config[file_key]
-
-        LOGGER.debug("model_config[%s][%s]=%s", tokenizer_key, file_key, file_property)
-
-        if file_property and file_property.startswith("nemo:"):
-            filename = file_property.split("nemo:")[1]
-            filename_pattern = f"*{filename}"
-        elif file_property and file_property.startswith("/artifacts/"):
-            filename = Path(file_property).name
-            filename_pattern = f"*{filename}"
-        elif file_property is None or file_property == "None":
-            filename_pattern = None
-        else:
-            filename_pattern = default_filename_pattern
-            LOGGER.warning(
-                f"Tokenizer file from config: {tokenizer_key}.{file_key}={file_property} "
-                f"looks like unsupported path. Pattern {filename_pattern} will be used."
-            )
-
-        file_path = None
-        if filename_pattern is not None:
-            files_paths = list(self._checkpoints_dir.glob(filename_pattern))
-            if files_paths:
-                assert len(files_paths) == 1
-                file_path = files_paths[0]
-
-        return file_path
