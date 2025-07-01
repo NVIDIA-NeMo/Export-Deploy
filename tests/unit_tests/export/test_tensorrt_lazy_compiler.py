@@ -19,7 +19,17 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import pytest
+import torch
 import torch.nn as nn
+
+from nemo_export.tensorrt_lazy_compiler import trt_to_torch_dtype_dict
+
+try:
+    import tensorrt as trt
+
+    HAVE_TRT = True
+except ImportError:
+    HAVE_TRT = False
 
 
 @pytest.mark.run_only_on("GPU")
@@ -163,6 +173,18 @@ class TestTensorRTLazyCompiler(unittest.TestCase):
 
         self.assertEqual(compiled_model, model)
         self.assertTrue(hasattr(model.submodule, "_trt_compiler"))
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.tensorrt_lazy_compiler.trt_imported", True)
+    @pytest.mark.skipif(not HAVE_TRT, reason="TensorRT is not installed")
+    def test_trt_to_torch_dtype_dict(self):
+        assert trt_to_torch_dtype_dict()[trt.int32] == torch.int32
+        assert trt_to_torch_dtype_dict()[trt.float32] == torch.float32
+        assert trt_to_torch_dtype_dict()[trt.float16] == torch.float16
+        assert trt_to_torch_dtype_dict()[trt.bfloat16] == torch.bfloat16
+        assert trt_to_torch_dtype_dict()[trt.int64] == torch.int64
+        assert trt_to_torch_dtype_dict()[trt.int8] == torch.int8
+        assert trt_to_torch_dtype_dict()[trt.bool] == torch.bool
 
 
 if __name__ == "__main__":
