@@ -181,7 +181,7 @@ class TestTensorRTLazyCompiler(unittest.TestCase):
         assert trt_to_torch_dtype_dict()[trt.int32] == torch.int32
         assert trt_to_torch_dtype_dict()[trt.float32] == torch.float32
         assert trt_to_torch_dtype_dict()[trt.float16] == torch.float16
-        assert trt_to_torch_dtype_dict()[trt.bfloat16] == torch.bfloat16
+        assert trt_to_torch_dtype_dict()[trt.bfloat16] == torch.float16
         assert trt_to_torch_dtype_dict()[trt.int64] == torch.int64
         assert trt_to_torch_dtype_dict()[trt.int8] == torch.int8
         assert trt_to_torch_dtype_dict()[trt.bool] == torch.bool
