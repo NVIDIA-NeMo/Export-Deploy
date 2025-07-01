@@ -62,7 +62,7 @@ autodoc2_packages = [
     "../nemo_export",  # Path to your package relative to conf.py
     "../nemo_deploy",
 ]
-autodoc2_render_plugin = "myst"  # Use MyST for rendering docstrings
+autodoc2_render_plugin = "rst"  # Use RST for rendering docstrings
 autodoc2_output_dir = "apidocs"  # Output directory for autodoc2 (relative to docs/)
 # This is a workaround that uses the parser located in autodoc2_docstrings_parser.py to allow autodoc2 to
 # render google style docstrings.

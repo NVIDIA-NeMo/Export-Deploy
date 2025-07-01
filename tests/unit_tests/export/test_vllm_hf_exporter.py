@@ -18,6 +18,13 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+try:
+    import vllm  # noqa: F401
+
+    HAVE_VLLM = True
+except ImportError:
+    HAVE_VLLM = False
+
 
 @pytest.fixture
 def exporter():
@@ -31,10 +38,10 @@ def mock_llm():
     with patch("nemo_export.vllm_hf_exporter.LLM") as mock:
         mock_instance = MagicMock()
         mock.return_value = mock_instance
-        yield mock_instance
+        yield mock
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_init(exporter):
     """Test initialization of vLLMHFExporter"""
@@ -42,7 +49,7 @@ def test_init(exporter):
     assert exporter.lora_models is None
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_export(exporter, mock_llm):
     """Test export method"""
@@ -53,7 +60,7 @@ def test_export(exporter, mock_llm):
     mock_llm.assert_called_once_with(model=model_path, enable_lora=False)
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_export_with_lora(exporter, mock_llm):
     """Test export method with LoRA enabled"""
@@ -64,7 +71,7 @@ def test_export_with_lora(exporter, mock_llm):
     mock_llm.assert_called_once_with(model=model_path, enable_lora=True)
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_add_lora_models(exporter):
     """Test adding LoRA models"""
@@ -78,7 +85,7 @@ def test_add_lora_models(exporter):
     assert exporter.lora_models[lora_name] == lora_model
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_get_triton_input(exporter):
     """Test triton input configuration"""
@@ -104,7 +111,7 @@ def test_get_triton_input(exporter):
             assert tensor.dtype == np.single
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_get_triton_output(exporter):
     """Test triton output configuration"""
@@ -115,7 +122,7 @@ def test_get_triton_output(exporter):
     assert outputs[0].dtype == bytes
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_forward_without_model(exporter):
     """Test forward method without initialized model"""
@@ -123,7 +130,7 @@ def test_forward_without_model(exporter):
         exporter.forward(["test prompt"])
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_forward_with_lora_not_added(exporter, mock_llm):
     """Test forward method with non-existent LoRA model"""
@@ -133,7 +140,7 @@ def test_forward_with_lora_not_added(exporter, mock_llm):
         exporter.forward(["test prompt"], lora_model_name="non_existent_lora")
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_forward_with_invalid_lora(exporter, mock_llm):
     """Test forward method with invalid LoRA model name"""
@@ -144,7 +151,8 @@ def test_forward_with_invalid_lora(exporter, mock_llm):
         exporter.forward(["test prompt"], lora_model_name="invalid_lora")
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.pleasefixme
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_triton_infer_fn(exporter, mock_llm):
     """Test triton inference function"""
@@ -166,7 +174,8 @@ def test_triton_infer_fn(exporter, mock_llm):
     assert result["outputs"].dtype == np.bytes_
 
 
-@pytest.mark.skip(reason="Need to enable virtual environment for vLLM")
+@pytest.mark.pleasefixme
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
 @pytest.mark.run_only_on("GPU")
 def test_triton_infer_fn_error_handling(exporter):
     """Test triton inference function error handling"""
