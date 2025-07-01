@@ -78,7 +78,7 @@ class TestOnnxLLMExporter:
     def test__override_layer_precision_to_fp32_without_trt(self):
         with (
             mock.patch.object(OnnxLLMExporter, "__init__", lambda self: None),
-            mock.patch("nemo_export.onnx_llm_exporter.HAVE_TENSORRT", True),
+            mock.patch("nemo_export.onnx_llm_exporter.HAVE_TENSORRT", False),
             pytest.raises(UnavailableError),
         ):
             OnnxLLMExporter()._override_layer_precision_to_fp32(layer="")
@@ -86,7 +86,7 @@ class TestOnnxLLMExporter:
     def test__override_layers_to_fp32_without_trt(self):
         with (
             mock.patch.object(OnnxLLMExporter, "__init__", lambda self: None),
-            mock.patch("nemo_export.onnx_llm_exporter.HAVE_TENSORRT", True),
+            mock.patch("nemo_export.onnx_llm_exporter.HAVE_TENSORRT", False),
             pytest.raises(UnavailableError),
         ):
             OnnxLLMExporter()._override_layers_to_fp32(network="", fp32_layer_patterns="")
@@ -94,7 +94,7 @@ class TestOnnxLLMExporter:
     def test__override_layernorm_precision_to_fp32_without_trt(self):
         with (
             mock.patch.object(OnnxLLMExporter, "__init__", lambda self: None),
-            mock.patch("nemo_export.onnx_llm_exporter.HAVE_TENSORRT", True),
+            mock.patch("nemo_export.onnx_llm_exporter.HAVE_TENSORRT", False),
             pytest.raises(UnavailableError),
         ):
             OnnxLLMExporter()._override_layernorm_precision_to_fp32(network="")
@@ -102,7 +102,7 @@ class TestOnnxLLMExporter:
     def test_quantize_without_nemo(self):
         with (
             mock.patch.object(OnnxLLMExporter, "__init__", lambda self: None),
-            mock.patch("nemo_export.onnx_llm_exporter.HAVE_NEMO", True),
+            mock.patch("nemo_export.onnx_llm_exporter.HAVE_NEMO", False),
             pytest.raises(UnavailableError),
         ):
             OnnxLLMExporter().quantize(quant_cfg="", forward_loop="")
