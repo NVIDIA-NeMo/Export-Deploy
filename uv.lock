@@ -3612,7 +3612,7 @@ requires-dist = [
     { name = "tensorrt-llm", marker = "extra == 'trtllm'", specifier = "~=0.20.0" },
     { name = "tensorstore" },
     { name = "timm", marker = "extra == 'vllm'" },
-    { name = "torch", specifier = "==2.7.0" },
+    { name = "torch" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
     { name = "torchvision" },
     { name = "transformer-engine", extras = ["pytorch"], marker = "extra == 'te'", specifier = "==2.2.0" },
@@ -3632,7 +3632,7 @@ build = [
     { name = "cython", specifier = ">=3.0.0" },
     { name = "pybind11" },
     { name = "setuptools" },
-    { name = "torch", specifier = "==2.7.0" },
+    { name = "torch" },
 ]
 docs = [
     { name = "myst-parser" },
