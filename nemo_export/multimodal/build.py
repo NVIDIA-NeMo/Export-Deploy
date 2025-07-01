@@ -623,13 +623,13 @@ def build_mllama_engine(
         )
 
         build_mllama_visual_engine(
-            os.path.join(model_dir, "visual_engine"),
+            os.path.join(model_dir, "vision"),
             hf_model_path,
             processor_name=processor_name,
             vision_max_batch_size=vision_max_batch_size,
         )
         build_mllama_trtllm_engine(
-            os.path.join(model_dir, "llm_engine"),
+            os.path.join(model_dir, "llm"),
             hf_model_path,
             tensor_parallelism_size,
             max_input_len,

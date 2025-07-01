@@ -364,9 +364,7 @@ class TensorRTMMExporter(ITritonDeployable):
                 from types import SimpleNamespace
 
                 args = SimpleNamespace(
-                    visual_engine_dir=visual_dir,
-                    visual_engine_name="visual_encoder.engine",
-                    llm_engine_dir=llm_dir,
+                    engine_dir=self.model_dir,
                     hf_model_dir="meta-llama/Llama-3.2-11B-Vision-Instruct",
                     use_py_session=True,
                     cross_kv_cache_fraction=0.5,
@@ -374,6 +372,7 @@ class TensorRTMMExporter(ITritonDeployable):
                     enable_chunked_context=False,
                     kv_cache_free_gpu_memory_fraction=0.9,
                     multi_block_mode=True,
+                    mm_embedding_offloading=None,
                 )
                 self.runner = TRTLLMRunner(args)
             else:
