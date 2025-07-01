@@ -107,7 +107,7 @@ class TestOnnxLLMExporter:
         ):
             OnnxLLMExporter().quantize(quant_cfg="", forward_loop="")
 
-    def test_quantize_without_modelopt(self, temp_dir, dummy_model, dummy_tokenizer):
+    def test_quantize_without_modelopt(self):
         with (
             mock.patch.object(OnnxLLMExporter, "__init__", lambda self: None),
             mock.patch("nemo_export.onnx_llm_exporter.HAVE_MODELOPT", False),
