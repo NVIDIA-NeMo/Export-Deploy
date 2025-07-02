@@ -16,11 +16,24 @@ import logging
 import shutil
 import subprocess
 import tempfile
+from pathlib import Path
 
 import pytest
 
+from nemo_export.tensorrt_llm import TensorRTLLM
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def tmp_dir():
+    tmp_dir = tempfile.mkdtemp()
+    yield tmp_dir
+    try:
+        shutil.rmtree(tmp_dir)
+    except FileNotFoundError as e:
+        logger.warning(f"Error removing temporary directory {tmp_dir}: {e}")
 
 
 class TestTRTLLMExport:
@@ -30,9 +43,6 @@ class TestTRTLLMExport:
         """
         Test safe tensor exporter. This tests the whole nemo export until engine building.
         """
-        from pathlib import Path
-
-        from nemo_export.tensorrt_llm import TensorRTLLM
 
         trt_llm_exporter = TensorRTLLM(model_dir="/tmp/safe_tensor_test_2/")
         trt_llm_exporter.export(
@@ -90,8 +100,7 @@ class TestTRTLLMExport:
 
         shutil.rmtree("/tmp/safe_tensor_test_2/")
 
-    def test_export_hf(self):
-        tmp_dir = tempfile.mkdtemp()
+    def test_export_hf(self, tmp_dir):
         subprocess.run(
             [
                 "coverage",
@@ -117,13 +126,7 @@ class TestTRTLLMExport:
             check=True,
         )
 
-        try:
-            shutil.rmtree(tmp_dir)
-        except FileNotFoundError as e:
-            logger.warning(f"Error removing temporary directory {tmp_dir}: {e}")
-
-    def test_export_nemo2(self):
-        tmp_dir = tempfile.mkdtemp()
+    def test_export_nemo2(self, tmp_dir):
         subprocess.run(
             [
                 "coverage",
@@ -146,4 +149,135 @@ class TestTRTLLMExport:
                 "True",
                 "--debug",
             ]
+        )
+
+    def test_export_qnemo(self, tmp_dir):
+        subprocess.run(
+            [
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
+                "tests/functional_tests/utils/create_hf_model.py",
+                "--model_name_or_path",
+                "/home/TestData/hf/Llama-2-7b-hf",
+                "--output_dir",
+                f"{tmp_dir}/llama_tiny_hf",
+                "--config_updates",
+                '{"num_hidden_layers": 2, "hidden_size": 512, "intermediate_size": 384, "num_attention_heads": 8, "num_key_value_heads": 8}',
+            ],
+            check=True,
+        )
+
+        subprocess.run(
+            [
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
+                "tests/functional_tests/utils/test_hf_import.py",
+                "--hf_model",
+                f"{tmp_dir}/llama_tiny_hf",
+                "--output_path",
+                f"{tmp_dir}/nemo2_ckpt",
+            ],
+            check=True,
+        )
+
+        subprocess.run(
+            [
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
+                "tests/functional_tests/utils/create_ptq_ckpt.py",
+                "--nemo_checkpoint",
+                f"{tmp_dir}/nemo2_ckpt",
+                "--algorithm",
+                "int8_sq",
+                "--calibration_dataset",
+                "tests/functional_tests/data/calibration_dataset.json",
+                "--calibration_batch_size",
+                "2",
+                "--calibration_dataset_size",
+                "6",
+                "--export_format",
+                "trtllm",
+                "--export_path",
+                f"{tmp_dir}/nemo2_ptq",
+                "--generate_sample",
+            ],
+            check=True,
+        )
+
+        subprocess.run(
+            [
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
+                "tests/functional_tests/utils/run_nemo_export.py",
+                "--model_name",
+                "test",
+                "--model_dir",
+                f"{tmp_dir}/trt_llm_model_dir/",
+                "--checkpoint_dir",
+                f"{tmp_dir}/nemo2_ptq",
+                "--min_tps",
+                "1",
+                "--test_deployment",
+                "True",
+                "--debug",
+            ],
+            check=True,
+        )
+
+    def test_export_onnx(self):
+        subprocess.run(
+            [
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
+                "tests/functional_tests/utils/test_export_onnx.py",
+                "--hf_model_path",
+                "/home/TestData/llm/models/llama-3.2-nv-embedqa-1b-v2",
+                "--quant_cfg",
+                "int8_sq",
+                "--calibration_dataset",
+                "tests/functional_tests/data/calibration_dataset.json",
+                "--calibration_batch_size",
+                "2",
+                "--calibration_dataset_size",
+                "6",
+            ],
+            check=True,
+        )
+
+    def test_export_onnx_int8(self):
+        subprocess.run(
+            [
+                "coverage",
+                "run",
+                "--data-file=/workspace/.coverage",
+                "--source=/workspace/",
+                "--parallel-mode",
+                "tests/functional_tests/utils/test_export_onnx.py",
+                "--hf_model_path",
+                "/home/TestData/llm/models/llama-3.2-nv-embedqa-1b-v2",
+                "--quant_cfg",
+                "int8_sq",
+                "--calibration_dataset",
+                "tests/functional_tests/data/calibration_dataset.json",
+                "--calibration_batch_size",
+                "2",
+                "--calibration_dataset_size",
+                "6",
+            ],
+            check=True,
         )
