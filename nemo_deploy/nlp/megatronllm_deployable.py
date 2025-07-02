@@ -253,7 +253,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         """
         try:
             tokenizer_chat_template = self.mcore_tokenizer.tokenizer.tokenizer.chat_template
-            
+
             # Try to get bos_token, handle different tokenizer types
             bos_token = None
             try:
@@ -298,7 +298,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             except AttributeError:
                 # If neither approach works, return text unchanged
                 return text
-        
+
         output = []
         for t in text:
             if eos_token in t:
