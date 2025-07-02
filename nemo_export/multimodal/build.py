@@ -24,7 +24,6 @@ from typing import List
 
 import torch
 import yaml
-from nemo.collections import llm
 from tensorrt_llm.tools.multimodal_builder import MultimodalEngineBuilder
 from transformers import AutoModel, AutoProcessor
 
@@ -33,8 +32,16 @@ from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 from nemo_export_deploy_common.import_utils import (
     MISSING_TENSORRT_LLM_MSG,
     MISSING_TENSORRT_MSG,
+    MISSING_NEMO_MSG,
     UnavailableError,
 )
+
+try:
+    from nemo.collections import llm
+
+    HAVE_NEMO = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_NEMO = False
 
 try:
     import tensorrt as trt
@@ -613,6 +620,9 @@ def build_mllama_engine(
     dtype: str = "bfloat16",
 ):
     """Build mllama engine."""
+    if not HAVE_NEMO:
+        raise UnavailableError(MISSING_NEMO_MSG)
+
     with tempfile.TemporaryDirectory() as tmp_dir:
         hf_model_path = os.path.join(tmp_dir, "hf_checkpoint")
 
