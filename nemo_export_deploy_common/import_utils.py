@@ -46,6 +46,7 @@ MISSING_VLLM_MSG = "vllm is not available. Please install it with `pip install v
 MISSING_DECORD_MSG = "decord is not available. Please install it with from https://github.com/dmlc/decord?tab=readme-ov-file#installation."
 MISSING_PIL_MSG = "Pillow is not available. Please install it with `pip install Pillow`."
 MISSING_MPI_MSG = "mpi4py is not available. Please install it with `pip install mpi4py`."
+MISSING_TRANSFORMERS_MSG = "transformers is not available. Please install it with `pip install transformers`."
 
 
 class UnavailableError(Exception):

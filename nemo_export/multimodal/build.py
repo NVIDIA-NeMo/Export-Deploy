@@ -24,15 +24,14 @@ from typing import List
 
 import torch
 import yaml
-from tensorrt_llm.tools.multimodal_builder import MultimodalEngineBuilder
-from transformers import AutoModel, AutoProcessor
 
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 from nemo_export_deploy_common.import_utils import (
+    MISSING_NEMO_MSG,
     MISSING_TENSORRT_LLM_MSG,
     MISSING_TENSORRT_MSG,
-    MISSING_NEMO_MSG,
+    MISSING_TRANSFORMERS_MSG,
     UnavailableError,
 )
 
@@ -42,6 +41,13 @@ try:
     HAVE_NEMO = True
 except (ImportError, ModuleNotFoundError):
     HAVE_NEMO = False
+
+try:
+    from transformers import AutoModel, AutoProcessor
+
+    HAVE_TRANSFORMERS = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_TRANSFORMERS = False
 
 try:
     import tensorrt as trt
@@ -57,6 +63,7 @@ try:
     from tensorrt_llm.mapping import Mapping
     from tensorrt_llm.models import MLLaMAForCausalLM
     from tensorrt_llm.plugin import PluginConfig
+    from tensorrt_llm.tools.multimodal_builder import MultimodalEngineBuilder
 
     HAVE_TRT_LLM = True
 except (ImportError, ModuleNotFoundError):
@@ -311,6 +318,9 @@ def build_neva_engine(
     visual_checkpoint_path: str,
     vision_max_batch_size: int = 1,
 ):
+    if not HAVE_TRANSFORMERS:
+        raise UnavailableError(MISSING_TRANSFORMERS_MSG)
+
     """Build neva visual engine."""
     device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
 
@@ -458,6 +468,9 @@ def build_video_neva_engine(
     vision_max_batch_size: int = 1,
 ):
     """Build video neva visual engine."""
+    if not HAVE_TRANSFORMERS:
+        raise UnavailableError(MISSING_TRANSFORMERS_MSG)
+
     device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
     # extract NeMo checkpoint
     with tarfile.open(visual_checkpoint_path) as tar:
@@ -537,6 +550,9 @@ def build_mllama_visual_engine(
     vision_max_batch_size: int = 1,
 ):
     """Build mllama visual engine."""
+    if not HAVE_TRANSFORMERS:
+        raise UnavailableError(MISSING_TRANSFORMERS_MSG)
+
     processor = AutoProcessor.from_pretrained(processor_name)
     processor_path = os.path.join(hf_model_path, "processor")
     processor.save_pretrained(processor_path)
