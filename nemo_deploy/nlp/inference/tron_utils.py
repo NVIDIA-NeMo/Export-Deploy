@@ -349,6 +349,7 @@ def get_model_from_config(
     overlap_param_gather_with_optimizer_step: bool = False,
     wrap_with_ddp: bool = True,
     data_parallel_random_init: bool = True,
+    tokenizer=None,
 ) -> List[MegatronModule]:
     """Get a model from the given configuration.
 
@@ -362,6 +363,7 @@ def get_model_from_config(
         wrap_with_ddp (bool, optional): Whether to wrap the model with DistributedDataParallel. Defaults to True.
         data_parallel_random_init (bool, optional): Whether to initialize data parallel ranks with random seeds.
             Defaults to True.
+        tokenizer (optional): The tokenizer to pass to configure_model. Defaults to None.
 
     Returns:
         List[MegatronModule]: List of model modules, potentially wrapped with DistributedDataParallel
@@ -381,7 +383,7 @@ def get_model_from_config(
             pre_process = parallel_state.is_pipeline_first_stage()
             post_process = parallel_state.is_pipeline_last_stage()
             this_model = model_config.configure_model(
-                tokenizer=None,
+                tokenizer=tokenizer,
                 pre_process=pre_process,
                 post_process=post_process,
             )
@@ -399,11 +401,11 @@ def get_model_from_config(
                 pre_process = rank == 0 or rank == first_decoder_rank
                 post_process = (rank == (first_decoder_rank - 1)) or (rank == (world_size - 1))
             model = model_config.configure_model(
-                tokenizer=None,
+                tokenizer=tokenizer,
             )
         else:
             model = model_config.configure_model(
-                tokenizer=None,
+                tokenizer=tokenizer,
                 pre_process=pre_process,
                 post_process=post_process,
             )

@@ -253,7 +253,14 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         """
         try:
             tokenizer_chat_template = self.mcore_tokenizer.tokenizer.tokenizer.chat_template
-            bos_token = self.mcore_tokenizer.tokenizer.tokenizer.bos_token
+            
+            # Try to get bos_token, handle different tokenizer types
+            bos_token = None
+            try:
+                bos_token = self.mcore_tokenizer.tokenizer.tokenizer.bos_token
+            except AttributeError:
+                # Some tokenizers might not have bos_token, use empty string as fallback
+                bos_token = ""
 
             # Check if chat_template is None or empty
             if tokenizer_chat_template is None:
@@ -280,7 +287,18 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
     def remove_eos_token(self, text):
         """Removes eos token if it exists in the output, otherwise does nothing."""
-        eos_token = self.mcore_tokenizer.tokenizer.tokenizer.eos_token
+        # Handle different tokenizer types
+        try:
+            eos_token = self.mcore_tokenizer.tokenizer.tokenizer.eos_token
+        except AttributeError:
+            # Fallback for TiktokenTokenizer and similar tokenizers
+            try:
+                eos_id = self.mcore_tokenizer.tokenizer.tokenizer.eos_id
+                eos_token = self.mcore_tokenizer.tokenizer.tokenizer.special_tokens[eos_id]
+            except AttributeError:
+                # If neither approach works, return text unchanged
+                return text
+        
         output = []
         for t in text:
             if eos_token in t:
