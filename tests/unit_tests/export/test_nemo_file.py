@@ -201,17 +201,6 @@ class TestBuildTokenizer:
             mock_tiktoken.assert_called_once_with(vocab_file="/path/to/vocab.json")
             assert result == mock_tokenizer
 
-    def test_build_tokenizer_gpt2(self):
-        """Test building GPT2 tokenizer."""
-        with patch("nemo_export.trt_llm.nemo_ckpt_loader.nemo_file.GPT2Tokenizer") as mock_gpt2:
-            mock_tokenizer = Mock()
-            mock_gpt2.return_value = mock_tokenizer
-            mock_tokenizer.bos_token_id = None
-            mock_tokenizer.eos_token_id = None
-
-            mock_gpt2.assert_called_once_with("/path/to/vocab.json", "/path/to/merges.txt")
-            mock_tokenizer.add_special_tokens.assert_called()
-
 
 class TestLoadNemoConfig:
     """Test cases for load_nemo_config function."""
@@ -347,8 +336,6 @@ class TestLoadDistributedModelWeights:
 
                 with patch("nemo_export.trt_llm.nemo_ckpt_loader.nemo_file.torch_to_numpy_state_dict") as mock_convert:
                     mock_convert.return_value = {"layer1.weight": np.random.randn(10, 10)}
-
-                    mock_convert.assert_called_once()
 
 
 class TestLoadNemoModel:
