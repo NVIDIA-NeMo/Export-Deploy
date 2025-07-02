@@ -34,6 +34,7 @@ except ImportError:
     HAVE_TRT_LLM = False
 
 
+@pytest.mark.skipif(not HAVE_TRT_LLM, reason="TensorRT-LLM is not installed")
 def test_trt_dtype_to_torch_without_trt():
     from nemo_export.multimodal.run import trt_dtype_to_torch
 
@@ -41,6 +42,7 @@ def test_trt_dtype_to_torch_without_trt():
         trt_dtype_to_torch(dtype=MagicMock())
 
 
+@pytest.mark.skipif(not HAVE_TRT_LLM, reason="TensorRT-LLM is not installed")
 @pytest.mark.run_only_on("GPU")
 class TestMultimodalModelRunner(unittest.TestCase):
     @pytest.mark.run_only_on("GPU")

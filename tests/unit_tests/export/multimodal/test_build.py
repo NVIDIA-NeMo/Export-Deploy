@@ -29,6 +29,7 @@ except ImportError:
     HAVE_TRTLLM = False
 
 
+@pytest.mark.skipif(not HAVE_TRTLLM, reason="TensorRT-LLM is not installed")
 @pytest.mark.run_only_on("GPU")
 class TestBuild(unittest.TestCase):
     @pytest.mark.run_only_on("GPU")
