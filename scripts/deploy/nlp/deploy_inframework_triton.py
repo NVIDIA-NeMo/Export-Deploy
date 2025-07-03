@@ -150,6 +150,7 @@ def get_args(argv):
     args = parser.parse_args(argv)
     return args
 
+
 def nemo_deploy(argv):
     args = get_args(argv)
 
@@ -179,7 +180,7 @@ def nemo_deploy(argv):
         max_batch_size=args.max_batch_size,
         enable_flash_decode=args.enable_flash_decode,
         enable_cuda_graphs=args.enable_cuda_graphs,
-        legacy_ckpt=args.legacy_ckpt
+        legacy_ckpt=args.legacy_ckpt,
     )
 
     if torch.distributed.is_initialized():
