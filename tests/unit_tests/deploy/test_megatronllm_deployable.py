@@ -483,62 +483,62 @@ def test_remove_eos_token(deployable):
     assert cleaned_texts == ["Hello", "World", "Test"]
 
 
-@pytest.mark.run_only_on("GPU") 
+@pytest.mark.run_only_on("GPU")
 def test_remove_eos_token_comprehensive(deployable):
     """Test remove_eos_token method covering all code paths and edge cases."""
-    
+
     # Test case 1: Normal case - eos_token accessible
     deployable.mcore_tokenizer.tokenizer.tokenizer.eos_token = "<eos>"
     texts = ["Hello<eos>", "World", "Test<eos>"]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["Hello", "World", "Test"]
-    
+
     # Test case 2: Multiple EOS tokens in same text (should remove only the last one)
     texts = ["Hello<eos>World<eos>"]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["Hello<eos>World"]
-    
+
     # Test case 3: Text that is just the EOS token
     texts = ["<eos>"]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == [""]
-    
+
     # Test case 4: Empty text list
     texts = []
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == []
-    
+
     # Test case 5: Empty strings in the list
     texts = ["", "Hello<eos>", ""]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["", "Hello", ""]
-    
+
     # Test case 6: Fallback case 1 - AttributeError on eos_token, but eos_id and special_tokens work
     del deployable.mcore_tokenizer.tokenizer.tokenizer.eos_token
     deployable.mcore_tokenizer.tokenizer.tokenizer.eos_id = 2
     deployable.mcore_tokenizer.tokenizer.tokenizer.special_tokens = {2: "</s>"}
-    
+
     texts = ["Hello</s>", "World", "Test</s>"]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["Hello", "World", "Test"]
-    
+
     # Test case 7: Fallback case 1 with multiple tokens
     texts = ["Hello</s>World</s>"]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["Hello</s>World"]
-    
+
     # Test case 8: Fallback case 2 - Both AttributeErrors, return unchanged
     del deployable.mcore_tokenizer.tokenizer.tokenizer.eos_id
-    
+
     texts = ["Hello<eos>", "World</s>", "Test"]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["Hello<eos>", "World</s>", "Test"]  # Should return unchanged
-    
+
     # Test case 9: Fallback case 2 - AttributeError on eos_id but not on eos_token access
     # First delete the special_tokens to trigger AttributeError in second try block
     deployable.mcore_tokenizer.tokenizer.tokenizer.eos_id = 2
     del deployable.mcore_tokenizer.tokenizer.tokenizer.special_tokens
-    
+
     texts = ["Hello<eos>", "World"]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["Hello<eos>", "World"]  # Should return unchanged
