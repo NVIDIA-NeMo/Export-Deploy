@@ -140,9 +140,15 @@ def get_args(argv):
         action="store_true",
         help="Load checkpoint saved with TE < 1.14",
     )
+    parser.add_argument(
+        "-imsl",
+        "--inference_max_seq_length",
+        default=4096,
+        type=int,
+        help="Max sequence length for inference",
+    )
     args = parser.parse_args(argv)
     return args
-
 
 def nemo_deploy(argv):
     args = get_args(argv)
@@ -168,10 +174,12 @@ def nemo_deploy(argv):
         nemo_checkpoint_filepath=args.nemo_checkpoint,
         tensor_model_parallel_size=args.tensor_parallelism_size,
         pipeline_model_parallel_size=args.pipeline_parallelism_size,
+        inference_max_seq_length=args.inference_max_seq_length,
         context_parallel_size=args.context_parallel_size,
         max_batch_size=args.max_batch_size,
         enable_flash_decode=args.enable_flash_decode,
         enable_cuda_graphs=args.enable_cuda_graphs,
+        legacy_ckpt=args.legacy_ckpt
     )
 
     if torch.distributed.is_initialized():
