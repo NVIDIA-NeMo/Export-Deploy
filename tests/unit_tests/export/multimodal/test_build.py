@@ -22,7 +22,7 @@ import pytest
 import torch
 
 try:
-    import trtllm  # noqa: F401
+    import tensorrt_llm  # noqa: F401
 
     HAVE_TRTLLM = True
 except ImportError:
