@@ -76,7 +76,7 @@ def get_args(argv):
         "--num_nodes",
         default=None,
         type=int,
-        help="Number of GPUs for the deployment",
+        help="Number of Nodes for the deployment",
     )
     parser.add_argument(
         "-tps",
@@ -97,7 +97,7 @@ def get_args(argv):
         "--context_parallel_size",
         default=1,
         type=int,
-        help="Pipeline parallelism size",
+        help="Context parallelism size",
     )
     parser.add_argument(
         "-emps",
