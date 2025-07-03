@@ -155,26 +155,6 @@ def rename_extra_states(state_dict: Dict[str, Any]) -> Dict[str, Any]:
     return state_dict | mcore_extra_states
 
 
-def torch_to_numpy_state_dict(state_dict: Dict[str, Any]) -> Dict[str, Any]:
-    """Transforms model state dictionary with torch tensors to numpy arrays.
-
-    Args:
-        state_dict (dict): Model state dictionary.
-
-    Returns:
-        dict: State dictionary using numpy arrays.
-    """
-    for k, v in state_dict.items():
-        if v.dtype == torch.bfloat16:
-            from tensorrt_llm._utils import np_bfloat16
-
-            state_dict[k] = v.view(torch.int16).numpy().view(np_bfloat16)
-        else:
-            state_dict[k] = v.numpy()
-
-    return state_dict
-
-
 def update_tokenizer_paths(tokenizer_config: Dict, unpacked_checkpoints_dir):
     """Updates tokenizer paths in the tokenizer config."""
 
@@ -410,7 +390,6 @@ def get_weights_dtype(nemo_ckpt: Union[str, Path]) -> Optional[str]:
 def load_distributed_model_weights(
     nemo_checkpoint: Union[str, Path],
     mcore_scales_format: bool,
-    torch_tensor: bool = True,
 ) -> Dict[str, Any]:
     """Loads model weights in `torch_dist` format from the model path.
 
@@ -419,14 +398,11 @@ def load_distributed_model_weights(
     Args:
         nemo_checkpoint (str | Path): Path to the nemo checkpoint.
         mcore_scales_format (bool): Flag for local vs megatron.core export.
-        torch_tensor (bool): If set to False, converts returns weights in numpy format.
 
     Returns:
         dict: Model state dictionary.
     """
     state_dict = load_model_weights(nemo_checkpoint, load_extra_states=True)
-    if not torch_tensor:
-        state_dict = torch_to_numpy_state_dict(state_dict)
 
     state_dict = rename_extra_states(state_dict)
     if not mcore_scales_format:
