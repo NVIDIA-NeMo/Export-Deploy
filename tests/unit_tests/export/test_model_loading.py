@@ -44,7 +44,6 @@ def test_model_loading() -> None:
     export_path = Path("/tmp/trtllm_exported_model")
     export_path.mkdir(parents=True, exist_ok=True)
     export_path_mcore = export_path / "mcore_export"
-    export_path_local = export_path / "local_export"
 
     with patch.dict(
         "sys.modules",
@@ -55,7 +54,6 @@ def test_model_loading() -> None:
     ):
         from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 
-        load_nemo_model(nemo_path, export_path_local, False)
-        load_nemo_model(nemo_path, export_path_mcore, True)
+        load_nemo_model(nemo_path, export_path_mcore)
 
     shutil.rmtree(OUTPUT_PATH, ignore_errors=True)

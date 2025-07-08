@@ -113,6 +113,7 @@ class TensorRTMMExporter(ITritonDeployable):
         llm_checkpoint_path: str = None,
         model_type: str = "neva",
         llm_model_type: str = "llama",
+        processor_name: str = None,
         tensor_parallel_size: int = 1,
         max_input_len: int = 4096,
         max_output_len: int = 256,
@@ -148,6 +149,7 @@ class TensorRTMMExporter(ITritonDeployable):
             build_mllama_engine(
                 model_dir=self.model_dir,
                 checkpoint_path=visual_checkpoint_path,
+                processor_name=processor_name or "meta-llama/Llama-3.2-11B-Vision-Instruct",
                 tensor_parallelism_size=tensor_parallel_size,
                 max_input_len=max_input_len,
                 max_output_len=max_output_len,
@@ -295,7 +297,7 @@ class TensorRTMMExporter(ITritonDeployable):
         "repetition_penalty",
         "num_beams",
     )
-    def triton_infer_fn(self, **inputs: np.ndarray):
+    def triton_infer_fn(self, **inputs: np.ndarray):  # pragma: no cover
         if not HAVE_TRT_LLM:
             raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
         try:
@@ -362,9 +364,7 @@ class TensorRTMMExporter(ITritonDeployable):
                 from types import SimpleNamespace
 
                 args = SimpleNamespace(
-                    visual_engine_dir=visual_dir,
-                    visual_engine_name="visual_encoder.engine",
-                    llm_engine_dir=llm_dir,
+                    engine_dir=self.model_dir,
                     hf_model_dir="meta-llama/Llama-3.2-11B-Vision-Instruct",
                     use_py_session=True,
                     cross_kv_cache_fraction=0.5,
@@ -372,6 +372,7 @@ class TensorRTMMExporter(ITritonDeployable):
                     enable_chunked_context=False,
                     kv_cache_free_gpu_memory_fraction=0.9,
                     multi_block_mode=True,
+                    mm_embedding_offloading=None,
                 )
                 self.runner = TRTLLMRunner(args)
             else:
