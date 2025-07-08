@@ -263,7 +263,7 @@ class TestLoadDistributedModelWeights:
             with patch("nemo_export.trt_llm.nemo_ckpt_loader.nemo_file.rename_extra_states") as mock_rename:
                 mock_rename.return_value = mock_state_dict
 
-                result = load_distributed_model_weights("/path/to/checkpoint", True)
+                result = load_distributed_model_weights("/path/to/checkpoint")
 
                 assert result == mock_state_dict
                 mock_load.assert_called_once_with("/path/to/checkpoint", load_extra_states=True)
