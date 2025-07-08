@@ -15,7 +15,6 @@
 import pickle
 from unittest.mock import Mock, patch
 
-import numpy as np
 import pytest
 import torch
 import yaml
@@ -29,9 +28,7 @@ from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
     load_extra_state_from_bytes,
     load_nemo_config,
     load_nemo_model,
-    preprocess_scaling_factors_for_local_export,
     rename_extra_states,
-    torch_to_numpy_state_dict,
     update_tokenizer_paths,
 )
 
@@ -58,43 +55,6 @@ class TestLoadExtraStateFromBytes:
 
         result = load_extra_state_from_bytes(tensor_data)
         assert result == test_data
-
-
-class TestPreprocessScalingFactorsForLocalExport:
-    """Test cases for preprocess_scaling_factors_for_local_export function."""
-
-    def test_preprocess_scaling_factors_empty_state_dict(self):
-        """Test preprocessing with empty state dict."""
-        state_dict = {}
-        result = preprocess_scaling_factors_for_local_export(state_dict)
-        assert result == {}
-
-    def test_preprocess_scaling_factors_no_extra_state(self):
-        """Test preprocessing with no extra state keys."""
-        state_dict = {"layer1.weight": torch.randn(10, 10)}
-        result = preprocess_scaling_factors_for_local_export(state_dict)
-        assert result == state_dict
-
-    def test_preprocess_scaling_factors_with_scales(self):
-        """Test preprocessing with scaling factors."""
-        # Create mock extra state with scale_fwd
-        extra_state = {"scale_fwd": torch.randn(10)}
-        serialized_extra_state = pickle.dumps(extra_state)
-        tensor_data = torch.tensor(list(serialized_extra_state), dtype=torch.uint8)
-
-        state_dict = {
-            "model.decoder.layers.0.attention._extra_state": tensor_data,
-            "model.decoder.layers.1.attention._extra_state": tensor_data,
-            "normal_layer.weight": torch.randn(10, 10),
-        }
-
-        result = preprocess_scaling_factors_for_local_export(state_dict)
-
-        # Check that normal layers are preserved
-        assert "normal_layer.weight" in result
-        # Check that scales are combined
-        # assert "model.decoder.layers.attention.scale_fwd" in result
-        # assert isinstance(result["model.decoder.layers.attention.scale_fwd"], torch.Tensor)
 
 
 class TestRenameExtraStates:
@@ -132,23 +92,6 @@ class TestRenameExtraStates:
         result = rename_extra_states(state_dict)
         assert "model.layers.0.attention._extra_state" in result
         assert isinstance(result["model.layers.0.attention._extra_state"], torch.Tensor)
-
-
-class TestTorchToNumpyStateDict:
-    """Test cases for torch_to_numpy_state_dict function."""
-
-    def test_torch_to_numpy_state_dict_normal_tensor(self):
-        """Test conversion of normal tensors."""
-        state_dict = {
-            "layer1.weight": torch.randn(10, 10, dtype=torch.float32),
-            "layer2.bias": torch.randn(10, dtype=torch.float32),
-        }
-
-        result = torch_to_numpy_state_dict(state_dict)
-
-        assert isinstance(result["layer1.weight"], np.ndarray)
-        assert isinstance(result["layer2.bias"], np.ndarray)
-        assert result["layer1.weight"].dtype == np.float32
 
 
 class TestUpdateTokenizerPaths:
@@ -319,23 +262,10 @@ class TestLoadDistributedModelWeights:
             with patch("nemo_export.trt_llm.nemo_ckpt_loader.nemo_file.rename_extra_states") as mock_rename:
                 mock_rename.return_value = mock_state_dict
 
-                result = load_distributed_model_weights("/path/to/checkpoint", True, True)
+                result = load_distributed_model_weights("/path/to/checkpoint")
 
                 assert result == mock_state_dict
                 mock_load.assert_called_once_with("/path/to/checkpoint", load_extra_states=True)
-
-    def test_load_distributed_model_weights_numpy(self):
-        """Test loading distributed model weights as numpy arrays."""
-        mock_state_dict = {"layer1.weight": torch.randn(10, 10), "layer2.bias": torch.randn(10)}
-
-        with patch("nemo_export.trt_llm.nemo_ckpt_loader.nemo_file.load_model_weights") as mock_load:
-            mock_load.return_value = mock_state_dict
-
-            with patch("nemo_export.trt_llm.nemo_ckpt_loader.nemo_file.rename_extra_states") as mock_rename:
-                mock_rename.return_value = mock_state_dict
-
-                with patch("nemo_export.trt_llm.nemo_ckpt_loader.nemo_file.torch_to_numpy_state_dict") as mock_convert:
-                    mock_convert.return_value = {"layer1.weight": np.random.randn(10, 10)}
 
 
 class TestLoadNemoModel:

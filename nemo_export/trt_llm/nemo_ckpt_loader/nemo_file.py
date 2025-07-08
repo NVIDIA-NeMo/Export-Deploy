@@ -72,54 +72,6 @@ def load_extra_state_from_bytes(
     return torch.load(val, weights_only=True)
 
 
-def preprocess_scaling_factors_for_local_export(
-    state_dict: Dict[str, Any],
-) -> Dict[str, Any]:
-    """Scaling factors are kept in BufferIO objects.
-
-    This function reads the exact scales, preparing them for export.
-    Used only for local (non-mcore) path.
-
-    Args:
-        state_dict (dict): Model state dictionary
-    Returns:
-        dict: The same dictionary, with explicitly loaded extra states from bytes.
-    """
-    scales_dict = {k: v for k, v in state_dict.items() if EXTRA_STATE in k and "core_attention" not in k}
-    state_dict = {k: v for k, v in state_dict.items() if EXTRA_STATE not in k}
-    scales = {}
-
-    for key, value in scales_dict.items():
-        extra_state = load_extra_state_from_bytes(value)
-
-        if extra_state is not None and "scale_fwd" in extra_state:
-            scales[key + ".scale_fwd"] = extra_state["scale_fwd"].cpu()
-
-    combined_scales = {}
-    for key in scales:
-        if ".decoder.layers.0" not in key:
-            continue
-
-        # Key has a structure "model.decoder.layers.<layer_number>.<rest>"
-        decomposed = key.split(".")
-        layer_num_idx = 3
-
-        # Merges scales from "model.decoder.layers.<layer_num>.<rest>" to
-        # larger dimensional tensor with "model.decoder.layers.<rest>" key
-        combined = []
-        layer_num = 0
-        decomposed[layer_num_idx] = str(layer_num)
-        while (scale := scales.get(".".join(decomposed))) is not None:
-            combined.append(scale)
-            layer_num += 1
-            decomposed[layer_num_idx] = str(layer_num)
-
-        del decomposed[layer_num_idx]
-        combined_scales[".".join(decomposed)] = torch.stack(combined)
-
-    return state_dict | combined_scales
-
-
 def rename_extra_states(state_dict: Dict[str, Any]) -> Dict[str, Any]:
     """This function preprocesses extra states for Megatron export.
 
@@ -153,26 +105,6 @@ def rename_extra_states(state_dict: Dict[str, Any]) -> Dict[str, Any]:
 
     state_dict = {k: v for k, v in state_dict.items() if EXTRA_STATE not in k}
     return state_dict | mcore_extra_states
-
-
-def torch_to_numpy_state_dict(state_dict: Dict[str, Any]) -> Dict[str, Any]:
-    """Transforms model state dictionary with torch tensors to numpy arrays.
-
-    Args:
-        state_dict (dict): Model state dictionary.
-
-    Returns:
-        dict: State dictionary using numpy arrays.
-    """
-    for k, v in state_dict.items():
-        if v.dtype == torch.bfloat16:
-            from tensorrt_llm._utils import np_bfloat16
-
-            state_dict[k] = v.view(torch.int16).numpy().view(np_bfloat16)
-        else:
-            state_dict[k] = v.numpy()
-
-    return state_dict
 
 
 def update_tokenizer_paths(tokenizer_config: Dict, unpacked_checkpoints_dir):
@@ -409,29 +341,26 @@ def get_weights_dtype(nemo_ckpt: Union[str, Path]) -> Optional[str]:
 
 def load_distributed_model_weights(
     nemo_checkpoint: Union[str, Path],
-    mcore_scales_format: bool,
-    torch_tensor: bool = True,
+    mcore_scales_format: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """Loads model weights in `torch_dist` format from the model path.
 
-    Preprocesses the scaling factors for local export if mcore_scales_format is set to False.
-
     Args:
         nemo_checkpoint (str | Path): Path to the nemo checkpoint.
-        mcore_scales_format (bool): Flag for local vs megatron.core export.
-        torch_tensor (bool): If set to False, converts returns weights in numpy format.
+        mcore_scales_format (bool): Depreacted flag for local vs megatron.core export.
 
     Returns:
         dict: Model state dictionary.
     """
+    if mcore_scales_format is not None:
+        LOGGER.warning(
+            "The mcore_scales_format parameter is deprecated and setting it does not take any effect. "
+            "It will be removed in the future."
+        )
+
     state_dict = load_model_weights(nemo_checkpoint, load_extra_states=True)
-    if not torch_tensor:
-        state_dict = torch_to_numpy_state_dict(state_dict)
 
     state_dict = rename_extra_states(state_dict)
-    if not mcore_scales_format:
-        state_dict.update({k: v[0] for k, v in state_dict.items() if EXTRA_STATE in k and isinstance(v, list)})
-        state_dict = preprocess_scaling_factors_for_local_export(state_dict)
 
     return state_dict
 
@@ -439,7 +368,6 @@ def load_distributed_model_weights(
 def load_nemo_model(
     nemo_ckpt: Union[str, Path],
     nemo_export_dir: Union[str, Path],
-    mcore_scales_format: bool = True,
 ):
     """Unified model loading for trt-llm export."""
     if not os.path.exists(nemo_ckpt):
@@ -450,7 +378,7 @@ def load_nemo_model(
     tokenizer = None
     try:
         if (nemo_dir / "weights").exists():
-            model = load_distributed_model_weights(nemo_ckpt, mcore_scales_format)
+            model = load_distributed_model_weights(nemo_ckpt)
             io_folder = nemo_dir / "context"
 
             if (io_folder / "model.yaml").exists():

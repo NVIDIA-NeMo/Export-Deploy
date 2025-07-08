@@ -35,7 +35,6 @@ from transformers import AutoConfig, PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
-from nemo_export.tarutils import unpack_tarball
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
     get_model_type,
     get_tokenizer,
@@ -311,11 +310,7 @@ class TensorRTLLM(ITritonDeployable):
             nemo_export_dir = Path(tmp_dir.name)
 
             if is_qnemo_checkpoint(nemo_checkpoint_path):
-                if os.path.isdir(nemo_checkpoint_path):
-                    nemo_export_dir = nemo_checkpoint_path
-                else:
-                    unpack_tarball(nemo_checkpoint_path, tmp_dir.name)
-                    nemo_checkpoint_path = tmp_dir.name
+                nemo_export_dir = nemo_checkpoint_path
 
                 self.tokenizer = get_tokenizer(nemo_checkpoint_path)
 
