@@ -30,7 +30,6 @@ from nemo_export.multimodal.build import (
     extract_lora_ckpt,
 )
 from nemo_export.multimodal.run import MultimodalModelRunner
-from nemo_export.tarutils import unpack_tarball
 from nemo_export_deploy_common.import_utils import MISSING_TENSORRT_LLM_MSG, UnavailableError
 
 try:
@@ -164,8 +163,7 @@ class TensorRTMMExporter(ITritonDeployable):
                 if os.path.isdir(lora_checkpoint_path):
                     lora_dir = lora_checkpoint_path
                 else:
-                    lora_dir = os.path.join(tmp_dir.name, "unpacked_lora")
-                    unpack_tarball(lora_checkpoint_path, lora_dir)
+                    raise ValueError("lora_checkpoint_path in nemo1 is not supported. It must be a directory")
 
                 llm_lora_path = [extract_lora_ckpt(lora_dir, tmp_dir.name)]
             else:
