@@ -29,7 +29,6 @@ from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
     load_extra_state_from_bytes,
     load_nemo_config,
     load_nemo_model,
-    preprocess_scaling_factors_for_local_export,
     rename_extra_states,
     update_tokenizer_paths,
 )
@@ -57,43 +56,6 @@ class TestLoadExtraStateFromBytes:
 
         result = load_extra_state_from_bytes(tensor_data)
         assert result == test_data
-
-
-class TestPreprocessScalingFactorsForLocalExport:
-    """Test cases for preprocess_scaling_factors_for_local_export function."""
-
-    def test_preprocess_scaling_factors_empty_state_dict(self):
-        """Test preprocessing with empty state dict."""
-        state_dict = {}
-        result = preprocess_scaling_factors_for_local_export(state_dict)
-        assert result == {}
-
-    def test_preprocess_scaling_factors_no_extra_state(self):
-        """Test preprocessing with no extra state keys."""
-        state_dict = {"layer1.weight": torch.randn(10, 10)}
-        result = preprocess_scaling_factors_for_local_export(state_dict)
-        assert result == state_dict
-
-    def test_preprocess_scaling_factors_with_scales(self):
-        """Test preprocessing with scaling factors."""
-        # Create mock extra state with scale_fwd
-        extra_state = {"scale_fwd": torch.randn(10)}
-        serialized_extra_state = pickle.dumps(extra_state)
-        tensor_data = torch.tensor(list(serialized_extra_state), dtype=torch.uint8)
-
-        state_dict = {
-            "model.decoder.layers.0.attention._extra_state": tensor_data,
-            "model.decoder.layers.1.attention._extra_state": tensor_data,
-            "normal_layer.weight": torch.randn(10, 10),
-        }
-
-        result = preprocess_scaling_factors_for_local_export(state_dict)
-
-        # Check that normal layers are preserved
-        assert "normal_layer.weight" in result
-        # Check that scales are combined
-        # assert "model.decoder.layers.attention.scale_fwd" in result
-        # assert isinstance(result["model.decoder.layers.attention.scale_fwd"], torch.Tensor)
 
 
 class TestRenameExtraStates:

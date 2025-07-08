@@ -72,54 +72,6 @@ def load_extra_state_from_bytes(
     return torch.load(val, weights_only=True)
 
 
-def preprocess_scaling_factors_for_local_export(
-    state_dict: Dict[str, Any],
-) -> Dict[str, Any]:
-    """Scaling factors are kept in BufferIO objects.
-
-    This function reads the exact scales, preparing them for export.
-    Used only for local (non-mcore) path.
-
-    Args:
-        state_dict (dict): Model state dictionary
-    Returns:
-        dict: The same dictionary, with explicitly loaded extra states from bytes.
-    """
-    scales_dict = {k: v for k, v in state_dict.items() if EXTRA_STATE in k and "core_attention" not in k}
-    state_dict = {k: v for k, v in state_dict.items() if EXTRA_STATE not in k}
-    scales = {}
-
-    for key, value in scales_dict.items():
-        extra_state = load_extra_state_from_bytes(value)
-
-        if extra_state is not None and "scale_fwd" in extra_state:
-            scales[key + ".scale_fwd"] = extra_state["scale_fwd"].cpu()
-
-    combined_scales = {}
-    for key in scales:
-        if ".decoder.layers.0" not in key:
-            continue
-
-        # Key has a structure "model.decoder.layers.<layer_number>.<rest>"
-        decomposed = key.split(".")
-        layer_num_idx = 3
-
-        # Merges scales from "model.decoder.layers.<layer_num>.<rest>" to
-        # larger dimensional tensor with "model.decoder.layers.<rest>" key
-        combined = []
-        layer_num = 0
-        decomposed[layer_num_idx] = str(layer_num)
-        while (scale := scales.get(".".join(decomposed))) is not None:
-            combined.append(scale)
-            layer_num += 1
-            decomposed[layer_num_idx] = str(layer_num)
-
-        del decomposed[layer_num_idx]
-        combined_scales[".".join(decomposed)] = torch.stack(combined)
-
-    return state_dict | combined_scales
-
-
 def rename_extra_states(state_dict: Dict[str, Any]) -> Dict[str, Any]:
     """This function preprocesses extra states for Megatron export.
 
