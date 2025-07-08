@@ -389,25 +389,26 @@ def get_weights_dtype(nemo_ckpt: Union[str, Path]) -> Optional[str]:
 
 def load_distributed_model_weights(
     nemo_checkpoint: Union[str, Path],
-    mcore_scales_format: bool,
+    mcore_scales_format: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """Loads model weights in `torch_dist` format from the model path.
 
-    Preprocesses the scaling factors for local export if mcore_scales_format is set to False.
-
     Args:
         nemo_checkpoint (str | Path): Path to the nemo checkpoint.
-        mcore_scales_format (bool): Flag for local vs megatron.core export.
+        mcore_scales_format (bool): Depreacted flag for local vs megatron.core export.
 
     Returns:
         dict: Model state dictionary.
     """
+    if mcore_scales_format is not None:
+        LOGGER.warning(
+            "The mcore_scales_format parameter is deprecated and setting it does not take any effect. "
+            "It will be removed in the future."
+        )
+
     state_dict = load_model_weights(nemo_checkpoint, load_extra_states=True)
 
     state_dict = rename_extra_states(state_dict)
-    if not mcore_scales_format:
-        state_dict.update({k: v[0] for k, v in state_dict.items() if EXTRA_STATE in k and isinstance(v, list)})
-        state_dict = preprocess_scaling_factors_for_local_export(state_dict)
 
     return state_dict
 
@@ -415,7 +416,6 @@ def load_distributed_model_weights(
 def load_nemo_model(
     nemo_ckpt: Union[str, Path],
     nemo_export_dir: Union[str, Path],
-    mcore_scales_format: bool = True,
 ):
     """Unified model loading for trt-llm export."""
     if not os.path.exists(nemo_ckpt):
@@ -426,7 +426,7 @@ def load_nemo_model(
     tokenizer = None
     try:
         if (nemo_dir / "weights").exists():
-            model = load_distributed_model_weights(nemo_ckpt, mcore_scales_format)
+            model = load_distributed_model_weights(nemo_ckpt)
             io_folder = nemo_dir / "context"
 
             if (io_folder / "model.yaml").exists():
