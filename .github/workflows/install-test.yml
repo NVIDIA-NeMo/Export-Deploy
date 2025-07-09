@@ -152,13 +152,14 @@ jobs:
 
   ngc-cuda-test-pip:
     runs-on: linux-amd64-cpu16
-    name: UV - Python${{ matrix.python-version }}${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }} - AMD64/Linux - NGC CUDA
+    name: UV - Python${{ matrix.python-version }}${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }} - AMD64/Linux - NGC ${{ contains(matrix.image, 'cuda') && 'CUDA' || 'PyTorch' }}
     container:
       image: nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
     environment: nemo-ci
     strategy:
       fail-fast: false
       matrix:
+        image: ["nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04", "nvcr.io/nvidia/pytorch:25.05-py3"]
         python-version: ["3.12"]
         extra-groups: ["", "te,trtllm", "te,vllm"]
     env:
