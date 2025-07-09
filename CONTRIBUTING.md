@@ -78,45 +78,7 @@ uv run ruff format .
 
 Note: If `ruff` is missing, please follow the [installation](#local-workstation) guide.
 
-## Making Changes
-
-### Workflow: Clone and Branch (No Fork Required)
-
-Pre-commit checks will help ensure your code follows our formatting and style guidelines.
-
-We follow a direct clone and branch workflow for now:
-
-1. Clone the repository directly:
-
-   ```bash
-   git clone https://github.com/NVIDIA-NeMo/Export-Deploy
-   cd Export-Deploy
-   ```
-
-2. Create a new branch for your changes:
-
-   ```bash
-   git checkout -b your-feature-name
-   ```
-
-3. Make your changes and commit them:
-
-   ```bash
-   git add .
-   git commit --signoff -m "Your descriptive commit message"
-   ```
-
-We require signing commits with `--signoff` (or `-s` for short). See [Signing Your Work](#signing-your-work) for details.
-
-4. Push your branch to the repository:
-
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-5. Create a pull request from your branch to the `main` branch.
-
-### Design Documentation Requirement
+### 📝 Documentation
 
 **Important**: All new key features (ex: enabling a new inference optimized library, enabling a new deployment option) must include documentation update (either a new doc or updating an existing one). This document update should:
 
@@ -132,7 +94,7 @@ This ensures that all significant changes are well-thought-out and properly docu
 
 Quality documentation is essential for both the usability of NeMo Export-Deploy and its ability to be customized by the community.
 
-## Code Quality
+## ✨ Code Quality
 
 - Follow the existing code style and conventions
 - Write tests for new features
@@ -140,7 +102,7 @@ Quality documentation is essential for both the usability of NeMo Export-Deploy 
 - Ensure all tests pass before submitting a PR
 - Do not add arbitrary defaults for configs, be as explicit as possible.
 
-## Signing Your Work
+## ✍️ Signing Your Work
 
 - We require that all contributors "sign-off" on their commits. This certifies that the contribution is your original work, or you have rights to submit it under the same license, or a compatible license.
 
