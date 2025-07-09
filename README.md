@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚀 NeMo Export-Deploy
+# NeMo Export-Deploy
 
 </div>
 
@@ -18,11 +18,11 @@
 
 </div>
 
-## Introduction
+## ✨ Introduction
 
 NVIDIA NeMo Export-Deploy library provides tools and APIs for exporting and deploying NeMo and Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server.
 
-## Key Features
+## 🚀 Key Features
 
 - Support for Large Language Models (LLMs) and Multimodal Models
 - Export NeMo and Hugging Face models to optimized inference formats including TensorRT-LLM and vLLM
