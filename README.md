@@ -31,7 +31,7 @@ NVIDIA NeMo Export-Deploy library provides tools and APIs for exporting and depl
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
-## Key Requirements
+## 🔑 Key Requirements
 
 - Python 3.10 or above (Recommended: Python 3.12)
 - PyTorch 2.5 or above (Recommended: PyTorch 2.6)

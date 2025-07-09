@@ -3131,6 +3131,20 @@ dependencies = [
     { name = "torch" },
 ]
 
+[package.optional-dependencies]
+dev = [
+    { name = "einops" },
+    { name = "megatron-energon" },
+    { name = "multi-storage-client" },
+    { name = "nvidia-modelopt", extra = ["torch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvtx" },
+    { name = "setuptools" },
+    { name = "tensorstore" },
+    { name = "tqdm" },
+    { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
+    { name = "transformers", version = "4.53.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trtllm'" },
+]
+
 [[package]]
 name = "megatron-energon"
 version = "5.2.0"
@@ -3535,7 +3549,7 @@ dependencies = [
     { name = "flashinfer-python" },
     { name = "hydra-core" },
     { name = "lightning" },
-    { name = "megatron-core" },
+    { name = "megatron-core", extra = ["dev"] },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "omegaconf" },
     { name = "peft" },
@@ -3544,9 +3558,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pyparsing" },
     { name = "ray", extra = ["serve"] },
-    { name = "sentencepiece" },
     { name = "tensorstore" },
-    { name = "tiktoken" },
     { name = "torch" },
     { name = "torchmetrics" },
     { name = "torchvision" },
@@ -3614,7 +3626,7 @@ requires-dist = [
     { name = "flashinfer-python", specifier = "==0.2.5" },
     { name = "hydra-core", specifier = ">1.3,<=1.3.2" },
     { name = "lightning" },
-    { name = "megatron-core", git = "https://github.com/NVIDIA/Megatron-LM.git?rev=7b296e0553ec19723d77a2310cb9808ab373eb2a" },
+    { name = "megatron-core", extras = ["dev"], git = "https://github.com/NVIDIA/Megatron-LM.git?rev=7b296e0553ec19723d77a2310cb9808ab373eb2a" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
     { name = "omegaconf", specifier = ">=2.3.0" },
     { name = "pandas", marker = "extra == 'vllm'" },
@@ -3624,10 +3636,8 @@ requires-dist = [
     { name = "pyparsing", specifier = ">2.0.2" },
     { name = "ray" },
     { name = "ray", extras = ["serve"] },
-    { name = "sentencepiece" },
     { name = "tensorrt-llm", marker = "extra == 'trtllm'", specifier = "~=0.20.0" },
     { name = "tensorstore" },
-    { name = "tiktoken" },
     { name = "timm", marker = "extra == 'vllm'" },
     { name = "torch" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
