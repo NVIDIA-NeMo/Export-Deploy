@@ -1434,7 +1434,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         # Mock ptuning_setup
         expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
-        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args):
             input_ids, ptuning_args = runner.setup_fake_prompts(
                 visual_features, pre_input_ids, post_input_ids, input_lengths
             )
@@ -1470,7 +1470,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         # Mock ptuning_setup
         expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
-        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args):
             input_ids, ptuning_args = runner.setup_fake_prompts(
                 visual_features, pre_input_ids, post_input_ids, input_lengths
             )
@@ -1483,13 +1483,6 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
             # Verify the tensor is properly formatted
             self.assertEqual(len(input_ids.shape), 2)  # Should be 2D tensor
-
-            # Verify
-
-            self.assertEqual(len(result), 3)  # Should return 3 elements
-        self.assertIsInstance(result[0], torch.Tensor)  # prompt_table
-        self.assertIsInstance(result[1], torch.Tensor)  # tasks
-        self.assertIsInstance(result[2], torch.Tensor)  # task_vocab_size
 
     @pytest.mark.run_only_on("GPU")
     def test_setup_fake_prompts_with_post_input_ids(self):
@@ -1662,7 +1655,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
 
         # Mock ptuning_setup
         expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
-        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args):
             input_ids, ptuning_args = runner.setup_fake_prompts(
                 visual_features, pre_input_ids, post_input_ids, input_lengths
             )
@@ -2039,7 +2032,7 @@ class TestMultimodalModelRunner(unittest.TestCase):
         with (
             patch.object(runner, "setup_inputs", return_value=mock_setup_inputs_return) as mock_setup_inputs,
             patch.object(runner, "generate", return_value=mock_generate_return) as mock_generate,
-            patch.object(runner, "print_result") as mock_print_result,
+            patch.object(runner, "print_result"),
         ):
             # Test run with batch size 2
             result = runner.run(
