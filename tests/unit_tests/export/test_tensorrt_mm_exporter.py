@@ -105,13 +105,12 @@ class TestTensorRTMMExporter:
     @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
     @patch("nemo_export.tensorrt_mm_exporter.build_visual_engine")
     @patch("nemo_export.tensorrt_mm_exporter.extract_lora_ckpt")
-    @patch("nemo_export.tensorrt_mm_exporter.unpack_tarball")
     @patch("os.path.isdir")
-    def test_export_with_lora(self, mock_isdir, mock_unpack, mock_extract, mock_visual, mock_trtllm, model_dir):
+    def test_export_with_lora(self, mock_isdir, mock_extract, mock_visual, mock_trtllm, model_dir):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
         # Mock the LoRA path handling
-        mock_isdir.return_value = False  # Treat as file, not directory
+        mock_isdir.return_value = True  # Treat as directory
         mock_extract.return_value = "dummy/lora/ckpt"
 
         exporter = TensorRTMMExporter(model_dir, load_model=False)
@@ -127,7 +126,6 @@ class TestTensorRTMMExporter:
         )
         mock_trtllm.assert_called_once()
         mock_visual.assert_called_once()
-        mock_unpack.assert_called_once()
         mock_extract.assert_called_once()
 
     @pytest.mark.run_only_on("GPU")
@@ -156,7 +154,29 @@ class TestTensorRTMMExporter:
         mock_trtllm.assert_called_once()
         mock_visual.assert_called_once()
         mock_extract.assert_called_once()
-        # Should not call unpack_tarball when path is a directory
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.build_visual_engine")
+    @patch("os.path.isdir")
+    def test_export_with_lora_not_directory(self, mock_isdir, mock_visual, mock_trtllm, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        # Mock the LoRA path handling - treat as file (not directory)
+        mock_isdir.return_value = False
+
+        exporter = TensorRTMMExporter(model_dir, load_model=False)
+        with pytest.raises(ValueError, match="lora_checkpoint_path in nemo1 is not supported. It must be a directory"):
+            exporter.export(
+                visual_checkpoint_path="dummy/path",
+                model_type="neva",
+                tensor_parallel_size=1,
+                load_model=False,
+                lora_checkpoint_path="dummy/lora/file.tar",
+                use_lora_plugin="lora_plugin",
+                lora_target_modules=["q_proj", "v_proj"],
+                max_lora_rank=32,
+            )
 
     @pytest.mark.run_only_on("GPU")
     @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
