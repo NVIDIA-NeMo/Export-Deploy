@@ -101,16 +101,6 @@ main() {
     # Install the package
     uv pip install --no-deps -e .
 
-    # Write environment variables to a file for later sourcing
-    cat >/opt/venv/env.sh <<'EOF'
-#!/bin/bash
-export UV_PROJECT_ENVIRONMENT=/opt/venv
-export PATH="/opt/venv/bin:$PATH"
-export UV_LINK_MODE=copy
-export PATH="/root/.local/bin:$PATH"
-EOF
-
-    chmod +x /opt/venv/env.sh
 }
 
 # Call the main function

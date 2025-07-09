@@ -72,7 +72,7 @@ jobs:
 
   ngc-cuda-test-uv:
     runs-on: linux-amd64-cpu16
-    name: UV - Python${{ matrix.python-version }} - AMD64/Linux - NGC ${{ contains(matrix.image, 'cuda') && 'CUDA' || 'PyTorch' }}
+    name: UV - AMD64/Linux - NGC ${{ contains(matrix.image, 'cuda') && 'CUDA' || 'PyTorch' }}
     container:
       image: ${{ matrix.image }}
     environment: nemo-ci
@@ -80,55 +80,22 @@ jobs:
       fail-fast: false
       matrix:
         image: ["nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04", "nvcr.io/nvidia/pytorch:25.05-py3"]
-        python-version: ["3.12"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install wget
-        run: |
-          apt-get update
-          apt-get install -y wget git libopenmpi-dev
-
-      - name: Upgrade pip
-        run: |
-          python -m pip install --upgrade pip
-
-      - name: Set up UV
-        uses: astral-sh/setup-uv@v1
-        with:
-          version: 0.7.2
-
-      - name: Set up yq
-        shell: bash
-        run: |
-          wget https://github.com/mikefarah/yq/releases/download/v4.45.4/yq_linux_amd64.tar.gz
-          tar -xzf yq_linux_amd64.tar.gz
-          mkdir -p ./bin
-          mv yq_linux_amd64 ./bin/yq 
-          chmod +x ./bin/yq
-
       - name: Install project
         env:
           PAT: ${{ secrets.PAT }}
+          BASE_IMAGE: ${{ contains(matrix.image, 'cuda') && 'CUDA' || 'PyTorch' }}
         shell: bash
         run: |
           echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
           chmod 600 ~/.netrc 
 
-          uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
-          source ./venv/bin/activate
-
-          export PATH="./bin/:$PATH"
-
-          uv sync --link-mode copy --locked --all-groups
-
-          bash ./docker/common/install_conflicting_deps.sh
+          bash docker/common/install.sh \
+            --base-image $BASE_IMAGE \
+            --inference-framework inframework
 
           uv pip install --no-deps -e .
 
