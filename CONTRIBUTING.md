@@ -12,7 +12,7 @@ You can configure uv with the following commands:
 
 ```bash
 uv sync --only-group build  # Installs build dependencies required by TransformerEngine
- # Sync remaining dependencies
+uv sync
 ```
 
 On a machine with CUDA, you can additionally sync TRT-LLM or vLLM:
