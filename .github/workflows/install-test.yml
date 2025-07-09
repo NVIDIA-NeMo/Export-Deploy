@@ -87,7 +87,7 @@ jobs:
       - name: Install project
         env:
           PAT: ${{ secrets.PAT }}
-          BASE_IMAGE: ${{ contains(matrix.image, 'cuda') && 'CUDA' || 'PyTorch' }}
+          BASE_IMAGE: ${{ contains(matrix.image, 'cuda') && 'cuda' || 'pytorch' }}
         shell: bash
         run: |
           echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
