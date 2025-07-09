@@ -12,7 +12,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![GitHub Stars](https://img.shields.io/github/stars/NVIDIA-NeMo/Export-Deploy.svg?style=social&label=Star)](https://github.com/NVIDIA-NeMo/Export-Deploy/stargazers/)
 
-<!-- **Day-0 integration with Hugging Face models automating fine-tuning and pretraining with pytorch-native parallelism, custom-kernels and optimized recipes** -->
+<!-- **Library with tooling and APIs for exporting and deploying NeMo and Hugging Face models with support of backends like  TensorRT, TensorRT-LLM and vLLM through NVIDIA Triton Inference Server.** -->
 
 [📖 Documentation](https://docs.nvidia.com/nemo/Export-Deploy/latest/index.html) • [🔥 Ready-to-Use Recipes](https://github.com/NVIDIA-NeMo/Export-Deploy/#-ready-to-use-recipes) • [💡 Examples](https://github.com/NVIDIA-NeMo/Export-Deploy/tree/main/recipes) • [🤝 Contributing](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md)
 
@@ -29,16 +29,7 @@ NVIDIA NeMo Export-Deploy library provides tools and APIs for exporting and depl
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
-## 🔑 Key Requirements
-
-- Python 3.10 or above (Recommended: Python 3.12)
-- PyTorch 2.5 or above (Recommended: PyTorch 2.6)
-- NVIDIA GPU
-- TensorRT-LLM and vLLM
-- Ray Serve
-- NVIDIA Triton Inference Server
-
-## Quick Start
+## 🔧 Installation
 
 For quick exploration of NeMo Export-Deploy, we recommend installing our pip package:
 
@@ -82,6 +73,19 @@ docker run \
     -v ${PWD}/checkpoints/:/opt/checkpoints/ \
     nemo-export-deploy
 ```
+
+### 🛠️ Source install
+
+#### 🔑 Key Requirements
+
+- Python 3.10 or above (Recommended: Python 3.12)
+- PyTorch 2.5 or above (Recommended: PyTorch 2.6)
+- NVIDIA GPU
+- TensorRT-LLM and vLLM
+- Ray Serve
+- NVIDIA Triton Inference Server
+
+## Quick Start
 
 ### Export-Deploy LLM Examples
 
