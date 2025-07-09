@@ -70,54 +70,6 @@ jobs:
           package-name: nemo_export
           python-binary: python
 
-  uv-test-cuda:
-    runs-on: linux-amd64-cpu16
-    name: UV - AMD64/Linux - NGC ${{ contains(matrix.image, 'cuda') && 'CUDA' || 'PyTorch' }}
-    container:
-      image: ${{ matrix.image }}
-    environment: nemo-ci
-    strategy:
-      fail-fast: false
-      matrix:
-        image: ["nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04", "nvcr.io/nvidia/pytorch:25.05-py3"]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install project
-        env:
-          PAT: ${{ secrets.PAT }}
-          BASE_IMAGE: ${{ contains(matrix.image, 'cuda') && 'cuda' || 'pytorch' }}
-        shell: bash
-        run: |
-          echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
-          chmod 600 ~/.netrc 
-
-          bash docker/common/install.sh \
-            --base-image $BASE_IMAGE \
-            --inference-framework inframework
-
-          uv pip install --no-deps -e .
-
-      - name: Checkout check-imports
-        uses: actions/checkout@v4
-        with:
-          repository: NVIDIA-NeMo/FW-CI-templates
-          ref: v0.39.0
-          path: FW-CI-templates
-
-      - name: Check imports for nemo_deploy
-        uses: ./FW-CI-templates/.github/actions/check-imports
-        with:
-          package-name: nemo_deploy
-          python-binary: ./venv/bin/python
-
-      - name: Check imports for nemo_export
-        uses: ./FW-CI-templates/.github/actions/check-imports
-        with:
-          package-name: nemo_export
-          python-binary: ./venv/bin/python
-
   pip-test-cuda:
     runs-on: linux-amd64-cpu16
     name: Pip - Python${{ matrix.python-version }}${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }} - AMD64/Linux - NGC CUDA
@@ -158,6 +110,54 @@ jobs:
           fi
 
           pip install ${PIP_ARGS[@]} .$EXTRA
+
+      - name: Checkout check-imports
+        uses: actions/checkout@v4
+        with:
+          repository: NVIDIA-NeMo/FW-CI-templates
+          ref: v0.39.0
+          path: FW-CI-templates
+
+      - name: Check imports for nemo_deploy
+        uses: ./FW-CI-templates/.github/actions/check-imports
+        with:
+          package-name: nemo_deploy
+          python-binary: ./venv/bin/python
+
+      - name: Check imports for nemo_export
+        uses: ./FW-CI-templates/.github/actions/check-imports
+        with:
+          package-name: nemo_export
+          python-binary: ./venv/bin/python
+
+  uv-test-cuda:
+    runs-on: linux-amd64-cpu16
+    name: UV - AMD64/Linux - NGC ${{ contains(matrix.image, 'cuda') && 'CUDA' || 'PyTorch' }}
+    container:
+      image: ${{ matrix.image }}
+    environment: nemo-ci
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04", "nvcr.io/nvidia/pytorch:25.05-py3"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install project
+        env:
+          PAT: ${{ secrets.PAT }}
+          BASE_IMAGE: ${{ contains(matrix.image, 'cuda') && 'cuda' || 'pytorch' }}
+        shell: bash
+        run: |
+          echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
+          chmod 600 ~/.netrc 
+
+          bash docker/common/install.sh \
+            --base-image $BASE_IMAGE \
+            --inference-framework inframework
+
+          uv pip install --no-deps -e .
 
       - name: Checkout check-imports
         uses: actions/checkout@v4
