@@ -76,6 +76,20 @@ For complete feature coverage, we recommend to install [TransformerEngine](https
 - CUDA 12.8
 - Ubuntu 24.04
 
+#### TransformerEngine + InFramework
+
+For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+
+```bash
+pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
+```
+
+Now proceed with the main installation:
+
+```bash
+pip install --no-build-isolation .[te]
+```
+
 #### TransformerEngine + TRT-LLM
 
 For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
