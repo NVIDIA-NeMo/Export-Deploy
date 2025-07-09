@@ -173,6 +173,7 @@ jobs:
             --inference-framework inframework
 
           uv python -m ensurepip --upgrade
+          ln -sf /opt/venv/bin/pip3 /opt/venv/bin/pip
           uv pip install --no-deps -e .
 
       - name: Checkout check-imports
