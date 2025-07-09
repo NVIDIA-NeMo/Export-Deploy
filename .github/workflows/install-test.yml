@@ -239,7 +239,7 @@ jobs:
           python-binary: ./venv/bin/python
 
   install-test-summary:
-    needs: [pip-test, uv-test, ngc-cuda-test-uv, ngc-cuda-test-pip]
+    needs: [pip-test-no-cuda, uv-test-cuda, pip-test-cuda, uv-test-no-cuda]
     runs-on: ubuntu-latest
     name: Install test summary
     steps:
