@@ -172,6 +172,7 @@ jobs:
             --base-image $BASE_IMAGE \
             --inference-framework inframework
 
+          uv python -m ensurepip --upgrade
           uv pip install --no-deps -e .
 
       - name: Checkout check-imports
