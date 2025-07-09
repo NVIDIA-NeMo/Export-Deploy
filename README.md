@@ -37,53 +37,73 @@ For quick exploration of NeMo Export-Deploy, we recommend installing our pip pac
 pip install nemo-export-deploy
 ```
 
+This installation comes without extra dependencies like TransformerEngine, TensorRT-LLM or vLLM. The installation serves for navigating around and exploring the project.
+
+For a feature-complete install, please refer to the following sections.
+
 ### 🐳 Using Docker
 
-For complete feature support including TransformerEngine, vLLM or In-Framework backend, we recommend building a container.
+An easy out-of-the-box experience with full feature support is provided by our Dockerfile. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
 
 ```bash
 docker build \
     -f docker/Dockerfile.ci \
     -t nemo-export-deploy \
-    --build-arg INFERENCE_FRAMEWORK=trtllm \
-    .
-```
-
-Or, alternatively to build a container with vLLM support, run:
-
-```bash
-docker build \
-    -f docker/Dockerfile.ci \
-    -t nemo-export-deploy \
-    --build-arg INFERENCE_FRAMEWORK=vllm \
+    --build-arg INFERENCE_FRAMEWORK=$INFERENCE_FRAMEWORK \
     .
 ```
 
 Start an interactive terminal inside the container:
 
 ```bash
-docker run \
-    --rm \
-    -it \
+docker run --rm -it \
     --entrypoint bash \
     --workdir /opt/Export-Deploy \
     --shm-size=4g \
     --gpus all \
     -v ${PWD}:/opt/Export-Deploy \
-    -v ${PWD}/checkpoints/:/opt/checkpoints/ \
     nemo-export-deploy
 ```
 
 ### 🛠️ Source install
 
-#### 🔑 Key Requirements
+For complete feature coverage, we recommend to install [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/?tab=readme-ov-file#pip-installation) and additionally either [TensorRT-LLM](https://nvidia.github.io/TensorRT-LLM/0.20.0/installation/linux.html) or [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#pre-built-wheels).
 
-- Python 3.10 or above (Recommended: Python 3.12)
-- PyTorch 2.5 or above (Recommended: PyTorch 2.6)
-- NVIDIA GPU
-- TensorRT-LLM and vLLM
-- Ray Serve
-- NVIDIA Triton Inference Server
+#### 🔑 Recommended requirements
+
+- Python 3.12
+- PyTorch 2.7
+- CUDA 12.8
+- Ubuntu 24.04
+
+#### TransformerEngine + TRT-LLM
+
+For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+
+```bash
+sudo apt-get -y install libopenmpi-dev  # Required for TRT-LLM
+pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
+```
+
+Now proceed with the main installation:
+
+```bash
+pip install --no-build-isolation .[te,trtllm]
+```
+
+#### TransformerEngine + vLLM
+
+For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+
+```bash
+pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
+```
+
+Now proceed with the main installation:
+
+```bash
+pip install --no-build-isolation .[te,vllm]
+```
 
 ## Quick Start
 
