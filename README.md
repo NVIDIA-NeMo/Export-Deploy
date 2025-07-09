@@ -14,7 +14,7 @@
 
 <!-- **Library with tooling and APIs for exporting and deploying NeMo and Hugging Face models with support of backends like  TensorRT, TensorRT-LLM and vLLM through NVIDIA Triton Inference Server.** -->
 
-[📖 Documentation](https://docs.nvidia.com/nemo/Export-Deploy/latest/index.html) • [🔥 Ready-to-Use Recipes](https://github.com/NVIDIA-NeMo/Export-Deploy/#-ready-to-use-recipes) • [💡 Examples](https://github.com/NVIDIA-NeMo/Export-Deploy/tree/main/recipes) • [🤝 Contributing](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md)
+[📖 Documentation](https://docs.nvidia.com/nemo/Export-Deploy/latest/index.html) • [🔧 Installation](https://github.com/NVIDIA-NeMo/Export-Deploy/#-installation) • [🚀 Quick start](https://github.com/NVIDIA-NeMo/Export-Deploy/#quick-start) • [🤝 Contributing](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md)
 
 </div>
 
@@ -119,7 +119,7 @@ Now proceed with the main installation:
 pip install --no-build-isolation .[te,vllm]
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Export-Deploy LLM Examples
 
@@ -344,67 +344,9 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
            output_path=Path("/opt/checkpoints/hf_llama32_1B_nemo2"),
        )
 
-## Installation
+## 🤝 Contributing
 
-For NeMo Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
-
-```bash
-pip install nemo-export-deploy
-pip install nemo-run # Needs to be installed additionally
-```
-
-### Installation with Megatron-Core and TransformerEngine support
-
-Prerequisites for pip installation:
-
-A compatible C++ compiler
-CUDA Toolkit with cuDNN and NVCC (NVIDIA CUDA Compiler) installed
-
-```bash
-git clone https://github.com/NVIDIA-NeMo/Export-Deploy
-cd Export-Deploy
-
-pip install torch setuptools pybind11 wheel_stub
-pip install -e --no-build-isolation '.[te]'
-```
-
-### Installation with TRT-LLM or vLLM support
-
-Additionally to Megatron-Core/TransformerEngine, users may also add TRT-LLM or vLLM support. Note that TRT-LLM and vLLM are mutually exclusive, attempting to install both together will likely result in an error.
-
-For TRT-LLM/TE, make sure to install `libopenmpi-dev` before.
-
-```bash
-sudo apt-get update
-sudo apt-get install -y libopenmpi-dev
-```
-
-Now, proceed with the actuall installation:
-
-```bash
-git clone https://github.com/NVIDIA-NeMo/Export-Deploy
-cd Export-Deploy
-pip install torch setuptools pybind11 wheel_stub
-pip install -e --no-build-isolation '.[te,trllm]'
-```
-
-For vLLM:
-
-```bash
-git clone https://github.com/NVIDIA-NeMo/Export-Deploy
-cd Export-Deploy
-pip install -e '.[vllm]'
-```
-
-## Documentation
-
-For detailed documentation, please refer to:
-
-- [NeMo-Export-Deploy User Guide](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)
-
-## Contributing
-
-We welcome contributions to NeMo RL! Please see our [Contributing Guidelines](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md) for more information on how to get involved.
+We welcome contributions to NeMo Export-Deploy! Please see our [Contributing Guidelines](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md) for more information on how to get involved.
 
 ## License
 
