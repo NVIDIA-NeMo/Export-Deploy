@@ -37,7 +37,7 @@ For quick exploration of NeMo Export-Deploy, we recommend installing our pip pac
 pip install nemo-export-deploy
 ```
 
-This installation comes without extra dependencies like TransformerEngine, TensorRT-LLM or vLLM. The installation serves for navigating around and exploring the project.
+This installation comes without extra dependencies like TransformerEngine, TensorRT-LLM or vLLM. The installation serves for navigating around and for exploring the project.
 
 For a feature-complete install, please refer to the following sections.
 
@@ -69,7 +69,7 @@ docker run --rm -it \
 
 For complete feature coverage, we recommend to install [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/?tab=readme-ov-file#pip-installation) and additionally either [TensorRT-LLM](https://nvidia.github.io/TensorRT-LLM/0.20.0/installation/linux.html) or [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#pre-built-wheels).
 
-#### 🔑 Recommended requirements
+#### Recommended requirements
 
 - Python 3.12
 - PyTorch 2.7
