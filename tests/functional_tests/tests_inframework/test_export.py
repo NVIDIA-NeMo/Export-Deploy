@@ -36,7 +36,7 @@ class TestInFrameworkExport:
                 "--data-file=/workspace/.coverage",
                 "--source=/workspace/",
                 "--parallel-mode",
-                "tests/functional_tests/utils/test_hf_import.py",
+                "scripts/export/export_hf_to_nemo2.py",
                 "--hf_model",
                 "meta-llama/Llama-3.2-1B",
                 "--output_path",

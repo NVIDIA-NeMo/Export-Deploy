@@ -66,7 +66,7 @@ class TestVLLMExportLlama:
                 "--data-file=/workspace/.coverage",
                 "--source=/workspace/",
                 "--parallel-mode",
-                "tests/functional_tests/utils/test_hf_import.py",
+                "scripts/export/export_hf_to_nemo2.py",
                 "--hf_model",
                 f"{cls.testdir}/llama_head64",
                 "--output_path",
