@@ -105,6 +105,255 @@ class TestMultimodalModelRunner(unittest.TestCase):
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
+    def _create_runner_with_mocks(self, model_type="vila"):
+        """Helper method to create a runner with mocked dependencies"""
+        from nemo_export.multimodal.run import MultimodalModelRunner
+
+        # Update config for specific model type
+        self.mock_visual_config["builder_config"]["model_type"] = model_type
+        with open(os.path.join(self.visual_engine_dir, "config.json"), "w") as f:
+            json.dump(self.mock_visual_config, f)
+
+        with (
+            patch("nemo_export.multimodal.run.torch.cuda.set_device"),
+            patch("nemo_export.multimodal.run.torch.cuda.device_count", return_value=1),
+            patch("nemo_export.multimodal.run.tensorrt_llm.mpi_rank", return_value=0),
+            patch("nemo_export.multimodal.run.Session.from_serialized_engine") as mock_session,
+            patch("nemo_export.multimodal.run.ModelRunner.from_dir") as mock_model_runner,
+            patch("transformers.AutoTokenizer.from_pretrained") as mock_tokenizer,
+            patch("transformers.SiglipImageProcessor.from_pretrained")
+            if model_type in ["vila", "vita"]
+            else patch("transformers.AutoProcessor.from_pretrained"),
+        ):
+            # Create mock visual encoder engine file
+            engine_path = os.path.join(self.visual_engine_dir, "visual_encoder.engine")
+            with open(engine_path, "wb") as f:
+                f.write(b"mock_engine_data")
+
+            # Setup mocks
+            mock_tokenizer_instance = MagicMock()
+            mock_tokenizer_instance.eos_token = "<eos>"
+            mock_tokenizer.return_value = mock_tokenizer_instance
+
+            mock_session_instance = MagicMock()
+            mock_session.return_value = mock_session_instance
+
+            mock_model_instance = MagicMock()
+            mock_model_config = MagicMock()
+            mock_model_config.vocab_size = 32000
+            mock_model_config.hidden_size = 4096
+            mock_model_config.dtype = "float16"
+            mock_model_config.remove_input_padding = False
+            mock_model_instance.session._model_config = mock_model_config
+            mock_model_instance.session.mapping = MagicMock()
+            mock_model_instance.session.mapping.tp_size = 1
+            mock_model_runner.return_value = mock_model_instance
+
+            return MultimodalModelRunner(
+                visual_engine_dir=self.visual_engine_dir,
+                llm_engine_dir=self.llm_engine_dir,
+                modality="vision",
+            )
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_vila_batch_size_1(self):
+        """Test setup_fake_prompts_vila with VILA model and batch size 1"""
+        runner = self._create_runner_with_mocks("vila")
+
+        # Mock visual features for single batch
+        visual_features = [
+            torch.randn(256, 4096),  # First visual feature
+            torch.randn(128, 4096),  # Second visual feature
+        ]
+
+        # Mock split input IDs
+        split_input_ids = [
+            torch.tensor([[1, 2, 3]]),  # Pre-prompt
+            torch.tensor([[4, 5]]),  # Inter-prompt
+            torch.tensor([[6, 7, 8]]),  # Post-prompt
+        ]
+
+        # Mock input lengths
+        input_lengths = torch.tensor([10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        with patch.object(runner, "ptuning_setup") as mock_ptuning:
+            mock_ptuning.return_value = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+
+            input_ids, ptuning_args = runner.setup_fake_prompts_vila(
+                batch_size=1,
+                visual_features=visual_features,
+                split_input_ids=split_input_ids,
+                input_lengths=input_lengths,
+            )
+
+            # Verify input_ids shape and type
+            self.assertEqual(input_ids.shape[0], 1)  # batch size
+            self.assertEqual(input_ids.dtype, torch.int32)
+
+            # Verify ptuning_setup was called
+            mock_ptuning.assert_called_once()
+
+            # Verify ptuning_args structure
+            self.assertEqual(len(ptuning_args), 3)
+            self.assertEqual(ptuning_args[0], "mock_prompt_table")
+            self.assertEqual(ptuning_args[1], "mock_tasks")
+            self.assertEqual(ptuning_args[2], "mock_task_vocab_size")
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_vila_batch_size_greater_than_1(self):
+        """Test setup_fake_prompts_vila with VILA model and batch size > 1"""
+        runner = self._create_runner_with_mocks("vila")
+
+        # Mock visual features for multiple batches
+        visual_features = [
+            torch.randn(256, 4096),  # First visual feature
+            torch.randn(128, 4096),  # Second visual feature
+        ]
+
+        # Mock split input IDs
+        split_input_ids = [
+            torch.tensor([[1, 2, 3]]),  # Pre-prompt
+            torch.tensor([[6, 7, 8]]),  # Post-prompt
+        ]
+
+        # Mock input lengths
+        input_lengths = torch.tensor([10, 10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        with patch.object(runner, "ptuning_setup") as mock_ptuning:
+            mock_ptuning.return_value = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+
+            input_ids, ptuning_args = runner.setup_fake_prompts_vila(
+                batch_size=2,
+                visual_features=visual_features,
+                split_input_ids=split_input_ids,
+                input_lengths=input_lengths,
+            )
+
+            # Verify input_ids shape and type
+            self.assertEqual(input_ids.shape[0], 2)  # batch size
+            self.assertEqual(input_ids.dtype, torch.int32)
+
+            # Verify ptuning_setup was called
+            mock_ptuning.assert_called_once()
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_vila_assertion_error(self):
+        """Test setup_fake_prompts_vila assertion error when visual features exceed split_input_ids"""
+        runner = self._create_runner_with_mocks("vila")
+
+        # Mock visual features with more features than split_input_ids
+        visual_features = [
+            torch.randn(256, 4096),  # First visual feature
+            torch.randn(128, 4096),  # Second visual feature
+            torch.randn(64, 4096),  # Third visual feature (exceeds split_input_ids)
+        ]
+
+        # Mock split input IDs (only 2 elements)
+        split_input_ids = [
+            torch.tensor([[1, 2, 3]]),  # Pre-prompt
+            torch.tensor([[6, 7, 8]]),  # Post-prompt
+        ]
+
+        # Mock input lengths
+        input_lengths = torch.tensor([10], dtype=torch.int32)
+
+        # Expect assertion error
+        with self.assertRaises(AssertionError) as context:
+            runner.setup_fake_prompts_vila(
+                batch_size=1,
+                visual_features=visual_features,
+                split_input_ids=split_input_ids,
+                input_lengths=input_lengths,
+            )
+
+        self.assertIn("Unexpected number of visual features", str(context.exception))
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_vila_fake_prompt_counter_increments(self):
+        """Test that fake_prompt_counter increments correctly"""
+        runner = self._create_runner_with_mocks("vila")
+
+        # Mock visual features with known sizes
+        visual_features = [
+            torch.randn(100, 4096),  # First visual feature (100 tokens)
+            torch.randn(50, 4096),  # Second visual feature (50 tokens)
+        ]
+
+        # Mock split input IDs
+        split_input_ids = [
+            torch.tensor([[1, 2, 3]]),  # Pre-prompt
+            torch.tensor([[4, 5]]),  # Inter-prompt
+            torch.tensor([[6, 7, 8]]),  # Post-prompt
+        ]
+
+        # Mock input lengths
+        input_lengths = torch.tensor([10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        with patch.object(runner, "ptuning_setup") as mock_ptuning:
+            mock_ptuning.return_value = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+
+            input_ids, ptuning_args = runner.setup_fake_prompts_vila(
+                batch_size=1,
+                visual_features=visual_features,
+                split_input_ids=split_input_ids,
+                input_lengths=input_lengths,
+            )
+
+            # Verify that fake prompt IDs start from vocab_size
+            # and increment by the size of each visual feature
+            vocab_size = runner.model_config.vocab_size
+
+            # Check that input_ids contains the expected fake prompt IDs
+            # First fake prompt should be [vocab_size, vocab_size+1, ..., vocab_size+99]
+            # Second fake prompt should be [vocab_size+100, vocab_size+101, ..., vocab_size+149]
+
+            # Since we can't easily extract the exact fake prompt IDs from the concatenated result,
+            # we'll verify that the input_ids contains values >= vocab_size
+            unique_ids = torch.unique(input_ids)
+            high_ids = unique_ids[unique_ids >= vocab_size]
+
+            # Should have 150 unique high IDs (100 + 50)
+            self.assertEqual(len(high_ids), 150)
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_vila_empty_split_input_ids(self):
+        """Test setup_fake_prompts_vila with minimal split_input_ids"""
+        runner = self._create_runner_with_mocks("vila")
+
+        # Mock visual features
+        visual_features = [
+            torch.randn(256, 4096),  # Single visual feature
+        ]
+
+        # Mock split input IDs with only pre-prompt
+        split_input_ids = [
+            torch.tensor([[1, 2, 3]]),  # Pre-prompt only
+        ]
+
+        # Mock input lengths
+        input_lengths = torch.tensor([10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        with patch.object(runner, "ptuning_setup") as mock_ptuning:
+            mock_ptuning.return_value = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+
+            input_ids, ptuning_args = runner.setup_fake_prompts_vila(
+                batch_size=1,
+                visual_features=visual_features,
+                split_input_ids=split_input_ids,
+                input_lengths=input_lengths,
+            )
+
+            # Should not raise an error and should produce valid output
+            self.assertEqual(input_ids.shape[0], 1)  # batch size
+            self.assertEqual(input_ids.dtype, torch.int32)
+
+            # Verify ptuning_setup was called
+            mock_ptuning.assert_called_once()
+
     @pytest.mark.run_only_on("GPU")
     @patch("nemo_export.multimodal.run.torch.cuda.set_device")
     @patch("nemo_export.multimodal.run.torch.cuda.device_count", return_value=1)
@@ -1013,6 +1262,839 @@ class TestMultimodalModelRunner(unittest.TestCase):
         with patch.object(MultimodalModelRunner, "__init__", lambda self: None):
             with patch("nemo_export.multimodal.run.HAVE_DECORD", False), pytest.raises(UnavailableError):
                 MultimodalModelRunner().process_lita_video(nemo_config="", video_path="", image_processor="")
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_with_post_input_ids(self):
+        """Test setup_fake_prompts with post_input_ids provided"""
+        runner = self._create_runner_with_mocks("neva")
+
+        # Test data
+        visual_features = torch.randn(1, 256, 4096)  # [batch_size, seq_len, hidden_size]
+        pre_input_ids = torch.tensor([[1, 2, 3]], dtype=torch.int64)
+        post_input_ids = torch.tensor([[4, 5, 6]], dtype=torch.int64)
+        input_lengths = torch.tensor([10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify input_ids structure: [pre_input_ids, fake_prompt_id, post_input_ids]
+            self.assertEqual(input_ids.dtype, torch.int32)
+            self.assertEqual(input_ids.shape[0], 1)  # batch_size
+            expected_length = pre_input_ids.shape[1] + visual_features.shape[1] + post_input_ids.shape[1]
+            self.assertEqual(input_ids.shape[1], expected_length)
+
+            # Verify fake_prompt_id generation (should be in the middle)
+            fake_prompt_start = runner.model_config.vocab_size
+            fake_prompt_end = fake_prompt_start + visual_features.shape[1]
+            middle_section = input_ids[0, pre_input_ids.shape[1] : pre_input_ids.shape[1] + visual_features.shape[1]]
+            expected_fake_ids = torch.arange(fake_prompt_start, fake_prompt_end, dtype=torch.int32)
+            torch.testing.assert_close(middle_section, expected_fake_ids)
+
+            # Verify pre and post prompts are correctly placed
+            torch.testing.assert_close(input_ids[0, : pre_input_ids.shape[1]], pre_input_ids[0].to(torch.int32))
+            torch.testing.assert_close(input_ids[0, -post_input_ids.shape[1] :], post_input_ids[0].to(torch.int32))
+
+            # Verify ptuning_setup was called with correct parameters
+            mock_ptuning.assert_called_once_with(visual_features, input_ids, input_lengths)
+
+            # Verify returned ptuning_args
+            self.assertEqual(ptuning_args, expected_ptuning_args)
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_without_post_input_ids(self):
+        """Test setup_fake_prompts with post_input_ids=None"""
+        runner = self._create_runner_with_mocks("neva")
+
+        # Test data
+        visual_features = torch.randn(1, 128, 4096)  # [batch_size, seq_len, hidden_size]
+        pre_input_ids = torch.tensor([[1, 2, 3, 4]], dtype=torch.int64)
+        post_input_ids = None
+        input_lengths = torch.tensor([8], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify input_ids structure: [fake_prompt_id, pre_input_ids]
+            self.assertEqual(input_ids.dtype, torch.int32)
+            self.assertEqual(input_ids.shape[0], 1)  # batch_size
+            expected_length = visual_features.shape[1] + pre_input_ids.shape[1]
+            self.assertEqual(input_ids.shape[1], expected_length)
+
+            # Verify fake_prompt_id generation (should be at the beginning)
+            fake_prompt_start = runner.model_config.vocab_size
+            fake_prompt_end = fake_prompt_start + visual_features.shape[1]
+            fake_section = input_ids[0, : visual_features.shape[1]]
+            expected_fake_ids = torch.arange(fake_prompt_start, fake_prompt_end, dtype=torch.int32)
+            torch.testing.assert_close(fake_section, expected_fake_ids)
+
+            # Verify pre_input_ids are correctly placed at the end
+            torch.testing.assert_close(input_ids[0, visual_features.shape[1] :], pre_input_ids[0].to(torch.int32))
+
+            # Verify ptuning_setup was called with correct parameters
+            mock_ptuning.assert_called_once_with(visual_features, input_ids, input_lengths)
+
+            # Verify returned ptuning_args
+            self.assertEqual(ptuning_args, expected_ptuning_args)
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_with_num_frames_reshaping(self):
+        """Test setup_fake_prompts with num_frames attribute that triggers reshaping"""
+        runner = self._create_runner_with_mocks("video-neva")
+
+        # Set num_frames attribute to trigger reshaping
+        runner.num_frames = 4
+
+        # Test data - visual_features.shape[1] == num_frames to trigger reshaping
+        visual_features = torch.randn(1, 4, 256, 4096)  # [batch_size, num_frames, seq_len, hidden_size]
+        pre_input_ids = torch.tensor([[1, 2]], dtype=torch.int64)
+        post_input_ids = torch.tensor([[3, 4]], dtype=torch.int64)
+        input_lengths = torch.tensor([8], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify that visual_features was reshaped
+            # The reshaped visual_features should have shape [1, 4*256, 4096] = [1, 1024, 4096]
+            expected_reshaped_seq_len = 4 * 256  # num_frames * original_seq_len
+
+            # Verify input_ids has correct length accounting for reshaped visual_features
+            expected_length = pre_input_ids.shape[1] + expected_reshaped_seq_len + post_input_ids.shape[1]
+            self.assertEqual(input_ids.shape[1], expected_length)
+
+            # Verify fake_prompt_id generation accounts for reshaping
+            fake_prompt_start = runner.model_config.vocab_size
+            fake_prompt_end = fake_prompt_start + expected_reshaped_seq_len
+            middle_section = input_ids[0, pre_input_ids.shape[1] : pre_input_ids.shape[1] + expected_reshaped_seq_len]
+            expected_fake_ids = torch.arange(fake_prompt_start, fake_prompt_end, dtype=torch.int32)
+            torch.testing.assert_close(middle_section, expected_fake_ids)
+
+            # Verify ptuning_setup was called with reshaped visual_features
+            mock_ptuning.assert_called_once()
+            call_args = mock_ptuning.call_args[0]
+            reshaped_visual_features = call_args[0]
+            self.assertEqual(reshaped_visual_features.shape, (1, expected_reshaped_seq_len, 4096))
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_without_num_frames(self):
+        """Test setup_fake_prompts without num_frames attribute (no reshaping)"""
+        runner = self._create_runner_with_mocks("neva")
+
+        # Ensure num_frames is not set (or doesn't match)
+        if hasattr(runner, "num_frames"):
+            delattr(runner, "num_frames")
+
+        # Test data
+        visual_features = torch.randn(1, 256, 4096)  # [batch_size, seq_len, hidden_size]
+        pre_input_ids = torch.tensor([[1, 2, 3]], dtype=torch.int64)
+        post_input_ids = torch.tensor([[4, 5]], dtype=torch.int64)
+        input_lengths = torch.tensor([10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify that visual_features was NOT reshaped (same sequence length)
+            expected_length = pre_input_ids.shape[1] + visual_features.shape[1] + post_input_ids.shape[1]
+            self.assertEqual(input_ids.shape[1], expected_length)
+
+            # Verify ptuning_setup was called with original visual_features
+            mock_ptuning.assert_called_once()
+            call_args = mock_ptuning.call_args[0]
+            passed_visual_features = call_args[0]
+            self.assertEqual(passed_visual_features.shape, visual_features.shape)
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_fake_prompt_id_generation(self):
+        """Test setup_fake_prompts fake_prompt_id generation logic"""
+        runner = self._create_runner_with_mocks("neva")
+
+        # Test data with specific shapes to verify calculations
+        batch_size = 2
+        seq_len = 64
+        hidden_size = 4096
+        visual_features = torch.randn(batch_size, seq_len, hidden_size)
+        pre_input_ids = torch.tensor([[1, 2], [3, 4]], dtype=torch.int64)
+        post_input_ids = torch.tensor([[5], [6]], dtype=torch.int64)
+        input_lengths = torch.tensor([10, 10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args):
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify fake_prompt_id generation
+            vocab_size = runner.model_config.vocab_size
+            expected_fake_start = vocab_size
+            expected_fake_end = vocab_size + (batch_size * seq_len)
+
+            # The fake_prompt_id should be reshaped to [batch_size, seq_len]
+            # For batch_size=2, seq_len=64, it should be:
+            # Row 0: [vocab_size, vocab_size+1, ..., vocab_size+63]
+            # Row 1: [vocab_size+64, vocab_size+65, ..., vocab_size+127]
+
+            # Extract the fake prompt section from input_ids
+            fake_section = input_ids[:, pre_input_ids.shape[1] : pre_input_ids.shape[1] + seq_len]
+
+            # Verify the fake IDs are correctly generated and placed
+            expected_fake_ids = torch.arange(expected_fake_start, expected_fake_end, dtype=torch.int32)
+            expected_fake_ids = expected_fake_ids.reshape(batch_size, seq_len)
+            torch.testing.assert_close(fake_section, expected_fake_ids)
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_input_ids_contiguous_and_type(self):
+        """Test setup_fake_prompts ensures input_ids are contiguous and correct type"""
+        runner = self._create_runner_with_mocks("neva")
+
+        # Test data
+        visual_features = torch.randn(1, 128, 4096)
+        pre_input_ids = torch.tensor([[1, 2, 3]], dtype=torch.int64)  # int64 input
+        post_input_ids = torch.tensor([[4, 5]], dtype=torch.int64)  # int64 input
+        input_lengths = torch.tensor([10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args):
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify input_ids type is torch.int32 (converted from int64)
+            self.assertEqual(input_ids.dtype, torch.int32)
+
+            # Verify input_ids is contiguous
+            self.assertTrue(input_ids.is_contiguous())
+
+            # Verify the tensor is properly formatted
+            self.assertEqual(len(input_ids.shape), 2)  # Should be 2D tensor
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_with_post_input_ids(self):
+        """Test setup_fake_prompts with post_input_ids provided"""
+        runner = self._create_runner_with_mocks("neva")
+
+        # Test data
+        visual_features = torch.randn(1, 256, 4096)  # [batch_size, seq_len, hidden_size]
+        pre_input_ids = torch.tensor([[1, 2, 3]], dtype=torch.int64)
+        post_input_ids = torch.tensor([[4, 5, 6]], dtype=torch.int64)
+        input_lengths = torch.tensor([10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify input_ids structure: [pre_input_ids, fake_prompt_id, post_input_ids]
+            self.assertEqual(input_ids.dtype, torch.int32)
+            self.assertEqual(input_ids.shape[0], 1)  # batch_size
+            expected_length = pre_input_ids.shape[1] + visual_features.shape[1] + post_input_ids.shape[1]
+            self.assertEqual(input_ids.shape[1], expected_length)
+
+            # Verify fake_prompt_id generation (should be in the middle)
+            fake_prompt_start = runner.model_config.vocab_size
+            fake_prompt_end = fake_prompt_start + visual_features.shape[1]
+            middle_section = input_ids[0, pre_input_ids.shape[1] : pre_input_ids.shape[1] + visual_features.shape[1]]
+            expected_fake_ids = torch.arange(fake_prompt_start, fake_prompt_end, dtype=torch.int32)
+            torch.testing.assert_close(middle_section, expected_fake_ids)
+
+            # Verify pre and post prompts are correctly placed
+            torch.testing.assert_close(input_ids[0, : pre_input_ids.shape[1]], pre_input_ids[0].to(torch.int32))
+            torch.testing.assert_close(input_ids[0, -post_input_ids.shape[1] :], post_input_ids[0].to(torch.int32))
+
+            # Verify ptuning_setup was called with correct parameters
+            mock_ptuning.assert_called_once_with(visual_features, input_ids, input_lengths)
+
+            # Verify returned ptuning_args
+            self.assertEqual(ptuning_args, expected_ptuning_args)
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_without_post_input_ids(self):
+        """Test setup_fake_prompts with post_input_ids=None"""
+        runner = self._create_runner_with_mocks("neva")
+
+        # Test data
+        visual_features = torch.randn(1, 128, 4096)  # [batch_size, seq_len, hidden_size]
+        pre_input_ids = torch.tensor([[1, 2, 3, 4]], dtype=torch.int64)
+        post_input_ids = None
+        input_lengths = torch.tensor([8], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify input_ids structure: [fake_prompt_id, pre_input_ids]
+            self.assertEqual(input_ids.dtype, torch.int32)
+            self.assertEqual(input_ids.shape[0], 1)  # batch_size
+            expected_length = visual_features.shape[1] + pre_input_ids.shape[1]
+            self.assertEqual(input_ids.shape[1], expected_length)
+
+            # Verify fake_prompt_id generation (should be at the beginning)
+            fake_prompt_start = runner.model_config.vocab_size
+            fake_prompt_end = fake_prompt_start + visual_features.shape[1]
+            fake_section = input_ids[0, : visual_features.shape[1]]
+            expected_fake_ids = torch.arange(fake_prompt_start, fake_prompt_end, dtype=torch.int32)
+            torch.testing.assert_close(fake_section, expected_fake_ids)
+
+            # Verify pre_input_ids are correctly placed at the end
+            torch.testing.assert_close(input_ids[0, visual_features.shape[1] :], pre_input_ids[0].to(torch.int32))
+
+            # Verify ptuning_setup was called with correct parameters
+            mock_ptuning.assert_called_once_with(visual_features, input_ids, input_lengths)
+
+            # Verify returned ptuning_args
+            self.assertEqual(ptuning_args, expected_ptuning_args)
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_with_num_frames_reshaping(self):
+        """Test setup_fake_prompts with num_frames attribute that triggers reshaping"""
+        runner = self._create_runner_with_mocks("video-neva")
+
+        # Set num_frames attribute to trigger reshaping
+        runner.num_frames = 4
+
+        # Test data - visual_features.shape[1] == num_frames to trigger reshaping
+        visual_features = torch.randn(1, 4, 256, 4096)  # [batch_size, num_frames, seq_len, hidden_size]
+        pre_input_ids = torch.tensor([[1, 2]], dtype=torch.int64)
+        post_input_ids = torch.tensor([[3, 4]], dtype=torch.int64)
+        input_lengths = torch.tensor([8], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify that visual_features was reshaped
+            # The reshaped visual_features should have shape [1, 4*256, 4096] = [1, 1024, 4096]
+            expected_reshaped_seq_len = 4 * 256  # num_frames * original_seq_len
+
+            # Verify input_ids has correct length accounting for reshaped visual_features
+            expected_length = pre_input_ids.shape[1] + expected_reshaped_seq_len + post_input_ids.shape[1]
+            self.assertEqual(input_ids.shape[1], expected_length)
+
+            # Verify fake_prompt_id generation accounts for reshaping
+            fake_prompt_start = runner.model_config.vocab_size
+            fake_prompt_end = fake_prompt_start + expected_reshaped_seq_len
+            middle_section = input_ids[0, pre_input_ids.shape[1] : pre_input_ids.shape[1] + expected_reshaped_seq_len]
+            expected_fake_ids = torch.arange(fake_prompt_start, fake_prompt_end, dtype=torch.int32)
+            torch.testing.assert_close(middle_section, expected_fake_ids)
+
+            # Verify ptuning_setup was called with reshaped visual_features
+            mock_ptuning.assert_called_once()
+            call_args = mock_ptuning.call_args[0]
+            reshaped_visual_features = call_args[0]
+            self.assertEqual(reshaped_visual_features.shape, (1, expected_reshaped_seq_len, 4096))
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_without_num_frames(self):
+        """Test setup_fake_prompts without num_frames attribute (no reshaping)"""
+        runner = self._create_runner_with_mocks("neva")
+
+        # Ensure num_frames is not set (or doesn't match)
+        if hasattr(runner, "num_frames"):
+            delattr(runner, "num_frames")
+
+        # Test data
+        visual_features = torch.randn(1, 256, 4096)  # [batch_size, seq_len, hidden_size]
+        pre_input_ids = torch.tensor([[1, 2, 3]], dtype=torch.int64)
+        post_input_ids = torch.tensor([[4, 5]], dtype=torch.int64)
+        input_lengths = torch.tensor([10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify that visual_features was NOT reshaped (same sequence length)
+            expected_length = pre_input_ids.shape[1] + visual_features.shape[1] + post_input_ids.shape[1]
+            self.assertEqual(input_ids.shape[1], expected_length)
+
+            # Verify ptuning_setup was called with original visual_features
+            mock_ptuning.assert_called_once()
+            call_args = mock_ptuning.call_args[0]
+            passed_visual_features = call_args[0]
+            self.assertEqual(passed_visual_features.shape, visual_features.shape)
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_fake_prompt_id_generation(self):
+        """Test setup_fake_prompts fake_prompt_id generation logic"""
+        runner = self._create_runner_with_mocks("neva")
+
+        # Test data with specific shapes to verify calculations
+        batch_size = 2
+        seq_len = 64
+        hidden_size = 4096
+        visual_features = torch.randn(batch_size, seq_len, hidden_size)
+        pre_input_ids = torch.tensor([[1, 2], [3, 4]], dtype=torch.int64)
+        post_input_ids = torch.tensor([[5], [6]], dtype=torch.int64)
+        input_lengths = torch.tensor([10, 10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args):
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify fake_prompt_id generation
+            vocab_size = runner.model_config.vocab_size
+            expected_fake_start = vocab_size
+            expected_fake_end = vocab_size + (batch_size * seq_len)
+
+            # The fake_prompt_id should be reshaped to [batch_size, seq_len]
+            # For batch_size=2, seq_len=64, it should be:
+            # Row 0: [vocab_size, vocab_size+1, ..., vocab_size+63]
+            # Row 1: [vocab_size+64, vocab_size+65, ..., vocab_size+127]
+
+            # Extract the fake prompt section from input_ids
+            fake_section = input_ids[:, pre_input_ids.shape[1] : pre_input_ids.shape[1] + seq_len]
+
+            # Verify the fake IDs are correctly generated and placed
+            expected_fake_ids = torch.arange(expected_fake_start, expected_fake_end, dtype=torch.int32)
+            expected_fake_ids = expected_fake_ids.reshape(batch_size, seq_len)
+            torch.testing.assert_close(fake_section, expected_fake_ids)
+
+    @pytest.mark.run_only_on("GPU")
+    def test_setup_fake_prompts_input_ids_contiguous_and_type(self):
+        """Test setup_fake_prompts ensures input_ids are contiguous and correct type"""
+        runner = self._create_runner_with_mocks("neva")
+
+        # Test data
+        visual_features = torch.randn(1, 128, 4096)
+        pre_input_ids = torch.tensor([[1, 2, 3]], dtype=torch.int64)  # int64 input
+        post_input_ids = torch.tensor([[4, 5]], dtype=torch.int64)  # int64 input
+        input_lengths = torch.tensor([10], dtype=torch.int32)
+
+        # Mock ptuning_setup
+        expected_ptuning_args = ["mock_prompt_table", "mock_tasks", "mock_task_vocab_size"]
+        with patch.object(runner, "ptuning_setup", return_value=expected_ptuning_args) as mock_ptuning:
+            input_ids, ptuning_args = runner.setup_fake_prompts(
+                visual_features, pre_input_ids, post_input_ids, input_lengths
+            )
+
+            # Verify input_ids type is torch.int32 (converted from int64)
+            self.assertEqual(input_ids.dtype, torch.int32)
+
+            # Verify input_ids is contiguous
+            self.assertTrue(input_ids.is_contiguous())
+
+            # Verify the tensor is properly formatted
+            self.assertEqual(len(input_ids.shape), 2)  # Should be 2D tensor
+
+            # Verify ptuning_setup was called with the correctly formatted input_ids
+            mock_ptuning.assert_called_once()
+            call_args = mock_ptuning.call_args[0]
+            passed_input_ids = call_args[1]
+            self.assertEqual(passed_input_ids.dtype, torch.int32)
+            self.assertTrue(passed_input_ids.is_contiguous())
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.multimodal.run.torch.cuda.set_device")
+    @patch("nemo_export.multimodal.run.torch.cuda.device_count", return_value=1)
+    @patch("nemo_export.multimodal.run.tensorrt_llm.mpi_rank", return_value=0)
+    @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
+    @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
+    @patch("transformers.AutoTokenizer.from_pretrained")
+    def test_run_function_basic(
+        self,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
+        """Test the run function with basic parameters"""
+        runner = self._create_runner_with_mocks("vila")
+
+        # Mock the methods that run() depends on
+        mock_setup_inputs_return = (
+            "test input",  # input_text
+            ["test pre prompt"],  # pre_prompt
+            ["test post prompt"],  # post_prompt
+            torch.randn(1, 3, 224, 224),  # processed_image
+            None,  # decoder_input_ids
+            None,  # attention_mask
+        )
+
+        mock_generate_return = [["Generated response text"]]
+
+        with (
+            patch.object(runner, "setup_inputs", return_value=mock_setup_inputs_return) as mock_setup_inputs,
+            patch.object(runner, "generate", return_value=mock_generate_return) as mock_generate,
+            patch.object(runner, "print_result") as mock_print_result,
+        ):
+            # Test basic run
+            result = runner.run(
+                input_text="Hello, what's in this image?",
+                input_image=Image.new("RGB", (224, 224), color="red"),
+                max_new_tokens=50,
+                batch_size=1,
+                top_k=1,
+                top_p=0.9,
+                temperature=0.7,
+                repetition_penalty=1.0,
+                num_beams=1,
+            )
+
+            # Verify setup_inputs was called correctly
+            mock_setup_inputs.assert_called_once()
+            setup_call_args = mock_setup_inputs.call_args[0]
+            self.assertEqual(setup_call_args[0], "Hello, what's in this image?")
+            self.assertEqual(setup_call_args[2], 1)  # batch_size is third argument
+
+            # Verify generate was called twice (warmup=True, then warmup=False)
+            self.assertEqual(mock_generate.call_count, 2)
+
+            # Check warmup call (first call)
+            warmup_call = mock_generate.call_args_list[0]
+            self.assertTrue(warmup_call[1]["warmup"])
+
+            # Check actual generation call (second call)
+            actual_call = mock_generate.call_args_list[1]
+            self.assertFalse(actual_call[1]["warmup"])
+            self.assertEqual(actual_call[1]["batch_size"], 1)
+            # self.assertEqual(actual_call[1]['max_new_tokens'], 50)
+            self.assertEqual(actual_call[1]["top_k"], 1)
+            self.assertEqual(actual_call[1]["top_p"], 0.9)
+            self.assertEqual(actual_call[1]["temperature"], 0.7)
+            self.assertEqual(actual_call[1]["repetition_penalty"], 1.0)
+            self.assertEqual(actual_call[1]["num_beams"], 1)
+
+            # Verify print_result was called
+            mock_print_result.assert_called_once()
+
+            # Verify return value
+            self.assertEqual(result, mock_generate_return)
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.multimodal.run.torch.cuda.set_device")
+    @patch("nemo_export.multimodal.run.torch.cuda.device_count", return_value=1)
+    @patch("nemo_export.multimodal.run.tensorrt_llm.mpi_rank", return_value=0)
+    @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
+    @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
+    @patch("transformers.AutoTokenizer.from_pretrained")
+    def test_run_function_with_profiling(
+        self,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
+        """Test the run function with profiling enabled"""
+        runner = self._create_runner_with_mocks("vila")
+        runner.profiling_iterations = 3  # Set to 3 for testing
+
+        # Mock the methods that run() depends on
+        mock_setup_inputs_return = (
+            "test input",
+            ["test pre prompt"],
+            ["test post prompt"],
+            torch.randn(1, 3, 224, 224),
+            None,
+            None,
+        )
+
+        mock_generate_return = [["Generated response text"]]
+
+        with (
+            patch.object(runner, "setup_inputs", return_value=mock_setup_inputs_return),
+            patch.object(runner, "generate", return_value=mock_generate_return) as mock_generate,
+            patch.object(runner, "print_result") as mock_print_result,
+        ):
+            # Test run with profiling
+            result = runner.run(
+                input_text="Hello, what's in this image?",
+                input_image=Image.new("RGB", (224, 224), color="red"),
+                max_new_tokens=50,
+                batch_size=1,
+                top_k=1,
+                top_p=0.9,
+                temperature=0.7,
+                repetition_penalty=1.0,
+                num_beams=1,
+                run_profiling=True,
+            )
+
+            # Verify generate was called 1 (warmup) + 3 (profiling iterations) = 4 times
+            self.assertEqual(mock_generate.call_count, 4)
+
+            # Check that first call is warmup
+            warmup_call = mock_generate.call_args_list[0]
+            self.assertTrue(warmup_call[1]["warmup"])
+
+            # Check that subsequent calls are not warmup
+            for i in range(1, 4):
+                actual_call = mock_generate.call_args_list[i]
+                self.assertFalse(actual_call[1]["warmup"])
+
+            # Verify print_result was called with profiling enabled
+            mock_print_result.assert_called_once()
+            print_result_args = mock_print_result.call_args[0]
+            print_result_kwargs = mock_print_result.call_args[1]
+
+            # Check that run_profiling was passed to print_result
+            self.assertTrue(
+                print_result_kwargs.get("run_profiling", False)
+                or len(print_result_args) > 4
+                and print_result_args[4] == True
+            )
+
+            # Verify return value
+            self.assertEqual(result, mock_generate_return)
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.multimodal.run.torch.cuda.set_device")
+    @patch("nemo_export.multimodal.run.torch.cuda.device_count", return_value=1)
+    @patch("nemo_export.multimodal.run.tensorrt_llm.mpi_rank", return_value=0)
+    @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
+    @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
+    @patch("transformers.AutoTokenizer.from_pretrained")
+    def test_run_function_with_lora_uids(
+        self,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
+        """Test the run function with LoRA UIDs"""
+        runner = self._create_runner_with_mocks("vila")
+
+        # Mock the methods that run() depends on
+        mock_setup_inputs_return = (
+            "test input",
+            ["test pre prompt"],
+            ["test post prompt"],
+            torch.randn(1, 3, 224, 224),
+            None,
+            None,
+        )
+
+        mock_generate_return = [["Generated response text"]]
+
+        with (
+            patch.object(runner, "setup_inputs", return_value=mock_setup_inputs_return),
+            patch.object(runner, "generate", return_value=mock_generate_return) as mock_generate,
+            patch.object(runner, "print_result"),
+        ):
+            # Test run with LoRA UIDs
+            lora_uids = ["lora_1", "lora_2"]
+            result = runner.run(
+                input_text="Hello, what's in this image?",
+                input_image=Image.new("RGB", (224, 224), color="red"),
+                max_new_tokens=50,
+                batch_size=1,
+                top_k=1,
+                top_p=0.9,
+                temperature=0.7,
+                repetition_penalty=1.0,
+                num_beams=1,
+                lora_uids=lora_uids,
+            )
+
+            # Verify generate was called with LoRA UIDs
+            self.assertEqual(mock_generate.call_count, 2)
+
+            # Check that both calls include lora_uids
+            for call in mock_generate.call_args_list:
+                self.assertEqual(call[1]["lora_uids"], lora_uids)
+
+            # Verify return value
+            self.assertEqual(result, mock_generate_return)
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.multimodal.run.torch.cuda.set_device")
+    @patch("nemo_export.multimodal.run.torch.cuda.device_count", return_value=1)
+    @patch("nemo_export.multimodal.run.tensorrt_llm.mpi_rank", return_value=0)
+    @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
+    @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
+    @patch("transformers.AutoTokenizer.from_pretrained")
+    def test_run_function_with_check_accuracy(
+        self,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
+        """Test the run function with accuracy checking enabled"""
+        runner = self._create_runner_with_mocks("vila")
+
+        # Mock the methods that run() depends on
+        mock_setup_inputs_return = (
+            "test input",
+            ["test pre prompt"],
+            ["test post prompt"],
+            torch.randn(1, 3, 224, 224),
+            None,
+            None,
+        )
+
+        mock_generate_return = [["Generated response text"]]
+
+        with (
+            patch.object(runner, "setup_inputs", return_value=mock_setup_inputs_return),
+            patch.object(runner, "generate", return_value=mock_generate_return) as mock_generate,
+            patch.object(runner, "print_result") as mock_print_result,
+        ):
+            # Test run with accuracy checking
+            result = runner.run(
+                input_text="Hello, what's in this image?",
+                input_image=Image.new("RGB", (224, 224), color="red"),
+                max_new_tokens=50,
+                batch_size=1,
+                top_k=1,
+                top_p=0.9,
+                temperature=0.7,
+                repetition_penalty=1.0,
+                num_beams=1,
+                check_accuracy=True,
+            )
+
+            # Verify generate was called
+            self.assertEqual(mock_generate.call_count, 2)
+
+            # Verify print_result was called with check_accuracy enabled
+            mock_print_result.assert_called_once()
+            print_result_args = mock_print_result.call_args[0]
+            print_result_kwargs = mock_print_result.call_args[1]
+
+            # Check that check_accuracy was passed to print_result
+            self.assertTrue(
+                print_result_kwargs.get("check_accuracy", False)
+                or len(print_result_args) > 5
+                and print_result_args[5] == True
+            )
+
+            # Verify return value
+            self.assertEqual(result, mock_generate_return)
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.multimodal.run.torch.cuda.set_device")
+    @patch("nemo_export.multimodal.run.torch.cuda.device_count", return_value=1)
+    @patch("nemo_export.multimodal.run.tensorrt_llm.mpi_rank", return_value=0)
+    @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
+    @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
+    @patch("transformers.AutoTokenizer.from_pretrained")
+    def test_run_function_batch_size_multiple(
+        self,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
+        """Test the run function with batch size greater than 1"""
+        runner = self._create_runner_with_mocks("vila")
+
+        # Mock the methods that run() depends on
+        mock_setup_inputs_return = (
+            "test input",
+            ["test pre prompt"] * 2,  # batch_size = 2
+            ["test post prompt"] * 2,
+            torch.randn(2, 3, 224, 224),
+            None,
+            None,
+        )
+
+        mock_generate_return = [["Generated response text 1"], ["Generated response text 2"]]
+
+        with (
+            patch.object(runner, "setup_inputs", return_value=mock_setup_inputs_return) as mock_setup_inputs,
+            patch.object(runner, "generate", return_value=mock_generate_return) as mock_generate,
+            patch.object(runner, "print_result"),
+        ):
+            # Test run with batch size 2
+            result = runner.run(
+                input_text="Hello, what's in this image?",
+                input_image=Image.new("RGB", (224, 224), color="red"),
+                max_new_tokens=50,
+                batch_size=2,
+                top_k=1,
+                top_p=0.9,
+                temperature=0.7,
+                repetition_penalty=1.0,
+                num_beams=1,
+            )
+
+            # Verify setup_inputs was called with batch_size=2
+            mock_setup_inputs.assert_called_once()
+            setup_call_args = mock_setup_inputs.call_args[0]
+            self.assertEqual(setup_call_args[2], 2)  # batch_size is third argument
+
+            # Verify generate was called with batch_size=2
+            for call in mock_generate.call_args_list:
+                self.assertEqual(call[1]["batch_size"], 2)
+
+            # Verify return value
+            self.assertEqual(result, mock_generate_return)
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.multimodal.run.torch.cuda.set_device")
+    @patch("nemo_export.multimodal.run.torch.cuda.device_count", return_value=1)
+    @patch("nemo_export.multimodal.run.tensorrt_llm.mpi_rank", return_value=0)
+    @patch("nemo_export.multimodal.run.ModelRunner.from_dir")
+    @patch("nemo_export.multimodal.run.Session.from_serialized_engine")
+    @patch("transformers.AutoTokenizer.from_pretrained")
+    def test_run_function_exception_handling(
+        self,
+        mock_tokenizer,
+        mock_session,
+        mock_model_runner,
+        mock_mpi_rank,
+        mock_device_count,
+        mock_set_device,
+    ):
+        """Test the run function handles exceptions properly"""
+        runner = self._create_runner_with_mocks("vila")
+
+        # Mock setup_inputs to raise an exception
+        with patch.object(runner, "setup_inputs", side_effect=RuntimeError("Setup failed")):
+            # Test that exception is propagated
+            with self.assertRaises(RuntimeError) as context:
+                runner.run(
+                    input_text="Hello, what's in this image?",
+                    input_image=Image.new("RGB", (224, 224), color="red"),
+                    max_new_tokens=50,
+                    batch_size=1,
+                    top_k=1,
+                    top_p=0.9,
+                    temperature=0.7,
+                    repetition_penalty=1.0,
+                    num_beams=1,
+                )
+
+            self.assertEqual(str(context.exception), "Setup failed")
 
 
 if __name__ == "__main__":
