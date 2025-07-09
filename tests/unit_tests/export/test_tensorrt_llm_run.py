@@ -53,7 +53,6 @@ def test_to_word_list_format_basic():
 
     # Check that the function processed the CSV format correctly
     flat_ids = result[0, 0]
-    offsets = result[0, 1]
 
     # Should have tokens for "hello" and "world"
     assert 200 in flat_ids  # token for "hello"
