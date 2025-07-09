@@ -19,7 +19,7 @@ ARG INFERENCE_FRAMEWORK
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 ENV UV_LINK_MODE=copy
-ENV PATH="/root/.local/bin:$PATH"
+ENV PATH="$HOME/.local/bin:$PATH"
 RUN --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
     export PAT=$(cat /run/secrets/GH_TOKEN)
     bash docker/common/install.sh --base-image cuda --inference-framework $INFERENCE_FRAMEWORK
