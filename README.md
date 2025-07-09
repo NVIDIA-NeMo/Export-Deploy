@@ -53,18 +53,6 @@ docker build \
     .
 ```
 
-Start an interactive terminal inside the container:
-
-```bash
-docker run --rm -it \
-    --entrypoint bash \
-    --workdir /opt/Export-Deploy \
-    --shm-size=4g \
-    --gpus all \
-    -v ${PWD}:/opt/Export-Deploy \
-    nemo-export-deploy
-```
-
 ### 🛠️ Source install
 
 For complete feature coverage, we recommend to install [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/?tab=readme-ov-file#pip-installation) and additionally either [TensorRT-LLM](https://nvidia.github.io/TensorRT-LLM/0.20.0/installation/linux.html) or [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#pre-built-wheels).
@@ -121,6 +109,8 @@ pip install --no-build-isolation .[te,vllm]
 
 ## 🚀 Quick Start
 
+The following steps are based on a self-built [container](#-using-docker).
+
 ### Generate a NeMo Checkpoint
 
 In order to run examples with NeMo models, a NeMo checkpoint is required. Please follow the steps below to generate a NeMo checkpoint.
@@ -130,9 +120,13 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
 2. Pull down and run the NeMo Framework Docker container image using the command shown below:
 
    ```shell
-   docker pull nvcr.io/nvidia/nemo:25.04
-
-   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}/:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:25.04
+   docker run --gpus all -it --rm -p 8000:8000 \
+    --entrypoint bash \
+    --workdir /opt/Export-Deploy \
+    --shm-size=4g \
+    --gpus all \
+    -v ${PWD}:/opt/Export-Deploy \
+    nemo-export-deploy
    ```
 
 3. Run the following command in the terminal and enter your Hugging Face access token to log in to Hugging Face:
