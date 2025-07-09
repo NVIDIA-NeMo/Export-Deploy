@@ -53,7 +53,7 @@ main() {
     # Install uv
     UV_VERSION="0.7.2"
     curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh
-    export PATH="/root/.local/bin:$PATH"
+    export PATH="$HOME/.local/bin:$PATH"
     export UV_PROJECT_ENVIRONMENT=/opt/venv
     export PATH="$UV_PROJECT_ENVIRONMENT/bin:$PATH"
     export UV_LINK_MODE=copy
