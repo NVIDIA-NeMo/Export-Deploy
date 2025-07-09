@@ -50,6 +50,7 @@ dependencies = [
     "transformers>=4.49.0",
     "wandb",
     "webdataset>=0.2.86",
+    "sentencepiece",
     "nvidia-pytriton ; platform_system != 'Darwin' ",
     "flashinfer-python==0.2.5",
     "Pillow ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
