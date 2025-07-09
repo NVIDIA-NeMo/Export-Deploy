@@ -121,6 +121,40 @@ pip install --no-build-isolation .[te,vllm]
 
 ## 🚀 Quick Start
 
+### Generate a NeMo Checkpoint
+
+In order to run examples with NeMo models, a NeMo checkpoint is required. Please follow the steps below to generate a NeMo checkpoint.
+
+1. To access the Llama models, please visit the [Llama 3.2 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.2-1B).
+
+2. Pull down and run the NeMo Framework Docker container image using the command shown below:
+
+   ```shell
+   docker pull nvcr.io/nvidia/nemo:25.04
+
+   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}/:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:25.04
+   ```
+
+3. Run the following command in the terminal and enter your Hugging Face access token to log in to Hugging Face:
+
+   ```shell
+   huggingface-cli login
+   ```
+
+4. Run the following Python code to generate the NeMo 2.0 checkpoint:
+
+   ```python
+   from nemo.collections.llm import import_ckpt
+   from nemo.collections.llm.gpt.model.llama import Llama32Config1B, LlamaModel
+   from pathlib import Path
+
+   if __name__ == "__main__":
+       import_ckpt(
+           model=LlamaModel(Llama32Config1B()),
+           source="hf://meta-llama/Llama-3.2-1B",
+           output_path=Path("/opt/checkpoints/hf_llama32_1B_nemo2"),
+       )
+
 ### Export-Deploy LLM Examples
 
 The following examples demonstrate how to Export-Deploy Large Language Models (LLMs) using NeMo Export-Deploy. These examples cover both Hugging Face and NeMo model formats, showing how to export them to TensorRT-LLM and deploy using NVIDIA Triton Inference Server for high-performance inference.
@@ -309,40 +343,6 @@ output = nq.query(
 )
 print(output)
 ```
-
-## Generate a NeMo Checkpoint
-
-In order to run examples with NeMo models, a NeMo checkpoint is required. Please follow the steps below to generate a NeMo checkpoint.
-
-1. To access the Llama models, please visit the [Llama 3.2 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.2-1B).
-
-2. Pull down and run the NeMo Framework Docker container image using the command shown below:
-
-   ```shell
-   docker pull nvcr.io/nvidia/nemo:25.04
-
-   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}/:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:25.04
-   ```
-
-3. Run the following command in the terminal and enter your Hugging Face access token to log in to Hugging Face:
-
-   ```shell
-   huggingface-cli login
-   ```
-
-4. Run the following Python code to generate the NeMo 2.0 checkpoint:
-
-   ```python
-   from nemo.collections.llm import import_ckpt
-   from nemo.collections.llm.gpt.model.llama import Llama32Config1B, LlamaModel
-   from pathlib import Path
-
-   if __name__ == "__main__":
-       import_ckpt(
-           model=LlamaModel(Llama32Config1B()),
-           source="hf://meta-llama/Llama-3.2-1B",
-           output_path=Path("/opt/checkpoints/hf_llama32_1B_nemo2"),
-       )
 
 ## 🤝 Contributing
 
