@@ -137,17 +137,12 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
 
 4. Run the following Python code to generate the NeMo 2.0 checkpoint:
 
-   ```python
-   from nemo.collections.llm import import_ckpt
-   from nemo.collections.llm.gpt.model.llama import Llama32Config1B, LlamaModel
-   from pathlib import Path
-
-   if __name__ == "__main__":
-       import_ckpt(
-           model=LlamaModel(Llama32Config1B()),
-           source="hf://meta-llama/Llama-3.2-1B",
-           output_path=Path("/opt/checkpoints/hf_llama32_1B_nemo2"),
-       )
+   ```shell
+   python scripts/export/export_hf_to_nemo2.py \
+    --hf_model meta-llama/Llama-3.2-1B \
+    --output_path /opt/checkpoints/hf_llama32_1B_nemo2 \
+    --config Llama32Config1B
+   ```
 
 ### Export-Deploy LLM Examples
 
