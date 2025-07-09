@@ -18,8 +18,6 @@
 
 </div>
 
-## ✨ Introduction
-
 NVIDIA NeMo Export-Deploy library provides tools and APIs for exporting and deploying NeMo and Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server.
 
 ## 🚀 Key Features
@@ -42,11 +40,15 @@ NVIDIA NeMo Export-Deploy library provides tools and APIs for exporting and depl
 
 ## Quick Start
 
-### Using Docker
+For quick exploration of NeMo Export-Deploy, we recommend installing our pip package:
 
-NeMo-Export-Deploy provides support for TRT-LLM and vLLM.  
+```bash
+pip install nemo-export-deploy
+```
 
-Build a container with TRT-LLM support:
+### 🐳 Using Docker
+
+For complete feature support including TransformerEngine, vLLM or In-Framework backend, we recommend building a container.
 
 ```bash
 docker build \
