@@ -1,8 +1,26 @@
-# **NeMo Export and Deploy**
+<div align="center">
+
+# 🚀 NeMo Export-Deploy
+
+</div>
+
+<div align="center">
+
+<!-- [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) -->
+[![codecov](https://codecov.io/github/NVIDIA-NeMo/Export-Deploy/graph/badge.svg?token=4NMKZVOW2Z)](https://codecov.io/github/NVIDIA-NeMo/Export-Deploy)
+[![CICD NeMo](https://github.com/NVIDIA-NeMo/Export-Deploy/actions/workflows/cicd-main.yml/badge.svg)](https://github.com/NVIDIA-NeMo/Export-Deploy/actions/workflows/cicd-main.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
+[![GitHub Stars](https://img.shields.io/github/stars/NVIDIA-NeMo/Export-Deploy.svg?style=social&label=Star)](https://github.com/NVIDIA-NeMo/Export-Deploy/stargazers/)
+
+<!-- **Day-0 integration with Hugging Face models automating fine-tuning and pretraining with pytorch-native parallelism, custom-kernels and optimized recipes** -->
+
+[📖 Documentation](https://docs.nvidia.com/nemo/Export-Deploy/latest/index.html) • [🔥 Ready-to-Use Recipes](https://github.com/NVIDIA-NeMo/Export-Deploy/#-ready-to-use-recipes) • [💡 Examples](https://github.com/NVIDIA-NeMo/Export-Deploy/tree/main/recipes) • [🤝 Contributing](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md)
+
+</div>
 
 ## Introduction
 
-NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and deploying NeMo and Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server.
+NVIDIA NeMo Export-Deploy library provides tools and APIs for exporting and deploying NeMo and Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server.
 
 ## Key Features
 
@@ -63,9 +81,9 @@ docker run \
     nemo-export-deploy
 ```
 
-### Export and Deploy LLM Examples
+### Export-Deploy LLM Examples
 
-The following examples demonstrate how to export and deploy Large Language Models (LLMs) using NeMo Export and Deploy. These examples cover both Hugging Face and NeMo model formats, showing how to export them to TensorRT-LLM and deploy using NVIDIA Triton Inference Server for high-performance inference.
+The following examples demonstrate how to Export-Deploy Large Language Models (LLMs) using NeMo Export-Deploy. These examples cover both Hugging Face and NeMo model formats, showing how to export them to TensorRT-LLM and deploy using NVIDIA Triton Inference Server for high-performance inference.
 
 #### Export Hugging Face Models to TensorRT-LLM and Deploy using Triton Inference Server
 
@@ -200,7 +218,7 @@ nm.deploy()
 nm.serve()
 ```
 
-### Export and Deploy Multimodal Examples
+### Export-Deploy Multimodal Examples
 
 #### Export NeMo Multimodal Models to TensorRT-LLM and Deploy using Triton Inference Server
 
