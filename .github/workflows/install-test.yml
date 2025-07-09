@@ -42,7 +42,7 @@ jobs:
         run: |
           sudo add-apt-repository ppa:deadsnakes/ppa -y
           sudo apt-get update
-          sudo apt-get install -y python3 python${{matrix.version}}-pip python${{matrix.version}}-venv
+          sudo apt-get install -y python3 python${{ matrix.python-version }}-pip python${{ matrix.python-version }}-venv
           python3 -m venv ./venv
           . ./venv/bin/activate
           pip install --upgrade pip
