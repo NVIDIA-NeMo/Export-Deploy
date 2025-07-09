@@ -191,16 +191,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up UV
-        uses: astral-sh/setup-uv@v1
-        with:
-          version: 0.7.2
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - name: Install dependencies with UV
         env:
           PAT: ${{ secrets.PAT }}
@@ -209,13 +199,9 @@ jobs:
           echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
           chmod 600 ~/.netrc 
 
-          export PATH="${UV_PROJECT_ENVIRONMENT}/bin/:$PATH"
-
-          uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
-
-          uv sync --link-mode copy --locked --only-group build
-
-          uv sync --link-mode copy --locked --all-groups
+          bash docker/common/install.sh \
+            --base-image cuda \
+            --inference-framework inframework
 
           uv pip install --no-deps -e .
 
