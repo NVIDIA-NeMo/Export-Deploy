@@ -87,7 +87,7 @@ jobs:
       - name: Install project
         env:
           PAT: ${{ secrets.PAT }}
-          BASE_IMAGE: ${{ contains(matrix.image, 'cuda') && 'cuda' || 'pytorch' }}
+          BASE_IMAGE: ${{ contains(matrix.image, 'cuda') && 'CUDA' || 'PyTorch' }}
         shell: bash
         run: |
           echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
@@ -199,9 +199,13 @@ jobs:
           echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
           chmod 600 ~/.netrc 
 
-          bash docker/common/install.sh \
-            --base-image cuda \
-            --inference-framework inframework
+          export PATH="${UV_PROJECT_ENVIRONMENT}/bin/:$PATH"
+
+          uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
+
+          uv sync --link-mode copy --locked --only-group build
+
+          uv sync --link-mode copy --locked --all-groups
 
           uv pip install --no-deps -e .
 
