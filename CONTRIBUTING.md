@@ -2,23 +2,53 @@
 
 Thanks for your interest in contributing to NeMo Export-Deploy!
 
-## Setting Up
+## 🛠️ Setting Up Your Environment
 
-### Development Container
+### Local workstation
 
-1. **Build and run the Docker container**:
+NeMo Export-Deploy uses [uv](https://docs.astral.sh/uv/) for package management.
+
+You can configure uv with the following commands:
+
+```bash
+uv sync --only-group build  # Installs build dependencies required by TransformerEngine
+ # Sync remaining dependencies
+```
+
+On a machine with CUDA, you can additionally sync TRT-LLM or vLLM:
+
+```bash
+# TRT-LLM
+uv sync --extra te --extra trtllm
+
+# or vLLM
+uv sync --extra te --extra vllm
+```
+
+### Alternative: Development Container
+
+For containerized development, use our Dockerfile for building your own container:
 
 ```bash
 docker build -f docker/Dockerfile.ci -t nemo-export-deploy .
 ```
 
+Start your container:
+
 ```bash
-docker run --rm -it --entrypoint bash --runtime nvidia --gpus all nemo-export-deploy
+docker run --rm -it \
+  -w /workdir \
+  -v $(pwd):/workdir \
+  --entrypoint bash \
+  --runtime nvidia \
+  --gpus all \
+  nemo-export-deploy
 ```
 
-### Development Dependencies
+## 📦 Dependencies management
 
-We use [uv](https://docs.astral.sh/uv/) for managing dependencies.
+We use [uv](https://docs.astral.sh/uv/) for managing dependencies. For reproducible builds, our project tracks the generated `uv.lock` file in the repository.  
+On a weekly basis, the CI attemps an update of the lock file to test against upstream dependencies.
 
 New required dependencies can be added by `uv add $DEPENDENCY`.
 
@@ -26,6 +56,8 @@ New optional dependencies can be added by `uv add --optional --extra $EXTRA $DEP
 
 `EXTRA` refers to the subgroup of extra-dependencies to which you're adding the new dependency.
 Example: For adding a TRT-LLM specific dependency, run `uv add --optional --extra trtllm $DEPENDENCY`.
+
+Alternatively, the `pyproject.toml` file can also be modified directly.
 
 Adding a new dependency will update UV's lock-file. Please check this into your branch:
 
@@ -35,22 +67,16 @@ git commit -m "build: Adding dependencies"
 git push
 ```
 
-### Linting and Formatting
+### 🧹 Linting and Formatting
 
-We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting.
-
-Installation:
+We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting. CI does not auto-fix linting and formatting issues, but most issues can be fixed by running the following command:
 
 ```bash
-pip install ruff
+uv run ruff check --fix .
+uv run ruff format .
 ```
 
-Format:
-
-```bash
-ruff check --fix .
-ruff format .
-```
+Note: If `ruff` is missing, please follow the [installation](#local-workstation) guide.
 
 ## Making Changes
 
