@@ -220,11 +220,9 @@ jobs:
 
           export PATH="${UV_PROJECT_ENVIRONMENT}/bin/:$PATH"
 
-          uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
+          uv venv ${UV_PROJECT_ENVIRONMENT}
 
-          uv sync --link-mode copy --locked --only-group build
-
-          uv sync --link-mode copy --locked --all-groups
+          uv sync --link-mode copy --locked
 
           uv pip install --no-deps -e .
 
