@@ -27,7 +27,6 @@ from transformers import PreTrainedTokenizer
 
 from nemo_export_deploy_common.import_utils import (
     MISSING_MPI_MSG,
-    MISSING_TENSORRT_MSG,
     UnavailableError,
 )
 
@@ -41,12 +40,6 @@ except (ImportError, ModuleNotFoundError):
     MPIPoolExecutor = MagicMock()
     HAVE_MPI = False
 
-try:
-    import tensorrt as trt
-
-    HAVE_TRT = True
-except (ImportError, ModuleNotFoundError):
-    HAVE_TRT = False
 
 try:
     import tensorrt_llm
@@ -385,26 +378,6 @@ def forward(
                 return result
 
         raise RuntimeError("Internal error")
-
-
-def maybe_cast_to_trt_dtype(dtype):
-    """Cast input dtype to TensorRT dtype if applicable.
-
-    Args:
-        dtype: Input dtype (torch.dtype or trt.DataType)
-
-    Returns:
-        trt.DataType: Corresponding TensorRT dtype
-    """
-    if not HAVE_TRT:
-        raise UnavailableError(MISSING_TENSORRT_MSG)
-
-    if isinstance(dtype, trt.DataType):
-        return dtype
-    elif isinstance(dtype, torch.dtype):
-        return tensorrt_llm._utils.torch_dtype_to_trt(dtype)
-    else:
-        raise NotImplementedError(f"Expects the type to be a tensorrt.DataType or torch.dtype, but got {type(dtype)=}")
 
 
 def unload_engine():
