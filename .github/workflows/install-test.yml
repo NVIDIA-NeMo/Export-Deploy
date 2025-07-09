@@ -71,13 +71,13 @@ jobs:
         uses: ./FW-CI-templates/.github/actions/check-imports
         with:
           package-name: nemo_deploy
-          python-binary: python
+          python-binary: ./venv/bin/python
 
       - name: Check imports for nemo_export
         uses: ./FW-CI-templates/.github/actions/check-imports
         with:
           package-name: nemo_export
-          python-binary: python
+          python-binary: ./venv/bin/python
 
   pip-test-cuda:
     runs-on: linux-amd64-cpu16
