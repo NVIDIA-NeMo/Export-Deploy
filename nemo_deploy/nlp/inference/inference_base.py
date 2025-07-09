@@ -281,6 +281,7 @@ def setup_model_and_tokenizer_for_inference(
         model_config,
         ddp_config=dist_config,
         wrap_with_ddp=False,  # No need for DDP for inference
+        tokenizer=model_context.tokenizer,
     )
 
     # Ensure model is configured

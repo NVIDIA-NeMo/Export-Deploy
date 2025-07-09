@@ -101,7 +101,7 @@ class vLLMHFExporter(ITritonDeployable):
 
     @batch
     @first_value("max_output_len", "top_k", "top_p", "temperature")
-    def triton_infer_fn(self, **inputs: np.ndarray):
+    def triton_infer_fn(self, **inputs: np.ndarray):  # pragma: no cover
         try:
             infer_input = {"input_texts": str_ndarray2list(inputs.pop("prompts"))}
             if "max_output_len" in inputs:

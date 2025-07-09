@@ -33,8 +33,18 @@ def mock_runner():
     return runner
 
 
+@pytest.fixture
+def mock_trtllm_runner():
+    runner = Mock()
+    runner.model_type = "mllama"
+    runner.args = Mock()
+    runner.load_test_data = Mock(return_value=np.zeros((1, 224, 224, 3)))
+    runner.run = Mock(return_value=["", "Test response"])
+    return runner
+
+
 try:
-    import trtllm  # noqa: F401
+    import tensorrt_llm  # noqa: F401
 
     HAVE_TRTLLM = True
 except ImportError:
@@ -92,6 +102,127 @@ class TestTensorRTMMExporter:
         mock_visual.assert_called_once()
 
     @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.build_visual_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.extract_lora_ckpt")
+    @patch("nemo_export.tensorrt_mm_exporter.unpack_tarball")
+    @patch("os.path.isdir")
+    def test_export_with_lora(self, mock_isdir, mock_unpack, mock_extract, mock_visual, mock_trtllm, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        # Mock the LoRA path handling
+        mock_isdir.return_value = False  # Treat as file, not directory
+        mock_extract.return_value = "dummy/lora/ckpt"
+
+        exporter = TensorRTMMExporter(model_dir, load_model=False)
+        exporter.export(
+            visual_checkpoint_path="dummy/path",
+            model_type="neva",
+            tensor_parallel_size=1,
+            load_model=False,
+            lora_checkpoint_path="dummy/lora/path",
+            use_lora_plugin="lora_plugin",
+            lora_target_modules=["q_proj", "v_proj"],
+            max_lora_rank=32,
+        )
+        mock_trtllm.assert_called_once()
+        mock_visual.assert_called_once()
+        mock_unpack.assert_called_once()
+        mock_extract.assert_called_once()
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.build_visual_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.extract_lora_ckpt")
+    @patch("os.path.isdir")
+    def test_export_with_lora_directory(self, mock_isdir, mock_extract, mock_visual, mock_trtllm, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        # Mock the LoRA path handling - treat as directory
+        mock_isdir.return_value = True  # Treat as directory
+        mock_extract.return_value = "dummy/lora/ckpt"
+
+        exporter = TensorRTMMExporter(model_dir, load_model=False)
+        exporter.export(
+            visual_checkpoint_path="dummy/path",
+            model_type="neva",
+            tensor_parallel_size=1,
+            load_model=False,
+            lora_checkpoint_path="dummy/lora/dir",
+            use_lora_plugin="lora_plugin",
+            lora_target_modules=["q_proj", "v_proj"],
+            max_lora_rank=32,
+        )
+        mock_trtllm.assert_called_once()
+        mock_visual.assert_called_once()
+        mock_extract.assert_called_once()
+        # Should not call unpack_tarball when path is a directory
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.build_visual_engine")
+    def test_export_vila(self, mock_visual, mock_trtllm, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        exporter = TensorRTMMExporter(model_dir, load_model=False)
+        exporter.export(
+            visual_checkpoint_path="dummy/path",
+            model_type="vila",
+            tensor_parallel_size=1,
+            load_model=False,
+        )
+        mock_trtllm.assert_called_once()
+        mock_visual.assert_called_once()
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.build_visual_engine")
+    def test_export_video_neva(self, mock_visual, mock_trtllm, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        exporter = TensorRTMMExporter(model_dir, load_model=False)
+        exporter.export(
+            visual_checkpoint_path="dummy/path",
+            model_type="video-neva",
+            tensor_parallel_size=1,
+            load_model=False,
+        )
+        mock_trtllm.assert_called_once()
+        mock_visual.assert_called_once()
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.build_visual_engine")
+    def test_export_lita(self, mock_visual, mock_trtllm, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        exporter = TensorRTMMExporter(model_dir, load_model=False)
+        exporter.export(
+            visual_checkpoint_path="dummy/path",
+            model_type="lita",
+            tensor_parallel_size=1,
+            load_model=False,
+        )
+        mock_trtllm.assert_called_once()
+        mock_visual.assert_called_once()
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.tensorrt_mm_exporter.build_trtllm_engine")
+    @patch("nemo_export.tensorrt_mm_exporter.build_visual_engine")
+    def test_export_vita(self, mock_visual, mock_trtllm, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        exporter = TensorRTMMExporter(model_dir, load_model=False)
+        exporter.export(
+            visual_checkpoint_path="dummy/path",
+            model_type="vita",
+            tensor_parallel_size=1,
+            load_model=False,
+        )
+        mock_trtllm.assert_called_once()
+        mock_visual.assert_called_once()
+
+    @pytest.mark.run_only_on("GPU")
     def test_forward_without_loading(self, model_dir):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
@@ -116,6 +247,47 @@ class TestTensorRTMMExporter:
 
         assert result == "Test response"
         mock_runner.load_test_media.assert_called_once()
+        mock_runner.run.assert_called_once()
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("nemo_export.tensorrt_mm_exporter.isinstance")
+    def test_forward_with_trtllm_runner(self, mock_isinstance, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        # Create a mock runner
+        mock_runner = Mock()
+        mock_runner.model_type = "mllama"
+        mock_runner.args = Mock()
+        mock_runner.load_test_data = Mock(return_value=np.zeros((1, 224, 224, 3)))
+        mock_runner.run = Mock(return_value=["", "Test response"])
+
+        # Make isinstance return True for TRTLLMRunner check
+        mock_isinstance.return_value = True
+
+        exporter = TensorRTMMExporter(model_dir, load_model=False)
+        exporter.runner = mock_runner
+
+        result = exporter.forward(
+            input_text="What's in this image?",
+            input_media="test_image.jpg",
+            batch_size=2,
+            max_output_len=50,
+            top_k=5,
+            top_p=0.9,
+            temperature=0.7,
+            repetition_penalty=1.2,
+            num_beams=4,
+        )
+
+        assert result == "Test response"
+        assert mock_runner.args.image_path == "test_image.jpg"
+        assert mock_runner.args.batch_size == 2
+        assert mock_runner.args.top_k == 5
+        assert mock_runner.args.top_p == 0.9
+        assert mock_runner.args.temperature == 0.7
+        assert mock_runner.args.repetition_penalty == 1.2
+        assert mock_runner.args.num_beams == 4
+        mock_runner.load_test_data.assert_called_once_with("test_image.jpg")
         mock_runner.run.assert_called_once()
 
     @pytest.mark.run_only_on("GPU")
@@ -191,6 +363,15 @@ class TestTensorRTMMExporter:
         assert tensors[0].dtype == np.uint8
 
     @pytest.mark.run_only_on("GPU")
+    def test_get_input_media_tensors_audio(self, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        exporter = TensorRTMMExporter(model_dir, load_model=False, modality="audio")
+        tensors = exporter.get_input_media_tensors()
+
+        assert len(tensors) == 0
+
+    @pytest.mark.run_only_on("GPU")
     def test_export_with_invalid_model_type(self, model_dir):
         from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
@@ -224,3 +405,47 @@ class TestTensorRTMMExporter:
                 delete_existing_files=False,
             )
         assert "There are files in this folder" in str(exc_info.value)
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("os.path.exists")
+    def test_load_no_llm_dir(self, mock_exists, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        mock_exists.return_value = False
+        exporter = TensorRTMMExporter(model_dir, load_model=False)
+        exporter._load()
+        assert exporter.runner is None
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("os.path.exists")
+    @patch("builtins.open", create=True)
+    @patch("json.load")
+    def test_load_mllama_model(self, mock_json_load, mock_open, mock_exists, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        mock_exists.return_value = True
+        mock_json_load.return_value = {"builder_config": {"model_type": "mllama"}}
+        mock_open.return_value.__enter__ = lambda x: x
+        mock_open.return_value.__exit__ = lambda x, y, z, w: None
+
+        with patch("nemo_export.tensorrt_mm_exporter.TRTLLMRunner") as mock_trtllm_runner:
+            exporter = TensorRTMMExporter(model_dir, load_model=False)
+            exporter._load()
+            mock_trtllm_runner.assert_called_once()
+
+    @pytest.mark.run_only_on("GPU")
+    @patch("os.path.exists")
+    @patch("builtins.open", create=True)
+    @patch("json.load")
+    def test_load_other_model(self, mock_json_load, mock_open, mock_exists, model_dir):
+        from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+
+        mock_exists.return_value = True
+        mock_json_load.return_value = {"builder_config": {"model_type": "neva"}}
+        mock_open.return_value.__enter__ = lambda x: x
+        mock_open.return_value.__exit__ = lambda x, y, z, w: None
+
+        with patch("nemo_export.tensorrt_mm_exporter.MultimodalModelRunner") as mock_multimodal_runner:
+            exporter = TensorRTMMExporter(model_dir, load_model=False)
+            exporter._load()
+            mock_multimodal_runner.assert_called_once()
