@@ -43,14 +43,13 @@ For a feature-complete install, please refer to the following sections.
 
 ### 🐳 Using Docker
 
-An easy out-of-the-box experience with full feature support is provided by our Dockerfile. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
+Best experience, highest performance and full feature support is guaranteed by the [NeMo Framework container](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/nemo/tags). Please fetch the most recent `$TAG` and run the following command to start a container:
 
 ```bash
-docker build \
-    -f docker/Dockerfile.ci \
-    -t nemo-export-deploy \
-    --build-arg INFERENCE_FRAMEWORK=$INFERENCE_FRAMEWORK \
-    .
+docker run --rm -it -w /workdir -v $(pwd):/workdir \
+  --entrypoint bash \
+  --gpus all \
+  nvcr.io/nvidia/nemo:${TAG}:
 ```
 
 ### 🛠️ Source install

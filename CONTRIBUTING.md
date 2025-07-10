@@ -27,20 +27,21 @@ uv sync --extra te --extra vllm
 
 ### Alternative: Development Container
 
-For containerized development, use our Dockerfile for building your own container:
+For containerized development, use our Dockerfile for building your own container. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
 
 ```bash
-docker build -f docker/Dockerfile.ci -t nemo-export-deploy .
+docker build \
+    -f docker/Dockerfile.ci \
+    -t nemo-export-deploy \
+    --build-arg INFERENCE_FRAMEWORK=$INFERENCE_FRAMEWORK \
+    .
 ```
 
 Start your container:
 
 ```bash
-docker run --rm -it \
-  -w /workdir \
-  -v $(pwd):/workdir \
+docker run --rm -it -w /workdir -v $(pwd):/workdir \
   --entrypoint bash \
-  --runtime nvidia \
   --gpus all \
   nemo-export-deploy
 ```
