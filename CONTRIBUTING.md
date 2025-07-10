@@ -2,23 +2,54 @@
 
 Thanks for your interest in contributing to NeMo Export-Deploy!
 
-## Setting Up
+## 🛠️ Setting Up Your Environment
 
-### Development Container
+### Local workstation
 
-1. **Build and run the Docker container**:
+NeMo Export-Deploy uses [uv](https://docs.astral.sh/uv/) for package management.
 
-```bash
-docker build -f docker/Dockerfile.ci -t nemo-export-deploy .
-```
+You can configure uv with the following commands:
 
 ```bash
-docker run --rm -it --entrypoint bash --runtime nvidia --gpus all nemo-export-deploy
+uv sync --only-group build  # Installs build dependencies required by TransformerEngine
+uv sync
 ```
 
-### Development Dependencies
+On a machine with CUDA, you can additionally sync TRT-LLM or vLLM:
 
-We use [uv](https://docs.astral.sh/uv/) for managing dependencies.
+```bash
+# TRT-LLM
+uv sync --extra te --extra trtllm
+
+# or vLLM
+uv sync --extra te --extra vllm
+```
+
+### Alternative: Development Container
+
+For containerized development, use our Dockerfile for building your own container. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
+
+```bash
+docker build \
+    -f docker/Dockerfile.ci \
+    -t nemo-export-deploy \
+    --build-arg INFERENCE_FRAMEWORK=$INFERENCE_FRAMEWORK \
+    .
+```
+
+Start your container:
+
+```bash
+docker run --rm -it -w /workdir -v $(pwd):/workdir \
+  --entrypoint bash \
+  --gpus all \
+  nemo-export-deploy
+```
+
+## 📦 Dependencies management
+
+We use [uv](https://docs.astral.sh/uv/) for managing dependencies. For reproducible builds, our project tracks the generated `uv.lock` file in the repository.  
+On a weekly basis, the CI attemps an update of the lock file to test against upstream dependencies.
 
 New required dependencies can be added by `uv add $DEPENDENCY`.
 
@@ -26,6 +57,8 @@ New optional dependencies can be added by `uv add --optional --extra $EXTRA $DEP
 
 `EXTRA` refers to the subgroup of extra-dependencies to which you're adding the new dependency.
 Example: For adding a TRT-LLM specific dependency, run `uv add --optional --extra trtllm $DEPENDENCY`.
+
+Alternatively, the `pyproject.toml` file can also be modified directly.
 
 Adding a new dependency will update UV's lock-file. Please check this into your branch:
 
@@ -35,62 +68,18 @@ git commit -m "build: Adding dependencies"
 git push
 ```
 
-### Linting and Formatting
+### 🧹 Linting and Formatting
 
-We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting.
-
-Installation:
+We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting. CI does not auto-fix linting and formatting issues, but most issues can be fixed by running the following command:
 
 ```bash
-pip install ruff
+uv run ruff check --fix .
+uv run ruff format .
 ```
 
-Format:
+Note: If `ruff` is missing, please follow the [installation](#local-workstation) guide.
 
-```bash
-ruff check --fix .
-ruff format .
-```
-
-## Making Changes
-
-### Workflow: Clone and Branch (No Fork Required)
-
-Pre-commit checks will help ensure your code follows our formatting and style guidelines.
-
-We follow a direct clone and branch workflow for now:
-
-1. Clone the repository directly:
-
-   ```bash
-   git clone https://github.com/NVIDIA-NeMo/Export-Deploy
-   cd Export-Deploy
-   ```
-
-2. Create a new branch for your changes:
-
-   ```bash
-   git checkout -b your-feature-name
-   ```
-
-3. Make your changes and commit them:
-
-   ```bash
-   git add .
-   git commit --signoff -m "Your descriptive commit message"
-   ```
-
-We require signing commits with `--signoff` (or `-s` for short). See [Signing Your Work](#signing-your-work) for details.
-
-4. Push your branch to the repository:
-
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-5. Create a pull request from your branch to the `main` branch.
-
-### Design Documentation Requirement
+### 📝 Documentation
 
 **Important**: All new key features (ex: enabling a new inference optimized library, enabling a new deployment option) must include documentation update (either a new doc or updating an existing one). This document update should:
 
@@ -106,7 +95,7 @@ This ensures that all significant changes are well-thought-out and properly docu
 
 Quality documentation is essential for both the usability of NeMo Export-Deploy and its ability to be customized by the community.
 
-## Code Quality
+## ✨ Code Quality
 
 - Follow the existing code style and conventions
 - Write tests for new features
@@ -114,7 +103,7 @@ Quality documentation is essential for both the usability of NeMo Export-Deploy 
 - Ensure all tests pass before submitting a PR
 - Do not add arbitrary defaults for configs, be as explicit as possible.
 
-## Signing Your Work
+## ✍️ Signing Your Work
 
 - We require that all contributors "sign-off" on their commits. This certifies that the contribution is your original work, or you have rights to submit it under the same license, or a compatible license.
 

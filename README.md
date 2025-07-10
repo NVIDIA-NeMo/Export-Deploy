@@ -1,10 +1,26 @@
-# **NeMo Export and Deploy**
+<div align="center">
 
-## Introduction
+# NeMo Export-Deploy
 
-NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and deploying NeMo and Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server.
+</div>
 
-## Key Features
+<div align="center">
+
+<!-- [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) -->
+[![codecov](https://codecov.io/github/NVIDIA-NeMo/Export-Deploy/graph/badge.svg?token=4NMKZVOW2Z)](https://codecov.io/github/NVIDIA-NeMo/Export-Deploy)
+[![CICD NeMo](https://github.com/NVIDIA-NeMo/Export-Deploy/actions/workflows/cicd-main.yml/badge.svg)](https://github.com/NVIDIA-NeMo/Export-Deploy/actions/workflows/cicd-main.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
+[![GitHub Stars](https://img.shields.io/github/stars/NVIDIA-NeMo/Export-Deploy.svg?style=social&label=Star)](https://github.com/NVIDIA-NeMo/Export-Deploy/stargazers/)
+
+<!-- **Library with tooling and APIs for exporting and deploying NeMo and Hugging Face models with support of backends like  TensorRT, TensorRT-LLM and vLLM through NVIDIA Triton Inference Server.** -->
+
+[📖 Documentation](https://docs.nvidia.com/nemo/Export-Deploy/latest/index.html) • [🔧 Installation](https://github.com/NVIDIA-NeMo/Export-Deploy/#-installation) • [🚀 Quick start](https://github.com/NVIDIA-NeMo/Export-Deploy/#quick-start) • [🤝 Contributing](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md)
+
+</div>
+
+NVIDIA NeMo Export-Deploy library provides tools and APIs for exporting and deploying NeMo and Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server.
+
+## 🚀 Key Features
 
 - Support for Large Language Models (LLMs) and Multimodal Models
 - Export NeMo and Hugging Face models to optimized inference formats including TensorRT-LLM and vLLM
@@ -13,59 +29,123 @@ NVIDIA NeMo Export and Deploy library provides tools and APIs for exporting and 
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
-## Key Requirements
+## 🔧 Installation
 
-- Python 3.10 or above (Recommended: Python 3.12)
-- PyTorch 2.5 or above (Recommended: PyTorch 2.6)
-- NVIDIA GPU
-- TensorRT-LLM and vLLM
-- Ray Serve
-- NVIDIA Triton Inference Server
-
-## Quick Start
-
-### Using Docker
-
-NeMo-Export-Deploy provides support for TRT-LLM and vLLM.  
-
-Build a container with TRT-LLM support:
+For quick exploration of NeMo Export-Deploy, we recommend installing our pip package:
 
 ```bash
-docker build \
-    -f docker/Dockerfile.ci \
-    -t nemo-export-deploy \
-    --build-arg INFERENCE_FRAMEWORK=trtllm \
-    .
+pip install nemo-export-deploy
 ```
 
-Or, alternatively to build a container with vLLM support, run:
+This installation comes without extra dependencies like TransformerEngine, TensorRT-LLM or vLLM. The installation serves for navigating around and for exploring the project.
+
+For a feature-complete install, please refer to the following sections.
+
+### 🐳 Using Docker
+
+Best experience, highest performance and full feature support is guaranteed by the [NeMo Framework container](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/nemo/tags). Please fetch the most recent `$TAG` and run the following command to start a container:
 
 ```bash
-docker build \
-    -f docker/Dockerfile.ci \
-    -t nemo-export-deploy \
-    --build-arg INFERENCE_FRAMEWORK=vllm \
-    .
+docker run --rm -it -w /workdir -v $(pwd):/workdir \
+  --entrypoint bash \
+  --gpus all \
+  nvcr.io/nvidia/nemo:${TAG}
 ```
 
-Start an interactive terminal inside the container:
+### 🛠️ Source install
+
+For complete feature coverage, we recommend to install [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/?tab=readme-ov-file#pip-installation) and additionally either [TensorRT-LLM](https://nvidia.github.io/TensorRT-LLM/0.20.0/installation/linux.html) or [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#pre-built-wheels).
+
+#### Recommended requirements
+
+- Python 3.12
+- PyTorch 2.7
+- CUDA 12.8
+- Ubuntu 24.04
+
+#### TransformerEngine + InFramework
+
+For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
 
 ```bash
-docker run \
-    --rm \
-    -it \
+pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
+```
+
+Now proceed with the main installation:
+
+```bash
+pip install --no-build-isolation .[te]
+```
+
+#### TransformerEngine + TRT-LLM
+
+For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+
+```bash
+sudo apt-get -y install libopenmpi-dev  # Required for TRT-LLM
+pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
+```
+
+Now proceed with the main installation:
+
+```bash
+pip install --no-build-isolation .[te,trtllm]
+```
+
+#### TransformerEngine + vLLM
+
+For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+
+```bash
+pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
+```
+
+Now proceed with the main installation:
+
+```bash
+pip install --no-build-isolation .[te,vllm]
+```
+
+## 🚀 Quick Start
+
+The following steps are based on a self-built [container](#-using-docker).
+
+### Generate a NeMo Checkpoint
+
+In order to run examples with NeMo models, a NeMo checkpoint is required. Please follow the steps below to generate a NeMo checkpoint.
+
+1. To access the Llama models, please visit the [Llama 3.2 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.2-1B).
+
+2. Pull down and run the NeMo Framework Docker container image using the command shown below:
+
+   ```shell
+   docker run --gpus all -it --rm -p 8000:8000 \
     --entrypoint bash \
     --workdir /opt/Export-Deploy \
     --shm-size=4g \
     --gpus all \
     -v ${PWD}:/opt/Export-Deploy \
-    -v ${PWD}/checkpoints/:/opt/checkpoints/ \
     nemo-export-deploy
-```
+   ```
 
-### Export and Deploy LLM Examples
+3. Run the following command in the terminal and enter your Hugging Face access token to log in to Hugging Face:
 
-The following examples demonstrate how to export and deploy Large Language Models (LLMs) using NeMo Export and Deploy. These examples cover both Hugging Face and NeMo model formats, showing how to export them to TensorRT-LLM and deploy using NVIDIA Triton Inference Server for high-performance inference.
+   ```shell
+   huggingface-cli login
+   ```
+
+4. Run the following Python code to generate the NeMo 2.0 checkpoint:
+
+   ```shell
+   python scripts/export/export_hf_to_nemo2.py \
+    --hf_model meta-llama/Llama-3.2-1B \
+    --output_path /opt/checkpoints/hf_llama32_1B_nemo2 \
+    --config Llama32Config1B
+   ```
+
+### Export-Deploy LLM Examples
+
+The following examples demonstrate how to Export-Deploy Large Language Models (LLMs) using NeMo Export-Deploy. These examples cover both Hugging Face and NeMo model formats, showing how to export them to TensorRT-LLM and deploy using NVIDIA Triton Inference Server for high-performance inference.
 
 #### Export Hugging Face Models to TensorRT-LLM and Deploy using Triton Inference Server
 
@@ -200,7 +280,7 @@ nm.deploy()
 nm.serve()
 ```
 
-### Export and Deploy Multimodal Examples
+### Export-Deploy Multimodal Examples
 
 #### Export NeMo Multimodal Models to TensorRT-LLM and Deploy using Triton Inference Server
 
@@ -252,101 +332,9 @@ output = nq.query(
 print(output)
 ```
 
-## Generate a NeMo Checkpoint
+## 🤝 Contributing
 
-In order to run examples with NeMo models, a NeMo checkpoint is required. Please follow the steps below to generate a NeMo checkpoint.
-
-1. To access the Llama models, please visit the [Llama 3.2 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.2-1B).
-
-2. Pull down and run the NeMo Framework Docker container image using the command shown below:
-
-   ```shell
-   docker pull nvcr.io/nvidia/nemo:25.04
-
-   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}/:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:25.04
-   ```
-
-3. Run the following command in the terminal and enter your Hugging Face access token to log in to Hugging Face:
-
-   ```shell
-   huggingface-cli login
-   ```
-
-4. Run the following Python code to generate the NeMo 2.0 checkpoint:
-
-   ```python
-   from nemo.collections.llm import import_ckpt
-   from nemo.collections.llm.gpt.model.llama import Llama32Config1B, LlamaModel
-   from pathlib import Path
-
-   if __name__ == "__main__":
-       import_ckpt(
-           model=LlamaModel(Llama32Config1B()),
-           source="hf://meta-llama/Llama-3.2-1B",
-           output_path=Path("/opt/checkpoints/hf_llama32_1B_nemo2"),
-       )
-
-## Installation
-
-For NeMo Export-Deploy without Mcore, TranformerEngine, TRT-LLM and vLLM support, just run:
-
-```bash
-pip install nemo-export-deploy
-pip install nemo-run # Needs to be installed additionally
-```
-
-### Installation with Megatron-Core and TransformerEngine support
-
-Prerequisites for pip installation:
-
-A compatible C++ compiler
-CUDA Toolkit with cuDNN and NVCC (NVIDIA CUDA Compiler) installed
-
-```bash
-git clone https://github.com/NVIDIA-NeMo/Export-Deploy
-cd Export-Deploy
-
-pip install torch setuptools pybind11 wheel_stub
-pip install -e --no-build-isolation '.[te]'
-```
-
-### Installation with TRT-LLM or vLLM support
-
-Additionally to Megatron-Core/TransformerEngine, users may also add TRT-LLM or vLLM support. Note that TRT-LLM and vLLM are mutually exclusive, attempting to install both together will likely result in an error.
-
-For TRT-LLM/TE, make sure to install `libopenmpi-dev` before.
-
-```bash
-sudo apt-get update
-sudo apt-get install -y libopenmpi-dev
-```
-
-Now, proceed with the actuall installation:
-
-```bash
-git clone https://github.com/NVIDIA-NeMo/Export-Deploy
-cd Export-Deploy
-pip install torch setuptools pybind11 wheel_stub
-pip install -e --no-build-isolation '.[te,trllm]'
-```
-
-For vLLM:
-
-```bash
-git clone https://github.com/NVIDIA-NeMo/Export-Deploy
-cd Export-Deploy
-pip install -e '.[vllm]'
-```
-
-## Documentation
-
-For detailed documentation, please refer to:
-
-- [NeMo-Export-Deploy User Guide](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)
-
-## Contributing
-
-We welcome contributions to NeMo RL! Please see our [Contributing Guidelines](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md) for more information on how to get involved.
+We welcome contributions to NeMo Export-Deploy! Please see our [Contributing Guidelines](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md) for more information on how to get involved.
 
 ## License
 
