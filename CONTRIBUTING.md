@@ -25,27 +25,6 @@ uv sync --extra te --extra trtllm
 uv sync --extra te --extra vllm
 ```
 
-### Alternative: Development Container
-
-For containerized development, use our Dockerfile for building your own container. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
-
-```bash
-docker build \
-    -f docker/Dockerfile.ci \
-    -t nemo-export-deploy \
-    --build-arg INFERENCE_FRAMEWORK=$INFERENCE_FRAMEWORK \
-    .
-```
-
-Start your container:
-
-```bash
-docker run --rm -it -w /workdir -v $(pwd):/workdir \
-  --entrypoint bash \
-  --gpus all \
-  nemo-export-deploy
-```
-
 ## 📦 Dependencies management
 
 We use [uv](https://docs.astral.sh/uv/) for managing dependencies. For reproducible builds, our project tracks the generated `uv.lock` file in the repository.  
