@@ -41,7 +41,7 @@ This installation comes without extra dependencies like TransformerEngine, Tenso
 
 For a feature-complete install, please refer to the following sections.
 
-### 🐳 Using Docker
+### 🐳 Using NeMo-FW container
 
 Best experience, highest performance and full feature support is guaranteed by the [NeMo Framework container](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/nemo/tags). Please fetch the most recent `$TAG` and run the following command to start a container:
 
