@@ -129,7 +129,7 @@ pip install --no-build-isolation .[te,vllm]
 
 ## 🚀 Quick Start
 
-The following steps are based on a self-built [container](#-using-docker).
+The following steps are based on a self-built [container](#-using-our-dockerfile).
 
 ### Generate a NeMo Checkpoint
 
