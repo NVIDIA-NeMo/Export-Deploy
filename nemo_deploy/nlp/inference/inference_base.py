@@ -381,6 +381,12 @@ def create_mcore_engine(
     model_context = io.load_context(path=ckpt_to_context_subdir(checkpoint_path), subpath="model")
     model_config = model_context.config
 
+    # Disable gradient_accumulation_fusion since its not required for inference
+    # and only available with Apex. We don't support Apex for community cuda-based
+    # installs.
+    if hasattr(model_config, "gradient_accumulation_fusion"):
+        model_config.gradient_accumulation_fusion = False
+
     # Use checkpoint values as defaults if not specified
     tp_size = (
         tensor_model_parallel_size
