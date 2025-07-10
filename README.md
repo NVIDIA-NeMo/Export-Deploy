@@ -49,7 +49,7 @@ Best experience, highest performance and full feature support is guaranteed by t
 docker run --rm -it -w /workdir -v $(pwd):/workdir \
   --entrypoint bash \
   --gpus all \
-  nvcr.io/nvidia/nemo:${TAG}:
+  nvcr.io/nvidia/nemo:${TAG}
 ```
 
 ### 🛠️ Source install
