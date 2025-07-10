@@ -6,20 +6,30 @@
 
 ## Build the Documentation
 
-The following sections describe how to set up and build the NeMo Export and Deploy documentation.
+The following sections describe how to set up and build the Megatron Hub documentation.
 
 Switch to the documentation source folder and generate HTML output.
 
 ```sh
-python3 -m venv docs-env
-source docs-env/bin/activate
-pip install sphinx sphinx-autobuild sphinx-autodoc2 sphinx-copybutton myst_parser nvidia-sphinx-theme
-sphinx-autobuild docs docs/_build/html
-
+cd docs/
+uv run --group docs sphinx-build . _build/html
 ```
 
 - The resulting HTML files are generated in a `_build/html` folder that is created under the project `docs/` folder.
 - The generated python API docs are placed in `apidocs` under the `docs/` folder.
+
+## Live Building
+
+When writing documentation, it can be helpful to serve the documentation and have it update live while you edit.
+
+To do so, run:
+
+```sh
+cd docs/
+uv run --group docs sphinx-autobuild . _build/html --port 12345 --host 0.0.0.0
+```
+
+Open a web browser and go to `http://${HOST_WHERE_SPHINX_COMMAND_RUN}:12345` to view the output.
 
 ## Documentation Version
 
