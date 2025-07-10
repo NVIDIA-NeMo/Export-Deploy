@@ -14,7 +14,7 @@ The following example shows how to execute the query script within the currently
 1. To use a query script, run the following command:
 
    ```shell
-   python scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name nemotron --prompt "What is the capital of United States?"
+   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name nemotron --prompt "What is the capital of United States?"
    ```
    
 2. Change the url and the ``model_name`` based on your server and the model name of your service. The code in the script can be used as a basis for your client code as well.
@@ -22,7 +22,7 @@ The following example shows how to execute the query script within the currently
 3. If the there is a prompt embedding table, run the following command to send a query:
 
    ```shell
-   python scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name nemotron --prompt "What is the capital of United States?" --task_id "task 1"
+   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name nemotron --prompt "What is the capital of United States?" --task_id "task 1"
    ```
    
 4. The following parameters are defined in the ``deploy_triton.py`` script:
@@ -44,7 +44,7 @@ The NeMo Framework provides NemoQueryLLM APIs to send a query to the Triton serv
 1. To run the request example using NeMo APIs, run the following command:
 
    ```python
-   from nemo.deploy.nlp import NemoQueryLLM
+   from nemo_deploy.nlp import NemoQueryLLM
 
    nq = NemoQueryLLM(url="localhost:8000", model_name="nemotron")
    output = nq.query_llm(prompts=["What is the capital of United States?"], max_output_len=10, top_k=1, top_p=0.0, temperature=1.0)

@@ -17,6 +17,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models within the fra
        -p 8000:8000 \
        -v ${PWD}/:/opt/checkpoints/ \
        -w /opt/NeMo \
+       --name nemo-fw \
        nvcr.io/nvidia/nemo:vr
    ``` 
 
@@ -29,29 +30,23 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models within the fra
 4. Deploy the model to Triton:
 
    ```python
-   python scripts/deploy/nlp/deploy_inframework_hf_triton.py \
+   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama
    ```
    
    **Note:** If you encounter shared memory errors, increase ``--shm-size`` gradually by 50%.
 
-5. In a new terminal, get the container ID:
+5. In a separate terminal, access the running container as follows:
 
    ```shell
-   docker ps
+   docker exec -it nemo-fw bash
    ```
 
-6. Access the container:
+6. Test the deployed model:
 
    ```shell
-   docker exec -it <container_id> bash
-   ```
-
-7. Test the deployed model:
-
-   ```shell
-   python scripts/deploy/nlp/query_inframework_hf.py \
+   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query_inframework_hf.py \
       -mn llama \
       -p "What is the color of a banana?" \
       -mol 15
@@ -68,7 +63,7 @@ Follow these steps to deploy your model on the Triton Inference Server:
 2. Deploy your model:
 
    ```shell
-   python scripts/deploy/nlp/deploy_inframework_hf_triton.py \
+   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama
    ```
@@ -112,7 +107,7 @@ For multi-GPU inference:
 
    ```shell
    torchrun --standalone --nnodes=1 --nproc_per_node=2 \
-      scripts/deploy/nlp/deploy_inframework_hf_triton.py \
+      /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama \
       --tp_plan auto
