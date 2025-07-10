@@ -52,6 +52,27 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
   nvcr.io/nvidia/nemo:${TAG}
 ```
 
+### 🐳 Using our Dockerfile
+
+For containerized development, use our Dockerfile for building your own container. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
+
+```bash
+docker build \
+    -f docker/Dockerfile.ci \
+    -t nemo-export-deploy \
+    --build-arg INFERENCE_FRAMEWORK=$INFERENCE_FRAMEWORK \
+    .
+```
+
+Start your container:
+
+```bash
+docker run --rm -it -w /workdir -v $(pwd):/workdir \
+  --entrypoint bash \
+  --gpus all \
+  nemo-export-deploy
+```
+
 ### 🛠️ Source install
 
 For complete feature coverage, we recommend to install [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/?tab=readme-ov-file#pip-installation) and additionally either [TensorRT-LLM](https://nvidia.github.io/TensorRT-LLM/0.20.0/installation/linux.html) or [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#pre-built-wheels).
