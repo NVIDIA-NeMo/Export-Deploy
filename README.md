@@ -339,6 +339,7 @@ output = nq.query_llm(
 print(output)
 ```
 
+
 #### Query Multimodal Model
 
 ```python
