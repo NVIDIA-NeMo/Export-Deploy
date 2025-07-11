@@ -11,33 +11,31 @@ This section demonstrates how to deploy PyTorch-level NeMo LLMs within the frame
    ```shell
    docker pull nvcr.io/nvidia/nemo:vr
 
-   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}/:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:vr
+   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 \
+       -v ${PWD}/:/opt/checkpoints/ \
+       -w /opt/NeMo \
+       --name nemo-fw \
+       nvcr.io/nvidia/nemo:vr
    ```
 
 3. Using a NeMo 2.0 model, run the following deployment script to verify that everything is working correctly. The script directly serves the NeMo 2.0 model on the Triton server:
 
    ```shell
-   python scripts/deploy/nlp/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo --triton_model_name llama
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo --triton_model_name llama
    ```
 
 4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
 
-5. In a separate terminal, run the following command to get the container ID of the running container. Please find the ``nvcr.io/nvidia/nemo:vr`` image to get the container ID.
+5. In a separate terminal, access the running container as follows:
 
    ```shell
-   docker ps
+   docker exec -it nemo-fw bash
    ```
 
-6. Access the running container and replace ``container_id`` with the actual container ID as follows:
+6. To send a query to the Triton server, run the following script:
 
    ```shell
-   docker exec -it container_id bash
-   ```
-
-7. To send a query to the Triton server, run the following script:
-
-   ```shell
-   python scripts/deploy/nlp/query_inframework.py -mn llama -p "What is the color of a banana?" -mol 5
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework.py -mn llama -p "What is the color of a banana?" -mol 5
    ```
 
 Please note that only NeMo 2.0 checkpoints are supported by the In-Framework deployment option.
@@ -55,7 +53,7 @@ Executing the script will directly deploy the NeMo LLM model and initiate the se
 2. To begin serving the downloaded model, run the following script:
 
    ```shell
-   python scripts/deploy/nlp/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo --triton_model_name llama
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo --triton_model_name llama
    ```
 
    The following parameters are defined in the ``deploy_inframework_triton.py`` script:

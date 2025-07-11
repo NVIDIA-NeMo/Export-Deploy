@@ -16,6 +16,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models using Ray Serv
        -p 1024:1024 \
        -v ${PWD}/:/opt/checkpoints/ \
        -w /opt/Export-Deploy \
+       --name nemo-fw \
        nvcr.io/nvidia/nemo:vr
    ``` 
 
@@ -28,7 +29,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models using Ray Serv
 4. Deploy the model to Ray:
 
    ```python
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
@@ -39,22 +40,16 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models using Ray Serv
    
    **Note:** If you encounter shared memory errors, increase ``--shm-size`` gradually by 50%.
 
-5. In a new terminal, get the container ID:
+5. In a separate terminal, access the running container as follows:
 
    ```shell
-   docker ps
+   docker exec -it nemo-fw bash
    ```
 
-6. Access the container:
+6. Test the deployed model:
 
    ```shell
-   docker exec -it <container_id> bash
-   ```
-
-7. Test the deployed model:
-
-   ```shell
-   python scripts/deploy/nlp/query_ray_deployment.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
       --model_id llama \
       --host 0.0.0.0 \
       --port 1024
@@ -71,7 +66,7 @@ Follow these steps to deploy your model on Ray Serve:
 2. Deploy your model:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
@@ -121,7 +116,7 @@ Ray Serve excels at single-node multi-instance deployment. This allows you to de
 1. Deploy multiple replicas using the ``--num_replicas`` parameter:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 4 \
@@ -133,7 +128,7 @@ Ray Serve excels at single-node multi-instance deployment. This allows you to de
 2. For models that require multiple GPUs per replica:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
@@ -156,7 +151,7 @@ Use the ``query_ray_deployment.py`` script to test your deployed model:
 1. Basic testing:
 
    ```shell
-   python scripts/deploy/nlp/query_ray_deployment.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
       --model_id llama \
       --host 0.0.0.0 \
       --port 1024
@@ -179,7 +174,7 @@ For more advanced deployment scenarios:
 1. **Custom Resource Allocation**:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 3 \
@@ -193,7 +188,7 @@ For more advanced deployment scenarios:
 2. **Memory Management**:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
