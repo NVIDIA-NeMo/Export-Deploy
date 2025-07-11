@@ -234,6 +234,12 @@ def setup_model_and_tokenizer_for_inference(
 
     model_config = model_context.config
 
+    # Disable gradient_accumulation_fusion since its not required for inference
+    # and only available with Apex. We don't support Apex for community cuda-based
+    # installs.
+    if hasattr(model_config, "gradient_accumulation_fusion"):
+        model_config.gradient_accumulation_fusion = False
+
     # Apply ModelOpt specs if they exist in the checkpoint
     set_modelopt_spec_if_exists_in_ckpt(model_context, checkpoint_path)
 
@@ -380,6 +386,12 @@ def create_mcore_engine(
     checkpoint_path = Path(path)
     model_context = io.load_context(path=ckpt_to_context_subdir(checkpoint_path), subpath="model")
     model_config = model_context.config
+
+    # Disable gradient_accumulation_fusion since its not required for inference
+    # and only available with Apex. We don't support Apex for community cuda-based
+    # installs.
+    if hasattr(model_config, "gradient_accumulation_fusion"):
+        model_config.gradient_accumulation_fusion = False
 
     # Use checkpoint values as defaults if not specified
     tp_size = (
