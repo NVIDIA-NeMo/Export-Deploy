@@ -52,6 +52,24 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
   nvcr.io/nvidia/nemo:${TAG}
 ```
 
+#### Install TRT-LLM (or vLLM)
+
+NeMo-FW container comes since version 25.07 without TRT-LLM or vLLM pre-installed. Please run the following command inside the container:
+
+For TRT-LLM:
+
+```bash
+cd /opt/Export-Deploy
+uv sync --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
+```
+
+For vLLM:
+
+```bash
+cd /opt/Export-Deploy
+uv sync --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
+```
+
 ### 🐳 Using our Dockerfile
 
 For containerized development, use our Dockerfile for building your own container. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
