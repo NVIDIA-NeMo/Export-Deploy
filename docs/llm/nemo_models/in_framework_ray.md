@@ -25,7 +25,7 @@ This section demonstrates how to deploy NeMo LLM models using Ray Serve (referre
 3. Deploy the NeMo model to Ray:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --num_replicas 1 \
@@ -61,7 +61,7 @@ Follow these steps to deploy your NeMo model on Ray Serve:
 2. Deploy your model:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --num_replicas 1 \
@@ -101,7 +101,7 @@ NeMo models support advanced parallelism strategies for large model deployment:
 1. **Tensor Model Parallelism**: Distributes model layers across multiple GPUs:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id large_llama \
       --num_gpus 4 \
@@ -113,7 +113,7 @@ NeMo models support advanced parallelism strategies for large model deployment:
 2. **Pipeline Model Parallelism**: Distributes model layers sequentially across GPUs:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id large_llama \
       --num_gpus 4 \
@@ -141,7 +141,7 @@ Deploy multiple replicas of your NeMo model for increased throughput:
 1. **Single GPU per replica**:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --num_replicas 4 \
@@ -154,7 +154,7 @@ Deploy multiple replicas of your NeMo model for increased throughput:
 2. **Multiple GPUs per replica with tensor parallelism**:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id large_llama \
       --num_replicas 2 \
@@ -176,7 +176,7 @@ Enable performance optimizations for faster inference:
 1. **CUDA Graphs**: Reduces kernel launch overhead:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --enable_cuda_graphs \
@@ -188,7 +188,7 @@ Enable performance optimizations for faster inference:
 2. **Flash Attention Decode**: Optimizes attention computation:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --enable_flash_decode \
@@ -200,7 +200,7 @@ Enable performance optimizations for faster inference:
 3. **Combined Optimizations**:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --enable_cuda_graphs \
@@ -218,7 +218,7 @@ Use the ``query_ray_deployment.py`` script to test your deployed NeMo model:
 1. Basic testing:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
       --model_id llama \
       --host 0.0.0.0 \
       --port 1024
@@ -241,7 +241,7 @@ For more advanced deployment scenarios:
 1. **Custom Resource Allocation**:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --num_replicas 2 \
@@ -255,7 +255,7 @@ For more advanced deployment scenarios:
 2. **Legacy Checkpoint Support**:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --legacy_ckpt \

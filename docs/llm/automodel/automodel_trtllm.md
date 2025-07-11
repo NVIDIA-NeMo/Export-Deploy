@@ -20,7 +20,7 @@ This section shows how to use scripts and APIs to export a Hugging Face model to
 2. Run the following deployment script to verify that everything is working correctly. The script exports the Hugging Face model to TensorRT-LLM and subsequently serves it on the Triton server:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
       --hf_model_id_path meta-llama/Meta-Llama-3-8B-Instruct \
       --model_type LlamaForCausalLM \
       --triton_model_name llama \
@@ -31,7 +31,7 @@ This section shows how to use scripts and APIs to export a Hugging Face model to
 
    ```shell
    cd /opt/Export-Deploy
-   uv sync --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
+   uv sync --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
 
    ```
 
@@ -46,7 +46,7 @@ This section shows how to use scripts and APIs to export a Hugging Face model to
 6. To send a query to the Triton server, run the following script:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
+   python /opt/Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
    ```
 
 ## Use a Script to Deploy Hugging Face Models on a Triton Server
@@ -81,7 +81,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
 
    ```shell
 
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
       --hf_model_id_path meta-llama/Meta-Llama-3-8B-Instruct \
       --model_type LlamaForCausalLM \
       --triton_model_name llama \
@@ -91,7 +91,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    b. To use a locally downloaded model:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
       --hf_model_id_path /path/to/your/local/model \
       --model_type LlamaForCausalLM \
       --triton_model_name llama \
@@ -207,7 +207,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
        -w /opt/NeMo \
        nvcr.io/nvidia/nemo:vr
 
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
        --hf_model_id_path /path/to/your/local/model \
        --model_type LlamaForCausalLM \
        --triton_model_name llama \
@@ -220,7 +220,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
 5. To load the exported model directly, run the following script within the container:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
        --triton_model_name llama \
        --triton_model_repository /opt/checkpoints/tmp_triton_model_repository \
        --model_type LlamaForCausalLM

@@ -21,7 +21,7 @@ This section demonstrates how to deploy PyTorch-level NeMo LLMs within the frame
 3. Using a NeMo 2.0 model, run the following deployment script to verify that everything is working correctly. The script directly serves the NeMo 2.0 model on the Triton server:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo --triton_model_name llama
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo --triton_model_name llama
    ```
 
 4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
@@ -35,7 +35,7 @@ This section demonstrates how to deploy PyTorch-level NeMo LLMs within the frame
 6. To send a query to the Triton server, run the following script:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query_inframework.py -mn llama -p "What is the color of a banana?" -mol 5
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework.py -mn llama -p "What is the color of a banana?" -mol 5
    ```
 
 Please note that only NeMo 2.0 checkpoints are supported by the In-Framework deployment option.
@@ -53,7 +53,7 @@ Executing the script will directly deploy the NeMo LLM model and initiate the se
 2. To begin serving the downloaded model, run the following script:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo --triton_model_name llama
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo --triton_model_name llama
    ```
 
    The following parameters are defined in the ``deploy_inframework_triton.py`` script:

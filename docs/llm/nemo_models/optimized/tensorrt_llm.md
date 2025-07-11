@@ -22,14 +22,14 @@ This section shows how to use scripts and APIs to export a NeMo LLM (*.nemo*) or
 
    ```shell
    cd /opt/Export-Deploy
-   uv sync --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
+   uv sync --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
 
    ```
 
 4. Run the following deployment script to verify that everything is working correctly. The script exports the Llama NeMo checkpoint to TensorRT-LLM and subsequently serves it on the Triton server:
 
     ```shell
-    python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
         --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
         --model_type llama \
         --triton_model_name llama \
@@ -47,7 +47,7 @@ This section shows how to use scripts and APIs to export a NeMo LLM (*.nemo*) or
 7. To send a query to the Triton server, run the following script:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
+   python /opt/Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
    ```
    
 8. To export and deploy a different model such as Llama3, Mixtral, or Starcoder, change the ``model_type`` in the `deploy_triton.py <https://github.com/NVIDIA/NeMo/blob/main/scripts/deploy/nlp/deploy_triton.py>`_ script. Please check below to see the list of the model types. For quantized *qnemo* models, specifying ``model_type`` is not necessary as this information is included in the TensorRT-LLM checkpoint.
@@ -66,7 +66,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
 2. To begin serving the [downloaded model](../../index.md) or a [quantized](https://docs.nvidia.com/nemo-framework/user-guide/latest/model-optimization/quantization/quantization.html) model, run the following script:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
        --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
        --model_type llama \
        --triton_model_name llama \
@@ -127,7 +127,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
        -w /opt/NeMo \
        nvcr.io/nvidia/nemo:vr
 
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
        --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
        --model_type llama \
        --triton_model_name llama \
@@ -140,7 +140,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
 5. To load the exported model directly, run the following script within the container:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
        --triton_model_name llama \
        --triton_model_repository /opt/checkpoints/tmp_triton_model_repository \
        --model_type llama
@@ -162,6 +162,19 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    export HF_TOKEN=your_token_here
    ```
 
+### Export and Deploy a LLM Model with TensorRT-LLM API
+
+Alternatively, if the **deploy_triton** script is unable to export your model to TensorRT-LLM, you can leverage the new [TensorRT-LLM LLM API](https://nvidia.github.io/TensorRT-LLM/quick-start-guide.html#llm-api). This API provides a streamlined way to export and deploy models. See the example below:
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+   --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
+   --model_type llama \
+   --triton_model_name llama \
+   --tensor_parallelism_size 1
+```
+
+After starting the Triton server, you can query the deployed model using the **/opt/Export-Deploy/scripts/deploy/nlp/query.py** script, as demonstrated in the previous steps.
 
 
 ## Use NeMo Export and Deploy Module APIs to Run Inference

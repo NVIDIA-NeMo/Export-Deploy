@@ -14,7 +14,7 @@ The following example shows how to execute the query script within the currently
 1. To use a query script, run the following command:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name nemotron --prompt "What is the capital of United States?"
+   python /opt/Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name nemotron --prompt "What is the capital of United States?"
    ```
    
 2. Change the url and the ``model_name`` based on your server and the model name of your service. The code in the script can be used as a basis for your client code as well.
@@ -22,7 +22,7 @@ The following example shows how to execute the query script within the currently
 3. If the there is a prompt embedding table, run the following command to send a query:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name nemotron --prompt "What is the capital of United States?" --task_id "task 1"
+   python /opt/Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name nemotron --prompt "What is the capital of United States?" --task_id "task 1"
    ```
    
 4. The following parameters are defined in the ``deploy_triton.py`` script:

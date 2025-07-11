@@ -30,7 +30,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models within the fra
 4. Deploy the model to Triton:
 
    ```python
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama
    ```
@@ -46,7 +46,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models within the fra
 6. Test the deployed model:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query_inframework_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework_hf.py \
       -mn llama \
       -p "What is the color of a banana?" \
       -mol 15
@@ -63,7 +63,7 @@ Follow these steps to deploy your model on the Triton Inference Server:
 2. Deploy your model:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama
    ```
@@ -107,7 +107,7 @@ For multi-GPU inference:
 
    ```shell
    torchrun --standalone --nnodes=1 --nproc_per_node=2 \
-      /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
+      /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama \
       --tp_plan auto

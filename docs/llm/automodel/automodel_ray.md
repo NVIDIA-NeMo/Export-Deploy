@@ -29,7 +29,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models using Ray Serv
 4. Deploy the model to Ray:
 
    ```python
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
@@ -49,7 +49,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models using Ray Serv
 6. Test the deployed model:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
       --model_id llama \
       --host 0.0.0.0 \
       --port 1024
@@ -66,7 +66,7 @@ Follow these steps to deploy your model on Ray Serve:
 2. Deploy your model:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
@@ -116,7 +116,7 @@ Ray Serve excels at single-node multi-instance deployment. This allows you to de
 1. Deploy multiple replicas using the ``--num_replicas`` parameter:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 4 \
@@ -128,7 +128,7 @@ Ray Serve excels at single-node multi-instance deployment. This allows you to de
 2. For models that require multiple GPUs per replica:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
@@ -151,7 +151,7 @@ Use the ``query_ray_deployment.py`` script to test your deployed model:
 1. Basic testing:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
       --model_id llama \
       --host 0.0.0.0 \
       --port 1024
@@ -174,7 +174,7 @@ For more advanced deployment scenarios:
 1. **Custom Resource Allocation**:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 3 \
@@ -188,7 +188,7 @@ For more advanced deployment scenarios:
 2. **Memory Management**:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \

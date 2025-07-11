@@ -30,7 +30,7 @@ This section shows how to use scripts and APIs to export a NeMo LLM to vLLM and 
 4. Run the following deployment script to verify that everything is working correctly. The script exports the Llama NeMo checkpoint to vLLM and subsequently serves it on the Triton server:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
        --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
        --model_type llama \
        --triton_model_name llama \
@@ -48,7 +48,7 @@ This section shows how to use scripts and APIs to export a NeMo LLM to vLLM and 
 7. To send a query to the Triton server, run the following script:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "The capital of Canada is" -mol 50
+   python /opt/Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "The capital of Canada is" -mol 50
    ```
 
 8. To export and deploy a different model such as Llama3, Mixtral, or Starcoder, change the *model_type* in the *scripts/deploy/nlp/deploy_vllm_triton.py* script. Please check below to see the list of the model types.
@@ -67,7 +67,7 @@ After executing the script, it will export the model to vLLM and then initiate t
 2. To begin serving the downloaded model, run the following script:
 
    ```shell
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
        --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
        --model_type llama \
        --triton_model_name llama \
@@ -114,7 +114,7 @@ After executing the script, it will export the model to vLLM and then initiate t
 
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:vr
 
-   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
        --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
        --model_type llama \
        --triton_model_name llama \
@@ -151,13 +151,11 @@ Up until now, we have used scripts for exporting and deploying LLM models. Howev
 You can use the APIs in the export module to export a NeMo checkpoint to vLLM. The following code example assumes the ``hf_llama31_8B_nemo2.nemo`` checkpoint has already been downloaded and mounted to the ``/opt/checkpoints/`` path.
 
 ```python
-import os
 from nemo_export.vllm_exporter import vLLMExporter
 
 checkpoint_file = "/opt/checkpoints/hf_llama31_8B_nemo2.nemo"
 model_dir = "/opt/checkpoints/hf_llama31_8B_nemo2.nemo/vllm_export"
 
-# Export the checkpoint to vLLM, prepare for inference
 exporter = vLLMExporter()
 exporter.export(
     nemo_checkpoint=checkpoint_file,
@@ -165,7 +163,6 @@ exporter.export(
     model_type="llama",
 )
    
-# Run inference and print the output
 output = exporter.forward(["What is the best city in the world?"], max_output_len=50, top_k=1, top_p=0.0, temperature=1.0)
 print("output: ", output)
 ```
