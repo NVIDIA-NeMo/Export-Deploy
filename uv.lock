@@ -4703,11 +4703,11 @@ wheels = [
 
 [[package]]
 name = "opentelemetry-semantic-conventions-ai"
-version = "0.4.10"
+version = "0.4.11"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f3/5d/ccc07fb79e7ee07887db0d7a729a640857d57b2e5023870e8ebdad2f11b4/opentelemetry_semantic_conventions_ai-0.4.10.tar.gz", hash = "sha256:3d8d1ea515a8470e135ca698459a4fd1d99fa297fc8c4bf14fdb1c789207bdc6", size = 4918, upload-time = "2025-07-02T19:20:00.767Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/39/8a/9228919e167a03f4c4f4c424a185dbfe62bd8597b9e2b20570b9db85bc84/opentelemetry_semantic_conventions_ai-0.4.11.tar.gz", hash = "sha256:bc84b71c66a01a5836a28104e691c5524f4f677fc90b40a4e6fbc2ec3e250610", size = 4825, upload-time = "2025-07-14T13:32:44.855Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/02/c4/54b68f5d03a4eb7c34e0e2863d6a9cd7b3b1a981daec0060eff219880fce/opentelemetry_semantic_conventions_ai-0.4.10-py3-none-any.whl", hash = "sha256:3e78251971ba58cc135a85d2a7868052add9b39e8090bcfb1b43c5045e70b803", size = 5621, upload-time = "2025-07-02T19:19:59.477Z" },
+    { url = "https://files.pythonhosted.org/packages/47/a3/eab56cbd9a7d6f7c797172c0600be60811777535fea9c820ede9e985f1c4/opentelemetry_semantic_conventions_ai-0.4.11-py3-none-any.whl", hash = "sha256:9b07da1e66bed1746b61bb5d49d8fba9ae693625ec4ea94ddab390760505bf4b", size = 5682, upload-time = "2025-07-14T13:32:43.877Z" },
 ]
 
 [[package]]
