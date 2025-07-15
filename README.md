@@ -8,7 +8,7 @@
 
 <!-- [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) -->
 [![codecov](https://codecov.io/github/NVIDIA-NeMo/Export-Deploy/graph/badge.svg?token=4NMKZVOW2Z)](https://codecov.io/github/NVIDIA-NeMo/Export-Deploy)
-[![CICD NeMo](https://github.com/NVIDIA-NeMo/Export-Deploy/actions/workflows/cicd-main.yml/badge.svg)](https://github.com/NVIDIA-NeMo/Export-Deploy/actions/workflows/cicd-main.yml)
+[![CI/CD](https://img.shields.io/github/actions/workflow/status/NVIDIA-NeMo/Export-Deploy/cicd-main.yml?branch=main)](https://github.com/NVIDIA-NeMo/Export-Deploy/actions/workflows/cicd-main.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![GitHub Stars](https://img.shields.io/github/stars/NVIDIA-NeMo/Export-Deploy.svg?style=social&label=Star)](https://github.com/NVIDIA-NeMo/Export-Deploy/stargazers/)
 
