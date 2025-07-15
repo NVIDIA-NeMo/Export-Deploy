@@ -3195,9 +3195,9 @@ wheels = [
 ]
 
 [[package]]
-name = "megatron-hub"
+name = "megatron-bridge"
 version = "0.1.0rc0"
-source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git?rev=cc2a60c3be11549f070fe1d7b6324a3dae51c6e0#cc2a60c3be11549f070fe1d7b6324a3dae51c6e0" }
+source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=cc2a60c3be11549f070fe1d7b6324a3dae51c6e0#cc2a60c3be11549f070fe1d7b6324a3dae51c6e0" }
 dependencies = [
     { name = "accelerate" },
     { name = "datasets", version = "3.1.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
@@ -3631,8 +3631,8 @@ docs = [
 linting = [
     { name = "ruff" },
 ]
-megatron-hub-pre = [
-    { name = "megatron-hub" },
+megatron-bridge-pre = [
+    { name = "megatron-bridge" },
 ]
 nemo-legacy = [
     { name = "nemo-toolkit", extra = ["automodel", "common-only", "eval", "multimodal-only", "nlp-only"] },
@@ -3698,7 +3698,7 @@ docs = [
     { name = "sphinx-copybutton" },
 ]
 linting = [{ name = "ruff", specifier = "~=0.9.0" }]
-megatron-hub-pre = [{ name = "megatron-hub", git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git?rev=cc2a60c3be11549f070fe1d7b6324a3dae51c6e0" }]
+megatron-bridge-pre = [{ name = "megatron-bridge", git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=cc2a60c3be11549f070fe1d7b6324a3dae51c6e0" }]
 nemo-legacy = [{ name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], git = "https://github.com/NVIDIA/NeMo.git?rev=5e63ca3c1631bb156187705f9c4cf643a67f9c05" }]
 test = [
     { name = "click" },
