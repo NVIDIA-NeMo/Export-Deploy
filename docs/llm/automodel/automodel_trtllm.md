@@ -1,5 +1,5 @@
 
-# Deploy Hugging Face Models by Exporting to TensorRT-LLM 
+# Deploy Hugging Face Models by Exporting to TensorRT-LLM
 
 This section shows how to use scripts and APIs to export a Hugging Face model to TensorRT-LLM, and deploy it with the NVIDIA Triton Inference Server.
 
@@ -53,13 +53,13 @@ This section shows how to use scripts and APIs to export a Hugging Face model to
 
 You can deploy a Hugging Face model on Triton using the provided script.
 
-### Export and Deploy a Hugging Face Model 
+### Export and Deploy a Hugging Face Model
 
 After executing the script, it will export the model to TensorRT-LLM and then initiate the service on Triton.
 
 1. Start the container using the steps described in the **Quick Example** section.
 
-2. If you want to deploy a model that needs to be downloaded from Hugging Face, you need to generate a Hugging Face token that has access to these models. Visit `Hugging Face <https://huggingface.co/>`__ for more information. After you have the token, perform one of the following steps.
+2. To deploy a model that needs to be downloaded from Hugging Face, you need to generate a Hugging Face token that has access to these models. Visit `Hugging Face <https://huggingface.co/>`__ for more information. After you have the token, perform one of the following steps.
 
    - Log in to Hugging Face:
 
@@ -73,9 +73,9 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    export HF_TOKEN=your_token_here
    ```
 
-   **Note: **If you're using a locally downloaded model, you don't need to provide a Hugging Face token unless the model requires it for downloading additional resources.
+   **Note:** If you're using a locally downloaded model, you don't need to provide a Hugging Face token unless the model requires it for downloading additional resources.
 
-2. To begin serving a Hugging Face model, you can use either a model ID from the Hugging Face hub or a path to a locally downloaded model:
+2. To begin serving a Hugging Face model, you can use either a model ID from the Hugging Face Hub or a path to a locally downloaded model:
 
    a. Using a Hugging Face model ID:
 
@@ -196,7 +196,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    | RobertaForQuestionAnswering  |     RobertaForQuestionAnswering|
    | RobertaForSequenceClassification | RobertaForSequenceClassification|
    
-4. Whenever the script is executed, it initiates the service by exporting the Hugging Face model to TensorRT-LLM. If you want to skip the exporting step in the optimized inference option, you can specify an empty directory to save the TensorRT-LLM engine produced. Stop the running container and then run the following command to specify an empty directory:
+4. Whenever the script is executed, it initiates the service by exporting the Hugging Face model to TensorRT-LLM. To skip the exporting step in the optimized inference option, you can specify an empty directory to save the TensorRT-LLM engine produced. Stop the running container and then run the following command to specify an empty directory:
 
    ```shell
 

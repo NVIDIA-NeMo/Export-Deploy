@@ -65,7 +65,7 @@ Executing the script will directly deploy the NeMo LLM model and initiate the se
    - ``--triton_http_address``: HTTP address for the Triton server. Default is 0.0.0.0.
    - ``--num_gpus``: number of GPUs to use for inference. Large models require multi-gpu export. *This parameter is deprecated*.
    - ``--max_batch_size``: maximum batch size of the model. Default is 8.
-   - ``--debug_mode``: enables additional debug logging messages from the script
+   - ``--debug_mode``: enables additional debug logging messages from the script.
 
 3. To deploy a different model, just change the ``--nemo_checkpoint`` in the [scripts/deploy/nlp/deploy_inframework_triton.py](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/scripts/deploy/nlp/deploy_inframework_triton.py) script.
 

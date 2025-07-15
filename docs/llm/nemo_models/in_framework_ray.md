@@ -94,7 +94,7 @@ Follow these steps to deploy your NeMo model on Ray Serve:
 3. To use a different model, modify the ``--nemo_checkpoint`` parameter with the path to your .nemo checkpoint file.
 
 
-### Model Parallelism Configuration
+### Configure Model Parallelism
 
 NeMo models support advanced parallelism strategies for large model deployment:
 
@@ -134,7 +134,7 @@ NeMo models support advanced parallelism strategies for large model deployment:
       --cuda_visible_devices "0,1,2,3,4,5,6,7"
    ```
 
-### Multi-Replica Deployment
+### Deploy Multiple Replicas
 
 Deploy multiple replicas of your NeMo model for increased throughput:
 
@@ -165,11 +165,11 @@ Deploy multiple replicas of your NeMo model for increased throughput:
    ```
 
 **Important GPU Configuration Notes:**
-- GPUs per replica = Total GPUs ÷ ``--num_replicas``
-- Each replica needs: ``--tensor_model_parallel_size`` × ``--pipeline_model_parallel_size`` × ``--context_parallel_size`` GPUs
-- Ensure ``--cuda_visible_devices`` lists all GPUs that will be used
+- GPUs per replica = Total GPUs ÷ ``--num_replicas``.
+- Each replica needs: ``--tensor_model_parallel_size`` × ``--pipeline_model_parallel_size`` × ``--context_parallel_size`` GPUs.
+- Ensure ``--cuda_visible_devices`` lists all GPUs that will be used.
 
-### Performance Optimization
+### Optimize Performance
 
 Enable performance optimizations for faster inference:
 
@@ -211,7 +211,7 @@ Enable performance optimizations for faster inference:
       --cuda_visible_devices "0,1,2,3"
    ```
 
-### Testing Ray Deployment
+### Test Ray Deployment
 
 Use the ``query_ray_deployment.py`` script to test your deployed NeMo model:
 
@@ -234,7 +234,7 @@ Use the ``query_ray_deployment.py`` script to test your deployed NeMo model:
    - ``--port``: Port number of the Ray Serve server. Default is 1024.
    - ``--model_id``: Identifier for the model in the API responses. Default is "nemo-model".
 
-### Advanced Configuration
+### Configure Advanced Deployments
 
 For more advanced deployment scenarios:
 
@@ -288,14 +288,14 @@ curl -X POST http://localhost:1024/v1/completions/ \
 
 ## Troubleshooting
 
-1. **Out of Memory Errors**: Reduce ``--num_replicas`` or adjust parallelism settings
-2. **Port Already in Use**: Change the ``--port`` parameter
-3. **Ray Cluster Issues**: Ensure no other Ray processes are running: ``ray stop``
-4. **GPU Allocation**: Verify ``--cuda_visible_devices`` matches your available GPUs
-5. **Parallelism Configuration Errors**: Ensure total parallelism per replica matches available GPUs per replica
-6. **CUDA Device Mismatch**: Make sure the number of devices in ``--cuda_visible_devices`` equals total GPUs
-7. **Checkpoint Loading Issues**: Verify the ``.nemo`` checkpoint path is correct and accessible
-8. **Legacy Checkpoint**: Use ``--legacy_ckpt`` flag for older checkpoint formats
+1. **Out of Memory Errors**: Reduce ``--num_replicas`` or adjust parallelism settings.
+2. **Port Already in Use**: Change the ``--port`` parameter.
+3. **Ray Cluster Issues**: Ensure no other Ray processes are running: ``ray stop``.
+4. **GPU Allocation**: Verify ``--cuda_visible_devices`` matches your available GPUs.
+5. **Parallelism Configuration Errors**: Ensure total parallelism per replica matches available GPUs per replica.
+6. **CUDA Device Mismatch**: Make sure the number of devices in ``--cuda_visible_devices`` equals total GPUs.
+7. **Checkpoint Loading Issues**: Verify the ``.nemo`` checkpoint path is correct and accessible.
+8. **Legacy Checkpoint**: Use ``--legacy_ckpt`` flag for older checkpoint formats.
 
 **Note:** Only NeMo 2.0 checkpoints are supported by default. For older checkpoints, use the ``--legacy_ckpt`` flag.
 
