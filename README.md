@@ -220,7 +220,7 @@ nm.deploy()
 nm.serve()
 ```
 
-After running the code above, Triton Inference Server will start and begin serving the model. For instructions on how to query the deployed model and make inference requests, please refer to [Query Deployed Models](#query-deployed-models).
+After running the code above, Triton Inference Server will start and begin serving the model. For instructions on how to query the deployed model and make inference requests, please refer to [Query Deployed Models](#-query-deployed-models).
 
 ### Export and Deploy NeMo LLM Models to TensorRT-LLM and Triton Inference Server
 
