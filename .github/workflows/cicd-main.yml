@@ -30,7 +30,7 @@ permissions:
 
 jobs:
   pre-flight:
-    uses: NVIDIA-NeMo/FW-CI-templates/_cicd_preflight.yml@ko3n1g/feat/cicd-preflight
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@ko3n1g/feat/cicd-preflight
 
   linting:
     runs-on: ubuntu-latest
