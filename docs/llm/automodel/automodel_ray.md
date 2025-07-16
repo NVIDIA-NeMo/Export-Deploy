@@ -1,6 +1,6 @@
 # Deploy NeMo AutoModel LLM Models using Ray
 
-This section demonstrates how to deploy NeMo AutoModel LLM Models using Ray Serve (referred to as 'Ray for AutoModel LLM'). Ray deployment support has been added in addition to Triton, to support single node multi-instance deployment. Ray Serve provides a scalable and flexible platform for deploying machine learning models, offering features such as automatic scaling, load balancing, and multi-replica deployment.
+This section demonstrates how to deploy NeMo AutoModel LLM models using Ray Serve (referred to as 'Ray for AutoModel LLM'). To support single-node, multi-instance deployment, Ray is now offered as an alternative to Triton. Ray Serve provides a scalable and flexible platform for deploying machine learning models, offering features such as automatic scaling, load balancing, and multi-replica deployment.
 
 ## Quick Example
 
@@ -109,7 +109,7 @@ Follow these steps to deploy your model on Ray Serve:
    export HF_TOKEN=your_token_here
    ```
 
-### Multi-Replica Deployment
+### Deploy Multiple Replicas
 
 Ray Serve excels at single-node multi-instance deployment. This allows you to deploy multiple instances of the same model to handle increased load:
 
@@ -140,11 +140,11 @@ Ray Serve excels at single-node multi-instance deployment. This allows you to de
 3. Ray automatically handles load balancing across replicas, distributing incoming requests to available instances.
 
 **Important GPU Configuration Notes:**
-- ``--num_gpus`` should equal ``--num_replicas`` × ``--num_gpus_per_replica``
+- ``--num_gpus`` should equal ``--num_replicas`` × ``--num_gpus_per_replica``.
 - ``--cuda_visible_devices`` should list all GPUs that will be used
-- Ensure the number of devices in ``--cuda_visible_devices`` matches ``--num_gpus``
+- Ensure the number of devices in ``--cuda_visible_devices`` matches ``--num_gpus``.
 
-### Testing Ray Deployment
+### Test Ray Deployment
 
 Use the ``query_ray_deployment.py`` script to test your deployed model:
 
@@ -158,16 +158,16 @@ Use the ``query_ray_deployment.py`` script to test your deployed model:
    ```
 
 2. The script will test multiple endpoints:
-   - Health check endpoint: ``/v1/health``
-   - Models list endpoint: ``/v1/models``
-   - Text completions endpoint: ``/v1/completions/``
+   - Health check endpoint: ``/v1/health``.
+   - Models list endpoint: ``/v1/models``.
+   - Text completions endpoint: ``/v1/completions/``.
 
 3. Available parameters for testing:
    - ``--host``: Host address of the Ray Serve server. Default is 0.0.0.0.
    - ``--port``: Port number of the Ray Serve server. Default is 1024.
    - ``--model_id``: Identifier for the model in the API responses. Default is "nemo-model".
 
-### Advanced Configuration
+### Configure Advanced Deployments
 
 For more advanced deployment scenarios:
 
@@ -203,10 +203,10 @@ For more advanced deployment scenarios:
 
 Once deployed, your model will be available through OpenAI-compatible API endpoints:
 
-- **Health Check**: ``GET /v1/health``
-- **List Models**: ``GET /v1/models``
-- **Text Completions**: ``POST /v1/completions/``
-- **Chat Completions**: ``POST /v1/chat/completions/``
+- **Health Check**: ``GET /v1/health``.
+- **List Models**: ``GET /v1/models``.
+- **Text Completions**: ``POST /v1/completions/``.
+- **Chat Completions**: ``POST /v1/chat/completions/``.
 
 Example API request:
 
@@ -223,11 +223,11 @@ curl -X POST http://localhost:1024/v1/completions/ \
 
 ## Troubleshooting
 
-1. **Out of Memory Errors**: Reduce ``--num_replicas`` or ``--num_gpus_per_replica``
-2. **Port Already in Use**: Change the ``--port`` parameter
-3. **Ray Cluster Issues**: Ensure no other Ray processes are running: ``ray stop``
-4. **GPU Allocation**: Verify ``--cuda_visible_devices`` matches your available GPUs
-5. **GPU Configuration Errors**: Ensure ``--num_gpus`` = ``--num_replicas`` × ``--num_gpus_per_replica``
-6. **CUDA Device Mismatch**: Make sure the number of devices in ``--cuda_visible_devices`` equals ``--num_gpus``
+1. **Out of Memory Errors**: Reduce ``--num_replicas`` or ``--num_gpus_per_replica``.
+2. **Port Already in Use**: Change the ``--port`` parameter.
+3. **Ray Cluster Issues**: Ensure no other Ray processes are running: ``ray stop``.
+4. **GPU Allocation**: Verify ``--cuda_visible_devices`` matches your available GPUs.
+5. **GPU Configuration Errors**: Ensure ``--num_gpus`` = ``--num_replicas`` × ``--num_gpus_per_replica``.
+6. **CUDA Device Mismatch**: Make sure the number of devices in ``--cuda_visible_devices`` equals ``--num_gpus``.
 
 For more information on Ray Serve, visit the [Ray Serve documentation](https://docs.ray.io/en/latest/serve/index.html). 

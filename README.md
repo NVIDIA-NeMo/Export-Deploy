@@ -8,13 +8,16 @@
 
 <!-- [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) -->
 [![codecov](https://codecov.io/github/NVIDIA-NeMo/Export-Deploy/graph/badge.svg?token=4NMKZVOW2Z)](https://codecov.io/github/NVIDIA-NeMo/Export-Deploy)
-[![CICD NeMo](https://github.com/NVIDIA-NeMo/Export-Deploy/actions/workflows/cicd-main.yml/badge.svg)](https://github.com/NVIDIA-NeMo/Export-Deploy/actions/workflows/cicd-main.yml)
+[![CI/CD](https://img.shields.io/github/actions/workflow/status/NVIDIA-NeMo/Export-Deploy/cicd-main.yml?branch=main)](https://github.com/NVIDIA-NeMo/Export-Deploy/actions/workflows/cicd-main.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![GitHub Stars](https://img.shields.io/github/stars/NVIDIA-NeMo/Export-Deploy.svg?style=social&label=Star)](https://github.com/NVIDIA-NeMo/Export-Deploy/stargazers/)
 
 <!-- **Library with tooling and APIs for exporting and deploying NeMo and Hugging Face models with support of backends like  TensorRT, TensorRT-LLM and vLLM through NVIDIA Triton Inference Server.** -->
 
-[📖 Documentation](https://docs.nvidia.com/nemo/Export-Deploy/latest/index.html) • [🔧 Installation](https://github.com/NVIDIA-NeMo/Export-Deploy/#-installation) • [🚀 Quick start](https://github.com/NVIDIA-NeMo/Export-Deploy/#quick-start) • [🤝 Contributing](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md)
+[![📖 Documentation](https://img.shields.io/badge/docs-nvidia-informational?logo=book)](https://docs.nvidia.com/nemo/Export-Deploy/latest/index.html)
+[![🔧 Installation](https://img.shields.io/badge/install-guide-blue?logo=terminal)](https://github.com/NVIDIA-NeMo/Export-Deploy/#-install)
+[![🚀 Quick start](https://img.shields.io/badge/quick%20start-guide-success?logo=rocket)](https://github.com/NVIDIA-NeMo/Export-Deploy/#-get-started-quickly)
+[![🤝 Contributing](https://img.shields.io/badge/contributing-guide-yellow?logo=github)](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md)
 
 </div>
 
@@ -29,7 +32,7 @@ NVIDIA NeMo Export-Deploy library provides tools and APIs for exporting and depl
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
-## 🔧 Installation
+## 🔧 Install
 
 For quick exploration of NeMo Export-Deploy, we recommend installing our pip package:
 
@@ -41,7 +44,7 @@ This installation comes without extra dependencies like TransformerEngine, Tenso
 
 For a feature-complete install, please refer to the following sections.
 
-### 🐳 Using NeMo-FW container
+### Use NeMo-FW Container
 
 Best experience, highest performance and full feature support is guaranteed by the [NeMo Framework container](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/nemo/tags). Please fetch the most recent `$TAG` and run the following command to start a container:
 
@@ -70,7 +73,7 @@ cd /opt/Export-Deploy
 uv sync --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
 ```
 
-### 🐳 Using our Dockerfile
+### Build with Dockerfile
 
 For containerized development, use our Dockerfile for building your own container. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
 
@@ -91,18 +94,18 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
   nemo-export-deploy
 ```
 
-### 🛠️ Source install
+### Install from Source
 
 For complete feature coverage, we recommend to install [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/?tab=readme-ov-file#pip-installation) and additionally either [TensorRT-LLM](https://nvidia.github.io/TensorRT-LLM/0.20.0/installation/linux.html) or [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#pre-built-wheels).
 
-#### Recommended requirements
+#### Recommended Requirements
 
 - Python 3.12
 - PyTorch 2.7
 - CUDA 12.8
 - Ubuntu 24.04
 
-#### TransformerEngine + InFramework
+#### Install TransformerEngine + InFramework
 
 For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
 
@@ -116,7 +119,7 @@ Now proceed with the main installation:
 pip install --no-build-isolation .[te]
 ```
 
-#### TransformerEngine + TRT-LLM
+#### Install TransformerEngine + TRT-LLM
 
 For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
 
@@ -131,7 +134,7 @@ Now proceed with the main installation:
 pip install --no-build-isolation .[te,trtllm]
 ```
 
-#### TransformerEngine + vLLM
+#### Install TransformerEngine + vLLM
 
 For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
 
@@ -145,9 +148,9 @@ Now proceed with the main installation:
 pip install --no-build-isolation .[te,vllm]
 ```
 
-## 🚀 Quick Start
+## 🚀 Get Started Quickly
 
-The following steps are based on a self-built [container](#-using-our-dockerfile).
+The following steps are based on a self-built [container](#build-with-dockerfile).
 
 ### Generate a NeMo Checkpoint
 
@@ -182,11 +185,11 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
     --config Llama32Config1B
    ```
 
-### Export-Deploy LLM Examples
+## 🚀 Export and Deploy Examples
 
-The following examples demonstrate how to Export-Deploy Large Language Models (LLMs) using NeMo Export-Deploy. These examples cover both Hugging Face and NeMo model formats, showing how to export them to TensorRT-LLM and deploy using NVIDIA Triton Inference Server for high-performance inference.
+The following examples demonstrate how to export and deploy Large Language Models (LLMs) using NeMo Export-Deploy. These examples cover both Hugging Face and NeMo model formats, showing how to export them to TensorRT-LLM and deploy using NVIDIA Triton Inference Server for high-performance inference.
 
-#### Export Hugging Face Models to TensorRT-LLM and Deploy using Triton Inference Server
+### Export and Deploy Hugging Face Models to TensorRT-LLM and Triton Inference Server
 
 Please note that Llama models require special access permissions from Meta. To use Llama models, you must first accept Meta's license agreement and obtain access credentials. For instructions on obtaining access, please refer to the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) below.
 
@@ -217,9 +220,9 @@ nm.deploy()
 nm.serve()
 ```
 
-After running the code above, Triton Inference Server will start and begin serving the model. For instructions on how to query the deployed model and make inference requests, please refer to [Querying Deployed Models](#querying-deployed-models).
+After running the code above, Triton Inference Server will start and begin serving the model. For instructions on how to query the deployed model and make inference requests, please refer to [Query Deployed Models](#-query-deployed-models).
 
-#### Export NeMo LLM Models to TensorRT-LLM and Deploy using Triton Inference Server
+### Export and Deploy NeMo LLM Models to TensorRT-LLM and Triton Inference Server
 
 Before running the example below, ensure you have a NeMo checkpoint file. If you don't have a checkpoint yet, see the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) for step-by-step instructions on creating one.
 
@@ -250,7 +253,7 @@ nm.deploy()
 nm.serve()
 ```
 
-#### Export NeMo Models vLLM and Deploy using Triton Inference Server
+### Export and Deploy NeMo Models to vLLM and Triton Inference Server
 
 ```python
 from nemo_export.vllm_exporter import vLLMExporter
@@ -280,7 +283,7 @@ nm.deploy()
 nm.serve()
 ```
 
-#### Deploy NeMo Models using Triton Inference Server
+### Deploy NeMo Models Directly with Triton Inference Server
 
 You can also deploy NeMo and Hugging Face models directly using Triton Inference Server without exporting to inference optimized libraries like TensorRT-LLM or vLLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
 
@@ -300,7 +303,7 @@ nm.deploy()
 nm.serve()
 ```
 
-#### Deploy Hugging Face Models using Triton Inference Server
+### Deploy Hugging Face Models Directly with Triton Inference Server
 
 You can also deploy NeMo and Hugging Face models directly using Triton Inference Server without exporting to inference optimized libraries like TensorRT-LLM or vLLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
 
@@ -319,9 +322,7 @@ nm.deploy()
 nm.serve()
 ```
 
-### Export-Deploy Multimodal Examples
-
-#### Export NeMo Multimodal Models to TensorRT-LLM and Deploy using Triton Inference Server
+### Export and Deploy Multimodal Models to TensorRT-LLM and Triton Inference Server
 
 ```python
 from nemo_deploy import DeployPyTriton
@@ -342,9 +343,9 @@ nm.deploy()
 nm.serve()
 ```
 
-### Querying Deployed Models
+## 🔍 Query Deployed Models
 
-#### Query LLM Model
+### Query LLM Model
 
 ```python
 from nemo_deploy.nlp import NemoQueryLLM
@@ -357,7 +358,7 @@ output = nq.query_llm(
 print(output)
 ```
 
-#### Query Multimodal Model
+### Query Multimodal Model
 
 ```python
 from nemo_deploy.multimodal import NemoQueryMultimodal
