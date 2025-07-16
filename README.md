@@ -40,7 +40,7 @@ For quick exploration of NeMo Export-Deploy, we recommend installing our pip pac
 pip install nemo-export-deploy
 ```
 
-This installation comes without extra dependencies like TransformerEngine, TensorRT-LLM or vLLM. The installation serves for navigating around and for exploring the project.
+This installation comes without extra dependencies like [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/), [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM) or [vLLM](https://github.com/vllm-project/vllm). The installation serves for navigating around and for exploring the project.
 
 For a feature-complete install, please refer to the following sections.
 
@@ -57,7 +57,7 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
 
 #### Install TRT-LLM (or vLLM)
 
-NeMo-FW container comes since version 25.07 without TRT-LLM or vLLM pre-installed. Please run the following command inside the container:
+Starting with version 25.07, the NeMo FW container no longer includes TRT-LLM and vLLM pre-installed. Please run the following command inside the container:
 
 For TRT-LLM:
 
@@ -116,6 +116,8 @@ pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
 Now proceed with the main installation:
 
 ```bash
+git clone https://github.com/NVIDIA-NeMo/Export-Deploy
+cd Export-Deploy/
 pip install --no-build-isolation .[te]
 ```
 
