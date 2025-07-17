@@ -18,13 +18,14 @@ This section demonstrates how to deploy NeMo LLM models using Ray Serve (referre
        -p 1024:1024 \
        -v ${PWD}/:/opt/checkpoints/ \
        -w /opt/Export-Deploy \
+       --name nemo-fw \
        nvcr.io/nvidia/nemo:vr
    ``` 
 
 3. Deploy the NeMo model to Ray:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --num_replicas 1 \
@@ -34,19 +35,13 @@ This section demonstrates how to deploy NeMo LLM models using Ray Serve (referre
       --cuda_visible_devices "0"
    ```
 
-4. In a new terminal, get the container ID:
+4. In a separate terminal, access the running container as follows:
 
    ```shell
-   docker ps
+   docker exec -it nemo-fw bash
    ```
 
-5. Access the container:
-
-   ```shell
-   docker exec -it <container_id> bash
-   ```
-
-6. Test the deployed model:
+5. Test the deployed model:
 
    ```shell
    python scripts/deploy/nlp/query_ray_deployment.py \
@@ -66,7 +61,7 @@ Follow these steps to deploy your NeMo model on Ray Serve:
 2. Deploy your model:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --num_replicas 1 \
@@ -99,14 +94,14 @@ Follow these steps to deploy your NeMo model on Ray Serve:
 3. To use a different model, modify the ``--nemo_checkpoint`` parameter with the path to your .nemo checkpoint file.
 
 
-### Model Parallelism Configuration
+### Configure Model Parallelism
 
 NeMo models support advanced parallelism strategies for large model deployment:
 
 1. **Tensor Model Parallelism**: Distributes model layers across multiple GPUs:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id large_llama \
       --num_gpus 4 \
@@ -118,7 +113,7 @@ NeMo models support advanced parallelism strategies for large model deployment:
 2. **Pipeline Model Parallelism**: Distributes model layers sequentially across GPUs:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id large_llama \
       --num_gpus 4 \
@@ -130,7 +125,7 @@ NeMo models support advanced parallelism strategies for large model deployment:
 3. **Combined Parallelism**: Uses both tensor and pipeline parallelism:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/NeMo-Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id large_llama \
       --num_gpus 8 \
@@ -139,14 +134,14 @@ NeMo models support advanced parallelism strategies for large model deployment:
       --cuda_visible_devices "0,1,2,3,4,5,6,7"
    ```
 
-### Multi-Replica Deployment
+### Deploy Multiple Replicas
 
 Deploy multiple replicas of your NeMo model for increased throughput:
 
 1. **Single GPU per replica**:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --num_replicas 4 \
@@ -159,7 +154,7 @@ Deploy multiple replicas of your NeMo model for increased throughput:
 2. **Multiple GPUs per replica with tensor parallelism**:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id large_llama \
       --num_replicas 2 \
@@ -170,18 +165,18 @@ Deploy multiple replicas of your NeMo model for increased throughput:
    ```
 
 **Important GPU Configuration Notes:**
-- GPUs per replica = Total GPUs ÷ ``--num_replicas``
-- Each replica needs: ``--tensor_model_parallel_size`` × ``--pipeline_model_parallel_size`` × ``--context_parallel_size`` GPUs
-- Ensure ``--cuda_visible_devices`` lists all GPUs that will be used
+- GPUs per replica = Total GPUs ÷ ``--num_replicas``.
+- Each replica needs: ``--tensor_model_parallel_size`` × ``--pipeline_model_parallel_size`` × ``--context_parallel_size`` GPUs.
+- Ensure ``--cuda_visible_devices`` lists all GPUs that will be used.
 
-### Performance Optimization
+### Optimize Performance
 
 Enable performance optimizations for faster inference:
 
 1. **CUDA Graphs**: Reduces kernel launch overhead:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --enable_cuda_graphs \
@@ -193,7 +188,7 @@ Enable performance optimizations for faster inference:
 2. **Flash Attention Decode**: Optimizes attention computation:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --enable_flash_decode \
@@ -205,7 +200,7 @@ Enable performance optimizations for faster inference:
 3. **Combined Optimizations**:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --enable_cuda_graphs \
@@ -216,14 +211,14 @@ Enable performance optimizations for faster inference:
       --cuda_visible_devices "0,1,2,3"
    ```
 
-### Testing Ray Deployment
+### Test Ray Deployment
 
 Use the ``query_ray_deployment.py`` script to test your deployed NeMo model:
 
 1. Basic testing:
 
    ```shell
-   python scripts/deploy/nlp/query_ray_deployment.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
       --model_id llama \
       --host 0.0.0.0 \
       --port 1024
@@ -239,14 +234,14 @@ Use the ``query_ray_deployment.py`` script to test your deployed NeMo model:
    - ``--port``: Port number of the Ray Serve server. Default is 1024.
    - ``--model_id``: Identifier for the model in the API responses. Default is "nemo-model".
 
-### Advanced Configuration
+### Configure Advanced Deployments
 
 For more advanced deployment scenarios:
 
 1. **Custom Resource Allocation**:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --num_replicas 2 \
@@ -260,7 +255,7 @@ For more advanced deployment scenarios:
 2. **Legacy Checkpoint Support**:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_inframework.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
       --model_id llama \
       --legacy_ckpt \
@@ -293,14 +288,14 @@ curl -X POST http://localhost:1024/v1/completions/ \
 
 ## Troubleshooting
 
-1. **Out of Memory Errors**: Reduce ``--num_replicas`` or adjust parallelism settings
-2. **Port Already in Use**: Change the ``--port`` parameter
-3. **Ray Cluster Issues**: Ensure no other Ray processes are running: ``ray stop``
-4. **GPU Allocation**: Verify ``--cuda_visible_devices`` matches your available GPUs
-5. **Parallelism Configuration Errors**: Ensure total parallelism per replica matches available GPUs per replica
-6. **CUDA Device Mismatch**: Make sure the number of devices in ``--cuda_visible_devices`` equals total GPUs
-7. **Checkpoint Loading Issues**: Verify the ``.nemo`` checkpoint path is correct and accessible
-8. **Legacy Checkpoint**: Use ``--legacy_ckpt`` flag for older checkpoint formats
+1. **Out of Memory Errors**: Reduce ``--num_replicas`` or adjust parallelism settings.
+2. **Port Already in Use**: Change the ``--port`` parameter.
+3. **Ray Cluster Issues**: Ensure no other Ray processes are running: ``ray stop``.
+4. **GPU Allocation**: Verify ``--cuda_visible_devices`` matches your available GPUs.
+5. **Parallelism Configuration Errors**: Ensure total parallelism per replica matches available GPUs per replica.
+6. **CUDA Device Mismatch**: Make sure the number of devices in ``--cuda_visible_devices`` equals total GPUs.
+7. **Checkpoint Loading Issues**: Verify the ``.nemo`` checkpoint path is correct and accessible.
+8. **Legacy Checkpoint**: Use ``--legacy_ckpt`` flag for older checkpoint formats.
 
 **Note:** Only NeMo 2.0 checkpoints are supported by default. For older checkpoints, use the ``--legacy_ckpt`` flag.
 

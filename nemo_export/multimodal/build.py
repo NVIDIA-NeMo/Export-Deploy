@@ -107,7 +107,6 @@ def build_trtllm_engine(
         max_output_len=max_output_len,
         max_seq_len=max_input_len + max_output_len,
         max_batch_size=max_batch_size,
-        max_prompt_embedding_table_size=max_multimodal_len,
         dtype=dtype,
         load_model=False,
         use_lora_plugin=use_lora_plugin,

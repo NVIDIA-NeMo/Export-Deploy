@@ -13,9 +13,7 @@ The following table shows the supported LLMs and their inference-optimized libra
 |:--------- | :-------------- |--------------------------|------------------|
 |GPT        |   2B, 8B, 43B   | &check;                  | &cross;          | 
 |Nemotron   |   8B, 22B       | &check;                  | &cross;          | 
-|Llama 2    |   7B, 13B, 70B  | &check;                  | &check;          |
-|Llama 3    |   8B, 70B       | &check;                  | &check;           | 
-|Llama 3.1  |   8B, 70B, 405B | &check;                  | &check;          |
+|Llama      |   8B, 70B, 405B | &check;                  | &check;          |
 |Falcon     |   7B, 40B       | &check;                  | &cross;                 |
 |Gemma      |   2B, 7B        | &check;                  | &check;                 |
 |StarCoder1 |   15B           | &check;                  | &cross;                 |

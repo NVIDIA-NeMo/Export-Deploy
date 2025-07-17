@@ -1,5 +1,5 @@
 
-# Deploy Hugging Face Models by Exporting to TensorRT-LLM 
+# Deploy Hugging Face Models by Exporting to TensorRT-LLM
 
 This section shows how to use scripts and APIs to export a Hugging Face model to TensorRT-LLM, and deploy it with the NVIDIA Triton Inference Server.
 
@@ -13,50 +13,53 @@ This section shows how to use scripts and APIs to export a Hugging Face model to
 
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 \
       -w /opt/NeMo \
+      --name nemo-fw \
       nvcr.io/nvidia/nemo:vr
    ```
 
 2. Run the following deployment script to verify that everything is working correctly. The script exports the Hugging Face model to TensorRT-LLM and subsequently serves it on the Triton server:
 
    ```shell
-   python scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
       --hf_model_id_path meta-llama/Meta-Llama-3-8B-Instruct \
       --model_type LlamaForCausalLM \
       --triton_model_name llama \
       --tensor_parallelism_size 1
    ```
 
-3. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
-
-4. In a separate terminal, run the following command to get the container ID of the running container:
+3. Install TensorRT-LLM by executing the following command inside the container:
 
    ```shell
-   docker ps
+   cd /opt/Export-Deploy
+   uv sync --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
+
    ```
 
-5. Access the running container and replace ``container_id`` with the actual container ID as follows:
+4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
+
+5. In a separate terminal, access the running container as follows:
 
    ```shell
-   docker exec -it container_id bash
+   docker exec -it nemo-fw bash
    ```
 
 6. To send a query to the Triton server, run the following script:
 
    ```shell
-   python scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
+   python /opt/Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
    ```
 
 ## Use a Script to Deploy Hugging Face Models on a Triton Server
 
 You can deploy a Hugging Face model on Triton using the provided script.
 
-### Export and Deploy a Hugging Face Model 
+### Export and Deploy a Hugging Face Model
 
 After executing the script, it will export the model to TensorRT-LLM and then initiate the service on Triton.
 
 1. Start the container using the steps described in the **Quick Example** section.
 
-2. If you want to deploy a model that needs to be downloaded from Hugging Face, you need to generate a Hugging Face token that has access to these models. Visit `Hugging Face <https://huggingface.co/>`__ for more information. After you have the token, perform one of the following steps.
+2. To deploy a model that needs to be downloaded from Hugging Face, you need to generate a Hugging Face token that has access to these models. Visit `Hugging Face <https://huggingface.co/>`__ for more information. After you have the token, perform one of the following steps.
 
    - Log in to Hugging Face:
 
@@ -70,15 +73,15 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    export HF_TOKEN=your_token_here
    ```
 
-   **Note: **If you're using a locally downloaded model, you don't need to provide a Hugging Face token unless the model requires it for downloading additional resources.
+   **Note:** If you're using a locally downloaded model, you don't need to provide a Hugging Face token unless the model requires it for downloading additional resources.
 
-2. To begin serving a Hugging Face model, you can use either a model ID from the Hugging Face hub or a path to a locally downloaded model:
+2. To begin serving a Hugging Face model, you can use either a model ID from the Hugging Face Hub or a path to a locally downloaded model:
 
    a. Using a Hugging Face model ID:
 
    ```shell
 
-   python scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
       --hf_model_id_path meta-llama/Meta-Llama-3-8B-Instruct \
       --model_type LlamaForCausalLM \
       --triton_model_name llama \
@@ -88,7 +91,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    b. To use a locally downloaded model:
 
    ```shell
-   python scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
       --hf_model_id_path /path/to/your/local/model \
       --model_type LlamaForCausalLM \
       --triton_model_name llama \
@@ -193,7 +196,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    | RobertaForQuestionAnswering  |     RobertaForQuestionAnswering|
    | RobertaForSequenceClassification | RobertaForSequenceClassification|
    
-4. Whenever the script is executed, it initiates the service by exporting the Hugging Face model to TensorRT-LLM. If you want to skip the exporting step in the optimized inference option, you can specify an empty directory to save the TensorRT-LLM engine produced. Stop the running container and then run the following command to specify an empty directory:
+4. Whenever the script is executed, it initiates the service by exporting the Hugging Face model to TensorRT-LLM. To skip the exporting step in the optimized inference option, you can specify an empty directory to save the TensorRT-LLM engine produced. Stop the running container and then run the following command to specify an empty directory:
 
    ```shell
 
@@ -204,7 +207,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
        -w /opt/NeMo \
        nvcr.io/nvidia/nemo:vr
 
-   python scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
        --hf_model_id_path /path/to/your/local/model \
        --model_type LlamaForCausalLM \
        --triton_model_name llama \
@@ -217,7 +220,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
 5. To load the exported model directly, run the following script within the container:
 
    ```shell
-   python scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
        --triton_model_name llama \
        --triton_model_repository /opt/checkpoints/tmp_triton_model_repository \
        --model_type LlamaForCausalLM
@@ -234,7 +237,7 @@ You can use the APIs in the export module to export a Hugging Face model to Tens
 1. Run the following command:
 
    ```python
-   from nemo.export.tensorrt_llm import TensorRTLLM
+   from nemo_export.tensorrt_llm import TensorRTLLM
 
    trt_llm_exporter = TensorRTLLM(model_dir="/opt/checkpoints/tmp_trt_llm/")
    # Using a Hugging Face model ID
@@ -269,8 +272,8 @@ You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Trit
 1. Run the following command:
 
    ```python
-   from nemo.export.tensorrt_llm import TensorRTLLM
-   from nemo.deploy import DeployPyTriton
+   from nemo_export.tensorrt_llm import TensorRTLLM
+   from nemo_deploy import DeployPyTriton
 
    trt_llm_exporter = TensorRTLLM(model_dir="/opt/checkpoints/tmp_trt_llm/")
    # Using a Hugging Face model ID

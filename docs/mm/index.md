@@ -52,7 +52,7 @@ This section provides an example of how to quickly and easily deploy a NeMo chec
 
    .. code-block:: python
 
-      python scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_neva.nemo --model_type neva --llm_model_type llama --triton_model_name neva --modality vision
+      python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_neva.nemo --model_type neva --llm_model_type llama --triton_model_name neva --modality vision
 
    If you only want to export the NeMo checkpoint to TensorRT, use the ``examples/multimodal/multimodal_llm/neva/neva_export.py``.
 
@@ -73,7 +73,7 @@ This section provides an example of how to quickly and easily deploy a NeMo chec
 6. To send a query to the Triton server, run the following script:
 
    ```shell
-   python scripts/deploy/multimodal/query.py -mn neva -mt=neva -int="What is in this image?" -im=/path/to/image.jpg
+   python /opt/Export-Deploy/scripts/deploy/multimodal/query.py -mn neva -mt=neva -int="What is in this image?" -im=/path/to/image.jpg
    ```
    
 7. To export and deploy a different model, such as Video Neva, change the *model_type* and *modality* in the *scripts/deploy/multimodal/deploy_triton.py* script.
@@ -93,7 +93,7 @@ After executing the script, it will export the model to TensorRT and then initia
 2. To begin serving the model, run the following script:
 
    ```shell
-   python scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_neva.nemo --model_type neva --llm_model_type llama --triton_model_name neva
+   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_neva.nemo --model_type neva --llm_model_type llama --triton_model_name neva
    ```
    
    The following parameters are defined in the ``deploy_triton.py`` script:
@@ -139,7 +139,7 @@ After executing the script, it will export the model to TensorRT and then initia
 
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:vr
 
-   python scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_neva.nemo --model_type neva --llm_model_type llama --triton_model_name neva --triton_model_repository /opt/checkpoints/tmp_triton_model_repository --modality vision
+   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_neva.nemo --model_type neva --llm_model_type llama --triton_model_name neva --triton_model_repository /opt/checkpoints/tmp_triton_model_repository --modality vision
    ```
    
    The checkpoint will be exported to the specified folder after executing the script mentioned above.
@@ -147,7 +147,7 @@ After executing the script, it will export the model to TensorRT and then initia
 5. To load the exported model directly, run the following script within the container:
 
    ```shell
-   python scripts/deploy/multimodal/deploy_triton.py --triton_model_name neva --triton_model_repository /opt/checkpoints/tmp_triton_model_repository --model_type neva --llm_model_type llama --modality vision
+   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --triton_model_name neva --triton_model_repository /opt/checkpoints/tmp_triton_model_repository --model_type neva --llm_model_type llama --modality vision
    ```
    
 #### Send a Query
@@ -164,7 +164,7 @@ The following example shows how to execute the query script within the currently
 1. To use a query script, run the following command. For VILA/LITA/VITA models, the input_text should add ``<image>\n`` before the actual text, such as ``<image>\n What is in this image?``:
 
    ```shell
-   python scripts/deploy/multimodal/query.py --url "http://localhost:8000" --model_name neva --model_type neva --input_text "What is in this image?" --input_media /path/to/image.jpg
+   python /opt/Export-Deploy/scripts/deploy/multimodal/query.py --url "http://localhost:8000" --model_name neva --model_type neva --input_text "What is in this image?" --input_media /path/to/image.jpg
    ```
    
 2. Change the url and the ``model_name`` based on your server and the model name of your service. The code in the script can be used as a basis for your client code as well. ``input_media`` is the path to the image or audio file you want to use as input. 
@@ -182,7 +182,7 @@ You can use the APIs in the export module to export a NeMo checkpoint to TensorR
 1. Run the following command:
 
    ```python
-   from nemo.export.tensorrt_mm_exporter import TensorRTMMExporter
+   from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
    exporter = TensorRTMMExporter(model_dir="/opt/checkpoints/tmp_triton_model_repository/", modality="vision")
    exporter.export(visual_checkpoint_path="/opt/checkpoints/nemo_neva.nemo", model_type="neva", llm_model_type="llama", tensor_parallel_size=1)
@@ -200,8 +200,8 @@ You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Trit
 1. Run the following command:
 
    ```python
-   from nemo.export.tensorrt_mm_exporter import TensorRTMMExporter
-   from nemo.deploy import DeployPyTriton
+   from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
+   from nemo_deploy import DeployPyTriton
 
    exporter = TensorRTMMExporter(model_dir="/opt/checkpoints/tmp_triton_model_repository/", modality="vision")
    exporter.export(visual_checkpoint_path="/opt/checkpoints/nemo_neva.nemo", model_type="neva", llm_model_type="llama", tensor_parallel_size=1)
@@ -218,7 +218,7 @@ The NeMo Framework provides NemoQueryMultimodal APIs to send a query to the Trit
 1. To run the request example using NeMo APIs, run the following command:
 
    ```python
-   from nemo.deploy.multimodal import NemoQueryMultimodal
+   from nemo_deploy.multimodal import NemoQueryMultimodal
 
    nq = NemoQueryMultimodal(url="localhost:8000", model_name="neva", model_type="neva")
    output = nq.query(input_text="What is in this image?", input_media="/opt/data/image.jpg", max_output_len=30, top_k=1, top_p=0.0, temperature=1.0)

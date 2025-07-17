@@ -1,6 +1,6 @@
 # Deploy NeMo AutoModel LLM Models in the Framework
 
-This section demonstrates how to deploy NeMo AutoModel LLM Models within the framework (referred to as 'In-Framework for AutoModel LLM') using the NVIDIA Triton Inference Server. NeMo AutoModel workflows generate Hugging Face compatible checkpoints that provide a simplified interface for working with pre-trained language models. These checkpoints maintain high performance during inference while offering enhanced configurability through the Hugging Face ecosystem.
+This section demonstrates how to deploy NeMo AutoModel LLM models within the framework (referred to as 'In-Framework for AutoModel LLM') using the NVIDIA Triton Inference Server. NeMo AutoModel workflows generate Hugging Face-compatible checkpoints that provide a simplified interface for working with pre-trained language models. These checkpoints maintain high performance during inference, while offering enhanced configurability through the Hugging Face ecosystem.
 
 
 ## Quick Example
@@ -17,6 +17,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models within the fra
        -p 8000:8000 \
        -v ${PWD}/:/opt/checkpoints/ \
        -w /opt/NeMo \
+       --name nemo-fw \
        nvcr.io/nvidia/nemo:vr
    ``` 
 
@@ -29,29 +30,23 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models within the fra
 4. Deploy the model to Triton:
 
    ```python
-   python scripts/deploy/nlp/deploy_inframework_hf_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama
    ```
    
    **Note:** If you encounter shared memory errors, increase ``--shm-size`` gradually by 50%.
 
-5. In a new terminal, get the container ID:
+5. In a separate terminal, access the running container as follows:
 
    ```shell
-   docker ps
+   docker exec -it nemo-fw bash
    ```
 
-6. Access the container:
+6. Test the deployed model:
 
    ```shell
-   docker exec -it <container_id> bash
-   ```
-
-7. Test the deployed model:
-
-   ```shell
-   python scripts/deploy/nlp/query_inframework_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework_hf.py \
       -mn llama \
       -p "What is the color of a banana?" \
       -mol 15
@@ -68,7 +63,7 @@ Follow these steps to deploy your model on the Triton Inference Server:
 2. Deploy your model:
 
    ```shell
-   python scripts/deploy/nlp/deploy_inframework_hf_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama
    ```
@@ -97,27 +92,27 @@ Follow these steps to deploy your model on the Triton Inference Server:
    huggingface-cli login
    ```
 
-   Option 2 - Set environment variable:
+   Option 2 - Set the environment variable:
 
    ```shell
    export HF_TOKEN=your_token_here
    ```
 
-### Multi-GPU Deployment
+### Deploy on Multiple GPUs
 
 For multi-GPU inference:
 
-1. Use ``--tp_plan`` instead of ``--device_map`` (they are mutually exclusive)
-2. For distributed inference across GPUs, use ``torchrun``. Example with 2 GPUs:
+1. Use ``--tp_plan`` instead of ``--device_map`` (they are mutually exclusive).
+2. For distributed inference across GPUs, use ``torchrun``. The following example shows 2 GPUs:
 
    ```shell
    torchrun --standalone --nnodes=1 --nproc_per_node=2 \
-      scripts/deploy/nlp/deploy_inframework_hf_triton.py \
+      /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_hf_triton.py \
       --hf_model_id_path meta-llama/Llama-3.2-1B \
       --triton_model_name llama \
       --tp_plan auto
    ```
 
 For more information:
-   - Device mapping: [Hugging Face Loading Big Models docs](https://huggingface.co/docs/accelerate/main/concept_guides/big_model_inference)
-   - Tensor parallelism: [Hugging Face Multi-GPU Inference docs](https://huggingface.co/docs/transformers/v4.47.0/en/perf_infer_gpu_multi)
+   - Device mapping: [Hugging Face Loading Big Models docs](https://huggingface.co/docs/accelerate/main/concept_guides/big_model_inference).
+   - Tensor parallelism: [Hugging Face Multi-GPU Inference docs](https://huggingface.co/docs/transformers/v4.47.0/en/perf_infer_gpu_multi).

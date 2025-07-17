@@ -1,6 +1,6 @@
 # Deploy NeMo AutoModel LLM Models using Ray
 
-This section demonstrates how to deploy NeMo AutoModel LLM Models using Ray Serve (referred to as 'Ray for AutoModel LLM'). Ray deployment support has been added in addition to Triton, to support single node multi-instance deployment. Ray Serve provides a scalable and flexible platform for deploying machine learning models, offering features such as automatic scaling, load balancing, and multi-replica deployment.
+This section demonstrates how to deploy NeMo AutoModel LLM models using Ray Serve (referred to as 'Ray for AutoModel LLM'). To support single-node, multi-instance deployment, Ray is now offered as an alternative to Triton. Ray Serve provides a scalable and flexible platform for deploying machine learning models, offering features such as automatic scaling, load balancing, and multi-replica deployment.
 
 ## Quick Example
 
@@ -16,6 +16,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models using Ray Serv
        -p 1024:1024 \
        -v ${PWD}/:/opt/checkpoints/ \
        -w /opt/Export-Deploy \
+       --name nemo-fw \
        nvcr.io/nvidia/nemo:vr
    ``` 
 
@@ -28,7 +29,7 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models using Ray Serv
 4. Deploy the model to Ray:
 
    ```python
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
@@ -39,22 +40,16 @@ This section demonstrates how to deploy NeMo AutoModel LLM Models using Ray Serv
    
    **Note:** If you encounter shared memory errors, increase ``--shm-size`` gradually by 50%.
 
-5. In a new terminal, get the container ID:
+5. In a separate terminal, access the running container as follows:
 
    ```shell
-   docker ps
+   docker exec -it nemo-fw bash
    ```
 
-6. Access the container:
+6. Test the deployed model:
 
    ```shell
-   docker exec -it <container_id> bash
-   ```
-
-7. Test the deployed model:
-
-   ```shell
-   python scripts/deploy/nlp/query_ray_deployment.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
       --model_id llama \
       --host 0.0.0.0 \
       --port 1024
@@ -71,7 +66,7 @@ Follow these steps to deploy your model on Ray Serve:
 2. Deploy your model:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
@@ -114,14 +109,14 @@ Follow these steps to deploy your model on Ray Serve:
    export HF_TOKEN=your_token_here
    ```
 
-### Multi-Replica Deployment
+### Deploy Multiple Replicas
 
 Ray Serve excels at single-node multi-instance deployment. This allows you to deploy multiple instances of the same model to handle increased load:
 
 1. Deploy multiple replicas using the ``--num_replicas`` parameter:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 4 \
@@ -133,7 +128,7 @@ Ray Serve excels at single-node multi-instance deployment. This allows you to de
 2. For models that require multiple GPUs per replica:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
@@ -145,41 +140,41 @@ Ray Serve excels at single-node multi-instance deployment. This allows you to de
 3. Ray automatically handles load balancing across replicas, distributing incoming requests to available instances.
 
 **Important GPU Configuration Notes:**
-- ``--num_gpus`` should equal ``--num_replicas`` × ``--num_gpus_per_replica``
+- ``--num_gpus`` should equal ``--num_replicas`` × ``--num_gpus_per_replica``.
 - ``--cuda_visible_devices`` should list all GPUs that will be used
-- Ensure the number of devices in ``--cuda_visible_devices`` matches ``--num_gpus``
+- Ensure the number of devices in ``--cuda_visible_devices`` matches ``--num_gpus``.
 
-### Testing Ray Deployment
+### Test Ray Deployment
 
 Use the ``query_ray_deployment.py`` script to test your deployed model:
 
 1. Basic testing:
 
    ```shell
-   python scripts/deploy/nlp/query_ray_deployment.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
       --model_id llama \
       --host 0.0.0.0 \
       --port 1024
    ```
 
 2. The script will test multiple endpoints:
-   - Health check endpoint: ``/v1/health``
-   - Models list endpoint: ``/v1/models``
-   - Text completions endpoint: ``/v1/completions/``
+   - Health check endpoint: ``/v1/health``.
+   - Models list endpoint: ``/v1/models``.
+   - Text completions endpoint: ``/v1/completions/``.
 
 3. Available parameters for testing:
    - ``--host``: Host address of the Ray Serve server. Default is 0.0.0.0.
    - ``--port``: Port number of the Ray Serve server. Default is 1024.
    - ``--model_id``: Identifier for the model in the API responses. Default is "nemo-model".
 
-### Advanced Configuration
+### Configure Advanced Deployments
 
 For more advanced deployment scenarios:
 
 1. **Custom Resource Allocation**:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 3 \
@@ -193,7 +188,7 @@ For more advanced deployment scenarios:
 2. **Memory Management**:
 
    ```shell
-   python scripts/deploy/nlp/deploy_ray_hf.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
       --model_path meta-llama/Llama-3.2-1B \
       --model_id llama \
       --num_replicas 2 \
@@ -208,10 +203,10 @@ For more advanced deployment scenarios:
 
 Once deployed, your model will be available through OpenAI-compatible API endpoints:
 
-- **Health Check**: ``GET /v1/health``
-- **List Models**: ``GET /v1/models``
-- **Text Completions**: ``POST /v1/completions/``
-- **Chat Completions**: ``POST /v1/chat/completions/``
+- **Health Check**: ``GET /v1/health``.
+- **List Models**: ``GET /v1/models``.
+- **Text Completions**: ``POST /v1/completions/``.
+- **Chat Completions**: ``POST /v1/chat/completions/``.
 
 Example API request:
 
@@ -228,11 +223,11 @@ curl -X POST http://localhost:1024/v1/completions/ \
 
 ## Troubleshooting
 
-1. **Out of Memory Errors**: Reduce ``--num_replicas`` or ``--num_gpus_per_replica``
-2. **Port Already in Use**: Change the ``--port`` parameter
-3. **Ray Cluster Issues**: Ensure no other Ray processes are running: ``ray stop``
-4. **GPU Allocation**: Verify ``--cuda_visible_devices`` matches your available GPUs
-5. **GPU Configuration Errors**: Ensure ``--num_gpus`` = ``--num_replicas`` × ``--num_gpus_per_replica``
-6. **CUDA Device Mismatch**: Make sure the number of devices in ``--cuda_visible_devices`` equals ``--num_gpus``
+1. **Out of Memory Errors**: Reduce ``--num_replicas`` or ``--num_gpus_per_replica``.
+2. **Port Already in Use**: Change the ``--port`` parameter.
+3. **Ray Cluster Issues**: Ensure no other Ray processes are running: ``ray stop``.
+4. **GPU Allocation**: Verify ``--cuda_visible_devices`` matches your available GPUs.
+5. **GPU Configuration Errors**: Ensure ``--num_gpus`` = ``--num_replicas`` × ``--num_gpus_per_replica``.
+6. **CUDA Device Mismatch**: Make sure the number of devices in ``--cuda_visible_devices`` equals ``--num_gpus``.
 
 For more information on Ray Serve, visit the [Ray Serve documentation](https://docs.ray.io/en/latest/serve/index.html). 
