@@ -3152,14 +3152,14 @@ wheels = [
 [[package]]
 name = "megatron-bridge"
 version = "0.2.0rc0"
-source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=929f5af7ab93b3ddf358491841e3631a592f6d97#929f5af7ab93b3ddf358491841e3631a592f6d97" }
+source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=8b35cffb4977e972f8f54c197c85d7b1bf3be0a8#8b35cffb4977e972f8f54c197c85d7b1bf3be0a8" }
 dependencies = [
     { name = "accelerate" },
     { name = "datasets", version = "3.1.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
     { name = "datasets", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trtllm'" },
     { name = "einops" },
     { name = "hydra-core" },
-    { name = "megatron-core", extra = ["dev"] },
+    { name = "megatron-core" },
     { name = "numpy" },
     { name = "nvidia-modelopt", extra = ["torch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
@@ -3182,32 +3182,17 @@ dependencies = [
 
 [[package]]
 name = "megatron-core"
-version = "0.14.0rc1"
+version = "0.13.0rc2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
     { name = "torch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/33/c4/1af3fc3618bb6d18d0012eb1a30aec1f57e9aacf5d9e894ed15cd079d825/megatron_core-0.14.0rc1.tar.gz", hash = "sha256:0e1071f8dcd72f4b8bdd4d60f580f9ef34d6e8dd670655c5f0d5f25af7df39b5", size = 749815, upload-time = "2025-07-14T04:12:30.346Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/68/22fe64fd22308efe1cea873a2b3bc2fa75cd5a4b9bb9194670a1e8e5f817/megatron_core-0.13.0rc2.tar.gz", hash = "sha256:3daa1b6f73ff2e171a2b587cd68031ea83023804ec412390f5e3e95ea99a34d6", size = 739144, upload-time = "2025-07-02T21:36:57.956Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/7b/f27dc0c0c38e70972f62bdb0483055d28875c4d08d047af90e2803f568d6/megatron_core-0.14.0rc1-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:de2da93d54e9ac2ff7c079b7f9a7de38ab59b69112e1f915df53f6a966667851", size = 2012264, upload-time = "2025-07-14T04:12:24.555Z" },
-    { url = "https://files.pythonhosted.org/packages/1e/a1/a5ecb1cfb2219188ac9e210ef0aee4ec532d640119902b76ae7550315326/megatron_core-0.14.0rc1-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5a9d761442b4708592ac2bb2ebe0b4dc10d69de3d61032ac67cd310a043d6c0f", size = 2037085, upload-time = "2025-07-14T04:12:26.315Z" },
-    { url = "https://files.pythonhosted.org/packages/77/50/9e39e7c150bbf01685273088279dde854f737c215ef609804d5514384f38/megatron_core-0.14.0rc1-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:90361c60123e2886ba0f77b29b90560908529f0746e3753112750a498353ed6d", size = 2022445, upload-time = "2025-07-14T04:12:27.944Z" },
-    { url = "https://files.pythonhosted.org/packages/6d/07/2f0de3f10d085c79e3a52601ad5835b389a90d083c2a191b6abdc0bda9be/megatron_core-0.14.0rc1-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:75051b4afa18a8cf49b18e7249563e1389b79195d33cca2e0c9e685bc3f69eeb", size = 2049347, upload-time = "2025-07-14T04:12:29.197Z" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "einops" },
-    { name = "megatron-energon" },
-    { name = "multi-storage-client" },
-    { name = "nvidia-modelopt", extra = ["torch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvtx" },
-    { name = "setuptools" },
-    { name = "tensorstore" },
-    { name = "tqdm" },
-    { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm'" },
-    { name = "transformers", version = "4.53.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trtllm'" },
+    { url = "https://files.pythonhosted.org/packages/05/47/a5df76cd3bf387abc171cb578a26973a95a3ee70dc34045d981c4280722d/megatron_core-0.13.0rc2-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1a2c0924efc45ccea264da79dfaf4a9f94c49fafbe20ed568274b1a556aecd59", size = 1888756, upload-time = "2025-07-02T21:36:52.02Z" },
+    { url = "https://files.pythonhosted.org/packages/18/7a/33316f32a7bb7c13d7fa4957087367d63bd51d5b306d133b0fb7d7d8bf7b/megatron_core-0.13.0rc2-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2ab8a2690f2f70c983e8bf9104de736053bdd07589b65422a4ef80a37a167b37", size = 1909085, upload-time = "2025-07-02T21:36:53.948Z" },
+    { url = "https://files.pythonhosted.org/packages/14/ff/1a5625e5437b242e634ba26d8752a55b155a46d05c6a458414ba6d89264e/megatron_core-0.13.0rc2-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0e078a90f2baecbe7d1e55650313d16d06edd048e66dc97360a17097678ac184", size = 1900518, upload-time = "2025-07-02T21:36:55.211Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/3a/4d92706b51dc7191d8093cac55322990cc0ccfa5a6c5bf0d15e0f7f38fdc/megatron_core-0.13.0rc2-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cc43887fd4889e8d9fdd6857d94699d442f17503fc887c034f03590d08c82e77", size = 1922555, upload-time = "2025-07-02T21:36:56.469Z" },
 ]
 
 [[package]]
@@ -3587,8 +3572,10 @@ dependencies = [
     { name = "flashinfer-python" },
     { name = "hydra-core" },
     { name = "lightning" },
-    { name = "megatron-core", extra = ["dev"] },
+    { name = "megatron-core" },
+    { name = "nvidia-modelopt", extra = ["torch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "omegaconf" },
     { name = "peft" },
     { name = "pillow", version = "10.3.0", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm') or (platform_machine == 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
@@ -3664,8 +3651,10 @@ requires-dist = [
     { name = "flashinfer-python", specifier = "==0.2.5" },
     { name = "hydra-core", specifier = ">1.3,<=1.3.2" },
     { name = "lightning" },
-    { name = "megatron-core", extras = ["dev"], specifier = ">=0.12.0" },
+    { name = "megatron-core", specifier = ">=0.13.0a0,<0.14.0" },
+    { name = "nvidia-modelopt", extras = ["onnx", "torch"], marker = "sys_platform != 'darwin'", specifier = ">=0.31.0a0,<0.32.0" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
+    { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin'", specifier = ">=0.3.0a0,<0.4.0" },
     { name = "omegaconf", specifier = ">=2.3.0" },
     { name = "pandas", marker = "extra == 'vllm'" },
     { name = "peft" },
@@ -3708,7 +3697,7 @@ docs = [
     { name = "sphinx-copybutton" },
 ]
 linting = [{ name = "ruff", specifier = "~=0.9.0" }]
-megatron-bridge-pre = [{ name = "megatron-bridge", git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=929f5af7ab93b3ddf358491841e3631a592f6d97" }]
+megatron-bridge-pre = [{ name = "megatron-bridge", git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=8b35cffb4977e972f8f54c197c85d7b1bf3be0a8" }]
 nemo-legacy = [{ name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], git = "https://github.com/NVIDIA/NeMo.git?rev=5e63ca3c1631bb156187705f9c4cf643a67f9c05" }]
 test = [
     { name = "click" },
@@ -4386,7 +4375,7 @@ wheels = [
 
 [[package]]
 name = "nvidia-resiliency-ext"
-version = "0.4.0"
+version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "defusedxml", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
@@ -4398,12 +4387,12 @@ dependencies = [
     { name = "torch", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a4/a5/ea0ae066c21432f3df573894524715a654f7a56dcfc9822635a495849b85/nvidia_resiliency_ext-0.4.0-cp310-cp310-manylinux_2_31_aarch64.whl", hash = "sha256:f83f8a8f2f86637d429e074d2d08d33dc4ebd3968c08cad3131cadc8f2b86890", size = 436052, upload-time = "2025-05-28T05:32:35.2Z" },
-    { url = "https://files.pythonhosted.org/packages/fa/bb/702e4b9df71bbf5089370c71ca7389f741fa5aafa2d19ec80f362abe7f7a/nvidia_resiliency_ext-0.4.0-cp310-cp310-manylinux_2_31_x86_64.whl", hash = "sha256:8a601bb437074c35552d4a7def69d1859972086ecdd1ebe18fdac1f98bb26f0c", size = 440381, upload-time = "2025-05-28T05:33:04.237Z" },
-    { url = "https://files.pythonhosted.org/packages/26/49/92f44ca5e818c1adfb5aaaf18be12b2ef0391af0e5badf12e75008723672/nvidia_resiliency_ext-0.4.0-cp311-cp311-manylinux_2_31_aarch64.whl", hash = "sha256:8a661ccd54d2d3fa78d0e750a807d7d77245dfe66e33f7368ec418c8880fa4d2", size = 436587, upload-time = "2025-05-28T05:33:33.175Z" },
-    { url = "https://files.pythonhosted.org/packages/41/19/3d655cd6d294039bd369c3e9ce6ac5ec766cbabe4fda38cfaf0703118ba1/nvidia_resiliency_ext-0.4.0-cp311-cp311-manylinux_2_31_x86_64.whl", hash = "sha256:499b5db52fcf416ddbe00d44f24b837b0aacd0586935312a13ffbb509bb8315b", size = 441424, upload-time = "2025-05-28T05:34:30.736Z" },
-    { url = "https://files.pythonhosted.org/packages/c4/ce/e06526126b00fe4e9761beb13b7b8fc2047e2a7dca06b6d95191fe728091/nvidia_resiliency_ext-0.4.0-cp312-cp312-manylinux_2_31_aarch64.whl", hash = "sha256:097ee479ae9ae3e7f40456bf06a2bd8a05246df3dcb17aae2823aee3e7e08e27", size = 435467, upload-time = "2025-05-28T05:34:01.64Z" },
-    { url = "https://files.pythonhosted.org/packages/bf/6e/080d7446b11cbc89bf32fd1f00f78ba073c81f6782a45be557a331d6faca/nvidia_resiliency_ext-0.4.0-cp312-cp312-manylinux_2_31_x86_64.whl", hash = "sha256:3ed370156f8a64565dca9469a989f92026f8947addf9521ef265687da4289589", size = 440114, upload-time = "2025-05-28T05:34:59.611Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/76/7d820d262f9a15ef5a0a0a3a23c4c2194f91db2a1c22f0838987de8b5ea9/nvidia_resiliency_ext-0.3.0-cp310-cp310-manylinux_2_31_aarch64.whl", hash = "sha256:84cb3bfc56a3d0624d8d9253e347aac06c8c9faee807b49445e23fac64d0082f", size = 425227, upload-time = "2025-03-25T10:49:25.725Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/33/5af286ba1d07a295dbb8dada4a620ca3e2b46cb2276dcd502654599ea2c8/nvidia_resiliency_ext-0.3.0-cp310-cp310-manylinux_2_31_x86_64.whl", hash = "sha256:13a86cc2fcd0db94fc1a67c8b0c200a92ce5edfb5f33ca13798e43bd66df9ac5", size = 429558, upload-time = "2025-03-18T07:08:46.099Z" },
+    { url = "https://files.pythonhosted.org/packages/68/b2/68ae57268f290a9fd45c4e8240929640a619d50778df21ab045a567348c3/nvidia_resiliency_ext-0.3.0-cp311-cp311-manylinux_2_31_aarch64.whl", hash = "sha256:024ee8272e4a0cd0b88b4ffa3aa02ed3f577cfea289af75336b5cd00d52237de", size = 425764, upload-time = "2025-03-25T10:48:56.897Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/68/549c5faa40d26b202a79959f7d173f39b54ed1ffd18281f660c7a62e6608/nvidia_resiliency_ext-0.3.0-cp311-cp311-manylinux_2_31_x86_64.whl", hash = "sha256:c6be95e09fef7bd29fd4d2d3713656edf27e67c414bc4888044352e02fe367de", size = 430597, upload-time = "2025-03-18T07:09:21.79Z" },
+    { url = "https://files.pythonhosted.org/packages/96/1e/0fa231487fd2f2068dfe8f942fee6860703004e6eacf36c59128c5216314/nvidia_resiliency_ext-0.3.0-cp312-cp312-manylinux_2_31_aarch64.whl", hash = "sha256:d5e6e812e0abbb493a8d720c7ea1f7910675553565698d1c3fee8d53e540d9da", size = 424640, upload-time = "2025-03-25T10:48:26.327Z" },
+    { url = "https://files.pythonhosted.org/packages/49/75/721afacc6deb4ce268d343dc49567fb3374695737587187018b2b590d989/nvidia_resiliency_ext-0.3.0-cp312-cp312-manylinux_2_31_x86_64.whl", hash = "sha256:8cf90151c9a023583fefed5ef3b3184860eef02d72a89538ea2c715bb083fc29", size = 429288, upload-time = "2025-03-18T07:09:03.346Z" },
 ]
 
 [[package]]

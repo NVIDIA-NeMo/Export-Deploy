@@ -28,7 +28,6 @@ requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
     # "megatron-bridge", add here after the release of Megatron-Bridge
-    "megatron-core[dev]>=0.12.0",
     "accelerate",
     "fastapi",
     "pydantic-settings",
@@ -55,6 +54,9 @@ dependencies = [
     "Pillow ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "decord ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "pyparsing>2.0.2",
+    "megatron-core>=0.13.0a0,<0.14.0",
+    "nvidia-modelopt[torch,onnx]>=0.31.0a0,<0.32.0; sys_platform != 'darwin'",
+    "nvidia-resiliency-ext>=0.3.0a0,<0.4.0; sys_platform != 'darwin'",
 ]
 
 [project.optional-dependencies]
@@ -87,7 +89,7 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 # Remove this
-megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "929f5af7ab93b3ddf358491841e3631a592f6d97" }
+megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "8b35cffb4977e972f8f54c197c85d7b1bf3be0a8" }
 nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "5e63ca3c1631bb156187705f9c4cf643a67f9c05" }
 
 [tool.uv]
