@@ -87,9 +87,8 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 # Remove this
-megatron-hub = { git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git", rev = "cc2a60c3be11549f070fe1d7b6324a3dae51c6e0" }
+megatron-hub = { git = "https://github.com/NVIDIA-NeMo/Megatron-Hub.git", rev = "929f5af7ab93b3ddf358491841e3631a592f6d97" }
 nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "5e63ca3c1631bb156187705f9c4cf643a67f9c05" }
-megatron-core = { git = "https://github.com/NVIDIA/Megatron-LM.git", rev = "015542d9607d50a7e2f39d8b625a3f999ad66d93" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
