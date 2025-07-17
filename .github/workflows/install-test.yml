@@ -52,13 +52,13 @@ jobs:
 
           python${{ matrix.python-version }} -m venv ./venv
           . ./venv/bin/activate
-          pip install --upgrade pip
+          pip install --pre --no-cache-dir --upgrade pip
 
       - name: Install project
         run: |
           . ./venv/bin/activate
-          pip install --upgrade pip
-          pip install .
+          pip install --pre --no-cache-dir --upgrade pip
+          pip install --pre --no-cache-dir .
 
       - name: Checkout check-imports
         uses: actions/checkout@v4
@@ -105,12 +105,12 @@ jobs:
 
           . ./venv/bin/activate
 
-          pip install --upgrade pip
+          pip install --pre --no-cache-dir --upgrade pip
 
           PIP_ARGS=()
 
           if [[ $EXTRA == *"te"* ]]; then
-            pip install torch setuptools pybind11 wheel_stub
+            pip install --pre --no-cache-dir torch setuptools pybind11 wheel_stub
             PIP_ARGS=(--no-build-isolation)
           fi
 
@@ -118,7 +118,7 @@ jobs:
             apt-get install -y libopenmpi-dev
           fi
 
-          pip install ${PIP_ARGS[@]} .$EXTRA
+          pip install --pre --no-cache-dir ${PIP_ARGS[@]} .$EXTRA
 
       - name: Checkout check-imports
         uses: actions/checkout@v4
@@ -174,7 +174,7 @@ jobs:
 
           uv run python -m ensurepip --upgrade
           ln -sf /opt/venv/bin/pip3 /opt/venv/bin/pip
-          uv pip install --no-deps -e .
+          uv pip install --pre --no-cache-dir --no-deps -e .
 
       - name: Checkout check-imports
         uses: actions/checkout@v4
@@ -232,7 +232,7 @@ jobs:
 
           uv sync --link-mode copy --locked --all-groups
 
-          uv pip install --no-deps -e .
+          uv pip install --pre --no-cache-dir --no-deps -e .
 
       - name: Checkout check-imports
         uses: actions/checkout@v4
