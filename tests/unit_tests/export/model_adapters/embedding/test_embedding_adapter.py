@@ -56,7 +56,7 @@ class TestPooling:
         """Test average pooling specifically."""
         pooling = Pooling(pooling_mode="avg")
 
-        # Simple case for manual verification        
+        # Simple case for manual verification
         last_hidden_states = torch.tensor([[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]])
         attention_mask = torch.tensor([[1, 1, 0]])  # Only first two tokens are valid
 
