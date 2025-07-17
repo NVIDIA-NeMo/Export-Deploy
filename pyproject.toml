@@ -55,7 +55,6 @@ dependencies = [
     "decord ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "pyparsing>2.0.2",
     "megatron-core>=0.13.0a0,<0.14.0",
-    "nvidia-modelopt[torch,onnx]>=0.29.0a0,<0.30.0; sys_platform != 'darwin'",
     "nvidia-resiliency-ext>=0.3.0a0,<0.4.0; sys_platform != 'darwin'",
     "sentencepiece>=0.2.0",
     "einops>=0.8.1",
@@ -63,8 +62,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-vllm = ["vllm==0.9.1", "pandas", "timm"]
-trtllm = ["tensorrt-llm~=0.20.0"]
+vllm = [
+    "vllm==0.9.1", 
+    "pandas", 
+    "timm", 
+    "nvidia-modelopt[torch,onnx]>=0.31.0a0,<0.32.0; sys_platform != 'darwin'"
+]
+trtllm = [
+    "tensorrt-llm~=0.20.0", 
+    "nvidia-modelopt[torch,onnx]>=0.29.0a0,<0.30.0; sys_platform != 'darwin'"
+]
 te = ["transformer-engine[pytorch]==2.5.0"]
 
 [dependency-groups]
