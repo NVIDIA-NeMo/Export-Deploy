@@ -57,6 +57,8 @@ dependencies = [
     "megatron-core>=0.13.0a0,<0.14.0",
     "nvidia-modelopt[torch,onnx]>=0.31.0a0,<0.32.0; sys_platform != 'darwin'",
     "nvidia-resiliency-ext>=0.3.0a0,<0.4.0; sys_platform != 'darwin'",
+    "sentencepiece>=0.2.0",
+    "einops>=0.8.1",
 ]
 
 [project.optional-dependencies]
