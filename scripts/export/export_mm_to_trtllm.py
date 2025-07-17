@@ -48,7 +48,7 @@ def parse_args():
         "--model_type",
         type=str,
         required=True,
-        choices=["neva", "video-neva", "lita", "vila", "vita", "salm"],
+        choices=["neva", "video-neva", "lita", "vila", "vita", "salm", "mllama"],
         help="Type of the model that is supported.",
     )
 
@@ -56,7 +56,7 @@ def parse_args():
         "--llm_model_type",
         type=str,
         required=True,
-        choices=["gptnext", "gpt", "llama", "falcon", "starcoder", "mixtral", "gemma"],
+        choices=["gptnext", "gpt", "llama", "falcon", "starcoder", "mixtral", "gemma", "mllama"],
         help="Type of LLM. gptnext, gpt, llama, falcon, and starcoder are only supported."
         " gptnext and gpt are the same and keeping it for backward compatibility",
     )

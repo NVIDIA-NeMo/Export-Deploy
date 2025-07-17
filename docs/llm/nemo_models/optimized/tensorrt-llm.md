@@ -14,37 +14,40 @@ This section shows how to use scripts and APIs to export a NeMo LLM (*.nemo*) or
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 \
        -v ${PWD}/hf_llama31_8B_nemo2.nemo:/opt/checkpoints/hf_llama31_8B_nemo2.nemo \
        -w /opt/NeMo \
+       --name nemo-fw \
        nvcr.io/nvidia/nemo:vr
    ```
 
-3. Run the following deployment script to verify that everything is working correctly. The script exports the Llama NeMo checkpoint to TensorRT-LLM and subsequently serves it on the Triton server:
+3. Install TensorRT-LLM by executing the following command inside the container:
+
+   ```shell
+   cd /opt/Export-Deploy
+   uv sync --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
+
+   ```
+
+4. Run the following deployment script to verify that everything is working correctly. The script exports the Llama NeMo checkpoint to TensorRT-LLM and subsequently serves it on the Triton server:
 
     ```shell
-    python scripts/deploy/nlp/deploy_triton.py \
+    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
         --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
         --model_type llama \
         --triton_model_name llama \
         --tensor_parallelism_size 1
    ```
 
-4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
+5. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
 
-5. In a separate terminal, run the following command to get the container ID of the running container. Please access the ``nvcr.io/nvidia/nemo:vr`` image to get the container ID.
-
-   ```shell
-   docker ps
-   ```
-   
-6. Access the running container and replace ``container_id`` with the actual container ID as follows:
+6. In a separate terminal, access the running container as follows:
 
    ```shell
-   docker exec -it container_id bash
+   docker exec -it nemo-fw bash
    ```
 
 7. To send a query to the Triton server, run the following script:
 
    ```shell
-   python scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
+   python /opt/Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
    ```
    
 8. To export and deploy a different model such as Llama3, Mixtral, or Starcoder, change the ``model_type`` in the `deploy_triton.py <https://github.com/NVIDIA/NeMo/blob/main/scripts/deploy/nlp/deploy_triton.py>`_ script. Please check below to see the list of the model types. For quantized *qnemo* models, specifying ``model_type`` is not necessary as this information is included in the TensorRT-LLM checkpoint.
@@ -63,7 +66,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
 2. To begin serving the [downloaded model](../../index.md) or a [quantized](https://docs.nvidia.com/nemo-framework/user-guide/latest/model-optimization/quantization/quantization.html) model, run the following script:
 
    ```shell
-   python scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
        --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
        --model_type llama \
        --triton_model_name llama \
@@ -87,9 +90,6 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    - ``--max_batch_size``: maximum batch size of the model. Default is 8. 
    - ``--max_num_tokens``: maximum number of tokens. Default is None.
    - ``--opt_num_tokens``: optimum number of tokens. Default is None.
-   - ``--ptuning_nemo_checkpoint``: source .nemo file for prompt embeddings table.
-   - ``--task_ids``: unique task names for the prompt embedding.
-   - ``--max_prompt_embedding_table_size``: max prompt embedding table size.
    - ``--lora_ckpt``: a checkpoint list of LoRA weights.
    - ``--use_lora_plugin``: activates the LoRA plugin which enables embedding sharing.
    - ``--lora_target_modules``: adds LoRA to specified modules, but only activates when the ``--use_lora_plugin`` is enabled.
@@ -109,10 +109,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    |:--------- |-------------|
    |GPT        | gpt         |          
    |Nemotron   | gpt         |                
-   |Llama 2    | llama       |
-   |Llama 3    | llama       |
-   |Llama 3.1  | llama       | 
-   |Llama 3.2  | llama       |
+   |Llama      | llama       |
    |Gemma      | gemma       |   
    |StarCoder1 | starcoder   |                     
    |StarCoder2 | starcoder   |          
@@ -130,7 +127,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
        -w /opt/NeMo \
        nvcr.io/nvidia/nemo:vr
 
-   python scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
        --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
        --model_type llama \
        --triton_model_name llama \
@@ -143,7 +140,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
 5. To load the exported model directly, run the following script within the container:
 
    ```shell
-   python scripts/deploy/nlp/deploy_triton.py \
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
        --triton_model_name llama \
        --triton_model_repository /opt/checkpoints/tmp_triton_model_repository \
        --model_type llama
@@ -165,42 +162,19 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    export HF_TOKEN=your_token_here
    ```
 
+### Export and Deploy a LLM Model with TensorRT-LLM API
 
-### Use Prompt Embedding Tables
+Alternatively, if the **deploy_triton** script is unable to export your model to TensorRT-LLM, you can leverage the new [TensorRT-LLM LLM API](https://nvidia.github.io/TensorRT-LLM/quick-start-guide.html#llm-api). This API provides a streamlined way to export and deploy models. See the example below:
 
-You can use learned virtual tokens to perform a downstream stream task during inference. Once the virtual tokens are learned using the NeMo Framework training container, all the tokens are saved in a .nemo file. You can feed this file into the script as shown in the following command. Since there is no NeMo checkpoint specifically for the virtual token available on NVIDIA NGC or Hugging Face, you’ll need to find or generate a checkpoint.
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
+   --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
+   --model_type llama \
+   --triton_model_name llama \
+   --tensor_parallelism_size 1
+```
 
-1. Assuming there is a checkpoint for the prompt embedding table, run the following command:
-
-   ```shell
-   python scripts/deploy/nlp/deploy_triton.py \
-       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
-       --model_type llama \
-       --triton_model_name llama \
-       --triton_model_repository /opt/checkpoints/tmp_triton_model_repository \
-       --max_prompt_embedding_table_size 1024 \
-       --ptuning_nemo_checkpoint /opt/checkpoints/my_ptuning_table.nemo \
-       --task_ids "task 1" \
-       --tensor_parallelism_size 1
-   ```
-
-   ``max_prompt_embedding_table_size`` parameter should be set as the total number of virtual tokens for all of the downstream tasks.
-
-2. To pass multiple NeMo checkpoints, run the following command:
-
-   ```shell
-   python scripts/deploy/nlp/deploy_triton.py \
-       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
-       --model_type llama \
-       --triton_model_name llama \
-       --triton_model_repository /opt/checkpoints/tmp_triton_model_repository \
-       --max_prompt_embedding_table_size 1024 \
-       --ptuning_nemo_checkpoint /opt/checkpoints/my_ptuning_table-1.nemo /opt/checkpoints/my_ptuning_table-2.nemo \
-       --task_ids "task 1" "task 2" \
-       --tensor_parallelism_size 1
-   ```
-
-   Please ensure that the combined total number of virtual tokens in `my_ptuning_table-1.nemo` and `my_ptuning_table-2.nemo` doesn't exceed the `max_prompt_embedding_table_size` parameter.
+After starting the Triton server, you can query the deployed model using the **/opt/Export-Deploy/scripts/deploy/nlp/query.py** script, as demonstrated in the previous steps.
 
 
 ## Use NeMo Export and Deploy Module APIs to Run Inference
@@ -214,7 +188,7 @@ You can use the APIs in the export module to export a NeMo checkpoint to TensorR
 1. Run the following command:
 
    ```python
-   from nemo.export.tensorrt_llm import TensorRTLLM
+   from nemo_export.tensorrt_llm import TensorRTLLM
 
    trt_llm_exporter = TensorRTLLM(model_dir="/opt/checkpoints/tmp_trt_llm/")
    trt_llm_exporter.export(
@@ -255,8 +229,8 @@ You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Trit
 1. Run the following command:
 
    ```python
-   from nemo.export.tensorrt_llm import TensorRTLLM
-   from nemo.deploy import DeployPyTriton
+   from nemo_export.tensorrt_llm import TensorRTLLM
+   from nemo_deploy import DeployPyTriton
 
    trt_llm_exporter = TensorRTLLM(model_dir="/opt/checkpoints/tmp_trt_llm/")
    trt_llm_exporter.export(
@@ -277,7 +251,7 @@ You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Trit
 If you have a FP8-trained checkpoint, produced during pre-training or fine-tuning with NVIDIA Transformer Engine, you can convert it to a FP8 TensorRT-LLM engine directly using ``nemo.export``. The entry point is the same as with regular *.nemo* and *.qnemo* checkpoints:
 
 ```python
-from nemo.export.tensorrt_llm import TensorRTLLM
+from nemo_export.tensorrt_llm import TensorRTLLM
 
 trt_llm_exporter = TensorRTLLM(model_dir="/opt/checkpoints/tmp_trt_llm/")
 trt_llm_exporter.export(
