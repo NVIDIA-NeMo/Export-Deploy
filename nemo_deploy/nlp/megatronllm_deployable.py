@@ -431,20 +431,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         if apply_chat_template:
             prompts = [self.apply_chat_template(prompt) for prompt in prompts]
 
-        if torch.distributed.is_initialized():
-            if torch.distributed.get_world_size() > 1:
-                torch.distributed.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
-                broadcast_list(prompts, src=0)
-                broadcast_list(
-                    data=[
-                        temperature,
-                        top_k,
-                        top_p,
-                        num_tokens_to_generate,
-                        log_probs,
-                    ],
-                    src=0,
-                )
+        # Note: Distributed broadcast is handled by the calling function (triton_infer_fn or ray_infer_fn)
+        # to avoid duplicate broadcasts that cause synchronization issues
+
         # cast top_k,top_p to native int, float since typecheck assert statements added in MCore0.13 error otherwise
         # return_prompt_top_n_logprobs returns top_logprobs for prompt tokens too when top_logprobs>0.
         inference_params = CommonInferenceParams(
