@@ -731,8 +731,6 @@ def test_infer_fn_with_distributed(deployable):
         patch.object(deployable, "remove_eos_token") as mock_remove_eos,
         patch("torch.distributed.is_initialized", return_value=True),
         patch("torch.distributed.get_world_size", return_value=2),
-        patch("torch.distributed.broadcast") as mock_broadcast,
-        patch("nemo_deploy.nlp.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
     ):
         # Set up mock results
         mock_result = MagicMock()
@@ -753,10 +751,6 @@ def test_infer_fn_with_distributed(deployable):
 
         assert output_infer["sentences"] == ["Generated text", "Generated text"]
         assert not "log_probs" in output_infer.keys()
-
-        # Verify distributed operations were called
-        mock_broadcast.assert_called_once()
-        assert mock_broadcast_list.call_count == 2  # One for prompts, one for parameters
 
 
 @pytest.mark.run_only_on("GPU")

@@ -526,6 +526,21 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         echo = inputs.pop("echo", False)
         text_only = inputs.pop("text_only", True)
 
+        if torch.distributed.is_initialized():
+            if torch.distributed.get_world_size() > 1:
+                torch.distributed.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
+                broadcast_list(prompts, src=0)
+                broadcast_list(
+                    data=[
+                        temperature,
+                        top_k,
+                        top_p,
+                        num_tokens_to_generate,
+                        log_probs,
+                    ],
+                    src=0,
+                )
+
         return self._infer_fn(
             prompts=prompts,
             temperature=temperature,
