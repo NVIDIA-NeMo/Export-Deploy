@@ -102,7 +102,7 @@ def query_llm(
     inputs = {"prompts": prompts}
 
     if max_output_len is not None:
-        inputs["max_output_len"] = np.full(prompts.shape, max_output_len, dtype=np.int_)
+        inputs["max_length"] = np.full(prompts.shape, max_output_len, dtype=np.int_)
 
     if top_k is not None:
         inputs["top_k"] = np.full(prompts.shape, top_k, dtype=np.int_)
@@ -140,7 +140,7 @@ def query_llm(
         output_type = client.model_config.outputs[0].dtype
 
     if output_type == np.bytes_:
-        sentences = np.char.decode(result_dict["outputs"].astype("bytes"), "utf-8")
+        sentences = np.char.decode(result_dict["sentences"].astype("bytes"), "utf-8")
         return sentences
     else:
         return result_dict["outputs"]
@@ -166,7 +166,7 @@ def query_llm_streaming(
     inputs = {"prompts": prompts}
 
     if max_output_len is not None:
-        inputs["max_output_len"] = np.full(prompts.shape, max_output_len, dtype=np.int_)
+        inputs["max_length"] = np.full(prompts.shape, max_output_len, dtype=np.int_)
 
     if top_k is not None:
         inputs["top_k"] = np.full(prompts.shape, top_k, dtype=np.int_)
@@ -203,7 +203,7 @@ def query_llm_streaming(
         for partial_result_dict in client.infer_batch(**inputs):
             output_type = client.model_config.outputs[0].dtype
             if output_type == np.bytes_:
-                sentences = np.char.decode(partial_result_dict["outputs"].astype("bytes"), "utf-8")
+                sentences = np.char.decode(partial_result_dict["sentences"].astype("bytes"), "utf-8")
                 yield sentences
             else:
                 yield partial_result_dict["outputs"]
