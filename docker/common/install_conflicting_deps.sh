@@ -6,4 +6,4 @@ source ${UV_PROJECT_ENVIRONMENT}/bin/activate
 # Nemo-run has conflicting dependencies to export-deploy:
 # They collide on nvidia-pytriton (export-deploy) and torchx (nemo-run)
 # via urllib3.
-uv pip install "nemo-run>=0.3.0a0,<0.4.0"
+# uv pip install "nemo-run>=0.3.0a0,<0.4.0"
