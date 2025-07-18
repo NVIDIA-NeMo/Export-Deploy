@@ -89,4 +89,16 @@ class TestDeployPyTriton:
         # Check if deployment was successful
         assert len(outputs) != 0, "Prediction empty"
 
+        outputs = query_llm(
+            url="0.0.0.0",
+            model_name="llama",
+            prompts=["Sending a 2nd request. What is the color of a banana?"],
+            max_output_len=20,
+        )
+
+        print(outputs)
+
+        # Check if deployment was successful
+        assert len(outputs) != 0, "Prediction empty"
+
         deploy_proc.send_signal(signal.SIGINT)
