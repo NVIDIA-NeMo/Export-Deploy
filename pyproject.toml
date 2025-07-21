@@ -89,7 +89,7 @@ vllm = [
 # Remove this
 megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "958fb9b7da4eb1506142a122965fa5424cfdc8a2" }
 nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "5e63ca3c1631bb156187705f9c4cf643a67f9c05" }
-megatron-core = { git = "https://github.com/NVIDIA/Megatron-LM.git", rev = "5e798111e60f45e82c336ef7b89d8d793c93208f" }
+megatron-core = { git = "https://github.com/NVIDIA/Megatron-LM.git", rev = "db41707430bff743f986b5779712c74242b99caa" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
