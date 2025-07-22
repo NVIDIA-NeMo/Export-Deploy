@@ -27,7 +27,6 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    # "megatron-bridge", add here after the release of Megatron-Bridge
     "megatron-core[dev]>=0.12.0",
     "accelerate",
     "fastapi",
@@ -78,7 +77,6 @@ test = ["pytest", "pytest-mock", "coverage", "click"]
 nemo-legacy = [
     "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]",
 ]
-megatron-bridge-pre = ["megatron-bridge"]
 
 [tool.uv.sources]
 xformers = [{ index = "pytorch-cu128" }]
@@ -87,7 +85,6 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 # Remove this
-megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "958fb9b7da4eb1506142a122965fa5424cfdc8a2" }
 nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "5e63ca3c1631bb156187705f9c4cf643a67f9c05" }
 megatron-core = { git = "https://github.com/NVIDIA/Megatron-LM.git", rev = "5e798111e60f45e82c336ef7b89d8d793c93208f" }
 
