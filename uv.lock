@@ -3688,7 +3688,6 @@ linting = [
     { name = "pre-commit", specifier = ">=3.6.0" },
     { name = "ruff", specifier = "~=0.9.0" },
 ]
-megatron-bridge-pre = [{ name = "megatron-bridge", git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=958fb9b7da4eb1506142a122965fa5424cfdc8a2" }]
 nemo-legacy = [{ name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], git = "https://github.com/NVIDIA/NeMo.git?rev=5e63ca3c1631bb156187705f9c4cf643a67f9c05" }]
 test = [
     { name = "click" },
