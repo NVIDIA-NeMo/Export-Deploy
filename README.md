@@ -14,9 +14,9 @@
 
 <!-- **Library with tooling and APIs for exporting and deploying NeMo and Hugging Face models with support of backends like  TensorRT, TensorRT-LLM and vLLM through NVIDIA Triton Inference Server.** -->
 
-[![📖 Documentation](https://img.shields.io/badge/docs-nvidia-informational?logo=book)](https://docs.nvidia.com/nemo/Export-Deploy/latest/index.html)
-[![🔧 Installation](https://img.shields.io/badge/install-guide-blue?logo=terminal)](https://github.com/NVIDIA-NeMo/Export-Deploy/#-install)
-[![🚀 Quick start](https://img.shields.io/badge/quick%20start-guide-success?logo=rocket)](https://github.com/NVIDIA-NeMo/Export-Deploy/#-get-started-quickly)
+[![📖 Documentation](https://img.shields.io/badge/docs-nvidia-informational?logo=book)](https://docs.nvidia.com/nemo/export-deploy/latest/index.html)
+[![🔧 Installation](https://img.shields.io/badge/install-guide-blue?logo=terminal)](https://github.com/NVIDIA-NeMo/Export-Deploy?tab=readme-ov-file#-install)
+[![🚀 Quick start](https://img.shields.io/badge/quick%20start-guide-success?logo=rocket)](https://github.com/NVIDIA-NeMo/Export-Deploy?tab=readme-ov-file#-get-started-quickly)
 [![🤝 Contributing](https://img.shields.io/badge/contributing-guide-yellow?logo=github)](https://github.com/NVIDIA-NeMo/Export-Deploy/blob/main/CONTRIBUTING.md)
 
 </div>
