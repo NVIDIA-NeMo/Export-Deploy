@@ -754,9 +754,9 @@ def test_infer_fn_with_distributed(deployable):
         assert output_infer["sentences"] == ["Generated text", "Generated text"]
         assert not "log_probs" in output_infer.keys()
 
-        # Verify distributed operations were called
+        # Verify distributed calls were made
         mock_broadcast.assert_called_once()
-        assert mock_broadcast_list.call_count == 2  # One for prompts, one for parameters
+        assert mock_broadcast_list.call_count == 2  # Called twice: once for prompts, once for parameters
 
 
 @pytest.mark.run_only_on("GPU")

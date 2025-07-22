@@ -364,20 +364,6 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         if apply_chat_template:
             prompts = [self.str_to_dict(prompt) for prompt in prompts]
 
-        if torch.distributed.is_initialized():
-            if torch.distributed.get_world_size() > 1:
-                torch.distributed.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
-                broadcast_list(prompts, src=0)
-                broadcast_list(
-                    data=[
-                        temperature,
-                        top_k,
-                        top_p,
-                        num_tokens_to_generate,
-                        log_probs,
-                    ],
-                    src=0,
-                )
         # Use the shared inference function
         output_infer = self._infer_fn(
             prompts=prompts,
@@ -445,6 +431,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
                     ],
                     src=0,
                 )
+
         # cast top_k,top_p to native int, float since typecheck assert statements added in MCore0.13 error otherwise
         # return_prompt_top_n_logprobs returns top_logprobs for prompt tokens too when top_logprobs>0.
         inference_params = CommonInferenceParams(

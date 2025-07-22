@@ -21,6 +21,12 @@ import torch
 from nemo_deploy import DeployPyTriton
 
 LOGGER = logging.getLogger("NeMo")
+# Add a stream handler if none exists
+if not LOGGER.hasHandlers():
+    handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s")
+    handler.setFormatter(formatter)
+    LOGGER.addHandler(handler)
 
 megatron_llm_supported = True
 try:
