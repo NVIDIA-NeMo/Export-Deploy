@@ -39,14 +39,91 @@ def get_args(argv):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Export NeMo models to vLLM and deploy them on Triton",
     )
-    parser.add_argument("-nc", "--nemo_checkpoint", type=str, help="Source .nemo file")
     parser.add_argument(
-        "-mt",
-        "--model_type",
+        "-nc", 
+        "--model_path_id", 
+        required=True, 
+        type=str, 
+        help="Path of a NeMo checkpoint, or Hugging Face model ID or path."
+    )
+    parser.add_argument(
+        "-t",
+        "--tokenizer",
         type=str,
-        required=True,
-        choices=["llama", "mistral", "mixtral", "starcoder2", "gemma"],
-        help="Type of the model",
+        default=None,
+        help="Tokenizer file if it is not provided in the checkpoint.",
+    )
+    parser.add_argument(
+        "-lc",
+        "--lora_ckpt",
+        default=[],
+        type=str,
+        nargs="+",
+        help="List of LoRA checkpoints in HF format",
+    )
+    parser.add_argument(
+        "-tps",
+        "--tensor_parallelism_size",
+        default=1,
+        type=int,
+        help="Tensor parallelism size",
+    )
+    parser.add_argument(
+        "-dt",
+        "--dtype",
+        choices=["auto", "bfloat16", "float16", "float32"],
+        default="auto",
+        type=str,
+        help="dtype of the model on vLLM",
+    )
+    parser.add_argument(
+        "-q",
+        "--quantization",
+        choices=["awq", "gptq", "fp8"],
+        default=None,
+        help="Quantization method for vLLM.",
+    )
+    parser.add_argument(
+        "-s",
+        "--seed",
+        default=0,
+        type=int,
+        help="Tensor parallelism size",
+    )
+    parser.add_argument(
+        "-gmu",
+        "--gpu_memory_utilization",
+        default=0.9,
+        type=float,
+        help="GPU memory utilization percentage for vLLM.",
+    )
+    parser.add_argument(
+        "-sp",
+        "--swap_space",
+        default=4,
+        type=float,
+        help="The size (GiB) of CPU memory per GPU to use as swap space.",
+    )
+    parser.add_argument(
+        "-cog",
+        "--cpu_offload_gb",
+        default=0,
+        type=float,
+        help="The size (GiB) of CPU memory to use for offloading the model weights.",
+    )
+    parser.add_argument(
+        "-ee",
+        "--enforce_eager",
+        default=False,
+        action="store_true",
+        help="Whether to enforce eager execution.",
+    ) 
+    parser.add_argument(
+        "-mslc",
+        "--max_seq_len_to_capture",
+        default=8192,
+        type=int,
+        help="Maximum sequence len covered by CUDA graphs.",
     )
     parser.add_argument(
         "-tmn",
@@ -75,36 +152,7 @@ def get_args(argv):
         default="0.0.0.0",
         type=str,
         help="HTTP address for the Triton server",
-    )
-    parser.add_argument(
-        "-tmr",
-        "--triton_model_repository",
-        default=None,
-        type=str,
-        help="Folder for the vLLM conversion",
-    )
-    parser.add_argument(
-        "-tps",
-        "--tensor_parallelism_size",
-        default=1,
-        type=int,
-        help="Tensor parallelism size",
-    )
-    parser.add_argument(
-        "-dt",
-        "--dtype",
-        choices=["bfloat16", "float16", "fp8", "int8"],
-        default="bfloat16",
-        type=str,
-        help="dtype of the model on vLLM",
-    )
-    parser.add_argument(
-        "-mml",
-        "--max_model_len",
-        default=512,
-        type=int,
-        help="Max input + ouptut length of the model",
-    )
+    )    
     parser.add_argument(
         "-mbs",
         "--max_batch_size",
@@ -113,69 +161,16 @@ def get_args(argv):
         help="Max batch size of the model",
     )
     parser.add_argument(
-        "-lc",
-        "--lora_ckpt",
-        default=[],
-        type=str,
-        nargs="+",
-        help="List of LoRA checkpoints in HF format",
-    )
-    parser.add_argument(
-        "-es",
-        "--enable_streaming",
-        default=False,
-        action="store_true",
-        help="Enables streaming sentences.",
-    )
-    parser.add_argument(
         "-dm",
         "--debug_mode",
         default=False,
         action="store_true",
         help="Enable debug mode",
-    )
-    parser.add_argument(
-        "-ws",
-        "--weight_storage",
-        default="auto",
-        choices=["auto", "cache", "file", "memory"],
-        help='Strategy for storing converted weights for vLLM: "file" - always write weights into a file, '
-        '"memory" - always do an in-memory conversion, "cache" - reuse existing files if they are '
-        'newer than the nemo checkpoint, "auto" - use "cache" for multi-GPU runs and "memory" '
-        "for single-GPU runs.",
-    )
-    parser.add_argument(
-        "-gmu",
-        "--gpu_memory_utilization",
-        default=0.9,
-        type=float,
-        help="GPU memory utilization percentage for vLLM.",
-    )
-    parser.add_argument(
-        "-q",
-        "--quantization",
-        choices=["fp8"],
-        help="Quantization method for vLLM.",
-    )
+    )    
+    
+    
     args = parser.parse_args(argv)
     return args
-
-
-def get_vllm_deployable(args, model_dir):
-    exporter = vLLMExporter()
-    exporter.export(
-        nemo_checkpoint=args.nemo_checkpoint,
-        model_dir=model_dir,
-        model_type=args.model_type,
-        tensor_parallel_size=args.tensor_parallelism_size,
-        max_model_len=args.max_model_len,
-        lora_checkpoints=args.lora_ckpt,
-        dtype=args.dtype,
-        weight_storage=args.weight_storage,
-        gpu_memory_utilization=args.gpu_memory_utilization,
-        quantization=args.quantization,
-    )
-    return exporter
 
 
 def nemo_deploy(argv):
@@ -188,35 +183,34 @@ def nemo_deploy(argv):
 
     LOGGER.setLevel(loglevel)
     LOGGER.info("Logging level set to {}".format(loglevel))
-    LOGGER.info(args)
-
-    # If no model_dir was supplied, create a temporary directory.
-    # This directory should persist while the model is being served, becaue it may contain
-    # converted LoRA checkpoints, and those are accessed by vLLM at request time.
-    tempdir = None
-    model_dir = args.triton_model_repository
-    if model_dir is None:
-        tempdir = tempfile.TemporaryDirectory()
-        model_dir = tempdir.name
-        LOGGER.info(
-            f"{model_dir} will be used for the vLLM intermediate folder. "
-            + "Please set the --triton_model_repository parameter if you'd like to use a path that already "
-            + "includes the vLLM model files."
-        )
-    elif not os.path.exists(model_dir):
-        os.makedirs(model_dir)
+    LOGGER.info(args)    
 
     try:
-        triton_deployable = get_vllm_deployable(args, model_dir=model_dir)
+        exporter = vLLMExporter()
+        exporter.export(
+            model_path_id=args.model_path_id,
+            tokenizer=args.tokenizer,
+            trust_remote_code=True,
+            enable_lora=True if len(args.lora_ckpt) else False,
+            tensor_parallel_size=args.tensor_parallelism_size,
+            dtype=args.dtype,
+            quantization=args.quantization,
+            seed=args.seed,
+            gpu_memory_utilization=args.gpu_memory_utilization,
+            swap_space=args.swap_space,
+            cpu_offload_gb=args.cpu_offload_gb,
+            enforce_eager=args.enforce_eager,
+            max_seq_len_to_capture=args.max_seq_len_to_capture,
+            task="generate",
+        )
 
         nm = DeployPyTriton(
-            model=triton_deployable,
+            model=exporter,
             triton_model_name=args.triton_model_name,
             triton_model_version=args.triton_model_version,
             max_batch_size=args.max_batch_size,
             http_port=args.triton_port,
             address=args.triton_http_address,
-            streaming=args.enable_streaming,
         )
 
         LOGGER.info("Starting the Triton server...")
@@ -229,11 +223,6 @@ def nemo_deploy(argv):
     except Exception as error:
         LOGGER.error("An error has occurred while setting up or serving the model. Error message: " + str(error))
         return
-
-    # Clean up the temporary directory
-    finally:
-        if tempdir is not None:
-            tempdir.cleanup()
 
 
 if __name__ == "__main__":
