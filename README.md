@@ -32,23 +32,23 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
-## Support Matrix
+## Feature Support Matrix
 
-#### Supported Export Features
+#### Model Export Capabilities
 
-| Model / Checkpoint   | TensorRT-LLM                        | vLLM                | ONNX        | TensorRT   |
-|----------------------|-------------------------------------|---------------------|-------------|------------|
-| NeMo LLM             | bf16, fp8 (PTQ, QAT),<br>fp4 (Coming Soon) | bf16, fp8 (PTQ, QAT) | N/A         | N/A        |
-| NeMo Multimodal      | bf16                                | N/A                 | N/A         | N/A        |
-| Megatron-LM          | Coming Soon                         | Coming Soon         | N/A         | N/A        |
-| Hugging Face LLM     | Coming Soon                         | Coming Soon         | N/A         | N/A        |
-| NIM Embedding        | N/A                                 | N/A                 | bf16        | bf16       |
-| NIM Reranking        | N/A                                 | N/A                 | Coming Soon | Coming Soon|
+| Model / Checkpoint   | TensorRT-LLM                              | vLLM                | ONNX        | TensorRT   |
+|----------------------|-------------------------------------------|---------------------|-------------|------------|
+| NeMo LLM             | bf16, fp8 (PTQ, QAT),<br>fp4 (Coming Soon)| bf16, fp8 (PTQ, QAT)| N/A         | N/A        |
+| NeMo Multimodal      | bf16                                      | N/A                 | N/A         | N/A        |
+| Megatron-LM          | Coming Soon                               | Coming Soon         | N/A         | N/A        |
+| Hugging Face LLM     | Coming Soon                               | Coming Soon         | N/A         | N/A        |
+| NIM Embedding        | N/A                                       | N/A                 | bf16        | bf16       |
+| NIM Reranking        | N/A                                       | N/A                 | Coming Soon | Coming Soon|
 
 The support matrix above details the export capabilities available for each model or checkpoint, including supported precision options across different inference-optimized libraries. Please note that not all large language models (LLMs) and multimodal models (MMs) are currently supported. For complete and up-to-date information, please consult the [documentation](docs).
 
 
-#### Supported Deploy Features
+#### Model Deployment Capabilities
 
 | Model / Checkpoint | RayServe                                 | PyTriton                |
 |--------------------|------------------------------------------|-------------------------|
