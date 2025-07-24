@@ -516,3 +516,87 @@ class NemoQueryTRTLLMAPI(NemoQueryLLMBase):
                 return sentences
             else:
                 return result_dict["sentences"]
+
+
+class NemoQueryvLLM(NemoQueryLLMBase):
+    """Sends a query to Triton for TensorRT-LLM API deployment inference.
+
+    Example:
+        from nemo_deploy import NemoQueryvLLM
+
+        nq = NemoQueryvLLM(url="localhost", model_name="GPT-2B")
+
+        prompts = ["hello, testing GPT inference", "another GPT inference test?"]
+        output = nq.query_llm(
+            prompts=prompts,
+            max_tokens=100,
+            top_k=1,
+            top_p=None,
+            temperature=None,
+        )
+        print("prompts: ", prompts)
+    """
+
+    def query_llm(
+        self,
+        prompts: List[str],
+        max_tokens: int = None,
+        min_tokens: int = None,
+        logprobs: Optional[bool] = None,
+        seed: Optional[int] = None,
+        top_k: Optional[int] = None,
+        top_p: Optional[float] = None,
+        temperature: Optional[float] = None,
+        init_timeout: float = 60.0,
+    ):
+        """
+        Query the Triton server synchronously and return a list of responses.
+
+        Args:
+            prompts (List[str]): List of input prompt strings.
+            max_tokens (Optional[int]): Maximum number of tokens to generate.
+            min_tokens (Optional[int]): Minimum number of tokens to generate.
+            logprobs (Optional[bool]): Whether to return log probabilities.
+            seed (Optional[int]): Random seed for generation.
+            top_k (Optional[int]): Limits to the top K tokens to consider at each step.
+            top_p (Optional[float]): Limits to the top tokens within cumulative probability p.
+            temperature (Optional[float]): Sampling temperature.
+            init_timeout (float): Timeout (in seconds) for connecting to the server.
+
+        Returns:
+            np.ndarray: An array of generated texts, one for each input prompt.
+        """
+        prompts = str_list2numpy(prompts)
+        inputs = {
+            "prompts": prompts,
+        }
+        if max_tokens is not None:
+            inputs["max_tokens"] = np.full(prompts.shape, max_tokens, dtype=np.int_)
+        if min_tokens is not None:
+            inputs["min_tokens"] = np.full(prompts.shape, min_tokens, dtype=np.int_)
+        if logprobs is not None:
+            inputs["logprobs"] = np.full(prompts.shape, logprobs, dtype=np.int_)
+        if seed is not None:
+            inputs["seed"] = np.full(prompts.shape, seed, dtype=np.int_)
+        if top_k is not None:
+            inputs["top_k"] = np.full(prompts.shape, top_k, dtype=np.int_)
+        if top_p is not None:
+            inputs["top_p"] = np.full(prompts.shape, top_p, dtype=np.single)
+        if temperature is not None:
+            inputs["temperature"] = np.full(prompts.shape, temperature, dtype=np.single)
+
+        with ModelClient(self.url, self.model_name, init_timeout_s=init_timeout) as client:
+            result_dict = client.infer_batch(**inputs)
+            output_type = client.model_config.outputs[0].dtype
+
+            print(result_dict)
+            if output_type == np.bytes_:
+                if "sentences" in result_dict.keys():
+                    output = result_dict["sentences"]
+                else:
+                    return "Unknown output keyword."
+
+                sentences = np.char.decode(output.astype("bytes"), "utf-8")
+                return sentences
+            else:
+                return result_dict["sentences"]

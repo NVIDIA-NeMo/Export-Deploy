@@ -160,47 +160,66 @@ class vLLMExporter(ITritonDeployable):
     def get_triton_input(self):
         inputs = (
             Tensor(name="prompts", shape=(-1,), dtype=bytes),
-            Tensor(name="max_output_len", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="max_tokens", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="min_tokens", shape=(-1,), dtype=np.int_, optional=True),
             Tensor(name="top_k", shape=(-1,), dtype=np.int_, optional=True),
             Tensor(name="top_p", shape=(-1,), dtype=np.single, optional=True),
             Tensor(name="temperature", shape=(-1,), dtype=np.single, optional=True),
+            Tensor(name="seed", shape=(-1,), dtype=np.int_, optional=True),            
+            Tensor(name="logprobs", shape=(-1,), dtype=np.int_, optional=True),            
         )
         return inputs
 
     @property
     def get_triton_output(self):
-        outputs = (Tensor(name="outputs", shape=(-1,), dtype=bytes),)
+        return (
+            Tensor(name="sentences", shape=(-1,), dtype=bytes),
+            Tensor(name="logits", shape=(-1,), dtype=np.single),            
+        )
         return outputs
 
     @batch
-    @first_value("max_output_len", "top_k", "top_p", "temperature")
     def triton_infer_fn(self, **inputs: np.ndarray):  # pragma: no cover
         try:
             infer_input = {"input_texts": str_ndarray2list(inputs.pop("prompts"))}
-            if "max_output_len" in inputs:
-                infer_input["max_output_len"] = inputs.pop("max_output_len")
+            if "max_tokens" in inputs:
+                infer_input["max_tokens"] = int(inputs.pop("max_tokens")[0][0]) 
+            if "min_tokens" in inputs:
+                infer_input["min_tokens"] = int(inputs.pop("min_tokens")[0][0])
+            if "logprobs" in inputs:
+                infer_input["logprobs"] = int(inputs.pop("logprobs")[0][0])
+            if "seed" in inputs:
+                infer_input["seed"] = int(inputs.pop("seed")[0][0])
             if "top_k" in inputs:
-                infer_input["top_k"] = inputs.pop("top_k")
+                infer_input["top_k"] = int(inputs.pop("top_k")[0][0])
             if "top_p" in inputs:
-                infer_input["top_p"] = inputs.pop("top_p")
+                infer_input["top_p"] = float(inputs.pop("top_p")[0][0])
             if "temperature" in inputs:
-                infer_input["temperature"] = inputs.pop("temperature")
+                infer_input["temperature"] = float(inputs.pop("temperature")[0][0])
 
-            output_texts = self.forward(**infer_input)
-            output = cast_output(output_texts, np.bytes_)
+            output = self.forward(**infer_input)
+            if isinstance(output, dict):
+                output_infer = {"sentences": cast_output(output["sentences"], np.bytes_)}                
+                if "logits" in output.keys():
+                    output_infer["logits"] = cast_output(output["logits"], np.single)
+            else:
+                output_infer = {"sentences": cast_output(output, np.bytes_)}
         except Exception as error:
             err_msg = "An error occurred: {0}".format(str(error))
-            output = cast_output([err_msg], np.bytes_)
+            output_infer = {"sentences": cast_output([err_msg], np.bytes_)}
 
-        return {"outputs": output}
+        return output_infer
 
     def forward(
         self,
         input_texts: List[str],
-        max_output_len: int = 64,
+        max_tokens: int = 16,
+        min_tokens: int = 0,
         top_k: int = 1,
         top_p: float = 0.1,
         temperature: float = 1.0,
+        logprobs: int = None,
+        seed: int = None,
         lora_model_name: str = None,
     ):
         assert self.model is not None, "Model is not initialized."
@@ -213,13 +232,17 @@ class vLLMExporter(ITritonDeployable):
             lora_request = LoRARequest(lora_model_name, 1, self.lora_models[lora_model_name])
 
         sampling_params = SamplingParams(
-            max_tokens=max_output_len,
+            max_tokens=max_tokens,
+            min_tokens=min_tokens,
+            logprobs=logprobs,
+            seed=seed,
             temperature=temperature,
-            top_k=int(top_k),
+            top_k=top_k,
             top_p=top_p,
         )
 
         request_output = self.model.generate(input_texts, sampling_params, lora_request=lora_request)
+        print(request_output)
         output = []
         for o in request_output:
             output.append(o.outputs[0].text)

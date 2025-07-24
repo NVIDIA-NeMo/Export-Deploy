@@ -40,7 +40,7 @@ def get_args(argv):
         description="Export NeMo models to vLLM and deploy them on Triton",
     )
     parser.add_argument(
-        "-nc", 
+        "-mpi", 
         "--model_path_id", 
         required=True, 
         type=str, 
