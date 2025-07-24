@@ -32,6 +32,35 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
+## Support Matrix
+
+### Supported Export Features
+
+| Model / Checkpoint   | TensorRT-LLM         | vLLM                | ONNX        | TensorRT   |
+|----------------------|----------------------|---------------------|-------------|------------|
+| NeMo LLM             | bf16, fp8 (PTQ, QAT) | bf16, fp8 (PTQ, QAT)| N/A         | N/A        |
+| NeMo Multimodal      | bf16                 | N/A                 | N/A         | N/A        |
+| Megatron-LM          | Coming Soon          | Coming Soon         |             |            |
+| Hugging Face LLM     | Coming Soon          | Coming Soon         | N/A         | N/A        |
+| NIM Embedding        | N/A                  | N/A                 | bf16        | bf16       |
+| NIM Reranking        | N/A                  | N/A                 | Coming Soon | Coming Soon|
+
+The support matrix above outlines which export operations are supported for each model or checkpoint, including the available precision options for various inference-optimized libraries. For comprehensive details, please refer to the [documentation](docs).
+
+
+### Supported Deploy Features
+
+| Model / Checkpoint | RayServe                                 | PyTriton                |
+|--------------------|------------------------------------------|-------------------------|
+| NeMo LLM           | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
+| NeMo Multimodal    | N/A                                      | Single-Node Multi-GPU   |
+| Megatron-LM        | Coming Soon                              | Coming Soon             |
+| TensorRT-LLM       | Single-Node Multi-GPU,<br>Multi-instance | Multi-Node Multi-GPU    |
+| vLLM               | N/A                                      | Single-Node Multi-GPU   |
+
+The support matrix above outlines the available deployment options for each model or checkpoint, highlighting multi-node and multi-GPU support where applicable. For comprehensive details, please refer to the [documentation](docs).
+
+
 ## 🔧 Install
 
 For quick exploration of NeMo Export-Deploy, we recommend installing our pip package:
@@ -347,7 +376,7 @@ nm.serve()
 
 ## 🔍 Query Deployed Models
 
-### Query LLM Model
+### Query TensorRT-LLM Models
 
 ```python
 from nemo_deploy.nlp import NemoQueryLLM
@@ -360,7 +389,7 @@ output = nq.query_llm(
 print(output)
 ```
 
-### Query Multimodal Model
+### Query TensorRT-LLM Multimodal Model
 
 ```python
 from nemo_deploy.multimodal import NemoQueryMultimodal
@@ -373,6 +402,8 @@ output = nq.query(
 )
 print(output)
 ```
+
+Note that each model type has its own dedicated query class. For further details, please consult the [documentation](docs/).
 
 ## 🤝 Contributing
 
