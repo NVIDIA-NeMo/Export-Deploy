@@ -36,14 +36,14 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 
 ### Supported Export Features
 
-| Model / Checkpoint   | TensorRT-LLM         | vLLM                | ONNX        | TensorRT   |
-|----------------------|----------------------|---------------------|-------------|------------|
-| NeMo LLM             | bf16, fp8 (PTQ, QAT) | bf16, fp8 (PTQ, QAT)| N/A         | N/A        |
-| NeMo Multimodal      | bf16                 | N/A                 | N/A         | N/A        |
-| Megatron-LM          | Coming Soon          | Coming Soon         |             |            |
-| Hugging Face LLM     | Coming Soon          | Coming Soon         | N/A         | N/A        |
-| NIM Embedding        | N/A                  | N/A                 | bf16        | bf16       |
-| NIM Reranking        | N/A                  | N/A                 | Coming Soon | Coming Soon|
+| Model / Checkpoint   | TensorRT-LLM                        | vLLM                | ONNX        | TensorRT   |
+|----------------------|-------------------------------------|---------------------|-------------|------------|
+| NeMo LLM             | bf16, fp8 (PTQ, QAT),<br>fp4 (Coming Soon) | bf16, fp8 (PTQ, QAT) | N/A         | N/A        |
+| NeMo Multimodal      | bf16                                | N/A                 | N/A         | N/A        |
+| Megatron-LM          | Coming Soon                         | Coming Soon         | N/A         | N/A        |
+| Hugging Face LLM     | Coming Soon                         | Coming Soon         | N/A         | N/A        |
+| NIM Embedding        | N/A                                 | N/A                 | bf16        | bf16       |
+| NIM Reranking        | N/A                                 | N/A                 | Coming Soon | Coming Soon|
 
 The support matrix above outlines which export operations are supported for each model or checkpoint, including the available precision options for various inference-optimized libraries. For comprehensive details, please refer to the [documentation](docs).
 
