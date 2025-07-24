@@ -53,7 +53,7 @@ The support matrix above details the export capabilities available for each mode
 | Model / Checkpoint | RayServe                                 | PyTriton                |
 |--------------------|------------------------------------------|-------------------------|
 | NeMo LLM           | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
-| NeMo Multimodal    | N/A                                      | Single-Node Multi-GPU   |
+| NeMo Multimodal    | Coming Soon                              | Coming Soon             |
 | Megatron-LM        | Coming Soon                              | Coming Soon             |
 | TensorRT-LLM       | Single-Node Multi-GPU,<br>Multi-instance | Multi-Node Multi-GPU    |
 | vLLM               | N/A                                      | Single-Node Multi-GPU   |
