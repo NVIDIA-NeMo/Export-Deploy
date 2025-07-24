@@ -34,7 +34,7 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 
 ## Support Matrix
 
-### Supported Export Features
+#### Supported Export Features
 
 | Model / Checkpoint   | TensorRT-LLM                        | vLLM                | ONNX        | TensorRT   |
 |----------------------|-------------------------------------|---------------------|-------------|------------|
@@ -45,10 +45,10 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 | NIM Embedding        | N/A                                 | N/A                 | bf16        | bf16       |
 | NIM Reranking        | N/A                                 | N/A                 | Coming Soon | Coming Soon|
 
-The support matrix above outlines which export operations are supported for each model or checkpoint, including the available precision options for various inference-optimized libraries. For comprehensive details, please refer to the [documentation](docs).
+The support matrix above details the export capabilities available for each model or checkpoint, including supported precision options across different inference-optimized libraries. Please note that not all large language models (LLMs) and multimodal models (MMs) are currently supported. For complete and up-to-date information, please consult the [documentation](docs).
 
 
-### Supported Deploy Features
+#### Supported Deploy Features
 
 | Model / Checkpoint | RayServe                                 | PyTriton                |
 |--------------------|------------------------------------------|-------------------------|
@@ -84,11 +84,11 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
   nvcr.io/nvidia/nemo:${TAG}
 ```
 
-#### Install TRT-LLM (or vLLM)
+#### Install TensorRT-LLM (or vLLM)
 
-Starting with version 25.07, the NeMo FW container no longer includes TRT-LLM and vLLM pre-installed. Please run the following command inside the container:
+Starting with version 25.07, the NeMo FW container no longer includes TensorRT-LLM and vLLM pre-installed. Please run the following command inside the container:
 
-For TRT-LLM:
+For TensorRT-LLM:
 
 ```bash
 cd /opt/Export-Deploy
@@ -136,7 +136,7 @@ For complete feature coverage, we recommend to install [TransformerEngine](https
 
 #### Install TransformerEngine + InFramework
 
-For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+For highly optimized TransformerEngine path with TensorRT-LLM backend, please make sure to install the following prerequisites first:
 
 ```bash
 pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
@@ -150,12 +150,12 @@ cd Export-Deploy/
 pip install --no-build-isolation .[te]
 ```
 
-#### Install TransformerEngine + TRT-LLM
+#### Install TransformerEngine + TensorRT-LLM
 
-For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+For highly optimized TransformerEngine path with TensorRT-LLM backend, please make sure to install the following prerequisites first:
 
 ```bash
-sudo apt-get -y install libopenmpi-dev  # Required for TRT-LLM
+sudo apt-get -y install libopenmpi-dev  # Required for TensorRT-LLM
 pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
 ```
 
@@ -167,7 +167,7 @@ pip install --no-build-isolation .[te,trtllm]
 
 #### Install TransformerEngine + vLLM
 
-For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+For highly optimized TransformerEngine path with TensorRT-LLM backend, please make sure to install the following prerequisites first:
 
 ```bash
 pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
