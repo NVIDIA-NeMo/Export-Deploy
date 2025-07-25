@@ -36,14 +36,14 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 
 #### Model Export Capabilities
 
-| Model / Checkpoint   | TensorRT-LLM                                   | vLLM      | ONNX                        | TensorRT               |
-|----------------------|:----------------------------------------------:|:---------:|:--------------------------:|:----------------------:|
-| NeMo LLM             | bf16, fp8, int8 (PTQ, QAT), fp4 (Coming Soon)  | bf16      | N/A                        | N/A                    |
-| NeMo Multimodal      | bf16                                           | N/A       | N/A                        | N/A                    |
-| Megatron-LM          | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
-| Hugging Face LLM     | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
-| NIM Embedding        | N/A                                            | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
-| NIM Reranking        | N/A                                            | N/A       | Coming Soon                | Coming Soon            |
+| Model / Checkpoint                                                                              | TensorRT-LLM                                   | vLLM      | ONNX                        | TensorRT               |
+|-------------------------------------------------------------------------------------------------|:----------------------------------------------:|:---------:|:--------------------------:|:----------------------:|
+| [NeMo LLM](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)              | bf16, fp8, int8 (PTQ, QAT), fp4 (Coming Soon)  | bf16      | N/A                        | N/A                    |
+| [NeMo Multimodal](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)       | bf16                                           | N/A       | N/A                        | N/A                    |
+| [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                            | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
+| [Hugging Face](https://huggingface.co/docs/transformers/en/index)                               | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
+| [NIM Embedding](https://docs.nvidia.com/nim/nemo-retriever/text-embedding/latest/overview.html) | N/A                                            | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
+| [NIM Reranking](https://docs.nvidia.com/nim/nemo-retriever/text-reranking/latest/overview.html) | N/A                                            | N/A       | Coming Soon                | Coming Soon            |
 
 The support matrix above outlines the export capabilities for each model or checkpoint, including the supported precision options across various inference-optimized libraries. The export module enables exporting models that have been quantized using post-training quantization (PTQ) with the [TensorRT Model Optimizer](https://github.com/NVIDIA/TensorRT-Model-Optimizer) library, as shown above. Models trained with low precision or quantization-aware training are also supported, as indicated in the table.
 
@@ -54,13 +54,14 @@ Please note that not all large language models (LLMs) and multimodal models (MMs
 
 #### Model Deployment Capabilities
 
-| Model / Checkpoint | RayServe                                 | PyTriton                |
-|--------------------|------------------------------------------|-------------------------|
-| NeMo LLM           | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
-| NeMo Multimodal    | Coming Soon                              | Coming Soon             |
-| Megatron-LM        | Coming Soon                              | Coming Soon             |
-| TensorRT-LLM       | Single-Node Multi-GPU,<br>Multi-instance | Multi-Node Multi-GPU    |
-| vLLM               | N/A                                      | Single-Node Multi-GPU   |
+| Model / Checkpoint                                                                        | RayServe                                 | PyTriton                |
+|-------------------------------------------------------------------------------------------|------------------------------------------|-------------------------|
+| [NeMo LLM](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)        | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
+| [NeMo Multimodal](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html) | Coming Soon                              | Coming Soon             |
+| [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                      | Coming Soon                              | Coming Soon             |
+| [Hugging Face](https://huggingface.co/docs/transformers/en/index)                         | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
+| [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM)                                    | Single-Node Multi-GPU,<br>Multi-instance | Multi-Node Multi-GPU    |
+| [vLLM](https://github.com/vllm-project/vllm)                                              | N/A                                      | Single-Node Multi-GPU   |
 
 The support matrix above outlines the available deployment options for each model or checkpoint, highlighting multi-node and multi-GPU support where applicable. For comprehensive details, please refer to the [documentation](docs).
 
