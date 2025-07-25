@@ -172,7 +172,7 @@ pip install --no-build-isolation .[te,trtllm]
 
 #### Install TransformerEngine + vLLM
 
-For highly optimized TransformerEngine path with TensorRT-LLM backend, please make sure to install the following prerequisites first:
+For highly optimized TransformerEngine path with vLLM backend, please make sure to install the following prerequisites first:
 
 ```bash
 pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
