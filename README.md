@@ -32,6 +32,40 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
+## Feature Support Matrix
+
+#### Model Export Capabilities
+
+| Model / Checkpoint                                                                              | TensorRT-LLM                                   | vLLM      | ONNX                        | TensorRT               |
+|-------------------------------------------------------------------------------------------------|:----------------------------------------------:|:---------:|:--------------------------:|:----------------------:|
+| [NeMo LLM](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)              | bf16, fp8, int8 (PTQ, QAT), fp4 (Coming Soon)  | bf16      | N/A                        | N/A                    |
+| [NeMo Multimodal](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)       | bf16                                           | N/A       | N/A                        | N/A                    |
+| [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                            | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
+| [Hugging Face](https://huggingface.co/docs/transformers/en/index)                               | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
+| [NIM Embedding](https://docs.nvidia.com/nim/nemo-retriever/text-embedding/latest/overview.html) | N/A                                            | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
+| [NIM Reranking](https://docs.nvidia.com/nim/nemo-retriever/text-reranking/latest/overview.html) | N/A                                            | N/A       | Coming Soon                | Coming Soon            |
+
+The support matrix above outlines the export capabilities for each model or checkpoint, including the supported precision options across various inference-optimized libraries. The export module enables exporting models that have been quantized using post-training quantization (PTQ) with the [TensorRT Model Optimizer](https://github.com/NVIDIA/TensorRT-Model-Optimizer) library, as shown above. Models trained with low precision or quantization-aware training are also supported, as indicated in the table.
+
+The inference-optimized libraries listed above also support on-the-fly quantization during model export, with configurable parameters available in the export APIs. However, please note that the precision options shown in the table above indicate support for exporting models that have already been quantized, rather than the ability to quantize models during export.
+
+Please note that not all large language models (LLMs) and multimodal models (MMs) are currently supported. For the most complete and up-to-date information, please refer to the [LLM documentation](docs/llm/) and [MM documentation](docs/mm/).
+
+
+#### Model Deployment Capabilities
+
+| Model / Checkpoint                                                                        | RayServe                                 | PyTriton                |
+|-------------------------------------------------------------------------------------------|------------------------------------------|-------------------------|
+| [NeMo LLM](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)        | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
+| [NeMo Multimodal](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html) | Coming Soon                              | Coming Soon             |
+| [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                      | Coming Soon                              | Coming Soon             |
+| [Hugging Face](https://huggingface.co/docs/transformers/en/index)                         | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
+| [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM)                                    | Single-Node Multi-GPU,<br>Multi-instance | Multi-Node Multi-GPU    |
+| [vLLM](https://github.com/vllm-project/vllm)                                              | N/A                                      | Single-Node Multi-GPU   |
+
+The support matrix above outlines the available deployment options for each model or checkpoint, highlighting multi-node and multi-GPU support where applicable. For comprehensive details, please refer to the [documentation](docs).
+
+
 ## 🔧 Install
 
 For quick exploration of NeMo Export-Deploy, we recommend installing our pip package:
@@ -55,11 +89,11 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
   nvcr.io/nvidia/nemo:${TAG}
 ```
 
-#### Install TRT-LLM (or vLLM)
+#### Install TensorRT-LLM (or vLLM)
 
-Starting with version 25.07, the NeMo FW container no longer includes TRT-LLM and vLLM pre-installed. Please run the following command inside the container:
+Starting with version 25.07, the NeMo FW container no longer includes TensorRT-LLM and vLLM pre-installed. Please run the following command inside the container:
 
-For TRT-LLM:
+For TensorRT-LLM:
 
 ```bash
 cd /opt/Export-Deploy
@@ -107,7 +141,7 @@ For complete feature coverage, we recommend to install [TransformerEngine](https
 
 #### Install TransformerEngine + InFramework
 
-For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+For highly optimized TransformerEngine path with TensorRT-LLM backend, please make sure to install the following prerequisites first:
 
 ```bash
 pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
@@ -121,12 +155,12 @@ cd Export-Deploy/
 pip install --no-build-isolation .[te]
 ```
 
-#### Install TransformerEngine + TRT-LLM
+#### Install TransformerEngine + TensorRT-LLM
 
-For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+For highly optimized TransformerEngine path with TensorRT-LLM backend, please make sure to install the following prerequisites first:
 
 ```bash
-sudo apt-get -y install libopenmpi-dev  # Required for TRT-LLM
+sudo apt-get -y install libopenmpi-dev  # Required for TensorRT-LLM
 pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
 ```
 
@@ -138,7 +172,7 @@ pip install --no-build-isolation .[te,trtllm]
 
 #### Install TransformerEngine + vLLM
 
-For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+For highly optimized TransformerEngine path with TensorRT-LLM backend, please make sure to install the following prerequisites first:
 
 ```bash
 pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
@@ -347,7 +381,7 @@ nm.serve()
 
 ## 🔍 Query Deployed Models
 
-### Query LLM Model
+### Query TensorRT-LLM Models
 
 ```python
 from nemo_deploy.nlp import NemoQueryLLM
@@ -360,7 +394,7 @@ output = nq.query_llm(
 print(output)
 ```
 
-### Query Multimodal Model
+### Query TensorRT-LLM Multimodal Model
 
 ```python
 from nemo_deploy.multimodal import NemoQueryMultimodal
@@ -373,6 +407,8 @@ output = nq.query(
 )
 print(output)
 ```
+
+Note that each model groups such as LLMs and Multimodals have its own dedicated query class. For further details, please consult the [documentation](docs/llm/nemo_models/send-query.md).
 
 ## 🤝 Contributing
 
