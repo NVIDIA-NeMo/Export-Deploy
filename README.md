@@ -36,16 +36,20 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 
 #### Model Export Capabilities
 
-| Model / Checkpoint   | TensorRT-LLM                              | vLLM                | ONNX        | TensorRT   |
-|----------------------|-------------------------------------------|---------------------|-------------|------------|
-| NeMo LLM             | bf16, fp8 (PTQ, QAT),<br>fp4 (Coming Soon)| bf16, fp8 (PTQ, QAT)| N/A         | N/A        |
-| NeMo Multimodal      | bf16                                      | N/A                 | N/A         | N/A        |
-| Megatron-LM          | Coming Soon                               | Coming Soon         | N/A         | N/A        |
-| Hugging Face LLM     | Coming Soon                               | Coming Soon         | N/A         | N/A        |
-| NIM Embedding        | N/A                                       | N/A                 | bf16        | bf16       |
-| NIM Reranking        | N/A                                       | N/A                 | Coming Soon | Coming Soon|
+| Model / Checkpoint   | TensorRT-LLM                                   | vLLM      | ONNX                        | TensorRT               |
+|----------------------|:----------------------------------------------:|:---------:|:--------------------------:|:----------------------:|
+| NeMo LLM             | bf16, fp8, int8 (PTQ, QAT), fp4 (Coming Soon)  | bf16      | N/A                        | N/A                    |
+| NeMo Multimodal      | bf16                                           | N/A       | N/A                        | N/A                    |
+| Megatron-LM          | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
+| Hugging Face LLM     | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
+| NIM Embedding        | N/A                                            | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
+| NIM Reranking        | N/A                                            | N/A       | Coming Soon                | Coming Soon            |
 
-The support matrix above details the export capabilities available for each model or checkpoint, including supported precision options across different inference-optimized libraries. Please note that not all large language models (LLMs) and multimodal models (MMs) are currently supported. For complete and up-to-date information, please consult the [documentation](docs).
+The support matrix above outlines the export capabilities for each model or checkpoint, including the supported precision options across various inference-optimized libraries. The export module enables exporting models that have been quantized using post-training quantization (PTQ) with the [TensorRT Model Optimizer](https://github.com/NVIDIA/TensorRT-Model-Optimizer) library, as shown above. Models trained with low precision or quantization-aware training are also supported, as indicated in the table.
+
+The inference-optimized libraries listed above also support on-the-fly quantization during model export, with configurable parameters available in the export APIs. However, please note that the precision options shown in the table above indicate support for exporting models that have already been quantized, rather than the ability to quantize models during export.
+
+Please note that not all large language models (LLMs) and multimodal models (MMs) are currently supported. For the most complete and up-to-date information, please refer to the [LLM documentation](docs/llm/) and [MM documentation](docs/mm/).
 
 
 #### Model Deployment Capabilities
@@ -403,7 +407,7 @@ output = nq.query(
 print(output)
 ```
 
-Note that each model type has its own dedicated query class. For further details, please consult the [documentation](docs/).
+Note that each model groups such as LLMs and Multimodals have its own dedicated query class. For further details, please consult the [documentation](docs/llm/nemo_models/send-query.md).
 
 ## 🤝 Contributing
 
