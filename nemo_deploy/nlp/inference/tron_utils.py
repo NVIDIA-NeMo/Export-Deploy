@@ -27,22 +27,8 @@ from megatron.core.distributed import (
 )
 from megatron.core.enums import ModelType
 from megatron.core.transformer.module import Float16Module, MegatronModule
-from packaging import version
 
 try:
-    import triton
-
-    if version.parse(triton.__version__) < version.parse("3.4.0") and not torch.cuda.is_available():
-        HAVE_TRITON = False
-    else:
-        HAVE_TRITON = True
-except ImportError:
-    HAVE_TRITON = False
-
-try:
-    if not HAVE_TRITON:
-        raise ImportError("Triton is not installed")
-
     from nemo.collections.llm.gpt.model.base import GPTConfig
     from nemo.collections.llm.t5.model.t5 import T5Config
 

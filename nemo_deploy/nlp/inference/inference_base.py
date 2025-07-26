@@ -37,7 +37,6 @@ from megatron.core.inference.text_generation_controllers.text_generation_control
 )
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
-from packaging import version
 
 from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
 
@@ -52,18 +51,6 @@ from .tron_utils import (
 )
 
 try:
-    import triton
-
-    if version.parse(triton.__version__) < version.parse("3.4.0") and not torch.cuda.is_available():
-        HAVE_TRITON = False
-    else:
-        HAVE_TRITON = True
-except ImportError:
-    HAVE_TRITON = False
-
-try:
-    if not HAVE_TRITON:
-        raise ImportError("Triton is not installed")
     from nemo.collections.llm.gpt.model.base import GPTConfig
     from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
     from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
