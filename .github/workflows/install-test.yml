@@ -230,7 +230,7 @@ jobs:
 
           uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
 
-          uv sync --link-mode copy --locked --all-groups
+          uv sync --link-mode copy --locked
 
           uv pip install --no-deps -e .
 
