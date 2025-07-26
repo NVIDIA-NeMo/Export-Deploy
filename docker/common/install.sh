@@ -93,9 +93,6 @@ main() {
         --extra te \
         --all-groups ${UV_ARGS[@]}
 
-    # Run install overrides
-    bash docker/common/install_conflicting_deps.sh
-
     # Install the package
     uv pip install --no-deps -e .
 
