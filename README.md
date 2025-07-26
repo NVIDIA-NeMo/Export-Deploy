@@ -118,7 +118,7 @@ Now proceed with the main installation:
 ```bash
 git clone https://github.com/NVIDIA-NeMo/Export-Deploy
 cd Export-Deploy/
-pip install --no-build-isolation .[te,inframework]
+pip install --no-build-isolation .[te]
 ```
 
 #### Install TransformerEngine + TRT-LLM

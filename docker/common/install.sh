@@ -82,6 +82,10 @@ main() {
 
     UV_ARGS+=("--extra" "$INFERENCE_FRAMEWORK")
 
+    if [[ "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
+        UV_ARGS+=("--extra" "$INFERENCE_FRAMEWORK")
+    fi
+
     # Create virtual environment and install dependencies
     uv venv ${UV_PROJECT_ENVIRONMENT} $([[ "$BASE_IMAGE" == "pytorch" ]] && echo "--system-site-packages")
 
