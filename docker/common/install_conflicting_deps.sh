@@ -7,3 +7,4 @@ source ${UV_PROJECT_ENVIRONMENT}/bin/activate
 # They collide on nvidia-pytriton (export-deploy) and torchx (nemo-run)
 # via urllib3.
 uv pip install nemo-run
+uv pip install "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]~=2.4.0"

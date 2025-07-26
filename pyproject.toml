@@ -63,11 +63,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-inframework = [
-    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]~=2.4.0",
-]
+inframework = []
 vllm = [
-    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]~=2.4.0",
     "vllm==0.9.1",
     "pandas",
     "timm",
@@ -75,7 +72,6 @@ vllm = [
     "nvidia-modelopt[torch]>=0.31.0a0,<0.32.0; sys_platform != 'darwin'",
 ]
 trtllm = [
-    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]~=2.4.0",
     "transformers~=4.51.0",
     "tensorrt-llm~=0.20.0",
     "nvidia-modelopt[torch]>=0.29.0a0,<0.30.0; sys_platform != 'darwin'",
@@ -118,8 +114,7 @@ link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }]]
 override-dependencies = [
     "urllib3>1.27.0",
-    "tiktoken>=0.9.0",                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
-    "fsspec[http]>=2023.1.0,<=2024.9.0",
+    "tiktoken>=0.9.0", # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
 ]
 prerelease = "allow"
 
