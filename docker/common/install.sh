@@ -80,8 +80,6 @@ main() {
         )
     fi
 
-    UV_ARGS+=("--extra" "$INFERENCE_FRAMEWORK")
-
     if [[ "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
         UV_ARGS+=("--extra" "$INFERENCE_FRAMEWORK")
     fi
