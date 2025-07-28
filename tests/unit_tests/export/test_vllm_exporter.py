@@ -106,9 +106,7 @@ def test_export_with_lora(exporter, mock_llm):
 def test_export_with_custom_params(exporter, mock_llm):
     """Test export method with custom parameters"""
     model_path = "/path/to/model"
-    exporter.export(
-        model_path_id=model_path, trust_remote_code=True, tensor_parallel_size=2, dtype="float16"
-    )
+    exporter.export(model_path_id=model_path, trust_remote_code=True, tensor_parallel_size=2, dtype="float16")
 
     assert exporter.model is not None
     mock_llm.assert_called_once_with(
@@ -242,4 +240,3 @@ def test_forward_basic_usage(exporter, mock_llm):
 
     assert "sentences" in result
     assert result["sentences"] == ["test output"]
-
