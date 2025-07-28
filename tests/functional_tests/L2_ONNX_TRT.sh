@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Build docs
+#!/bin/bash
+set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
-on:
-  push:
-    branches:
-      - main
-      - "pull-request/[0-9]+"
+export CUDA_VISIBLE_DEVICES="0,1"
 
-jobs:
-  build-docs:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_build_docs.yml@v0.48.0
+coverage run \
+    --data-file=/workspace/.coverage \
+    --source=/workspace/ \
+    --parallel-mode \
+    -m pytest \
+    -o log_cli=true \
+    -o log_cli_level=INFO \
+    -vs -m "not pleasefixme" --tb=short tests/functional_tests/tests_onnx_trt
+coverage combine

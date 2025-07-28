@@ -24,6 +24,7 @@ from typing import List
 
 import torch
 import yaml
+from packaging import version
 
 from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
@@ -36,6 +37,19 @@ from nemo_export_deploy_common.import_utils import (
 )
 
 try:
+    import triton
+
+    if version.parse(triton.__version__) < version.parse("3.4.0") and not torch.cuda.is_available():
+        HAVE_TRITON = False
+    else:
+        HAVE_TRITON = True
+except ImportError:
+    HAVE_TRITON = False
+
+try:
+    if not HAVE_TRITON:
+        raise ImportError("Triton is not installed")
+
     from nemo.collections import llm
 
     HAVE_NEMO = True

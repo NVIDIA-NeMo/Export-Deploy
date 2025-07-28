@@ -48,7 +48,7 @@ main() {
     # Install dependencies
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install -y curl git libopenmpi-dev libpython3.12 python3-pip python3-venv
+    apt-get install -y curl git libopenmpi-dev libpython3.12 python3-pip python3-venv libnvinfer-lean-dev
 
     # Install uv
     UV_VERSION="0.7.2"
@@ -94,9 +94,6 @@ main() {
         --locked \
         --extra te \
         --all-groups ${UV_ARGS[@]}
-
-    # Run install overrides
-    bash docker/common/install_conflicting_deps.sh
 
     # Install the package
     uv pip install --no-deps -e .
