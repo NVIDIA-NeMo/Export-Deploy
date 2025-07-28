@@ -34,7 +34,7 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 
 ## Feature Support Matrix
 
-#### Model Export Capabilities
+### Model Export Capabilities
 
 | Model / Checkpoint                                                                              | TensorRT-LLM                                   | vLLM      | ONNX                        | TensorRT               |
 |-------------------------------------------------------------------------------------------------|:----------------------------------------------:|:---------:|:--------------------------:|:----------------------:|
@@ -51,7 +51,7 @@ The inference-optimized libraries listed above also support on-the-fly quantizat
 
 Please note that not all large language models (LLMs) and multimodal models (MMs) are currently supported. For the most complete and up-to-date information, please refer to the [LLM documentation](https://docs.nvidia.com/nemo/export-deploy/latest/llm/index.html) and [MM documentation](https://docs.nvidia.com/nemo/export-deploy/latest/mm/index.html).
 
-#### Model Deployment Capabilities
+### Model Deployment Capabilities
 
 | Model / Checkpoint                                                                        | RayServe                                 | PyTriton                |
 |-------------------------------------------------------------------------------------------|------------------------------------------|-------------------------|
