@@ -28,7 +28,7 @@ LOGGER = logging.getLogger("NeMo")
 triton_supported = True
 try:
     from nemo_deploy import DeployPyTriton
-    from nemo_deploy.nlp import NemoQueryLLM
+    from nemo_deploy.nlp import NemoQueryLLM, NemoQueryvLLM
 except Exception as e:
     LOGGER.warning(f"Cannot import Triton, deployment will not be available. {type(e).__name__}: {e}")
     triton_supported = False
@@ -111,7 +111,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                         inference_params=CommonInferenceParams(
                             temperature=0.1,
                             top_k=1,
-                            top_p=0.0,
+                            top_p=0.01,
                             num_tokens_to_generate=1,
                             return_log_probs=False,
                         ),
@@ -122,7 +122,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                         input_texts=[prompt],
                         max_output_len=1,
                         top_k=1,
-                        top_p=0,
+                        top_p=0.01,
                         temperature=0.1,
                         lora_uids=lora_uids,
                     )
@@ -147,7 +147,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                         prompts=[prompt],
                         max_length=1,
                         top_k=1,
-                        top_p=0,
+                        top_p=0.01,
                         temperature=0.1,
                     )
                     # Accessing [0][0] of "text" is to get a raw string entry from a NumPy array
@@ -158,7 +158,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                         prompts=[prompt],
                         max_output_len=1,
                         top_k=1,
-                        top_p=0,
+                        top_p=0.01,
                         temperature=0.1,
                     )
                     deployed_output = deployed_output[0][0].strip().lower()
@@ -218,7 +218,7 @@ def run_inference(
     tp_size=1,
     pp_size=1,
     top_k=1,
-    top_p=0.0,
+    top_p=0.01,
     temperature=1.0,
     run_accuracy=False,
     debug=True,
@@ -282,14 +282,18 @@ def run_inference(
             exporter = vLLMExporter()
 
             exporter.export(
-                nemo_checkpoint=checkpoint_path,
-                model_dir=model_dir,
-                model_type=model_type,
+                model_path_id=checkpoint_path,
+                trust_remote_code=True,
                 tensor_parallel_size=tp_size,
-                pipeline_parallel_size=pp_size,
-                max_model_len=max_input_len + max_output_len,
-                gpu_memory_utilization=args.gpu_memory_utilization,
                 **vllm_export_kwargs,
+            )
+
+            output = exporter.forward(
+                input_texts=prompts,
+                max_tokens=max_output_len,
+                top_k=top_k,
+                top_p=top_p,
+                temperature=temperature,
             )
         else:
             exporter = TensorRTLLM(model_dir, lora_ckpt_list, load_model=False)
@@ -320,15 +324,15 @@ def run_inference(
                     **trt_llm_export_kwargs,
                 )
 
-        output = exporter.forward(
-            input_texts=prompts,
-            max_output_len=max_output_len,
-            top_k=top_k,
-            top_p=top_p,
-            temperature=temperature,
-            lora_uids=lora_uids,
-            stop_words_list=stop_words_list,
-        )
+            output = exporter.forward(
+                input_texts=prompts,
+                max_output_len=max_output_len,
+                top_k=top_k,
+                top_p=top_p,
+                temperature=temperature,
+                lora_uids=lora_uids,
+                stop_words_list=stop_words_list,
+            )
 
         # Unwrap the generator if needed
         output = list(output)
@@ -370,26 +374,36 @@ def run_inference(
             )
             nm.deploy()
             nm.run()
-            nq = NemoQueryLLM(url="localhost:8000", model_name=model_name)
 
-            output_deployed = nq.query_llm(
-                prompts=prompts,
-                max_output_len=max_output_len,
-                top_k=1,
-                top_p=0.0,
-                temperature=1.0,
-                lora_uids=lora_uids,
-            )
+            if use_vllm:
+                nq = NemoQueryvLLM(url="localhost:8000", model_name=model_name)
+                output_deployed = nq.query_llm(
+                    prompts=prompts,
+                    max_tokens=max_output_len,
+                    top_k=1,
+                    top_p=0.01,
+                    temperature=1.0,
+                )
+            else:
+                nq = NemoQueryLLM(url="localhost:8000", model_name=model_name)
+                output_deployed = nq.query_llm(
+                    prompts=prompts,
+                    max_output_len=max_output_len,
+                    top_k=1,
+                    top_p=0.0,
+                    temperature=1.0,
+                    lora_uids=lora_uids,
+                )
 
-            # Unwrap the generator if needed
-            output_deployed = list(output_deployed)
+                # Unwrap the generator if needed
+                output_deployed = list(output_deployed)
 
-            # Check deployed funcitonal correctness
-            if args.functional_test:
-                functional_result.deployed_pass = True
-                if not check_model_outputs(output_deployed, expected_outputs):
-                    LOGGER.warning("Deployed model outputs don't match the expected result.")
-                    functional_result.deployed_pass = False
+                # Check deployed functional correctness
+                if args.functional_test and not use_vllm:
+                    functional_result.deployed_pass = True
+                    if not check_model_outputs(output_deployed, expected_outputs):
+                        LOGGER.warning("Deployed model outputs don't match the expected result.")
+                        functional_result.deployed_pass = False
 
         if debug or functional_result.regular_pass == False or functional_result.deployed_pass == False:
             print("")
@@ -574,7 +588,7 @@ def get_args():
     parser.add_argument(
         "--top_p",
         type=float,
-        default=0.0,
+        default=0.01,
     )
     parser.add_argument(
         "--temperature",

@@ -542,7 +542,8 @@ class NemoQueryvLLM(NemoQueryLLMBase):
         prompts: List[str],
         max_tokens: int = None,
         min_tokens: int = None,
-        logprobs: Optional[bool] = None,
+        n_log_probs: Optional[bool] = None,
+        n_prompt_log_probs: Optional[bool] = None,
         seed: Optional[int] = None,
         top_k: Optional[int] = None,
         top_p: Optional[float] = None,
@@ -550,13 +551,14 @@ class NemoQueryvLLM(NemoQueryLLMBase):
         init_timeout: float = 60.0,
     ):
         """
-        Query the Triton server synchronously and return a list of responses.
+        Query the Triton server synchronously and return a response in OpenAI-compatible format.
 
         Args:
             prompts (List[str]): List of input prompt strings.
             max_tokens (Optional[int]): Maximum number of tokens to generate.
             min_tokens (Optional[int]): Minimum number of tokens to generate.
-            logprobs (Optional[bool]): Whether to return log probabilities.
+            n_log_probs (Optional[int]): Number of log probabilities to return for generated tokens.
+            n_prompt_log_probs (Optional[int]): Number of log probabilities to return for prompt tokens.
             seed (Optional[int]): Random seed for generation.
             top_k (Optional[int]): Limits to the top K tokens to consider at each step.
             top_p (Optional[float]): Limits to the top tokens within cumulative probability p.
@@ -564,7 +566,7 @@ class NemoQueryvLLM(NemoQueryLLMBase):
             init_timeout (float): Timeout (in seconds) for connecting to the server.
 
         Returns:
-            np.ndarray: An array of generated texts, one for each input prompt.
+            dict: OpenAI-style response containing generated text and optionally log probabilities.
         """
         prompts = str_list2numpy(prompts)
         inputs = {
@@ -574,8 +576,10 @@ class NemoQueryvLLM(NemoQueryLLMBase):
             inputs["max_tokens"] = np.full(prompts.shape, max_tokens, dtype=np.int_)
         if min_tokens is not None:
             inputs["min_tokens"] = np.full(prompts.shape, min_tokens, dtype=np.int_)
-        if logprobs is not None:
-            inputs["logprobs"] = np.full(prompts.shape, logprobs, dtype=np.int_)
+        if n_log_probs is not None:
+            inputs["n_log_probs"] = np.full(prompts.shape, n_log_probs, dtype=np.int_)
+        if n_prompt_log_probs is not None:
+            inputs["n_prompt_log_probs"] = np.full(prompts.shape, n_prompt_log_probs, dtype=np.int_)
         if seed is not None:
             inputs["seed"] = np.full(prompts.shape, seed, dtype=np.int_)
         if top_k is not None:
@@ -587,16 +591,26 @@ class NemoQueryvLLM(NemoQueryLLMBase):
 
         with ModelClient(self.url, self.model_name, init_timeout_s=init_timeout) as client:
             result_dict = client.infer_batch(**inputs)
-            output_type = client.model_config.outputs[0].dtype
 
-            print(result_dict)
-            if output_type == np.bytes_:
-                if "sentences" in result_dict.keys():
-                    output = result_dict["sentences"]
-                else:
-                    return "Unknown output keyword."
-
-                sentences = np.char.decode(output.astype("bytes"), "utf-8")
-                return sentences
+            if "sentences" in result_dict.keys():
+                output = result_dict["sentences"]
             else:
-                return result_dict["sentences"]
+                return "Unknown output keyword."
+
+            sentences = np.char.decode(output.astype("bytes"), "utf-8")
+
+            openai_response = {
+                "id": f"cmpl-{int(time.time())}",
+                "object": "text_completion",
+                "created": int(time.time()),
+                "model": self.model_name,
+                "choices": [{"text": sentences}],
+            }
+            if "log_probs" in result_dict:
+                openai_response["log_probs"] = np.char.decode(result_dict["log_probs"].astype("bytes"), "utf-8")
+            if "prompt_log_probs" in result_dict:
+                openai_response["prompt_log_probs"] = np.char.decode(
+                    result_dict["prompt_log_probs"].astype("bytes"), "utf-8"
+                )
+
+            return openai_response

@@ -17,7 +17,7 @@ import sys
 import typing
 
 import numpy as np
-from pytriton.client import DecoupledModelClient, ModelClient
+
 from nemo_deploy.nlp import NemoQueryvLLM
 
 
@@ -36,7 +36,7 @@ def get_args(argv):
         required=False,
         type=str,
         help="File to read the prompt from",
-    )    
+    )
     parser.add_argument(
         "-mat",
         "--max_tokens",
@@ -52,11 +52,18 @@ def get_args(argv):
         help="Min output token length",
     )
     parser.add_argument(
-        "-lp",
-        "--logprobs",
+        "-nlp",
+        "--n_log_probs",
         default=None,
         type=int,
         help="Number of log probabilities to return per output token.",
+    )
+    parser.add_argument(
+        "-nplp",
+        "--n_prompt_log_probs",
+        default=None,
+        type=int,
+        help="Number of log probabilities to return per prompt token.",
     )
     parser.add_argument(
         "-s",
@@ -67,7 +74,7 @@ def get_args(argv):
     )
     parser.add_argument("-tk", "--top_k", default=1, type=int, help="top_k")
     parser.add_argument("-tpp", "--top_p", default=0.1, type=float, help="top_p")
-    parser.add_argument("-t", "--temperature", default=1.0, type=float, help="temperature")    
+    parser.add_argument("-t", "--temperature", default=1.0, type=float, help="temperature")
     parser.add_argument(
         "-lt",
         "--lora_task_uids",
@@ -75,7 +82,7 @@ def get_args(argv):
         type=str,
         nargs="+",
         help="The list of LoRA task uids; use -1 to disable the LoRA module",
-    )    
+    )
     parser.add_argument(
         "-it",
         "--init_timeout",
@@ -87,9 +94,11 @@ def get_args(argv):
     args = parser.parse_args(argv)
     return args
 
+
 def str_list2numpy(str_list: typing.List[str]) -> np.ndarray:
     str_ndarray = np.array(str_list)[..., np.newaxis]
     return np.char.encode(str_ndarray, "utf-8")
+
 
 def query(argv):
     args = get_args(argv)
@@ -103,14 +112,15 @@ def query(argv):
         prompts=[args.prompt],
         max_tokens=args.max_tokens,
         min_tokens=args.min_tokens,
-        logprobs=args.logprobs,
+        n_log_probs=args.n_log_probs,
+        n_prompt_log_probs=args.n_prompt_log_probs,
         seed=args.seed,
         top_k=args.top_k,
         top_p=args.top_p,
         temperature=args.temperature,
         init_timeout=args.init_timeout,
     )
-    
+
     print(outputs)
 
 
