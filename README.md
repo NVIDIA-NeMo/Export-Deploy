@@ -41,7 +41,7 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 | [NeMo LLM](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)              | bf16, fp8, int8 (PTQ, QAT), fp4 (Coming Soon)  | bf16      | N/A                        | N/A                    |
 | [NeMo Multimodal](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)       | bf16                                           | N/A       | N/A                        | N/A                    |
 | [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                            | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
-| [Hugging Face](https://huggingface.co/docs/transformers/en/index)                               | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
+| [Hugging Face](https://huggingface.co/docs/transformers/en/index)                               | bf16                                           | bf16      | N/A                      | N/A                    |
 | [NIM Embedding](https://docs.nvidia.com/nim/nemo-retriever/text-embedding/latest/overview.html) | N/A                                            | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
 | [NIM Reranking](https://docs.nvidia.com/nim/nemo-retriever/text-reranking/latest/overview.html) | N/A                                            | N/A       | Coming Soon                | Coming Soon            |
 
