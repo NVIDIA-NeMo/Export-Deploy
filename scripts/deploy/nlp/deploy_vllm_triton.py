@@ -14,9 +14,7 @@
 
 import argparse
 import logging
-import os
 import sys
-import tempfile
 
 from nemo_deploy import DeployPyTriton
 
@@ -40,11 +38,11 @@ def get_args(argv):
         description="Export NeMo models to vLLM and deploy them on Triton",
     )
     parser.add_argument(
-        "-mpi", 
-        "--model_path_id", 
-        required=True, 
-        type=str, 
-        help="Path of a NeMo checkpoint, or Hugging Face model ID or path."
+        "-mpi",
+        "--model_path_id",
+        required=True,
+        type=str,
+        help="Path of a NeMo checkpoint, or Hugging Face model ID or path.",
     )
     parser.add_argument(
         "-t",
@@ -117,7 +115,7 @@ def get_args(argv):
         default=False,
         action="store_true",
         help="Whether to enforce eager execution.",
-    ) 
+    )
     parser.add_argument(
         "-mslc",
         "--max_seq_len_to_capture",
@@ -152,7 +150,7 @@ def get_args(argv):
         default="0.0.0.0",
         type=str,
         help="HTTP address for the Triton server",
-    )    
+    )
     parser.add_argument(
         "-mbs",
         "--max_batch_size",
@@ -166,9 +164,8 @@ def get_args(argv):
         default=False,
         action="store_true",
         help="Enable debug mode",
-    )    
-    
-    
+    )
+
     args = parser.parse_args(argv)
     return args
 
@@ -183,7 +180,7 @@ def nemo_deploy(argv):
 
     LOGGER.setLevel(loglevel)
     LOGGER.info("Logging level set to {}".format(loglevel))
-    LOGGER.info(args)    
+    LOGGER.info(args)
 
     try:
         exporter = vLLMExporter()
