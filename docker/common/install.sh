@@ -48,7 +48,7 @@ main() {
     # Install dependencies
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install -y curl git libopenmpi-dev libpython3.12 python3-pip python3-venv libnvinfer-lean-dev
+    apt-get install -y curl git libopenmpi-dev libpython3.12 python3-pip python3-venv libnvinfer-lean-dev cmake
 
     # Install uv
     UV_VERSION="0.7.2"
@@ -90,6 +90,7 @@ main() {
     # Install dependencies
     uv sync --locked --only-group build ${UV_ARGS[@]}
     uv sync \
+        -v \
         --link-mode copy \
         --locked \
         --extra te \
