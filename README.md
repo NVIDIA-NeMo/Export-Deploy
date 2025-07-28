@@ -34,7 +34,7 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 
 ## Feature Support Matrix
 
-#### Model Export Capabilities
+### Model Export Capabilities
 
 | Model / Checkpoint                                                                              | TensorRT-LLM                                   | vLLM      | ONNX                        | TensorRT               |
 |-------------------------------------------------------------------------------------------------|:----------------------------------------------:|:---------:|:--------------------------:|:----------------------:|
@@ -49,10 +49,9 @@ The support matrix above outlines the export capabilities for each model or chec
 
 The inference-optimized libraries listed above also support on-the-fly quantization during model export, with configurable parameters available in the export APIs. However, please note that the precision options shown in the table above indicate support for exporting models that have already been quantized, rather than the ability to quantize models during export.
 
-Please note that not all large language models (LLMs) and multimodal models (MMs) are currently supported. For the most complete and up-to-date information, please refer to the [LLM documentation](docs/llm/) and [MM documentation](docs/mm/).
+Please note that not all large language models (LLMs) and multimodal models (MMs) are currently supported. For the most complete and up-to-date information, please refer to the [LLM documentation](https://docs.nvidia.com/nemo/export-deploy/latest/llm/index.html) and [MM documentation](https://docs.nvidia.com/nemo/export-deploy/latest/mm/index.html).
 
-
-#### Model Deployment Capabilities
+### Model Deployment Capabilities
 
 | Model / Checkpoint                                                                        | RayServe                                 | PyTriton                |
 |-------------------------------------------------------------------------------------------|------------------------------------------|-------------------------|
@@ -63,8 +62,7 @@ Please note that not all large language models (LLMs) and multimodal models (MMs
 | [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM)                                    | Single-Node Multi-GPU,<br>Multi-instance | Multi-Node Multi-GPU    |
 | [vLLM](https://github.com/vllm-project/vllm)                                              | N/A                                      | Single-Node Multi-GPU   |
 
-The support matrix above outlines the available deployment options for each model or checkpoint, highlighting multi-node and multi-GPU support where applicable. For comprehensive details, please refer to the [documentation](docs).
-
+The support matrix above outlines the available deployment options for each model or checkpoint, highlighting multi-node and multi-GPU support where applicable. For comprehensive details, please refer to the [documentation](https://docs.nvidia.com/nemo/export-deploy/latest/index.html).
 
 ## 🔧 Install
 
