@@ -21,7 +21,9 @@
 
 </div>
 
-NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for large language models (LLMs), multi-modal models and speech models. It enables seamless scaling of training (both pretraining and post-training) workloads from single GPU to thousand-node clusters for both 🤗Hugging Face/PyTorch and Megatron models. It includes a suite of libraries and recipe collections to help users train models from end to end. The Export-Deploy library ("NeMo Export-Deploy") provides tools and APIs for exporting and deploying NeMo and 🤗Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server.
+NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for large language models (LLMs), multi-modal models and speech models. It enables seamless scaling of training (both pretraining and post-training) workloads from single GPU to thousand-node clusters for both 🤗Hugging Face/PyTorch and Megatron models. It includes a suite of libraries and recipe collections to help users train models from end to end. The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for exporting and deploying NeMo and 🤗Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server.
+
+![image](docs/NeMo_Repo_Overview_ExportDeploy.png)
 
 ## 🚀 Key Features
 
@@ -31,6 +33,38 @@ NeMo Framework is NVIDIA's GPU accelerated, end-to-end training framework for la
 - Export quantized NeMo models (FP8, etc)
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
+
+## Feature Support Matrix
+
+### Model Export Capabilities
+
+| Model / Checkpoint                                                                              | TensorRT-LLM                                   | vLLM      | ONNX                        | TensorRT               |
+|-------------------------------------------------------------------------------------------------|:----------------------------------------------:|:---------:|:--------------------------:|:----------------------:|
+| [NeMo Framework - LLMs](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)              | bf16, fp8, int8 (PTQ, QAT), fp4 (Coming Soon)  | bf16      | N/A                        | N/A                    |
+| [NeMo Framework - Multimodal Models](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)       | bf16                                           | N/A       | N/A                        | N/A                    |
+| [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                            | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
+| [Hugging Face](https://huggingface.co/docs/transformers/en/index)                               | bf16                                           | bf16      | N/A                      | N/A                    |
+| [NIM Embedding](https://docs.nvidia.com/nim/nemo-retriever/text-embedding/latest/overview.html) | N/A                                            | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
+| [NIM Reranking](https://docs.nvidia.com/nim/nemo-retriever/text-reranking/latest/overview.html) | N/A                                            | N/A       | Coming Soon                | Coming Soon            |
+
+The support matrix above outlines the export capabilities for each model or checkpoint, including the supported precision options across various inference-optimized libraries. The export module enables exporting models that have been quantized using post-training quantization (PTQ) with the [TensorRT Model Optimizer](https://github.com/NVIDIA/TensorRT-Model-Optimizer) library, as shown above. Models trained with low precision or quantization-aware training are also supported, as indicated in the table.
+
+The inference-optimized libraries listed above also support on-the-fly quantization during model export, with configurable parameters available in the export APIs. However, please note that the precision options shown in the table above indicate support for exporting models that have already been quantized, rather than the ability to quantize models during export.
+
+Please note that not all large language models (LLMs) and multimodal models (MMs) are currently supported. For the most complete and up-to-date information, please refer to the [LLM documentation](https://docs.nvidia.com/nemo/export-deploy/latest/llm/index.html) and [MM documentation](https://docs.nvidia.com/nemo/export-deploy/latest/mm/index.html).
+
+### Model Deployment Capabilities
+
+| Model / Checkpoint                                                                        | RayServe                                 | PyTriton                |
+|-------------------------------------------------------------------------------------------|------------------------------------------|-------------------------|
+| [NeMo Framework - LLMs](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)        | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
+| [NeMo Framework - Multimodal Models](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html) | Coming Soon                              | Coming Soon             |
+| [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                      | Coming Soon                              | Coming Soon             |
+| [Hugging Face](https://huggingface.co/docs/transformers/en/index)                         | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
+| [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM)                                    | Single-Node Multi-GPU,<br>Multi-instance | Multi-Node Multi-GPU    |
+| [vLLM](https://github.com/vllm-project/vllm)                                              | N/A                                      | Single-Node Multi-GPU   |
+
+The support matrix above outlines the available deployment options for each model or checkpoint, highlighting multi-node and multi-GPU support where applicable. For comprehensive details, please refer to the [documentation](https://docs.nvidia.com/nemo/export-deploy/latest/index.html).
 
 ## 🔧 Install
 
@@ -107,7 +141,7 @@ For complete feature coverage, we recommend to install [TransformerEngine](https
 
 #### Install TransformerEngine + InFramework
 
-For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+For highly optimized TransformerEngine path with PyTriton backend, please make sure to install the following prerequisites first:
 
 ```bash
 pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
@@ -138,7 +172,7 @@ pip install --no-build-isolation .[te,trtllm]
 
 #### Install TransformerEngine + vLLM
 
-For highly optimized TransformerEngine path with TRT-LLM backend, please make sure to install the following prerequisites first:
+For highly optimized TransformerEngine path with vLLM backend, please make sure to install the following prerequisites first:
 
 ```bash
 pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
