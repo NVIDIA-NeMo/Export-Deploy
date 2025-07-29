@@ -46,6 +46,7 @@ def mock_triton_settings():
         instance.triton_service_ip = "localhost"
         yield instance
 
+
 class TestTritonSettings:
     def test_default_values(self):
         with patch.dict(os.environ, {}, clear=True):
@@ -254,7 +255,6 @@ class TestAPIEndpoints:
             data = response.json()
             assert data["choices"][0]["message"]["role"] == "assistant"
             assert data["choices"][0]["message"]["content"] == "test response"
-
 
     def test_triton_health_success(self, client):
         with patch("requests.get") as mock_get:
