@@ -1,5 +1,6 @@
 ```{include} ../README.md
 :relative-docs: docs/
+:relative-images:
 ```
 
 ```{toctree}
@@ -7,18 +8,18 @@
 :hidden:
 :maxdepth: 4
 
-export_deploy_models.md
+export-deploy-models.md
 llm/index.md
 llm/nemo_models/nim.md
 llm/nemo_models/optimized/index.md
-llm/nemo_models/optimized/tensorrt_llm.md
+llm/nemo_models/optimized/tensorrt-llm.md
 llm/nemo_models/optimized/vllm.md
-llm/nemo_models/in_framework.md
-llm/nemo_models/in_framework_ray.md
-llm/nemo_models/send_query.md
-llm/automodel/automodel_in_framework.md
-llm/automodel/automodel_trtllm.md
-llm/automodel/automodel_ray.md
+llm/nemo_models/in-framework.md
+llm/nemo_models/in-framework-ray.md
+llm/nemo_models/send-query.md
+llm/automodel/automodel-in-framework.md
+llm/automodel/automodel-trtllm.md
+llm/automodel/automodel-ray.md
 mm/index.md
 ```
 

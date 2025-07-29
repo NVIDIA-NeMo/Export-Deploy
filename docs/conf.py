@@ -75,6 +75,13 @@ autodoc2_docstring_parser_regexes = [(r".*", "docs.autodoc2_docstrings_parser")]
 html_theme = "nvidia_sphinx_theme"
 html_theme_options = {
     "switcher": {"json_url": "../versions1.json", "version_match": release},
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/NVIDIA-NeMo/Export-Deploy",
+            "icon": "fa-brands fa-github",
+        }
+    ],
     "extra_head": {
         """
     <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js" ></script>
