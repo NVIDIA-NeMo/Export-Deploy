@@ -20,7 +20,6 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-import uvicorn
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
 from nemo_deploy import DeployPyTriton
@@ -491,13 +490,6 @@ def nemo_deploy(argv):
     LOGGER.info("Logging level set to {}".format(loglevel))
     LOGGER.info(args)
 
-    if args.start_rest_service:
-        if args.service_port == args.triton_port:
-            logging.error("REST service port and Triton server port cannot use the same port.")
-            return
-        # Store triton ip, port and other args relevant for REST API in config.json to be accessible by rest_model_api.py
-        store_args_to_json(args)
-
     backend = args.backend.lower()
     if backend == "tensorrt-llm":
         if not trt_llm_supported:
@@ -529,17 +521,6 @@ def nemo_deploy(argv):
 
     try:
         LOGGER.info("Model serving on Triton is will be started.")
-        if args.start_rest_service:
-            try:
-                LOGGER.info("REST service will be started.")
-                uvicorn.run(
-                    "nemo_deploy.service.rest_model_api:app",
-                    host=args.service_http_address,
-                    port=args.service_port,
-                    reload=True,
-                )
-            except Exception as error:
-                logging.error("Error message has occurred during REST service start. Error message: " + str(error))
         nm.serve()
     except Exception as error:
         LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
