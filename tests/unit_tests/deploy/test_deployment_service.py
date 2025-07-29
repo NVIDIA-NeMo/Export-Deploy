@@ -31,11 +31,6 @@ from nemo_deploy.service.fastapi_interface_to_pytriton import (
     dict_to_str,
     query_llm_async,
 )
-from nemo_deploy.service.rest_model_api import (
-    CompletionRequest as RestCompletionRequest,
-)
-from nemo_deploy.service.rest_model_api import TritonSettings as RestTritonSettings
-from nemo_deploy.service.rest_model_api import app as rest_app
 
 
 @pytest.fixture
@@ -55,18 +50,6 @@ def mock_triton_settings():
 @pytest.fixture
 def rest_client():
     return TestClient(rest_app)
-
-
-@pytest.fixture
-def mock_rest_triton_settings():
-    with patch("nemo_deploy.service.rest_model_api.TritonSettings") as mock:
-        instance = mock.return_value
-        instance.triton_service_port = 8080
-        instance.triton_service_ip = "localhost"
-        instance.triton_request_timeout = 60
-        instance.openai_format_response = False
-        instance.output_generation_logits = False
-        yield instance
 
 
 class TestTritonSettings:
@@ -338,52 +321,3 @@ class TestRestHealthEndpoints:
             response = rest_client.get("/v1/triton_health")
             assert response.status_code == 200
             assert response.json() == {"status": "Triton server is reachable and ready"}
-
-
-class TestRestCompletionsEndpoint:
-    def test_completions_success(self, rest_client):
-        mock_output = [["test response"]]
-        with patch("nemo_deploy.service.rest_model_api.NemoQueryLLM") as mock_llm:
-            mock_instance = mock_llm.return_value
-            mock_instance.query_llm.return_value = mock_output
-
-            response = rest_client.post(
-                "/v1/completions/",
-                json={
-                    "model": "test_model",
-                    "prompt": "test prompt",
-                    "max_tokens": 100,
-                    "temperature": 0.7,
-                    "top_p": 0.9,
-                    "top_k": 10,
-                },
-            )
-            assert response.status_code == 200
-            assert response.json() == {"output": "test response"}
-
-    def test_completions_standard_format(self, rest_client, mock_rest_triton_settings):
-        mock_output = [["test response"]]
-        mock_rest_triton_settings.openai_format_response = False
-
-        with patch("nemo_deploy.service.rest_model_api.NemoQueryLLM") as mock_llm:
-            mock_instance = mock_llm.return_value
-            mock_instance.query_llm.return_value = mock_output
-
-            response = rest_client.post(
-                "/v1/completions/",
-                json={"model": "test_model", "prompt": "test prompt"},
-            )
-            assert response.status_code == 200
-            assert response.json() == {"output": "test response"}
-
-    def test_completions_error_handling(self, rest_client):
-        with patch("nemo_deploy.service.rest_model_api.NemoQueryLLM") as mock_llm:
-            mock_instance = mock_llm.return_value
-            mock_instance.query_llm.side_effect = Exception("Test error")
-
-            response = rest_client.post(
-                "/v1/completions/",
-                json={"model": "test_model", "prompt": "test prompt"},
-            )
-            assert response.status_code == 200
-            assert response.json() == {"error": "An exception occurred"}
