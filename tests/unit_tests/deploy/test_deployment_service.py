@@ -46,12 +46,6 @@ def mock_triton_settings():
         instance.triton_service_ip = "localhost"
         yield instance
 
-
-@pytest.fixture
-def rest_client():
-    return TestClient(rest_app)
-
-
 class TestTritonSettings:
     def test_default_values(self):
         with patch.dict(os.environ, {}, clear=True):
@@ -262,62 +256,12 @@ class TestAPIEndpoints:
             assert data["choices"][0]["message"]["content"] == "test response"
 
 
-class TestRestTritonSettings:
-    def test_default_values(self):
-        with patch.dict(os.environ, {}, clear=True):
-            settings = RestTritonSettings()
-            assert settings.triton_service_port == 8080
-            assert settings.triton_service_ip == "0.0.0.0"
-            assert settings.triton_request_timeout == 60
-            assert settings.openai_format_response is False
-            assert settings.output_generation_logits is False
-
-    def test_custom_values(self):
-        with patch.dict(
-            os.environ,
-            {
-                "TRITON_PORT": "9000",
-                "TRITON_HTTP_ADDRESS": "127.0.0.1",
-                "TRITON_REQUEST_TIMEOUT": "120",
-                "OPENAI_FORMAT_RESPONSE": "True",
-                "OUTPUT_GENERATION_LOGITS": "True",
-            },
-            clear=True,
-        ):
-            settings = RestTritonSettings()
-            assert settings.triton_service_port == 9000
-            assert settings.triton_service_ip == "127.0.0.1"
-            assert settings.triton_request_timeout == 120
-            assert settings.openai_format_response is True
-            assert settings.output_generation_logits is True
-
-
-class TestRestCompletionRequest:
-    def test_default_values(self):
-        request = RestCompletionRequest(model="test_model", prompt="test prompt")
-        assert request.model == "test_model"
-        assert request.prompt == "test prompt"
-        assert request.max_tokens == 512
-        assert request.temperature == 1.0
-        assert request.top_p == 0.0
-        assert request.top_k == 1
-        assert request.stream is False
-        assert request.stop is None
-        assert request.frequency_penalty == 1.0
-
-
-class TestRestHealthEndpoints:
-    def test_health_check(self, rest_client):
-        response = rest_client.get("/v1/health")
-        assert response.status_code == 200
-        assert response.json() == {"status": "ok"}
-
-    def test_triton_health_success(self, rest_client):
+    def test_triton_health_success(self, client):
         with patch("requests.get") as mock_get:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_get.return_value = mock_response
 
-            response = rest_client.get("/v1/triton_health")
+            response = client.get("/v1/triton_health")
             assert response.status_code == 200
             assert response.json() == {"status": "Triton server is reachable and ready"}
