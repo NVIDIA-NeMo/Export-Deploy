@@ -164,7 +164,7 @@ jobs:
       )
       && !cancelled()
     runs-on: ${{ matrix.runner }}
-    name: ${{ matrix.script }}
+    name: ${{ matrix.script }}_TRTLLM
     environment: nemo-ci
     steps:
       - name: Checkout
@@ -204,7 +204,7 @@ jobs:
       )
       && !cancelled()
     runs-on: ${{ matrix.runner }}
-    name: ${{ matrix.script }}
+    name: ${{ matrix.script }}_vLLM
     environment: nemo-ci
     steps:
       - name: Checkout
@@ -224,7 +224,7 @@ jobs:
           inference-framework: vllm
 
   cicd-e2e-tests-trtllm:
-    needs: [cicd-unit-tests-trtllm]
+    # needs: [cicd-unit-tests-trtllm]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     if: |
@@ -255,7 +255,7 @@ jobs:
           inference-framework: trtllm
 
   cicd-e2e-tests-onnx-trt:
-    needs: [cicd-unit-tests-trtllm]
+    # needs: [cicd-unit-tests-trtllm]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     if: |
@@ -286,7 +286,7 @@ jobs:
           inference-framework: trtllm
 
   cicd-e2e-tests-vllm:
-    needs: [cicd-unit-tests-vllm]
+    # needs: [cicd-unit-tests-vllm]
     runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
@@ -317,7 +317,7 @@ jobs:
           inference-framework: vllm
 
   cicd-e2e-tests-inframework:
-    needs: [cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
+    # needs: [cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
     runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci

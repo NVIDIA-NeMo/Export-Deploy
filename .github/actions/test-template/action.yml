@@ -140,9 +140,14 @@ runs:
         sudo apt install -y rclone fuse3
         sudo mkdir -p $MNT_PATH-cached
         sudo rclone config create local-smb local nounc=true
-        sudo rclone mount -vv --vfs-cache-mode full \
+        sudo rclone mount -vv--vfs-cache-mode full \
           --vfs-cache-max-size 50G \
-          --vfs-read-chunk-size 64M \
+          --vfs-cache-max-age 24h \
+          --vfs-read-chunk-size 128M \
+          --vfs-read-chunk-size-limit 2G \
+          --buffer-size 256M \
+          --dir-cache-time 24h \
+          --poll-interval 0 \
           --allow-other \
           --daemon \
           local-smb:$MNT_PATH/ "$MNT_PATH-cached"
