@@ -226,7 +226,6 @@ jobs:
   cicd-e2e-tests-trtllm:
     # needs: [cicd-unit-tests-trtllm]
     runs-on: ${{ matrix.runner }}
-    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     if: |
       (
         success() 
@@ -244,7 +243,7 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: L2_Launch_TRTLLM
-          is_optional: ${{ matrix.is_optional || false }}
+          is_optional: false
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -257,7 +256,6 @@ jobs:
   cicd-e2e-tests-onnx-trt:
     # needs: [cicd-unit-tests-trtllm]
     runs-on: ${{ matrix.runner }}
-    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     if: |
       (
         success() 
@@ -275,7 +273,7 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: L2_Launch_ONNX_TRT
-          is_optional: ${{ matrix.is_optional || false }}
+          is_optional: false
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
