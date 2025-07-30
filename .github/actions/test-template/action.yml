@@ -131,6 +131,22 @@ runs:
 
         ls -al $MNT_PATH/TestData
 
+    - name: Configure local file cache
+      shell: bash
+      if: ${{ inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false' }}
+      env:
+        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
+      run: |
+        sudo apt install -y rclone fuse3
+        sudo mkdir -p $MNT_PATH-cached
+        sudo rclone config create local-smb local nounc=true
+        sudo rclone mount -vv --vfs-cache-mode full \
+          --vfs-cache-max-size 50G \
+          --vfs-read-chunk-size 64M \
+          --allow-other \
+          --daemon \
+          local-smb:$MNT_PATH/ "$MNT_PATH-cached"
+
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
@@ -145,12 +161,18 @@ runs:
 
     - name: Start container
       shell: bash
+      env:
+        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
+        MOUNT_FS: ${{ inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false' }}
       run: |
-        MNT_PATH=${{ steps.azure-fileshare.outputs.mnt_path }}
-
         ARG=("")
+
+        if [[ "$MOUNT_FS" == "true" ]]; then
+          ARG+=("--volume $MNT_PATH-cached/TestData:/home/TestData")
+        fi
+
         if [[ "${{ inputs.cpu-only }}" == "false" ]]; then
-          ARG=("--runtime=nvidia --gpus all")
+          ARG+=("--runtime=nvidia --gpus all")
         fi
 
         cmd=$(cat <<RUN_TEST_EOF
@@ -159,7 +181,8 @@ runs:
         docker run \
           --rm \
           -d \
-          --name nemo_container_${{ github.run_id }} ${ARG[@]} \
+          --name nemo_container_${{ github.run_id }} \
+          ${ARG[@]} \
           --shm-size=64g \
           --env TRANSFORMERS_OFFLINE=0 \
           --env HYDRA_FULL_ERROR=1 \
@@ -167,7 +190,6 @@ runs:
           --env RUN_ID=${{ github.run_id }} \
           --workdir /workspace \
           --volume $(pwd)/Export-Deploy:/workspace \
-          --volume $MNT_PATH/TestData:/home/TestData \
           export-deploy \
           bash -c "sleep $(( ${{ inputs.timeout }} * 60 + 60 ))"
         RUN_TEST_EOF
