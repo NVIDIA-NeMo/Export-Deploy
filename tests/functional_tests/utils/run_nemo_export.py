@@ -386,9 +386,13 @@ def run_inference(
                 output_deployed = nq.query_llm(
                     prompts=prompts,
                     max_tokens=max_output_len,
+                    min_tokens=1,
                     top_k=1,
                     top_p=0.1,
                     temperature=1.0,
+                    n_log_probs=2,
+                    n_prompt_log_probs=3,
+                    seed=1,
                 )
             else:
                 nq = NemoQueryLLM(url="localhost:8000", model_name=model_name)

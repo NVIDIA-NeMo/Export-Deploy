@@ -240,3 +240,188 @@ def test_forward_basic_usage(exporter, mock_llm):
 
     assert "sentences" in result
     assert result["sentences"] == ["test output"]
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_forward_with_all_params(exporter, mock_llm):
+    """Test forward method with all parameters specified"""
+    with (
+        patch("nemo_export.vllm_exporter.SamplingParams") as mock_sampling_params,
+        patch("nemo_export.vllm_exporter.LoRARequest") as mock_lora_request,
+    ):
+        # Setup mock outputs with log probabilities
+        mock_logprob_value = MagicMock()
+        mock_logprob_value.rank = 1
+        mock_logprob_value.decoded_token = "test_token"
+        mock_logprob_value.logprob = -0.5
+
+        mock_logprob_dict = MagicMock()
+        mock_logprob_dict.values.return_value = [mock_logprob_value]
+
+        mock_prompt_logprob_value = MagicMock()
+        mock_prompt_logprob_value.rank = 1
+        mock_prompt_logprob_value.decoded_token = "prompt_token"
+        mock_prompt_logprob_value.logprob = -0.3
+
+        mock_prompt_logprob_dict = MagicMock()
+        mock_prompt_logprob_dict.values.return_value = [mock_prompt_logprob_value]
+
+        mock_output = MagicMock()
+        mock_output.outputs = [MagicMock(text="Generated text response", logprobs=[mock_logprob_dict])]
+        mock_output.prompt_logprobs = [mock_prompt_logprob_dict]
+
+        mock_llm.return_value.generate.return_value = [mock_output]
+
+        # Setup LoRA model
+        exporter.export(model_path_id="/path/to/model")
+        exporter.add_lora_models("test_lora", "/path/to/lora")
+
+        # Call forward with all parameters
+        input_texts = ["Test prompt 1", "Test prompt 2"]
+        result = exporter.forward(
+            input_texts=input_texts,
+            max_tokens=50,
+            min_tokens=5,
+            top_k=10,
+            top_p=0.95,
+            temperature=0.8,
+            n_log_probs=5,
+            n_prompt_log_probs=3,
+            seed=42,
+            lora_model_name="test_lora",
+        )
+
+        # Verify SamplingParams was called with correct parameters
+        mock_sampling_params.assert_called_once_with(
+            max_tokens=50,
+            min_tokens=5,
+            logprobs=5,
+            prompt_logprobs=3,
+            seed=42,
+            temperature=0.8,
+            top_k=10,
+            top_p=0.95,
+        )
+
+        # Verify LoRARequest was called correctly
+        mock_lora_request.assert_called_once_with("test_lora", 1, "/path/to/lora")
+
+        # Verify model.generate was called with correct arguments
+        mock_llm.return_value.generate.assert_called_once()
+        call_args = mock_llm.return_value.generate.call_args
+        assert call_args[0][0] == input_texts  # input_texts
+        assert call_args[1]["lora_request"] == mock_lora_request.return_value
+
+        # Verify output structure
+        assert "sentences" in result
+        assert "log_probs" in result
+        assert "prompt_log_probs" in result
+        assert result["sentences"] == ["Generated text response"]
+
+        # Verify log probabilities are properly formatted
+        assert isinstance(result["log_probs"], np.ndarray)
+        assert isinstance(result["prompt_log_probs"], np.ndarray)
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_forward_with_multiple_outputs_and_logprobs(exporter, mock_llm):
+    """Test forward method with multiple outputs and varying logprob lengths"""
+    with patch("nemo_export.vllm_exporter.SamplingParams"):
+        # Setup mock outputs with different logprob lengths to test padding
+        mock_logprob_value1 = MagicMock()
+        mock_logprob_value1.rank = 1
+        mock_logprob_value1.decoded_token = "token1"
+        mock_logprob_value1.logprob = -0.1
+
+        mock_logprob_value2 = MagicMock()
+        mock_logprob_value2.rank = 2
+        mock_logprob_value2.decoded_token = "token2"
+        mock_logprob_value2.logprob = -0.2
+
+        mock_logprob_dict1 = MagicMock()
+        mock_logprob_dict1.values.return_value = [mock_logprob_value1]
+
+        mock_logprob_dict2 = MagicMock()
+        mock_logprob_dict2.values.return_value = [mock_logprob_value2]
+
+        # First output with 2 logprobs
+        mock_output1 = MagicMock()
+        mock_output1.outputs = [MagicMock(text="Output 1", logprobs=[mock_logprob_dict1, mock_logprob_dict2])]
+        mock_output1.prompt_logprobs = [mock_logprob_dict1]
+
+        # Second output with 1 logprob (will be padded)
+        mock_output2 = MagicMock()
+        mock_output2.outputs = [MagicMock(text="Output 2", logprobs=[mock_logprob_dict1])]
+        mock_output2.prompt_logprobs = [mock_logprob_dict1, mock_logprob_dict2]
+
+        mock_llm.return_value.generate.return_value = [mock_output1, mock_output2]
+
+        exporter.export(model_path_id="/path/to/model")
+
+        result = exporter.forward(
+            input_texts=["Prompt 1", "Prompt 2"], max_tokens=30, n_log_probs=2, n_prompt_log_probs=2
+        )
+
+        # Verify output structure
+        assert "sentences" in result
+        assert "log_probs" in result
+        assert "prompt_log_probs" in result
+        assert len(result["sentences"]) == 2
+        assert result["sentences"] == ["Output 1", "Output 2"]
+
+        # Verify log probabilities arrays are properly padded
+        assert result["log_probs"].shape == (2, 2)  # 2 outputs, max 2 logprobs
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_forward_no_logprobs(exporter, mock_llm):
+    """Test forward method when log probabilities are not requested"""
+    with patch("nemo_export.vllm_exporter.SamplingParams") as mock_sampling_params:
+        mock_output = MagicMock()
+        mock_output.outputs = [MagicMock(text="No logprobs output", logprobs=None)]
+        mock_output.prompt_logprobs = None
+
+        mock_llm.return_value.generate.return_value = [mock_output]
+
+        exporter.export(model_path_id="/path/to/model")
+
+        result = exporter.forward(
+            input_texts=["Test prompt"],
+            max_tokens=20,
+            # n_log_probs and n_prompt_log_probs are None (default)
+        )
+
+        # Verify SamplingParams called with None for logprobs
+        mock_sampling_params.assert_called_once_with(
+            max_tokens=20,
+            min_tokens=0,
+            logprobs=None,
+            prompt_logprobs=None,
+            seed=None,
+            temperature=1.0,
+            top_k=1,
+            top_p=0.1,
+        )
+
+        # Verify output structure (no log probabilities)
+        assert "sentences" in result
+        assert "log_probs" not in result
+        assert "prompt_log_probs" not in result
+        assert result["sentences"] == ["No logprobs output"]
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_dict_to_str_method(exporter):
+    """Test the _dict_to_str utility method"""
+    test_dict = {"key1": "value1", "key2": 42, "key3": [1, 2, 3]}
+    result = exporter._dict_to_str(test_dict)
+
+    import json
+
+    expected = json.dumps(test_dict)
+    assert result == expected
+    assert isinstance(result, str)
