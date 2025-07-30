@@ -60,8 +60,8 @@ def create_hf_model(
         print(f"Output directory {output_dir} exists and overwrite flag is not set so exiting.")
         return
 
-    hf_config = transformers.AutoConfig.from_pretrained(model_name_or_path)
-    tokenizer = transformers.AutoTokenizer.from_pretrained(model_name_or_path)
+    hf_config = transformers.AutoConfig.from_pretrained(model_name_or_path, use_fast=False)
+    tokenizer = transformers.AutoTokenizer.from_pretrained(model_name_or_path, use_fast=False)
     model_class = get_hf_model_class(hf_config)
 
     if config_updates is not None:
