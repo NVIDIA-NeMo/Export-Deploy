@@ -22,7 +22,7 @@ coverage run \
     --source=/workspace/ \
     --parallel-mode \
     -m pytest \
-    --retries 2 \
+    --reruns 2 \
     -o log_cli=true \
     -o log_cli_level=INFO \
     -vs -m "not pleasefixme" --tb=short tests/functional_tests/tests_vllm

@@ -90,7 +90,7 @@ docs = [
     "nvidia-sphinx-theme", # Our NVIDIA theme
 ]
 linting = ["pre-commit>=3.6.0", "ruff~=0.9.0"]
-test = ["pytest", "pytest-mock", "coverage", "click", "pytest-retry"]
+test = ["pytest", "pytest-mock", "coverage", "click", "pytest-rerunfailures"]
 nemo-toolkit = [
     "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]~=2.4.0",
 ]
