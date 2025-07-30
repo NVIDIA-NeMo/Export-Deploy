@@ -225,7 +225,7 @@ jobs:
 
   cicd-e2e-tests-trtllm:
     # needs: [cicd-unit-tests-trtllm]
-    runs-on: ${{ matrix.runner }}
+    runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
     if: |
       (
         success() 
@@ -255,7 +255,7 @@ jobs:
 
   cicd-e2e-tests-onnx-trt:
     # needs: [cicd-unit-tests-trtllm]
-    runs-on: ${{ matrix.runner }}
+    runs-on: linux-amd64-gpu-rtxa6000-latest-2-nemo
     if: |
       (
         success() 
