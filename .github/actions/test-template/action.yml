@@ -141,7 +141,7 @@ runs:
         sudo mkdir -p $MNT_PATH-cached
         sudo rclone config create local-smb local nounc=true
         sudo rclone mount -vv \
-          ---vfs-cache-mode full \
+          --vfs-cache-mode full \
           --vfs-cache-max-size 200G \
           --vfs-cache-max-age 48h \
           --vfs-cache-poll-interval 5m \
