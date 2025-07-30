@@ -27,9 +27,9 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    "megatron-core>=0.13.0a0,<0.14.0",
-    "nvidia-modelopt[torch]>=0.29.0a0,<0.32.0; sys_platform != 'darwin'",
-    "nvidia-resiliency-ext>=0.3.0a0,<0.4.0; sys_platform != 'darwin'",
+    "megatron-core>=0.14.0a0,<0.15.0",
+    "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
+    "nvidia-resiliency-ext>=0.4.0a0,<0.5.0; sys_platform != 'darwin'",
     "accelerate",
     "fastapi",
     "pydantic-settings",
@@ -64,23 +64,13 @@ dependencies = [
 
 [project.optional-dependencies]
 inframework = []
-vllm = [
-    "vllm==0.9.1",
-    "pandas",
-    "timm",
-    "transformers~=4.53.0",
-    "nvidia-modelopt[torch]>=0.31.0a0,<0.32.0; sys_platform != 'darwin'",
-]
-trtllm = [
-    "transformers~=4.51.0",
-    "tensorrt-llm~=0.20.0",
-    "nvidia-modelopt[torch]>=0.29.0a0,<0.30.0; sys_platform != 'darwin'",
-]
-te = ["transformer-engine[pytorch]==2.5.0"]
+vllm = ["vllm==0.9.1", "pandas", "timm", "transformers~=4.53.0"]
+trtllm = ["transformers~=4.51.0", "tensorrt-llm>=1.0.0a0,<1.1.0"]
+te = ["transformer-engine[pytorch]>=2.7.0a0,<2.8.0; sys_platform != 'darwin'"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch", "pybind11", "Cython>=3.0.0"]
+build = ["setuptools", "torch", "pybind11", "Cython>=3.0.0", "ninja"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
@@ -102,6 +92,7 @@ vllm = [
     { index = "pytorch-cu128", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
+transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "5f1142e8c12172510d34709df3629be6f88dc993" } # on release_v2.6.0
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
@@ -118,8 +109,9 @@ link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }]]
 override-dependencies = [
     "urllib3>1.27.0",
-    "tiktoken>=0.9.0",                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
+    "tiktoken>=0.9.0",                                                    # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
+    "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
 ]
 prerelease = "allow"
 
