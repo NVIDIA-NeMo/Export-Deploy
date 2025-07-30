@@ -138,29 +138,65 @@ runs:
         MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
       run: |
         sudo apt install -y rclone fuse3
-        sudo mkdir -p $MNT_PATH-cached
-        sudo rclone config create local-smb local nounc=true
+
+        # Clean up any existing corrupted cache
+        sudo umount "$MNT_PATH-cached" 2>/dev/null || true
+        sudo rm -rf "$MNT_PATH-cached"
+        sudo mkdir -p "$MNT_PATH-cached"
+
+        # Create rclone config with better error handling
+        sudo rclone config create local-smb local nounc=true || {
+          echo "Failed to create rclone config, trying alternative approach"
+          sudo rclone config create local-smb local nounc=true --non-interactive
+        }
+
+        # Start rclone mount with improved settings for stability
         sudo rclone mount -vv \
-          --vfs-cache-mode full \
-          --vfs-cache-max-size 200G \
-          --vfs-cache-max-age 48h \
-          --vfs-cache-poll-interval 5m \
-          --vfs-read-wait 60s \
-          --vfs-read-chunk-size 128M \
+          --vfs-cache-mode writes \
+          --vfs-cache-max-size 100G \
+          --vfs-cache-max-age 24h \
+          --vfs-cache-poll-interval 1m \
+          --vfs-read-wait 30s \
+          --vfs-read-chunk-size 64M \
           --vfs-read-chunk-size-limit 0 \
-          --buffer-size 0 \
-          --dir-cache-time 48h \
+          --buffer-size 16M \
+          --dir-cache-time 24h \
           --poll-interval 0 \
-          --attr-timeout 1h \
-          --timeout 2m \
-          --low-level-retries 30 \
-          --retries 15 \
-          --multi-thread-streams 1 \
-          --transfers 1 \
+          --attr-timeout 30m \
+          --timeout 5m \
+          --low-level-retries 10 \
+          --retries 5 \
+          --multi-thread-streams 4 \
+          --transfers 4 \
           --allow-non-empty \
           --allow-other \
           --daemon \
-          local-smb:$MNT_PATH/ "$MNT_PATH-cached"
+          --log-level INFO \
+          --log-file /tmp/rclone.log \
+          local-smb:"$MNT_PATH/" "$MNT_PATH-cached"
+
+        # Wait for mount to be ready and verify it's working
+        echo "Waiting for rclone mount to be ready..."
+        for i in {1..30}; do
+          if mountpoint -q "$MNT_PATH-cached" && ls "$MNT_PATH-cached" >/dev/null 2>&1; then
+            echo "Rclone mount is ready"
+            break
+          fi
+          echo "Waiting for mount... (attempt $i/30)"
+          sleep 2
+        done
+
+        # Verify the mount is working by testing a simple file operation
+        if ! ls "$MNT_PATH-cached/TestData" >/dev/null 2>&1; then
+          echo "ERROR: Rclone mount verification failed"
+          echo "Mount status:"
+          mount | grep rclone || echo "No rclone mounts found"
+          echo "Rclone log:"
+          sudo cat /tmp/rclone.log || echo "No rclone log found"
+          exit 1
+        fi
+
+        echo "Rclone mount is working correctly"
 
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -183,7 +219,17 @@ runs:
         ARG=("")
 
         if [[ "$MOUNT_FS" == "true" ]]; then
-          ARG+=("--volume $MNT_PATH-cached/TestData:/home/TestData")
+          # Check if rclone mount is working, fallback to direct mount if needed
+          if mountpoint -q "$MNT_PATH-cached" && ls "$MNT_PATH-cached/TestData" >/dev/null 2>&1; then
+            echo "Using rclone cached mount"
+            ARG+=("--volume $MNT_PATH-cached/TestData:/home/TestData")
+          else
+            echo "Rclone mount failed, falling back to direct CIFS mount"
+            # Try to remount the CIFS share directly
+            sudo umount "$MNT_PATH" 2>/dev/null || true
+            sudo mount -t cifs "$SMB_PATH" "$MNT_PATH" -o credentials="$SMB_CREDENTIAL_FILE",serverino,nosharesock,actimeo=30,mfsymlinks,iocharset=utf8,file_mode=0777,dir_mode=0777
+            ARG+=("--volume $MNT_PATH/TestData:/home/TestData")
+          fi
         fi
 
         if [[ "${{ inputs.cpu-only }}" == "false" ]]; then
@@ -216,9 +262,39 @@ runs:
     - name: Create run-script
       id: create
       shell: bash
+      env:
+        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
+        MOUNT_FS: ${{ inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false' }}
       run: |
         COVERAGE_PREFIX=$([[ "${{ inputs.is_unit_test }}" == "true" ]] && echo "unit-test" || echo "e2e")
         echo "coverage-prefix=$COVERAGE_PREFIX" | tee -a "$GITHUB_OUTPUT"
+
+        # Check mount health before running tests
+        if [[ "$MOUNT_FS" == "true" ]]; then
+          echo "Checking mount health..."
+          if mountpoint -q "$MNT_PATH-cached" 2>/dev/null; then
+            echo "Rclone mount is active"
+            if ! ls "$MNT_PATH-cached/TestData" >/dev/null 2>&1; then
+              echo "WARNING: Rclone mount exists but TestData is not accessible"
+              echo "Mount status:"
+              mount | grep -E "(rclone|cifs)" || echo "No relevant mounts found"
+            else
+              echo "Rclone mount is healthy"
+            fi
+          elif mountpoint -q "$MNT_PATH" 2>/dev/null; then
+            echo "Direct CIFS mount is active"
+            if ! ls "$MNT_PATH/TestData" >/dev/null 2>&1; then
+              echo "WARNING: Direct mount exists but TestData is not accessible"
+            else
+              echo "Direct mount is healthy"
+            fi
+          else
+            echo "ERROR: No working mount found"
+            echo "Available mounts:"
+            mount | grep -E "(rclone|cifs)" || echo "No relevant mounts found"
+            exit 1
+          fi
+        fi
 
         cmd=$(cat <<'RUN_TEST_EOF'
         #!/bin/bash
@@ -272,10 +348,50 @@ runs:
 
         exit $EXIT_CODE
 
+    - name: Cleanup mounts
+      if: always()
+      shell: bash
+      env:
+        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
+      run: |
+        echo "Cleaning up mounts..."
+        sudo umount "$MNT_PATH-cached" 2>/dev/null || true
+        sudo umount "$MNT_PATH" 2>/dev/null || true
+        echo "Mount cleanup completed"
+
     - name: Test coverage
       shell: bash -x -e -u -o pipefail {0}
       run: |
         docker exec -t nemo_container_${{ github.run_id }} /opt/venv/bin/coverage report -i
+
+    - name: Debug mount issues
+      if: failure() && inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false'
+      shell: bash
+      env:
+        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
+      run: |
+        echo "=== Debugging mount issues ==="
+        echo "Current mounts:"
+        mount | grep -E "(rclone|cifs)" || echo "No relevant mounts found"
+
+        echo "Rclone processes:"
+        ps aux | grep rclone || echo "No rclone processes found"
+
+        echo "Rclone log (if available):"
+        sudo cat /tmp/rclone.log 2>/dev/null || echo "No rclone log found"
+
+        echo "Testing mount access:"
+        if mountpoint -q "$MNT_PATH-cached" 2>/dev/null; then
+          echo "Testing rclone mount access..."
+          ls -la "$MNT_PATH-cached/TestData" 2>/dev/null || echo "Cannot access rclone mount"
+        fi
+
+        if mountpoint -q "$MNT_PATH" 2>/dev/null; then
+          echo "Testing direct mount access..."
+          ls -la "$MNT_PATH/TestData" 2>/dev/null || echo "Cannot access direct mount"
+        fi
+
+        echo "=== End debug info ==="
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
