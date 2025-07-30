@@ -224,16 +224,6 @@ jobs:
           inference-framework: vllm
 
   cicd-e2e-tests-trtllm:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - script: L2_Launch_TRTLLM
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_TRTLLM_API_Deploy_Query
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
-          - script: L2_ONNX_TRT
-            runner: linux-amd64-gpu-rtxa6000-latest-2-nemo
     needs: [cicd-unit-tests-trtllm]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
@@ -253,7 +243,38 @@ jobs:
       - name: main
         uses: ./.github/actions/test-template
         with:
-          script: ${{ matrix.script }}
+          script: L2_Launch_TRTLLM
+          is_optional: ${{ matrix.is_optional || false }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          has-azure-credentials: true
+          is_unit_test: "false"
+          timeout: 60
+          PAT: ${{ secrets.PAT }}
+          inference-framework: trtllm
+
+  cicd-e2e-tests-onnx-trt:
+    needs: [cicd-unit-tests-trtllm]
+    runs-on: ${{ matrix.runner }}
+    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    if: |
+      (
+        success() 
+        || (
+          needs.cicd-wait-in-queue.result == 'skipped'
+          && needs.pre-flight.outputs.is_ci_workload == 'true'
+        )
+      )
+      && !cancelled()
+    environment: nemo-ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: main
+        uses: ./.github/actions/test-template
+        with:
+          script: L2_Launch_ONNX_TRT
           is_optional: ${{ matrix.is_optional || false }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -333,6 +354,8 @@ jobs:
       - cicd-unit-tests-vllm
       - cicd-e2e-tests-trtllm
       - cicd-e2e-tests-vllm
+      - cicd-e2e-tests-onnx-trt
+      - cicd-e2e-tests-inframework
     if: always()
     runs-on: ubuntu-latest
     permissions: write-all
