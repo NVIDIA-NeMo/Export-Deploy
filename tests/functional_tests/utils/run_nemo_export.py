@@ -111,7 +111,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                         inference_params=CommonInferenceParams(
                             temperature=0.1,
                             top_k=1,
-                            top_p=0.01,
+                            top_p=0.0,
                             num_tokens_to_generate=1,
                             return_log_probs=False,
                         ),
@@ -122,7 +122,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                         input_texts=[prompt],
                         max_output_len=1,
                         top_k=1,
-                        top_p=0.01,
+                        top_p=0.0,
                         temperature=0.1,
                         lora_uids=lora_uids,
                     )
@@ -147,7 +147,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                         prompts=[prompt],
                         max_length=1,
                         top_k=1,
-                        top_p=0.01,
+                        top_p=0.0,
                         temperature=0.1,
                     )
                     # Accessing [0][0] of "text" is to get a raw string entry from a NumPy array
@@ -158,7 +158,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                         prompts=[prompt],
                         max_output_len=1,
                         top_k=1,
-                        top_p=0.01,
+                        top_p=0.0,
                         temperature=0.1,
                     )
                     deployed_output = deployed_output[0][0].strip().lower()
@@ -288,6 +288,9 @@ def run_inference(
                 **vllm_export_kwargs,
             )
 
+            if top_p == 0.0:
+                top_p = 0.01
+
             output = exporter.forward(
                 input_texts=prompts,
                 max_tokens=max_output_len,
@@ -323,6 +326,9 @@ def run_inference(
                     fp8_kvcache=fp8_kvcache,
                     **trt_llm_export_kwargs,
                 )
+
+            if use_vllm and top_p == 0.0:
+                top_p = 0.01
 
             output = exporter.forward(
                 input_texts=prompts,
@@ -381,7 +387,7 @@ def run_inference(
                     prompts=prompts,
                     max_tokens=max_output_len,
                     top_k=1,
-                    top_p=0.01,
+                    top_p=0.1,
                     temperature=1.0,
                 )
             else:
@@ -588,7 +594,7 @@ def get_args():
     parser.add_argument(
         "--top_p",
         type=float,
-        default=0.01,
+        default=0.0,
     )
     parser.add_argument(
         "--temperature",
