@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import json
 import logging
 import os
 import pickle
 import shutil
+import time
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
@@ -365,6 +365,32 @@ def load_distributed_model_weights(
     return state_dict
 
 
+def copytree_with_retry(src: Path, dst: Path, retries=5, backoff=2):
+    """
+    Retry shutil.copytree with exponential backoff on failure.
+    Raises the final exception if all retries fail.
+    """
+    attempt = 0
+    while attempt < retries:
+        try:
+            if dst.exists():
+                LOGGER.info(f"Destination {dst} already exists. Skipping copy.")
+                return
+            LOGGER.info(f"Copying from {src} to {dst} (attempt {attempt + 1})")
+            shutil.copytree(src, dst)
+            LOGGER.info(f"Copy succeeded on attempt {attempt + 1}")
+            return
+        except Exception as e:
+            LOGGER.warning(f"Copy attempt {attempt + 1} failed: {e}")
+            attempt += 1
+            if attempt == retries:
+                LOGGER.error(f"All {retries} attempts to copy {src} failed.")
+                raise
+            sleep_time = backoff**attempt
+            LOGGER.info(f"Retrying in {sleep_time:.1f} seconds...")
+            time.sleep(sleep_time)
+
+
 def load_nemo_model(
     nemo_ckpt: Union[str, Path],
     nemo_export_dir: Union[str, Path],
@@ -423,7 +449,7 @@ def load_nemo_model(
             nemo_model_config["max_position_embeddings"] = nemo_model_config.get("seq_length", 4096)
             nemo_model_config["rotary_percentage"] = nemo_model_config.get("rotary_percent", 1.0)
 
-            shutil.copytree(io_folder, nemo_export_dir / "nemo_context")
+            copytree_with_retry(io_folder, nemo_export_dir / "nemo_context")
         else:
             raise Exception("Not a supported NeMo file format: only distributed MCore NeMo checkpoints are supported.")
     finally:
