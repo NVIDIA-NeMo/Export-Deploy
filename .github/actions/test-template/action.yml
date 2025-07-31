@@ -204,9 +204,6 @@ runs:
     - name: Create run-script
       id: create
       shell: bash
-      env:
-        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
-        MOUNT_FS: ${{ inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false' }}
       run: |
         COVERAGE_PREFIX=$([[ "${{ inputs.is_unit_test }}" == "true" ]] && echo "unit-test" || echo "e2e")
         echo "coverage-prefix=$COVERAGE_PREFIX" | tee -a "$GITHUB_OUTPUT"
@@ -267,35 +264,6 @@ runs:
       shell: bash -x -e -u -o pipefail {0}
       run: |
         docker exec -t nemo_container_${{ github.run_id }} /opt/venv/bin/coverage report -i
-
-    - name: Debug mount issues
-      if: failure() && inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false'
-      shell: bash
-      env:
-        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
-      run: |
-        echo "=== Debugging mount issues ==="
-        echo "Current mounts:"
-        mount | grep -E "(rclone|cifs)" || echo "No relevant mounts found"
-
-        echo "Rclone processes:"
-        ps aux | grep rclone || echo "No rclone processes found"
-
-        echo "Rclone log (if available):"
-        sudo cat /tmp/rclone.log 2>/dev/null || echo "No rclone log found"
-
-        echo "Testing mount access:"
-        if mountpoint -q "$MNT_PATH-cached" 2>/dev/null; then
-          echo "Testing rclone mount access..."
-          ls -la "$MNT_PATH-cached/TestData" 2>/dev/null || echo "Cannot access rclone mount"
-        fi
-
-        if mountpoint -q "$MNT_PATH" 2>/dev/null; then
-          echo "Testing direct mount access..."
-          ls -la "$MNT_PATH/TestData" 2>/dev/null || echo "Cannot access direct mount"
-        fi
-
-        echo "=== End debug info ==="
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
