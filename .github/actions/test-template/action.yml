@@ -139,65 +139,16 @@ runs:
       run: |
         sudo apt install -y rclone fuse3
 
-        # Clean up any existing corrupted cache
-        sudo umount "$MNT_PATH-cached" 2>/dev/null || true
-        sudo rm -rf "$MNT_PATH-cached"
-        sudo mkdir -p "$MNT_PATH-cached"
+        sudo mkdir -p $MNT_PATH-cached
 
-        # Try rclone first, fallback to direct mount if it fails
-        echo "Attempting rclone mount..."
+        sudo rclone config create local-smb local nounc=true
 
-        # Create rclone config
-        sudo rclone config create local-smb local nounc=true --non-interactive 
-
-        # Start rclone mount with conservative settings
-        sudo rclone mount \
-          --vfs-cache-mode writes \
+        sudo rclone mount -vv --vfs-cache-mode full \
           --vfs-cache-max-size 50G \
-          --vfs-cache-max-age 12h \
-          --vfs-read-wait 10s \
-          --vfs-read-chunk-size 32M \
-          --buffer-size 8M \
-          --dir-cache-time 12h \
-          --attr-timeout 10m \
-          --timeout 2m \
-          --low-level-retries 5 \
-          --retries 3 \
-          --allow-non-empty \
+          --vfs-read-chunk-size 64M \
           --allow-other \
           --daemon \
-          --log-file /tmp/rclone.log \
-          local-smb:"$MNT_PATH/" "$MNT_PATH-cached" &
-
-        # Wait for mount to be ready
-        echo "Waiting for rclone mount..."
-        for i in {1..15}; do
-          if mountpoint -q "$MNT_PATH-cached" 2>/dev/null && ls "$MNT_PATH-cached" >/dev/null 2>&1; then
-            echo "Rclone mount is ready"
-            break
-          fi
-          echo "Waiting... (attempt $i/15)"
-          sleep 2
-        done
-
-        # Test the mount
-        if ! ls "$MNT_PATH-cached/TestData" >/dev/null 2>&1; then
-          echo "Rclone mount failed, using direct CIFS mount"
-          sudo pkill rclone || true
-          sudo umount "$MNT_PATH-cached" 2>/dev/null || true
-          
-          # Ensure direct mount is working
-          sudo umount "$MNT_PATH" 2>/dev/null || true
-          sudo mount -t cifs "$SMB_PATH" "$MNT_PATH" -o credentials="$SMB_CREDENTIAL_FILE",serverino,nosharesock,actimeo=30,mfsymlinks,iocharset=utf8,file_mode=0777,dir_mode=0777
-          
-          if ! ls "$MNT_PATH/TestData" >/dev/null 2>&1; then
-            echo "ERROR: All mount attempts failed"
-            exit 1
-          fi
-          echo "Direct CIFS mount is working"
-        else
-          echo "Rclone mount is working"
-        fi
+          local-smb:$MNT_PATH/ "$MNT_PATH-cached"
 
     - name: Checkout repository
       uses: actions/checkout@v2
