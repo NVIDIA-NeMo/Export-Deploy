@@ -146,6 +146,7 @@ runs:
         sudo rclone mount -vv --vfs-cache-mode full \
           --vfs-cache-max-size 50G \
           --vfs-read-chunk-size 64M \
+          --vfs-fast-fingerprint \
           --allow-other \
           --daemon \
           local-smb:$MNT_PATH/ "$MNT_PATH-cached"
