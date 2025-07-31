@@ -17,8 +17,6 @@ set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
 export CUDA_VISIBLE_DEVICES="0,1"
 
-find /home/TestData/llm/models/llama32_1b_nemo2/ -type f -exec head -c 0 {} \;
-
 coverage run \
     --data-file=/workspace/.coverage \
     --source=/workspace/ \
