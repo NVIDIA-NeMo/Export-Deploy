@@ -23,6 +23,7 @@ from nemo_deploy.nlp.query_llm import (
     NemoQueryLLMHF,
     NemoQueryLLMPyTorch,
     NemoQueryTRTLLMAPI,
+    NemoQueryvLLM,
 )
 
 
@@ -519,3 +520,192 @@ class TestNemoQueryTRTLLMAPI:
         response = query.query_llm(prompts=["test prompt"])
 
         assert response == ["non-bytes response"]
+
+
+class TestNemoQueryvLLM:
+    @pytest.fixture
+    def query(self):
+        return NemoQueryvLLM(url="localhost:8000", model_name="test-model")
+
+    def test_initialization(self, query):
+        assert isinstance(query, NemoQueryLLMBase)
+        assert query.url == "localhost:8000"
+        assert query.model_name == "test-model"
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_basic(self, mock_client, query):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test basic query
+        response = query.query_llm(prompts=["test prompt"], max_tokens=100, temperature=0.7, top_k=1, top_p=0.9)
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+        assert response["choices"][0]["text"] == "test response"
+        assert "id" in response
+        assert "object" in response
+        assert response["object"] == "text_completion"
+        assert "model" in response
+        assert response["model"] == "test-model"
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_with_log_probs(self, mock_client, query):
+        # Setup mock with log probabilities
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"test response"]),
+            "log_probs": np.array([b'{"token": "test", "logprob": -0.1}']),
+        }
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test query with log probabilities
+        response = query.query_llm(prompts=["test prompt"], max_tokens=100, n_log_probs=5)
+
+        assert isinstance(response, dict)
+        assert "log_probs" in response
+        assert response["log_probs"] == '{"token": "test", "logprob": -0.1}'
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_with_prompt_log_probs(self, mock_client, query):
+        # Setup mock with prompt log probabilities
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"test response"]),
+            "prompt_log_probs": np.array([b'{"prompt_token": "hello", "logprob": -0.2}']),
+        }
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test query with prompt log probabilities
+        response = query.query_llm(prompts=["test prompt"], max_tokens=100, n_prompt_log_probs=3)
+
+        assert isinstance(response, dict)
+        assert "prompt_log_probs" in response
+        assert response["prompt_log_probs"] == '{"prompt_token": "hello", "logprob": -0.2}'
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_with_both_log_probs(self, mock_client, query):
+        # Setup mock with both log probabilities and prompt log probabilities
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"test response"]),
+            "log_probs": np.array([b'{"token": "test", "logprob": -0.1}']),
+            "prompt_log_probs": np.array([b'{"prompt_token": "hello", "logprob": -0.2}']),
+        }
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test query with both types of log probabilities
+        response = query.query_llm(prompts=["test prompt"], max_tokens=100, n_log_probs=5, n_prompt_log_probs=3)
+
+        assert isinstance(response, dict)
+        assert "log_probs" in response
+        assert "prompt_log_probs" in response
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_unknown_output_keyword(self, mock_client, query):
+        # Setup mock for unknown output keyword case
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"unknown_key": np.array([b"test response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test query with unknown output keyword
+        response = query.query_llm(prompts=["test prompt"])
+
+        assert response == "Unknown output keyword."
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_with_min_tokens(self, mock_client, query):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test query with min_tokens
+        response = query.query_llm(prompts=["test prompt"], min_tokens=10, max_tokens=100)
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_with_seed(self, mock_client, query):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test query with seed parameter
+        response = query.query_llm(prompts=["test prompt"], max_tokens=100, seed=42)
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_with_defaults(self, mock_client, query):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"default response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test query with default parameters (no optional params)
+        response = query.query_llm(prompts=["test prompt"])
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+        assert response["choices"][0]["text"] == "default response"
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_all_parameters(self, mock_client, query):
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {
+            "sentences": np.array([b"test response"]),
+            "log_probs": np.array([b'{"token": "test", "logprob": -0.1}']),
+            "prompt_log_probs": np.array([b'{"prompt_token": "hello", "logprob": -0.2}']),
+        }
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test query with all parameters
+        response = query.query_llm(
+            prompts=["test prompt"],
+            max_tokens=100,
+            min_tokens=10,
+            n_log_probs=5,
+            n_prompt_log_probs=3,
+            seed=42,
+            top_k=5,
+            top_p=0.95,
+            temperature=0.8,
+            init_timeout=30.0,
+        )
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+        assert "log_probs" in response
+        assert "prompt_log_probs" in response
+
+    @patch("nemo_deploy.nlp.query_llm.ModelClient")
+    def test_query_llm_multiple_prompts(self, mock_client, query):
+        # Setup mock for multiple prompts
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"response 1", b"response 2"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # Test query with multiple prompts
+        response = query.query_llm(prompts=["test prompt 1", "test prompt 2"], max_tokens=50)
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+        # Note: The actual implementation returns text as array, so checking the structure
+        assert response["choices"][0]["text"].size == 2
