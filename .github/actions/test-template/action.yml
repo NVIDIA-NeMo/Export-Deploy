@@ -83,6 +83,7 @@ runs:
       env:
         MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
       run: |
+        sudo apt update
         sudo apt install -y achefilesd
 
         # Enable and start the service
