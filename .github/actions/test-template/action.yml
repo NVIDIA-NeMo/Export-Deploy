@@ -89,11 +89,6 @@ runs:
         sudo chown root:root /var/cache/fscache
         sudo chmod 700 /var/cache/fscache
 
-        # Check if xattr is supported
-        getfattr --version
-        # If not installed:
-        sudo apt install -y attr
-
         sudo apt update
         sudo apt install -y cachefilesd
 
