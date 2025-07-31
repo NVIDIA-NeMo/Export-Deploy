@@ -84,7 +84,7 @@ runs:
         MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
       run: |
         sudo apt update
-        sudo apt install -y achefilesd
+        sudo apt install -y cachefilesd
 
         # Enable and start the service
         sudo systemctl enable cachefilesd
