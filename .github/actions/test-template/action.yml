@@ -77,6 +77,21 @@ runs:
       run: |
         az acr login --name nemoci
 
+    - name: Configure local file cache
+      shell: bash
+      if: ${{ inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false' }}
+      env:
+        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
+      run: |
+        sudo apt install -y achefilesd
+
+        # Enable and start the service
+        sudo systemctl enable cachefilesd
+        sudo systemctl start cachefilesd
+
+        # Check status
+        sudo systemctl status cachefilesd
+
     - name: Azure Fileshare
       if: ${{ inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false' }}
       shell: bash
@@ -127,39 +142,9 @@ runs:
 
         STORAGE_ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query "[0].value" --output tsv | tr -d '"')
 
-        sudo mount -t cifs $SMB_PATH $MNT_PATH -o credentials=$SMB_CREDENTIAL_FILE,serverino,nosharesock,actimeo=30,mfsymlinks
+        sudo mount -t cifs $SMB_PATH $MNT_PATH -o credentials=$SMB_CREDENTIAL_FILE,serverino,nosharesock,actimeo=30,mfsymlinks,cache=strict
 
         ls -al $MNT_PATH/TestData
-
-    - name: Configure local file cache
-      shell: bash
-      if: ${{ inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false' }}
-      env:
-        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
-      run: |
-        sudo apt install -y rclone fuse3
-
-        sudo mkdir -p $MNT_PATH-cached
-
-        sudo rclone config create local-smb local nounc=true
-
-        sudo rclone mount -vv --vfs-cache-mode full \
-          --vfs-cache-mode full \
-          --vfs-cache-max-size 500G \
-          --vfs-cache-max-age 1000h \
-          --vfs-read-chunk-size 128M \
-          --vfs-read-chunk-size-limit off \
-          --multi-thread-streams 16 \
-          --transfers 64 \
-          --vfs-fast-fingerprint \
-          --vfs-write-back 30s \
-          --dir-cache-time 1000h \
-          --attr-timeout 1000h \
-          --no-checksum \
-          --no-modtime \
-          --allow-other \
-          --daemon \
-          local-smb:$MNT_PATH/ "$MNT_PATH-cached"
 
     - name: Checkout repository
       uses: actions/checkout@v2
