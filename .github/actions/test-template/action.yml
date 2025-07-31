@@ -167,7 +167,7 @@ runs:
         ARG=("")
 
         if [[ "$MOUNT_FS" == "true" ]]; then
-          ARG+=("--volume $MNT_PATH-cached/TestData:/home/TestData")
+          ARG+=("--volume $MNT_PATH/TestData:/home/TestData")
         fi
 
         if [[ "${{ inputs.cpu-only }}" == "false" ]]; then
