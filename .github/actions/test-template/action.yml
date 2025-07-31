@@ -90,6 +90,15 @@ runs:
         sudo systemctl enable cachefilesd
         sudo systemctl start cachefilesd
 
+        # Enable cachefilesd
+        sudo sed -i 's/RUN=no/RUN=yes/' /etc/default/cachefilesd
+
+        # Restart the service
+        sudo systemctl restart cachefilesd
+
+        # Check status again
+        sudo systemctl status cachefilesd
+
         # Check status
         sudo systemctl status cachefilesd
 
