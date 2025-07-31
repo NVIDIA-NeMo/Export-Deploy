@@ -171,17 +171,7 @@ runs:
         ARG=("")
 
         if [[ "$MOUNT_FS" == "true" ]]; then
-          # Check if rclone mount is working, fallback to direct mount if needed
-          if mountpoint -q "$MNT_PATH-cached" && ls "$MNT_PATH-cached/TestData" >/dev/null 2>&1; then
-            echo "Using rclone cached mount"
-            ARG+=("--volume $MNT_PATH-cached/TestData:/home/TestData")
-          else
-            echo "Rclone mount failed, falling back to direct CIFS mount"
-            # Try to remount the CIFS share directly
-            sudo umount "$MNT_PATH" 2>/dev/null || true
-            sudo mount -t cifs "$SMB_PATH" "$MNT_PATH" -o credentials="$SMB_CREDENTIAL_FILE",serverino,nosharesock,actimeo=30,mfsymlinks,iocharset=utf8,file_mode=0777,dir_mode=0777
-            ARG+=("--volume $MNT_PATH/TestData:/home/TestData")
-          fi
+          ARG+=("--volume $MNT_PATH-cached/TestData:/home/TestData")
         fi
 
         if [[ "${{ inputs.cpu-only }}" == "false" ]]; then
@@ -220,33 +210,6 @@ runs:
       run: |
         COVERAGE_PREFIX=$([[ "${{ inputs.is_unit_test }}" == "true" ]] && echo "unit-test" || echo "e2e")
         echo "coverage-prefix=$COVERAGE_PREFIX" | tee -a "$GITHUB_OUTPUT"
-
-        # Check mount health before running tests
-        if [[ "$MOUNT_FS" == "true" ]]; then
-          echo "Checking mount health..."
-          if mountpoint -q "$MNT_PATH-cached" 2>/dev/null; then
-            echo "Rclone mount is active"
-            if ! ls "$MNT_PATH-cached/TestData" >/dev/null 2>&1; then
-              echo "WARNING: Rclone mount exists but TestData is not accessible"
-              echo "Mount status:"
-              mount | grep -E "(rclone|cifs)" || echo "No relevant mounts found"
-            else
-              echo "Rclone mount is healthy"
-            fi
-          elif mountpoint -q "$MNT_PATH" 2>/dev/null; then
-            echo "Direct CIFS mount is active"
-            if ! ls "$MNT_PATH/TestData" >/dev/null 2>&1; then
-              echo "WARNING: Direct mount exists but TestData is not accessible"
-            else
-              echo "Direct mount is healthy"
-            fi
-          else
-            echo "ERROR: No working mount found"
-            echo "Available mounts:"
-            mount | grep -E "(rclone|cifs)" || echo "No relevant mounts found"
-            exit 1
-          fi
-        fi
 
         cmd=$(cat <<'RUN_TEST_EOF'
         #!/bin/bash
@@ -299,17 +262,6 @@ runs:
         fi
 
         exit $EXIT_CODE
-
-    - name: Cleanup mounts
-      if: always()
-      shell: bash
-      env:
-        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
-      run: |
-        echo "Cleaning up mounts..."
-        sudo umount "$MNT_PATH-cached" 2>/dev/null || true
-        sudo umount "$MNT_PATH" 2>/dev/null || true
-        echo "Mount cleanup completed"
 
     - name: Test coverage
       shell: bash -x -e -u -o pipefail {0}
