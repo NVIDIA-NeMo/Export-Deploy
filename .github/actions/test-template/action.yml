@@ -144,17 +144,19 @@ runs:
         sudo rclone config create local-smb local nounc=true
 
         sudo rclone mount -vv --vfs-cache-mode full \
-          --vfs-cache-max-size 150G \
-          --vfs-cache-max-age 87600h \
-          --vfs-read-chunk-size 256M \
-          --vfs-read-chunk-size-limit 4G \
-          --vfs-cache-poll-interval 0 \
-          --buffer-size 128M \
-          --vfs-read-ahead 512M \
-          --attr-timeout 87600h \
+          --vfs-cache-mode full \
+          --vfs-cache-max-size 500G \
+          --vfs-cache-max-age 1000h \
+          --vfs-read-chunk-size 128M \
+          --vfs-read-chunk-size-limit off \
+          --multi-thread-streams 16 \
+          --transfers 64 \
           --vfs-fast-fingerprint \
-          --transfers 16 \
-          --multi-thread-streams 8 \
+          --vfs-write-back 30s \
+          --dir-cache-time 1000h \
+          --attr-timeout 1000h \
+          --no-checksum \
+          --no-modtime \
           --allow-other \
           --daemon \
           local-smb:$MNT_PATH/ "$MNT_PATH-cached"
