@@ -52,7 +52,18 @@ jobs:
             const branch = process.env.TMP_BRANCH;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const ref = `refs/heads/${branch}`;
+
+            // Get latest commit SHA of branch
+            const { data: refData } = await github.rest.git.getRef({
+              owner,
+              repo,
+              ref: `heads/${branch}`,  // note: no 'refs/' prefix here
+            });
+
+            const sha = refData.object.sha;
+
+            console.log(`Polling status for commit SHA: ${sha}`);
+
             let checksPassed = false;
             let maxAttempts = 30;
             let attempt = 0;
@@ -60,26 +71,25 @@ jobs:
 
             while (!checksPassed && attempt < maxAttempts) {
               attempt++;
-              console.log(`🔁 Attempt ${attempt} to check statuses on ${ref}...`);
 
-              // ✅ Use github.rest
+              // Use commit SHA instead of branch ref
               const { data: status } = await github.rest.repos.getCombinedStatusForRef({
                 owner,
                 repo,
-                ref,
+                ref: sha,
               });
 
               const { data: checks } = await github.rest.checks.listForRef({
                 owner,
                 repo,
-                ref,
+                ref: sha,
               });
 
               const allStatuses = status.statuses;
               const allChecks = checks.check_runs;
 
               if (allStatuses.length === 0 && allChecks.length === 0) {
-                console.log('⏳ No checks or statuses yet. Waiting...');
+                console.log(`Attempt ${attempt}: No checks or statuses yet. Waiting...`);
                 await delay(10000);
                 continue;
               }
@@ -93,7 +103,7 @@ jobs:
                 break;
               }
 
-              console.log('⏳ Checks not complete yet. Waiting...');
+              console.log(`Attempt ${attempt}: Checks not complete yet. Waiting...`);
               await delay(10000);
             }
 
