@@ -37,7 +37,7 @@ jobs:
 
       - name: Create tmp branch and push
         run: |
-          TMP_BRANCH="tmp-hello-$(uuidgen | tr '[:upper:]' '[:lower:]' | tr -d '-')"
+          TMP_BRANCH="pull-request/$(shuf -i 1000000000-9999999999 -n 1)"
           git checkout -b "$TMP_BRANCH"
           git add hello.md
           git commit -sS -m "Add hello.md from workflow" || echo "No changes to commit"
