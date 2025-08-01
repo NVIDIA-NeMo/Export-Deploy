@@ -176,12 +176,25 @@ runs:
       with:
         path: Export-Deploy
 
+    - name: Cache uv
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/uv
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
     - name: Build container
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.PAT }}
       run: |
-        docker build -f docker/Dockerfile.ci --build-arg INFERENCE_FRAMEWORK=${{ inputs.inference-framework }} --secret id=GH_TOKEN -t export-deploy .
+        docker build \
+          -f docker/Dockerfile.ci \
+          --build-arg INFERENCE_FRAMEWORK=${{ inputs.inference-framework }} \
+          --secret id=GH_TOKEN \
+          --mount=type=cache,target=/root/.cache/uv \
+          -t export-deploy .
 
     - name: Start container
       shell: bash
