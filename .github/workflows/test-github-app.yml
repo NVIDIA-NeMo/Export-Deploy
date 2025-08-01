@@ -90,6 +90,16 @@ jobs:
               if (statusesOk && checksOk) {
                 console.log('✅ All checks passed.');
                 checksPassed = true;
+                break;
+              }
+
+              console.log('⏳ Checks not complete yet. Waiting...');
+              await delay(10000);
+            }
+
+            if (!checksPassed) {
+              core.setFailed('❌ Status checks did not pass in time');
+            }
 
       - name: Commit and push hello.md
         run: |
