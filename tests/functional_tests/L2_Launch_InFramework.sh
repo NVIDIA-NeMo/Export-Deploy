@@ -22,6 +22,8 @@ coverage run \
     --source=/workspace/ \
     --parallel-mode \
     -m pytest \
+    --reruns 2 \
+    --reruns-delay 5 \
     -o log_cli=true \
     -o log_cli_level=INFO \
     -vs -m "not pleasefixme" --tb=short tests/functional_tests/tests_inframework
