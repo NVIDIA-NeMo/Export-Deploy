@@ -16,6 +16,7 @@ on:
   push:
     branches:
       - "deploy-to-main"
+      - "!pull-request/[0-9]+"
 
 jobs:
   Nemo_CICD_Test:
