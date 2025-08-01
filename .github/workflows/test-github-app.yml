@@ -41,4 +41,4 @@ jobs:
           git checkout -b ko3n1g/chore/test-app-protected
           git add hello.md
           git commit -sS -m "Add hello.md from workflow" || echo "No changes to commit"
-          git push
+          git push -u origin ko3n1g/chore/test-app-protected
