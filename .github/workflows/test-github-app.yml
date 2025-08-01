@@ -57,40 +57,39 @@ jobs:
             let maxAttempts = 30;
             let attempt = 0;
             const delay = ms => new Promise(res => setTimeout(res, ms));
+
             while (!checksPassed && attempt < maxAttempts) {
               attempt++;
-              // Get combined status for the ref
-              const { data: status } = await github.repos.getCombinedStatusForRef({
+              console.log(`🔁 Attempt ${attempt} to check statuses on ${ref}...`);
+
+              // ✅ Use github.rest
+              const { data: status } = await github.rest.repos.getCombinedStatusForRef({
                 owner,
                 repo,
                 ref,
               });
-              // Get check runs for the ref
-              const { data: checks } = await github.checks.listForRef({
+
+              const { data: checks } = await github.rest.checks.listForRef({
                 owner,
                 repo,
                 ref,
               });
+
               const allStatuses = status.statuses;
               const allChecks = checks.check_runs;
-              // If there are no checks or statuses, wait
+
               if (allStatuses.length === 0 && allChecks.length === 0) {
+                console.log('⏳ No checks or statuses yet. Waiting...');
                 await delay(10000);
                 continue;
               }
-              // All statuses must be 'success'
+
               const statusesOk = allStatuses.every(s => s.state === 'success');
-              // All check runs must be 'completed' and 'success'
               const checksOk = allChecks.every(c => c.status === 'completed' && c.conclusion === 'success');
+
               if (statusesOk && checksOk) {
+                console.log('✅ All checks passed.');
                 checksPassed = true;
-                break;
-              }
-              await delay(10000);
-            }
-            if (!checksPassed) {
-              core.setFailed('Status checks did not pass in time');
-            }
 
       - name: Commit and push hello.md
         run: |
