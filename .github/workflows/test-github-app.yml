@@ -2,6 +2,8 @@ name: Push hello.md
 
 on:
   push:
+    branches:
+      - "!deploy-to-main"
 
 jobs:
   push-hello:
