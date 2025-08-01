@@ -22,7 +22,7 @@ ENV UV_LINK_MODE=copy
 ENV HOME=/root
 ENV PATH="$HOME/.local/bin:$PATH"
 RUN --mount=type=secret,id=GH_TOKEN \
-    --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=/github/home/.cache/uv,target=/root/.cache/uv  \
     bash -ex <<"EOF"
     export PAT=$(cat /run/secrets/GH_TOKEN)
     bash docker/common/install.sh --base-image cuda --inference-framework $INFERENCE_FRAMEWORK
