@@ -6,12 +6,25 @@ on:
 jobs:
   push-hello:
     runs-on: ubuntu-latest
+    environment: main
     steps:
       - uses: actions/create-github-app-token@v2
         id: app-token
         with:
           app-id: ${{ vars.BOT_ID }}
           private-key: ${{ secrets.BOT_KEY }}
+
+      - name: Install GPG
+        run: sudo apt-get install -y gnupg2
+
+      - name: Import GPG key (for signing)
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
+        id: gpg-action
+        with:
+          gpg_private_key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PWD }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
 
       - name: Checkout repository
         uses: actions/checkout@v4
