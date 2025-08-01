@@ -193,7 +193,6 @@ runs:
           -f docker/Dockerfile.ci \
           --build-arg INFERENCE_FRAMEWORK=${{ inputs.inference-framework }} \
           --secret id=GH_TOKEN \
-          --mount=type=cache,target=/root/.cache/uv \
           -t export-deploy .
 
     - name: Start container
