@@ -17,6 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ko3n1g/chore/test-app-protected
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Install GPG
@@ -32,7 +33,7 @@ jobs:
           git_commit_gpgsign: true
 
       - name: Create hello.md
-        run: echo "# Hello from GitHub Actions" > hello.md
+        run: echo "$(uuidgen)" > hello.md
 
       - name: Commit and push hello.md
         run: |
