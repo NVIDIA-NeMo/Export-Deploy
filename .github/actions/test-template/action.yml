@@ -169,6 +169,11 @@ runs:
         restore-keys: |
           ${{ runner.os }}-uv-
 
+    - name: Create cache directory
+      shell: bash
+      run: |
+        mkdir -p /home/runner/.cache/uv
+
     - name: Build container
       shell: bash
       env:
