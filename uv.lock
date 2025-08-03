@@ -475,15 +475,16 @@ wheels = [
 
 [[package]]
 name = "bitsandbytes"
-version = "0.45.5"
+version = "0.46.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_machine == 'aarch64' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "torch", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_machine == 'aarch64' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/b7/cb5ce4d1a382cf53c19ef06c5fc29e85f5e129b4da6527dd207d90a5b8ad/bitsandbytes-0.45.5-py3-none-manylinux_2_24_x86_64.whl", hash = "sha256:a5453f30cc6aab6ccaac364e6bf51a7808d3da5f71763dffeb6d9694c59136e4", size = 76059261, upload-time = "2025-04-07T13:32:52.573Z" },
-    { url = "https://files.pythonhosted.org/packages/a6/4c/77b535e025ce780d2ada8271c1e481fb7337c1df2588a52fe1c9bd87d2e8/bitsandbytes-0.45.5-py3-none-win_amd64.whl", hash = "sha256:ed1c61b91d989d6a33fd05737d6edbf5086d8ebc89235ee632c7a19144085da2", size = 75430204, upload-time = "2025-04-07T13:32:57.553Z" },
+    { url = "https://files.pythonhosted.org/packages/70/39/aa68b7bd28b091a96795be18810b2325ce9263ba8db087f6f196a663f03a/bitsandbytes-0.46.0-py3-none-manylinux_2_24_aarch64.whl", hash = "sha256:010709b56c85b0355f47fefbb37fe9058e8b18b9bf275bd576c5bd95a0d14d0c", size = 25533201, upload-time = "2025-05-27T21:25:27.601Z" },
+    { url = "https://files.pythonhosted.org/packages/72/27/ec6ee3408e09e01ab05db07af5a97dc76db7bc18824cf5f5dbc98e1e08a4/bitsandbytes-0.46.0-py3-none-manylinux_2_24_x86_64.whl", hash = "sha256:ef38883cfd26f36a0dfff1715f620f87cee3813431f33e10e9658205160cb89b", size = 67047276, upload-time = "2025-05-27T21:25:31.299Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/06/2ef5f6b28d8fa442c670b5acc1eb09dd57d4edb00b435b35529c3f09936c/bitsandbytes-0.46.0-py3-none-win_amd64.whl", hash = "sha256:121820a6df80ae3b7e361f7ef193279c3204c361a7e21eb43b5ffa7293403979", size = 66452401, upload-time = "2025-05-27T21:25:35.552Z" },
 ]
 
 [[package]]
@@ -3827,7 +3828,7 @@ linting = [
     { name = "ruff", specifier = "~=0.9.0" },
 ]
 nemo-run = [{ name = "nemo-run" }]
-nemo-toolkit = [{ name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], specifier = "~=2.4.0" }]
+nemo-toolkit = [{ name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], git = "https://github.com/NVIDIA/NeMo.git?rev=620d2ba07835c230b2e1ee25fe1322504ce01d79" }]
 test = [
     { name = "click" },
     { name = "coverage" },
@@ -3861,8 +3862,8 @@ wheels = [
 
 [[package]]
 name = "nemo-toolkit"
-version = "2.4.0"
-source = { registry = "https://pypi.org/simple" }
+version = "2.5.0rc0"
+source = { git = "https://github.com/NVIDIA/NeMo.git?rev=620d2ba07835c230b2e1ee25fe1322504ce01d79#620d2ba07835c230b2e1ee25fe1322504ce01d79" }
 dependencies = [
     { name = "fsspec", extra = ["http"] },
     { name = "huggingface-hub" },
@@ -3880,10 +3881,6 @@ dependencies = [
     { name = "tqdm" },
     { name = "wget" },
     { name = "wrapt" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3f/57/4a91de89abbac976e44728efa4b7a2caad6e05a41873805ad76e4e372c2f/nemo_toolkit-2.4.0.tar.gz", hash = "sha256:459c7ae6800262a25531c32f020ee506f882cad9b17661ca4545425d8f290b90", size = 5086279, upload-time = "2025-07-25T18:12:25.551Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bf/d4/647351caf68b56c8c26d282d1ef07bd30320216cef676809ba939d2994bb/nemo_toolkit-2.4.0-py3-none-any.whl", hash = "sha256:5706c34dd96c6e53b711f435f8f933b70c3325ba6094e6ce5a89d899cee89882", size = 7206834, upload-time = "2025-07-25T18:12:22.005Z" },
 ]
 
 [package.optional-dependencies]
