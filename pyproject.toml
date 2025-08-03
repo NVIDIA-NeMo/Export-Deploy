@@ -60,12 +60,13 @@ dependencies = [
     "einops",
     "ijson",
     "pyarrow<21.0.0",
+    "transformers~=4.53.0",
 ]
 
 [project.optional-dependencies]
 inframework = []
-vllm = ["vllm==0.9.1", "pandas", "timm", "transformers~=4.53.0"]
-trtllm = ["transformers~=4.51.0", "tensorrt-llm>=1.0.0a0,<1.1.0"]
+vllm = ["vllm~=0.10.0", "pandas", "timm"]
+trtllm = ["tensorrt-llm>=1.0.0a0,<1.1.0"]
 te = ["transformer-engine[pytorch]>=2.7.0a0,<2.8.0; sys_platform != 'darwin'"]
 
 [dependency-groups]
