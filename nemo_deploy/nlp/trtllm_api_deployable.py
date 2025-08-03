@@ -38,6 +38,7 @@ except ImportError:
 
 try:
     from tensorrt_llm import SamplingParams
+    from tensorrt_llm._torch.pyexecutor.config import PyTorchConfig
     from tensorrt_llm.llmapi.llm import LLM, TokenizerBase
 
     HAVE_TENSORRT_LLM = True
@@ -89,6 +90,9 @@ class TensorRTLLMAPIDeployable(ITritonDeployable):
         if not HAVE_TRITON:
             raise ImportError(MISSING_TRITON_MSG)
 
+        config_args = {k: kwargs.pop(k) for k in PyTorchConfig.__annotations__.keys() & kwargs.keys()}
+        pytorch_config = PyTorchConfig(**config_args)
+
         self.model = LLM(
             model=hf_model_id_path,
             tokenizer=hf_model_id_path if tokenizer is None else tokenizer,
@@ -100,6 +104,7 @@ class TensorRTLLMAPIDeployable(ITritonDeployable):
             max_num_tokens=max_num_tokens,
             backend=backend,
             dtype=dtype,
+            pytorch_backend_config=pytorch_config,
             **kwargs,
         )
 

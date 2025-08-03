@@ -37,6 +37,13 @@ def mock_sampling_params():
         yield mock
 
 
+@pytest.fixture
+def mock_pytorch_config():
+    with patch("nemo_deploy.nlp.trtllm_api_deployable.PyTorchConfig") as mock:
+        mock.__annotations__ = {}
+        yield mock
+
+
 try:
     import tensorrt_llm  # noqa: F401
 
@@ -48,7 +55,7 @@ except ImportError:
 @pytest.mark.skipif(not HAVE_TENSORRT_LLM, reason="TensorRT-LLM is not installed")
 @pytest.mark.run_only_on("GPU")
 class TestTensorRTLLMAPIDeployable:
-    def test_initialization_with_defaults(self):
+    def test_initialization_with_defaults(self, mock_pytorch_config):
         from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
         with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM") as mock_llm_class:
@@ -60,7 +67,7 @@ class TestTensorRTLLMAPIDeployable:
             assert deployer.model == mock_llm_instance
             mock_llm_class.assert_called_once()
 
-    def test_initialization_with_custom_params(self):
+    def test_initialization_with_custom_params(self, mock_pytorch_config):
         from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
         with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM") as mock_llm_class:
@@ -102,7 +109,7 @@ class TestTensorRTLLMAPIDeployable:
             with pytest.raises(RuntimeError, match="Model is not initialized"):
                 deployer.generate(prompts=["test prompt"])
 
-    def test_generate_with_model(self, mock_llm, mock_sampling_params):
+    def test_generate_with_model(self, mock_llm, mock_sampling_params, mock_pytorch_config):
         from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
         with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM") as mock_llm_class:
@@ -115,7 +122,7 @@ class TestTensorRTLLMAPIDeployable:
             mock_llm.generate.assert_called_once()
             mock_sampling_params.assert_called_once()
 
-    def test_generate_with_parameters(self, mock_llm, mock_sampling_params):
+    def test_generate_with_parameters(self, mock_llm, mock_sampling_params, mock_pytorch_config):
         from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
         with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM") as mock_llm_class:
@@ -128,7 +135,7 @@ class TestTensorRTLLMAPIDeployable:
             mock_llm.generate.assert_called_once()
             mock_sampling_params.assert_called_once_with(max_tokens=100, temperature=0.8, top_k=50, top_p=0.95)
 
-    def test_triton_input_output_config(self):
+    def test_triton_input_output_config(self, mock_pytorch_config):
         from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
         with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM"):
