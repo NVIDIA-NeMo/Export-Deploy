@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2025, NVIDIA CORPORATION.
+# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_trtllm_api_deploy_query.py \
-  --hf_model_path /home/TestData/hf/Llama-3.2-1B \
-  --tensor_parallel_size 2
+#!/bin/bash
+set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
+
+export CUDA_VISIBLE_DEVICES="0,1"
+
+coverage run \
+    --data-file=/workspace/.coverage \
+    --source=/workspace/ \
+    --parallel-mode \
+    -m pytest \
+    --reruns 2 \
+    --reruns-delay 5 \
+    -o log_cli=true \
+    -o log_cli_level=INFO \
+    -vs -m "not pleasefixme" --tb=short tests/functional_tests/tests_onnx_trt
+coverage combine

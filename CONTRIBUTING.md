@@ -47,7 +47,7 @@ git commit -m "build: Adding dependencies"
 git push
 ```
 
-### 🧹 Linting and Formatting
+## 🧹 Linting and Formatting
 
 We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting. CI does not auto-fix linting and formatting issues, but most issues can be fixed by running the following command:
 
@@ -58,7 +58,16 @@ uv run ruff format .
 
 Note: If `ruff` is missing, please follow the [installation](#local-workstation) guide.
 
-### 📝 Documentation
+## 📝 Writing tests
+
+We use [pytest](https://docs.pytest.org/en/stable/) for writing both unit and functional tests.
+
+Unit tests aim to test functions in isolation. They generally do not depend on artifacts like Hugging Face checkpoints or larger datasets. Exception to this is a small toy dataset consisting of tokenizers.  
+Unit tests are stored at `tests/unit_tests`. Please add your test to an existing folder or create a new one if no one matches.
+
+Functional tests are integration tests that perform model training or operate on larger artifacts. We use pytest for writing these. In some cases, it might be desired to run your test (or parts of it) in a subprocess to avoid process contamination. We use `subprocess.Run` for this inside the pytest function. Please add your test into one of the predefined folders. If none of the folders matches semantically, please reach out to the `@nvidia-nemo/automation` in your PR for consultation.
+
+## 📝 Documentation
 
 **Important**: All new key features (ex: enabling a new inference optimized library, enabling a new deployment option) must include documentation update (either a new doc or updating an existing one). This document update should:
 

@@ -77,6 +77,31 @@ runs:
       run: |
         az acr login --name nemoci
 
+    - name: Configure local file cache
+      shell: bash
+      if: ${{ inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false' }}
+      env:
+        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
+      run: |
+        set -x -e -u -o pipefail
+
+        sudo apt update
+        sudo apt install -y cachefilesd
+
+        # Create systemd override for proper dependencies
+        sudo mkdir -p /etc/systemd/system/cachefilesd.service.d
+        printf "[Unit]\nAfter=network.target local-fs.target\nWants=local-fs.target\n\n[Service]\nRestart=on-failure\nRestartSec=2\n" | sudo tee /etc/systemd/system/cachefilesd.service.d/override.conf > /dev/null
+        sudo systemctl daemon-reload
+
+        # Enable cachefilesd in config file
+        sudo sed -i 's/^#RUN=yes/RUN=yes/' /etc/default/cachefilesd
+        sudo cat /etc/default/cachefilesd
+
+        # Enable and restart the service
+        sudo systemctl enable cachefilesd
+        sudo systemctl restart cachefilesd
+        sudo systemctl status cachefilesd
+
     - name: Azure Fileshare
       if: ${{ inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false' }}
       shell: bash
@@ -127,7 +152,7 @@ runs:
 
         STORAGE_ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query "[0].value" --output tsv | tr -d '"')
 
-        sudo mount -t cifs $SMB_PATH $MNT_PATH -o credentials=$SMB_CREDENTIAL_FILE,serverino,nosharesock,actimeo=30,mfsymlinks
+        sudo mount -t cifs $SMB_PATH $MNT_PATH -o credentials=$SMB_CREDENTIAL_FILE,serverino,nosharesock,actimeo=30,mfsymlinks,fsc,cache=strict
 
         ls -al $MNT_PATH/TestData
 
@@ -136,21 +161,47 @@ runs:
       with:
         path: Export-Deploy
 
+    - name: Cache uv
+      uses: actions/cache@v4
+      id: cache
+      with:
+        path: cache-mount
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    # - name: Restore Docker cache mounts
+    #   uses: reproducible-containers/buildkit-cache-dance@v3
+    #   with:
+    #     cache-dir: cache-mount
+    #     dockerfile: docker/Dockerfile.ci
+    #     skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+
     - name: Build container
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.PAT }}
       run: |
-        docker build -f docker/Dockerfile.ci --build-arg INFERENCE_FRAMEWORK=${{ inputs.inference-framework }} --secret id=GH_TOKEN -t export-deploy .
+        docker build \
+          -f docker/Dockerfile.ci \
+          --build-arg INFERENCE_FRAMEWORK=${{ inputs.inference-framework }} \
+          --secret id=GH_TOKEN \
+          -t export-deploy .
 
     - name: Start container
       shell: bash
+      env:
+        MNT_PATH: ${{ steps.azure-fileshare.outputs.MNT_PATH }}
+        MOUNT_FS: ${{ inputs.has-azure-credentials == 'true' && inputs.is_unit_test == 'false' }}
       run: |
-        MNT_PATH=${{ steps.azure-fileshare.outputs.mnt_path }}
-
         ARG=("")
+
+        if [[ "$MOUNT_FS" == "true" ]]; then
+          ARG+=("--volume $MNT_PATH/TestData:/home/TestData")
+        fi
+
         if [[ "${{ inputs.cpu-only }}" == "false" ]]; then
-          ARG=("--runtime=nvidia --gpus all")
+          ARG+=("--runtime=nvidia --gpus all")
         fi
 
         cmd=$(cat <<RUN_TEST_EOF
@@ -159,7 +210,8 @@ runs:
         docker run \
           --rm \
           -d \
-          --name nemo_container_${{ github.run_id }} ${ARG[@]} \
+          --name nemo_container_${{ github.run_id }} \
+          ${ARG[@]} \
           --shm-size=64g \
           --env TRANSFORMERS_OFFLINE=0 \
           --env HYDRA_FULL_ERROR=1 \
@@ -167,7 +219,6 @@ runs:
           --env RUN_ID=${{ github.run_id }} \
           --workdir /workspace \
           --volume $(pwd)/Export-Deploy:/workspace \
-          --volume $MNT_PATH/TestData:/home/TestData \
           export-deploy \
           bash -c "sleep $(( ${{ inputs.timeout }} * 60 + 60 ))"
         RUN_TEST_EOF
