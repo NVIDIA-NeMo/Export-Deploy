@@ -38,7 +38,6 @@ except ImportError:
 
 try:
     from tensorrt_llm import SamplingParams
-    from tensorrt_llm._torch.pyexecutor.config import PyTorchConfig
     from tensorrt_llm.llmapi.llm import LLM, TokenizerBase
 
     HAVE_TENSORRT_LLM = True
