@@ -123,7 +123,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path, use_vllm):
                             input_texts=[prompt],
                             max_tokens=1,
                             top_k=1,
-                            top_p=0.0,
+                            top_p=0.01,
                             temperature=0.1,
                             lora_uids=lora_uids,
                         )
