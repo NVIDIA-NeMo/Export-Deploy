@@ -109,6 +109,12 @@ class TestVLLMExportMixtral:
                 f"{self.testdir}/vllm_from_nemo2",
                 "--checkpoint_dir",
                 f"{self.testdir}/mixtral_tiny_nemo2",
+                "--run_accuracy",
+                "True",
+                "--test_data_path",
+                "tests/functional_tests/data/lambada.json",
+                "--accuracy_threshold",
+                "0.0",
             ],
             check=True,
         )

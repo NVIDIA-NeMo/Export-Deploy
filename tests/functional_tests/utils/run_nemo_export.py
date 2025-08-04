@@ -83,7 +83,7 @@ class AccuracyResult:
     evaluation_time: float
 
 
-def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
+def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path, use_vllm: bool = False):
     # lambada dataset based accuracy test, which includes more than 5000 sentences.
     # Use generated last token with original text's last token for accuracy comparison.
     # If the generated last token start with the original token, trtllm_correct make an increment.
@@ -118,15 +118,26 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                     )
                     model_output = model_output[0].generated_text  # Index [0] as a single prompt is used
                 else:
-                    model_output = model.forward(
-                        input_texts=[prompt],
-                        max_output_len=1,
-                        top_k=1,
-                        top_p=0.0,
-                        temperature=0.1,
-                        lora_uids=lora_uids,
-                    )
-                    model_output = model_output[0][0].strip().lower()
+                    if use_vllm:
+                        model_output = model.forward(
+                            input_texts=[prompt],
+                            max_tokens=1,
+                            top_k=1,
+                            top_p=0.01,
+                            temperature=0.1,
+                        )
+                        model_output = model_output["sentences"][0].strip().lower()
+                    else:
+                        model_output = model.forward(
+                            input_texts=[prompt],
+                            max_output_len=1,
+                            top_k=1,
+                            top_p=0.0,
+                            temperature=0.1,
+                            lora_uids=lora_uids,
+                        )
+
+                        model_output = model_output[0][0].strip().lower()
                 all_actual_outputs.append(model_output)
 
                 if expected_output == model_output:
@@ -154,14 +165,24 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path):
                     # for a single prompt (batch size = 1) and stripping prefix if needed:
                     deployed_output = deployed_output["choices"][0]["text"][0][0][0:].strip().lower()
                 else:
-                    deployed_output = nq.query_llm(
-                        prompts=[prompt],
-                        max_output_len=1,
-                        top_k=1,
-                        top_p=0.0,
-                        temperature=0.1,
-                    )
-                    deployed_output = deployed_output[0][0].strip().lower()
+                    if use_vllm:
+                        deployed_output = nq.query_llm(
+                            prompts=[prompt],
+                            max_tokens=1,
+                            top_k=1,
+                            top_p=0.01,
+                            temperature=0.1,
+                        )
+                        deployed_output = deployed_output["choices"][0]["text"][0][0][0:].strip().lower()
+                    else:
+                        deployed_output = nq.query_llm(
+                            prompts=[prompt],
+                            max_output_len=1,
+                            top_k=1,
+                            top_p=0.0,
+                            temperature=0.1,
+                        )
+                        deployed_output = deployed_output[0][0].strip().lower()
 
                 if expected_output == deployed_output:
                     correct_answers_deployed += 1
@@ -432,7 +453,7 @@ def run_inference(
         accuracy_result = None
         if run_accuracy:
             print("Start model accuracy testing ...")
-            accuracy_result = get_accuracy_with_lambada(exporter, nq, lora_uids, test_data_path)
+            accuracy_result = get_accuracy_with_lambada(exporter, nq, lora_uids, test_data_path, use_vllm)
 
         if test_deployment:
             nm.stop()
