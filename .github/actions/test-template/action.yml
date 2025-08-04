@@ -170,12 +170,12 @@ runs:
         restore-keys: |
           ${{ runner.os }}-uv-
 
-    # - name: Restore Docker cache mounts
-    #   uses: reproducible-containers/buildkit-cache-dance@v3
-    #   with:
-    #     cache-dir: cache-mount
-    #     dockerfile: docker/Dockerfile.ci
-    #     skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+    - name: Restore Docker cache mounts
+      uses: reproducible-containers/buildkit-cache-dance@5b81f4d29dc8397a7d341dba3aeecc7ec54d6361
+      with:
+        cache-dir: cache-mount
+        dockerfile: docker/Dockerfile.ci
+        skip-extraction: ${{ steps.cache.outputs.cache-hit }}
 
     - name: Build container
       shell: bash
