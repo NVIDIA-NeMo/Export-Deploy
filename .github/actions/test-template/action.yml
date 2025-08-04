@@ -166,7 +166,7 @@ runs:
       id: cache
       with:
         path: cache-mount
-        key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock')-${{ inputs.inference-framework }} }}
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}-${{ inputs.inference-framework }}
         restore-keys: |
           ${{ runner.os }}-uv-
 
