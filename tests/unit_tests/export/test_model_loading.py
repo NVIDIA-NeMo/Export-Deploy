@@ -33,6 +33,11 @@ def test_model_loading() -> None:
     """
     Test if model loading works for tensorrt_llm export.
     """
+    try:
+        import tensorrt_llm  # noqa: F401
+    except ImportError:
+        pytest.skip("Could not import TRTLLM helpers. tensorrt_llm is likely not installed")
+        return
 
     model = llm.LlamaModel(config=llm.Llama2Config7B)
     nemo_path = llm.import_ckpt(model, "hf://" + HF_PATH, output_path=Path(OUTPUT_PATH))

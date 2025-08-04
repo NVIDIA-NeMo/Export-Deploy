@@ -410,6 +410,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             log_probs (bool): Whether to compute log probabilities
             apply_chat_template (bool): Whether to apply chat template
             text_only (bool): Whether to return only text or full results
+            top_logprobs (int): Number of top logprobs to return
+            echo (bool): If True, returns the prompt and generated text. If log_probs is True, returns the prompt and
+            generated log_probs. If top_logprobs is > 0, returns the prompt and generated top_logprobs.
 
         Returns:
             dict: sentences and required log probs.

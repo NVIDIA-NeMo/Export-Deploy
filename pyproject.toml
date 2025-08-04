@@ -94,7 +94,7 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "5f1142e8c12172510d34709df3629be6f88dc993" } # on release_v2.6.0
-nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
+nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "620d2ba07835c230b2e1ee25fe1322504ce01d79" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
