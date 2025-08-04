@@ -29,5 +29,4 @@ RUN --mount=type=secret,id=GH_TOKEN \
     rm -f /etc/apt/apt.conf.d/docker-clean
     export PAT=$(cat /run/secrets/GH_TOKEN)
     bash docker/common/install.sh --base-image cuda --inference-framework $INFERENCE_FRAMEWORK
-    uv cache prune --ci
 EOF
