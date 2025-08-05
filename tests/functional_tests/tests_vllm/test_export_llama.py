@@ -105,6 +105,12 @@ class TestVLLMExportLlama:
                 f"{self.testdir}/vllm_from_nemo2",
                 "--checkpoint_dir",
                 f"{self.testdir}/nemo2_ckpt",
+                "--run_accuracy",
+                "True",
+                "--test_data_path",
+                "tests/functional_tests/data/lambada.json",
+                "--accuracy_threshold",
+                "0.0",
             ],
             check=True,
         )
