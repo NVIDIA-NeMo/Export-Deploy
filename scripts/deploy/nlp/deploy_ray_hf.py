@@ -67,7 +67,7 @@ def parse_args():
     parser.add_argument(
         "--port",
         type=int,
-        default=None,
+        default=1024,
         help="Port number to use for the Ray Serve server. If None, an available port will be found automatically.",
     )
     parser.add_argument(

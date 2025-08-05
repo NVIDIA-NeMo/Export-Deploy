@@ -85,8 +85,7 @@ class ModelWorker:
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
-                random_seed=random_seed,
-                legacy_ckpt=legacy_ckpt
+                random_seed=random_seed
             )
             if rank != 0:
                 self.model.generate_other_ranks()

@@ -163,7 +163,6 @@ def main():
     ray_deployer.deploy_inframework_model(
         nemo_checkpoint=args.nemo_checkpoint,
         num_gpus=args.num_gpus,
-        num_nodes=args.num_nodes,
         tensor_model_parallel_size=args.tensor_model_parallel_size,
         pipeline_model_parallel_size=args.pipeline_model_parallel_size,
         expert_model_parallel_size=args.expert_model_parallel_size,

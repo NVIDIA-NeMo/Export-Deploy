@@ -168,7 +168,6 @@ class DeployRay:
         self,
         nemo_checkpoint: str,
         num_gpus: int = 1,
-        num_nodes: int = 1,
         tensor_model_parallel_size: int = 1,
         pipeline_model_parallel_size: int = 1,
         expert_model_parallel_size: int = 1,
@@ -193,7 +192,6 @@ class DeployRay:
         Args:
             nemo_checkpoint (str): Path to the .nemo checkpoint file.
             num_gpus (int, optional): Number of GPUs per node. Defaults to 1.
-            num_nodes (int, optional): Number of nodes for deployment. Defaults to 1.
             tensor_model_parallel_size (int, optional): Tensor model parallel size. Defaults to 1.
             pipeline_model_parallel_size (int, optional): Pipeline model parallel size. Defaults to 1.
             expert_model_parallel_size (int, optional): Expert model parallel size. Defaults to 1.
@@ -213,8 +211,7 @@ class DeployRay:
             raise UnavailableError(MISSING_RAY_MSG)
 
         # Calculate total GPUs and GPUs per replica
-        total_gpus = num_gpus * num_nodes
-        gpus_per_replica = total_gpus // num_replicas
+        gpus_per_replica = num_gpus // num_replicas
 
         # Validate parallelism configuration
         parallelism_per_replica = (
@@ -226,7 +223,7 @@ class DeployRay:
                 f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
             )
             LOGGER.error(
-                f"Total GPUs: {total_gpus}, Num replicas: {num_replicas}, GPUs per replica: {gpus_per_replica}"
+                f"Total GPUs: {num_gpus}, Num replicas: {num_replicas}, GPUs per replica: {gpus_per_replica}"
             )
             LOGGER.error(
                 f"Each replica needs: tensor_parallel({tensor_model_parallel_size}) * "
@@ -254,7 +251,6 @@ class DeployRay:
             ).bind(
                 nemo_checkpoint_filepath=nemo_checkpoint,
                 num_gpus=gpus_per_replica,
-                num_nodes=num_nodes,
                 tensor_model_parallel_size=tensor_model_parallel_size,
                 pipeline_model_parallel_size=pipeline_model_parallel_size,
                 expert_model_parallel_size=expert_model_parallel_size,

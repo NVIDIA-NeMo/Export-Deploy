@@ -81,7 +81,7 @@ class HFRayDeployable:
         """
         try:
             max_memory_dict = None
-            self._setup_unique_distributed_parameters(device_map)
+            self._setup_unique_distributed_parameters()
             if device_map == "balanced":
                 if not max_memory:
                     raise ValueError("max_memory must be provided when device_map is 'balanced'")
