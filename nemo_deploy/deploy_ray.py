@@ -27,6 +27,7 @@ try:
     from ray.serve import Application
     from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
     from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
+    from nemo_export.tensorrt_llm_deployable_ray import TensorRTLLMRayDeployable
 
     from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
     from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
@@ -413,6 +414,7 @@ class DeployRay:
             num_gpus_per_replica (int, optional): GPUs per model replica. Defaults to 1.
             max_ongoing_requests (int, optional): Maximum number of ongoing requests per replica. Defaults to 10.
             test_mode (bool, optional): Enable test mode. Defaults to False.
+
         Raises:
             Exception: If Ray is not installed or deployment fails.
             ValueError: If C++ runtime specific options are used with Python runtime.
