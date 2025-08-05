@@ -15,11 +15,8 @@
 import argparse
 import logging
 import multiprocessing
-import signal
-import sys
 
 from nemo_deploy.deploy_ray import DeployRay
-from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -43,12 +40,6 @@ def parse_args():
         type=int,
         default=1,
         help="Number of GPUs to use per node",
-    )
-    parser.add_argument(
-        "--num_nodes",
-        type=int,
-        default=1,
-        help="Number of nodes to use for deployment",
     )
     parser.add_argument(
         "--tensor_model_parallel_size",
@@ -136,59 +127,31 @@ def parse_args():
         action="store_true",
         help="Whether to use legacy checkpoint format",
     )
+    parser.add_argument(
+        "--max_batch_size",
+        type=int,
+        default=32,
+        help="Maximum batch size for inference",
+    )
+    parser.add_argument(
+        "--random_seed",
+        type=int,
+        default=None,
+        help="Random seed for reproducible inference",
+    )
     return parser.parse_args()
-
-
-def signal_handler(signum, frame, deployer):
-    """Handle signal interrupts and gracefully shutdown the deployer."""
-    LOGGER.info("Received interrupt signal. Shutting down gracefully...")
-    deployer.stop()
-    sys.exit(0)
 
 
 def main():
     """Main function to deploy a Megatron model using Ray."""
     args = parse_args()
-
-    # If num_cpus is not specified, use all available CPUs
-    if args.num_cpus is None:
-        args.num_cpus = get_available_cpus()
-        LOGGER.info(f"Using all available CPUs: {args.num_cpus}")
-
-    # Calculate total GPUs if not specified
-    total_gpus = args.num_gpus * args.num_nodes
-    LOGGER.info(f"Total GPUs: {total_gpus}")
-
-    # Calculate GPUs per replica
-    gpus_per_replica = total_gpus // args.num_replicas
-
-    # Validate the parallelism configuration
-    # Each replica should use: tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size GPUs
-    parallelism_per_replica = (
-        args.tensor_model_parallel_size * args.pipeline_model_parallel_size * args.context_parallel_size
-    )
-
-    if parallelism_per_replica != gpus_per_replica:
-        LOGGER.error(
-            f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
-        )
-        LOGGER.error(
-            f"Total GPUs: {total_gpus}, Num replicas: {args.num_replicas}, GPUs per replica: {gpus_per_replica}"
-        )
-        LOGGER.error(
-            f"Each replica needs: tensor_parallel({args.tensor_model_parallel_size}) * "
-            f"pipeline_parallel({args.pipeline_model_parallel_size}) * "
-            f"context_parallel({args.context_parallel_size}) = {parallelism_per_replica} GPUs"
-        )
-        sys.exit(1)
-
-    LOGGER.info(f"Configuration: {args.num_replicas} replicas, {gpus_per_replica} GPUs per replica")
-
-    # Initialize Ray deployment
+    # Initialize Ray deployment with updated DeployRay class
     ray_deployer = DeployRay(
         num_cpus=args.num_cpus,
-        num_gpus=total_gpus,
+        num_gpus=args.num_gpus,
         include_dashboard=args.include_dashboard,
+        host=args.host,
+        port=args.port,
         runtime_env={
             "env_vars": {
                 "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
@@ -196,51 +159,24 @@ def main():
         },
     )
 
-    # Set up signal handlers
-    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
-    signal.signal(
-        signal.SIGTERM,
-        lambda signum, frame: signal_handler(signum, frame, ray_deployer),
+    # Deploy the inframework model using the updated API
+    ray_deployer.deploy_inframework_model(
+        nemo_checkpoint=args.nemo_checkpoint,
+        num_gpus=args.num_gpus,
+        num_nodes=args.num_nodes,
+        tensor_model_parallel_size=args.tensor_model_parallel_size,
+        pipeline_model_parallel_size=args.pipeline_model_parallel_size,
+        expert_model_parallel_size=args.expert_model_parallel_size,
+        context_parallel_size=args.context_parallel_size,
+        model_id=args.model_id,
+        num_cpus_per_replica=args.num_cpus_per_replica,
+        num_replicas=args.num_replicas,
+        enable_cuda_graphs=args.enable_cuda_graphs,
+        enable_flash_decode=args.enable_flash_decode,
+        legacy_ckpt=args.legacy_ckpt,
+        max_batch_size=args.max_batch_size,
+        random_seed=args.random_seed,
     )
-
-    try:
-        # Start Ray Serve
-        ray_deployer.start(host=args.host, port=args.port)
-
-        # Create the Multi-Rank Megatron model deployment
-        app = MegatronRayDeployable.options(
-            num_replicas=args.num_replicas,  # Configurable replicas, typically 1 since multi-rank
-            # deployable uses internal parallelism
-            ray_actor_options={
-                "num_cpus": args.num_cpus_per_replica  # Using default from the multi_rank implementation
-            },
-        ).bind(
-            nemo_checkpoint_filepath=args.nemo_checkpoint,
-            num_gpus=gpus_per_replica,
-            num_nodes=args.num_nodes,
-            tensor_model_parallel_size=args.tensor_model_parallel_size,
-            pipeline_model_parallel_size=args.pipeline_model_parallel_size,
-            expert_model_parallel_size=args.expert_model_parallel_size,
-            context_parallel_size=args.context_parallel_size,
-            model_id=args.model_id,
-            enable_cuda_graphs=args.enable_cuda_graphs,
-            enable_flash_decode=args.enable_flash_decode,
-            legacy_ckpt=args.legacy_ckpt,
-        )
-
-        # Deploy the model
-        ray_deployer.run(app, args.model_id)
-
-        LOGGER.info(f"Megatron model deployed successfully at {args.host}:{args.port}")
-        LOGGER.info("Press Ctrl+C to stop the deployment")
-
-        # Keep the script running
-        while True:
-            signal.pause()
-    except Exception as e:
-        LOGGER.error(f"Error during deployment: {str(e)}")
-        ray_deployer.stop()
-        sys.exit(1)
 
 
 if __name__ == "__main__":

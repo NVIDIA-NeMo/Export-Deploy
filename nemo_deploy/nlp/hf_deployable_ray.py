@@ -102,7 +102,7 @@ class HFRayDeployable:
             LOGGER.error(f"Error initializing HuggingFaceLLMServe replica: {str(e)}")
             raise
 
-    def _setup_unique_distributed_parameters(self, device_map):
+    def _setup_unique_distributed_parameters(self):
         """Configure unique distributed communication parameters for each model replica.
 
         This function sets up unique MASTER_PORT environment variables for each Ray Serve
@@ -112,19 +112,18 @@ class HFRayDeployable:
         Args:
             device_map (str): The device mapping strategy ('auto', 'balanced', etc.)
         """
-        if device_map == "balanced" or device_map == "auto":
-            import os
+        import os
 
-            import torch.distributed as dist
+        import torch.distributed as dist
 
-            # Check if torch.distributed is already initialized
-            if not dist.is_initialized():
-                # Get a unique port based on current process ID to avoid conflicts
+        # Check if torch.distributed is already initialized
+        if not dist.is_initialized():
+            # Get a unique port based on current process ID to avoid conflicts
 
-                unique_port = find_available_port(29500, "127.0.0.1")
-                # Set environment variables for torch.distributed
-                os.environ["MASTER_ADDR"] = "127.0.0.1"
-                os.environ["MASTER_PORT"] = str(unique_port)
+            unique_port = find_available_port(29500, "127.0.0.1")
+            # Set environment variables for torch.distributed
+            os.environ["MASTER_ADDR"] = "127.0.0.1"
+            os.environ["MASTER_PORT"] = str(unique_port)
 
     @app.post("/v1/completions/")
     async def completions(self, request: Dict[Any, Any]):
