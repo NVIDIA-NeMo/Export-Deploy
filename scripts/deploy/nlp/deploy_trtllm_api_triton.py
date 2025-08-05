@@ -48,9 +48,8 @@ def get_args():
     )
     parser.add_argument("-dt", "--dtype", default="auto", type=str, help="Model data type")
     parser.add_argument("-ab", "--attn_backend", default="TRTLLM", type=str, help="Attention kernel backend")
-    parser.add_argument("-eos", "--enable_overlap_scheduler", action="store_true", help="Enable overlap scheduler")
+    parser.add_argument("-dos", "--disable_overlap_scheduler", action="store_true", help="Disable overlap scheduler")
     parser.add_argument("-ecp", "--enable_chunked_prefill", action="store_true", help="Enable chunked prefill")
-    parser.add_argument("-ucg", "--use_cuda_graph", action="store_true", help="Use CUDA graph")
     parser.add_argument("-dm", "--debug_mode", action="store_true", help="Enable debug mode")
     args = parser.parse_args()
     return args
@@ -79,9 +78,8 @@ def trtllm_deploy():
         max_num_tokens=args.max_num_tokens,
         dtype=args.dtype,
         attn_backend=args.attn_backend,
-        enable_overlap_scheduler=args.enable_overlap_scheduler,
+        disable_overlap_scheduler=args.disable_overlap_scheduler,
         enable_chunked_prefill=args.enable_chunked_prefill,
-        use_cuda_graph=args.use_cuda_graph,
     )
 
     try:
