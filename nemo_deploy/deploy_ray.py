@@ -25,6 +25,8 @@ try:
     import ray
     from ray import serve
     from ray.serve import Application
+    from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
+    from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
 
     from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
     from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
@@ -43,6 +45,10 @@ except (ImportError, ModuleNotFoundError):
     HAVE_RAY = False
 
 LOGGER = logging.getLogger("NeMo")
+
+def get_available_cpus():
+    """Get the total number of available CPUs in the system."""
+    return multiprocessing.cpu_count()
 
 
 def get_available_cpus():
@@ -174,6 +180,7 @@ class DeployRay:
         self,
         nemo_checkpoint: str,
         num_gpus: int = 1,
+        num_nodes: int = 1,
         tensor_model_parallel_size: int = 1,
         pipeline_model_parallel_size: int = 1,
         expert_model_parallel_size: int = 1,
@@ -199,6 +206,7 @@ class DeployRay:
         Args:
             nemo_checkpoint (str): Path to the .nemo checkpoint file.
             num_gpus (int, optional): Number of GPUs per node. Defaults to 1.
+            num_nodes (int, optional): Number of nodes for deployment. Defaults to 1.
             tensor_model_parallel_size (int, optional): Tensor model parallel size. Defaults to 1.
             pipeline_model_parallel_size (int, optional): Pipeline model parallel size. Defaults to 1.
             expert_model_parallel_size (int, optional): Expert model parallel size. Defaults to 1.
@@ -315,6 +323,7 @@ class DeployRay:
             num_gpus_per_replica (int, optional): GPUs per model replica. Defaults to 1.
             max_ongoing_requests (int, optional): Maximum number of ongoing requests per replica. Defaults to 10.
             test_mode (bool, optional): Enable test mode. Defaults to False.
+
         Raises:
             Exception: If Ray is not installed or deployment fails.
         """
