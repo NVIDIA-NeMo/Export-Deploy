@@ -180,7 +180,6 @@ class DeployRay:
         self,
         nemo_checkpoint: str,
         num_gpus: int = 1,
-        num_nodes: int = 1,
         tensor_model_parallel_size: int = 1,
         pipeline_model_parallel_size: int = 1,
         expert_model_parallel_size: int = 1,
@@ -206,7 +205,6 @@ class DeployRay:
         Args:
             nemo_checkpoint (str): Path to the .nemo checkpoint file.
             num_gpus (int, optional): Number of GPUs per node. Defaults to 1.
-            num_nodes (int, optional): Number of nodes for deployment. Defaults to 1.
             tensor_model_parallel_size (int, optional): Tensor model parallel size. Defaults to 1.
             pipeline_model_parallel_size (int, optional): Pipeline model parallel size. Defaults to 1.
             expert_model_parallel_size (int, optional): Expert model parallel size. Defaults to 1.
