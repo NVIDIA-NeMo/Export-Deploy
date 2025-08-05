@@ -26,6 +26,7 @@ try:
     from ray.serve import Application
     from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
     from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
+    from nemo_export.tensorrt_llm_deployable_ray import TensorRTLLMRayDeployable
 
     HAVE_RAY = True
 except (ImportError, ModuleNotFoundError):
@@ -36,6 +37,7 @@ except (ImportError, ModuleNotFoundError):
     Application = MagicMock()
     MegatronRayDeployable = MagicMock()
     HFRayDeployable = MagicMock()
+    TensorRTLLMRayDeployable = MagicMock()
     HAVE_RAY = False
 
 LOGGER = logging.getLogger("NeMo")
@@ -50,7 +52,7 @@ class DeployRay:
 
     This class provides functionality to initialize Ray, start Ray Serve,
     deploy models, and manage the lifecycle of the Ray cluster. It supports
-    both NeMo inframework models and Hugging Face models.
+    both NeMo inframework models, Hugging Face models, and TensorRT-LLM models.
 
     Attributes:
         address (str): The address of the Ray cluster to connect to.
@@ -65,6 +67,7 @@ class DeployRay:
     Methods:
         deploy_inframework_model: Deploy a NeMo inframework model using Ray Serve.
         deploy_huggingface_model: Deploy a Hugging Face model using Ray Serve.
+        deploy_tensorrt_llm_model: Deploy a TensorRT-LLM model using Ray Serve.
     """
 
     def __init__(
@@ -357,5 +360,106 @@ class DeployRay:
 
         except Exception as e:
             LOGGER.error(f"Error during HuggingFace model deployment: {str(e)}")
+            self._stop()
+            sys.exit(1)
+
+    def deploy_tensorrt_llm_model(
+        self,
+        trt_llm_path: str,
+        model_id: str = "tensorrt-llm-model",
+        use_python_runtime: bool = True,
+        multi_block_mode: bool = False,
+        lora_ckpt_list: Optional[list] = None,
+        enable_chunked_context: bool = False,
+        max_tokens_in_paged_kv_cache: Optional[int] = None,
+        num_replicas: int = 1,
+        num_cpus_per_replica: float = 8,
+        num_gpus_per_replica: int = 1,
+        max_ongoing_requests: int = 10,
+    ):
+        """Deploy a TensorRT-LLM model using Ray Serve.
+
+        This method handles the complete deployment lifecycle including:
+        - Starting Ray Serve
+        - Creating and deploying the TensorRTLLMRayDeployable
+        - Setting up signal handlers for graceful shutdown
+        - Keeping the deployment running until interrupted
+
+        Note: This method assumes the model is already converted to TensorRT-LLM format.
+        The conversion should be done before calling this API.
+
+        Args:
+            trt_llm_path (str): Path to the TensorRT-LLM model directory with pre-built engines.
+            model_id (str, optional): Model identifier for API responses. Defaults to "tensorrt-llm-model".
+            use_python_runtime (bool, optional): Whether to use Python runtime (vs C++ runtime). Defaults to True.
+            multi_block_mode (bool, optional): Whether to enable multi-block mode. Defaults to False.
+            lora_ckpt_list (list, optional): List of LoRA checkpoint paths. Defaults to None.
+            enable_chunked_context (bool, optional): Whether to enable chunked context (C++ runtime only). Defaults to False.
+            max_tokens_in_paged_kv_cache (int, optional): Maximum tokens in paged KV cache (C++ runtime only). Defaults to None.
+            num_replicas (int, optional): Number of replicas for deployment. Defaults to 1.
+            num_cpus_per_replica (float, optional): CPUs per model replica. Defaults to 8.
+            num_gpus_per_replica (int, optional): GPUs per model replica. Defaults to 1.
+            max_ongoing_requests (int, optional): Maximum number of ongoing requests per replica. Defaults to 10.
+
+        Raises:
+            Exception: If Ray is not installed or deployment fails.
+            ValueError: If C++ runtime specific options are used with Python runtime.
+        """
+        if not HAVE_RAY:
+            raise UnavailableError(MISSING_RAY_MSG)
+
+        # Validate C++ runtime specific options
+        if use_python_runtime and (enable_chunked_context or max_tokens_in_paged_kv_cache):
+            raise ValueError(
+                "enable_chunked_context and max_tokens_in_paged_kv_cache options "
+                "work only with the TensorRT-LLM C++ runtime. Set use_python_runtime=False."
+            )
+
+        LOGGER.info(f"Configuration: {num_replicas} replicas, {num_gpus_per_replica} GPUs per replica, {num_cpus_per_replica} CPUs per replica")
+
+        # Set up signal handlers for graceful shutdown
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
+
+        try:
+            # Start Ray Serve
+            self._start()
+
+            # Prepare deployment parameters
+            deployment_kwargs = {
+                "trt_llm_path": trt_llm_path,
+                "model_id": model_id,
+                "use_python_runtime": use_python_runtime,
+                "multi_block_mode": multi_block_mode,
+                "lora_ckpt_list": lora_ckpt_list,
+            }
+
+            # Add C++ runtime specific options if using C++ runtime
+            if not use_python_runtime:
+                deployment_kwargs["enable_chunked_context"] = enable_chunked_context
+                deployment_kwargs["max_tokens_in_paged_kv_cache"] = max_tokens_in_paged_kv_cache
+
+            # Create the TensorRT-LLM model deployment
+            app = TensorRTLLMRayDeployable.options(
+                num_replicas=num_replicas,
+                ray_actor_options={
+                    "num_cpus": num_cpus_per_replica,
+                    "num_gpus": num_gpus_per_replica,
+                },
+                max_ongoing_requests=max_ongoing_requests,
+            ).bind(**deployment_kwargs)
+
+            # Deploy the model
+            serve.run(app, name=model_id)
+
+            LOGGER.info(f"TensorRT-LLM model deployed successfully at {self.host}:{self.port or 'auto'}")
+            LOGGER.info("Press Ctrl+C to stop the deployment")
+
+            # Keep the deployment running
+            while True:
+                signal.pause()
+
+        except Exception as e:
+            LOGGER.error(f"Error during TensorRT-LLM model deployment: {str(e)}")
             self._stop()
             sys.exit(1)
