@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 
 from nemo_deploy.triton_deployable import ITritonDeployable
 
-LOGGER = logging.getLogger("NeMo")
+LOGGER = logging.getLogger("NeMoTest")
 
 
 class DeployBase(ABC):
