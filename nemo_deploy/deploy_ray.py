@@ -182,7 +182,8 @@ class DeployRay:
         enable_flash_decode: bool = False,
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
-        random_seed: Optional[int] = None
+        random_seed: Optional[int] = None,
+        test_mode: bool = False
     ):
         """Deploy an inframework NeMo model using Ray Serve.
 
@@ -205,6 +206,7 @@ class DeployRay:
             enable_cuda_graphs (bool, optional): Enable CUDA graphs. Defaults to False.
             enable_flash_decode (bool, optional): Enable Flash Attention decode. Defaults to False.
             legacy_ckpt (bool, optional): Use legacy checkpoint format. Defaults to False.
+            test_mode (bool, optional): Enable test mode. Defaults to False.
 
         Raises:
             SystemExit: If parallelism configuration is invalid.
@@ -273,7 +275,7 @@ class DeployRay:
             LOGGER.info("Press Ctrl+C to stop the deployment")
 
             # Keep the deployment running
-            while True:
+            while not test_mode:
                 signal.pause()
 
         except Exception as e:
@@ -293,6 +295,7 @@ class DeployRay:
         num_cpus_per_replica: float = 8,
         num_gpus_per_replica: int = 1,
         max_ongoing_requests: int = 10,
+        test_mode: bool = False
     ):
         """Deploy a Hugging Face model using Ray Serve.
 
@@ -314,7 +317,7 @@ class DeployRay:
             num_cpus_per_replica (float, optional): CPUs per model replica. Defaults to 8.
             num_gpus_per_replica (int, optional): GPUs per model replica. Defaults to 1.
             max_ongoing_requests (int, optional): Maximum number of ongoing requests per replica. Defaults to 10.
-
+            test_mode (bool, optional): Enable test mode. Defaults to False.
         Raises:
             Exception: If Ray is not installed or deployment fails.
         """
@@ -355,7 +358,7 @@ class DeployRay:
             LOGGER.info("Press Ctrl+C to stop the deployment")
 
             # Keep the deployment running
-            while True:
+            while not test_mode:
                 signal.pause()
 
         except Exception as e:
@@ -376,6 +379,7 @@ class DeployRay:
         num_cpus_per_replica: float = 8,
         num_gpus_per_replica: int = 1,
         max_ongoing_requests: int = 10,
+        test_mode: bool = False
     ):
         """Deploy a TensorRT-LLM model using Ray Serve.
 
@@ -400,7 +404,7 @@ class DeployRay:
             num_cpus_per_replica (float, optional): CPUs per model replica. Defaults to 8.
             num_gpus_per_replica (int, optional): GPUs per model replica. Defaults to 1.
             max_ongoing_requests (int, optional): Maximum number of ongoing requests per replica. Defaults to 10.
-
+            test_mode (bool, optional): Enable test mode. Defaults to False.
         Raises:
             Exception: If Ray is not installed or deployment fails.
             ValueError: If C++ runtime specific options are used with Python runtime.
@@ -456,7 +460,7 @@ class DeployRay:
             LOGGER.info("Press Ctrl+C to stop the deployment")
 
             # Keep the deployment running
-            while True:
+            while not test_mode:
                 signal.pause()
 
         except Exception as e:

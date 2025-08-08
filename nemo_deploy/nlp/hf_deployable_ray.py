@@ -15,7 +15,7 @@
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import numpy as np
 import torch
@@ -62,8 +62,8 @@ class HFRayDeployable:
         task: str = "text-generation",
         trust_remote_code: bool = True,
         model_id: str = "nemo-model",
-        device_map: str = "auto",
-        max_memory: str = None,
+        device_map: Optional[str] = None,
+        max_memory: Optional[str] = None,
     ):
         """Initialize the HuggingFace model deployment.
 
@@ -266,16 +266,9 @@ class HFRayDeployable:
             prompt = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages])
             prompt += "\nassistant:"
 
-            # Create a modified request with the prompt
-            chat_request = request.copy()
-            chat_request["prompt"] = prompt
-
-            # Extract parameters from the request dictionary
-            messages = request.get("messages", [])
-
-            # Prepare inference parameters
+            # Prepare inference parameters using the formatted prompt
             inference_inputs = {
-                "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
+                "prompts": [prompt],  # Use formatted prompt string instead of raw messages
                 "max_length": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
@@ -329,7 +322,7 @@ class HFRayDeployable:
                         ),
                         "finish_reason": (
                             "length"
-                            if generated_texts and len(generated_texts[0]) >= inference_inputs["max_length"]
+                            if generated_texts and len(generated_texts[0]) >= request.get("max_tokens", 256)
                             else "stop"
                         ),
                     }

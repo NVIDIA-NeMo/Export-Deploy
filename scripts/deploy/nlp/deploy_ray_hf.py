@@ -43,7 +43,7 @@ def parse_args():
     parser.add_argument(
         "--device_map",
         type=str,
-        default="auto",
+        default=None,
         help="Device mapping strategy for model placement",
     )
     parser.add_argument(
@@ -114,7 +114,7 @@ def parse_args():
     parser.add_argument(
         "--cuda_visible_devices",
         type=str,
-        default="0,1",
+        default="0",
         help="Comma-separated list of CUDA visible devices",
     )
     return parser.parse_args()
