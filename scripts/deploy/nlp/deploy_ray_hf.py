@@ -14,19 +14,10 @@
 
 import argparse
 import logging
-import multiprocessing
-import signal
-import sys
 
 from nemo_deploy.deploy_ray import DeployRay
-from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
 
 LOGGER = logging.getLogger("NeMo")
-
-
-def get_available_cpus():
-    """Get the total number of available CPUs in the system."""
-    return multiprocessing.cpu_count()
 
 
 def parse_args():
@@ -52,7 +43,7 @@ def parse_args():
     parser.add_argument(
         "--device_map",
         type=str,
-        default="auto",
+        default=None,
         help="Device mapping strategy for model placement",
     )
     parser.add_argument(
@@ -77,7 +68,7 @@ def parse_args():
         "--port",
         type=int,
         default=1024,
-        help="Port number to use for the Ray Serve server",
+        help="Port number to use for the Ray Serve server. If None, an available port will be found automatically.",
     )
     parser.add_argument(
         "--num_cpus",
@@ -115,34 +106,31 @@ def parse_args():
         help="Number of CPUs per model replica",
     )
     parser.add_argument(
+        "--max_ongoing_requests",
+        type=int,
+        default=10,
+        help="Maximum number of ongoing requests per replica",
+    )
+    parser.add_argument(
         "--cuda_visible_devices",
         type=str,
-        default="0,1",
+        default="0",
         help="Comma-separated list of CUDA visible devices",
     )
     return parser.parse_args()
 
 
-def signal_handler(signum, frame, deployer):
-    """Handle interrupt signals."""
-    LOGGER.info("Received interrupt signal. Shutting down gracefully...")
-    deployer.stop()
-    sys.exit(0)
-
-
 def main():
+    """Main function to deploy HuggingFace model using the updated DeployRay API."""
     args = parse_args()
 
-    # If num_cpus is not specified, use all available CPUs
-    if args.num_cpus is None:
-        args.num_cpus = get_available_cpus()
-        LOGGER.error(f"Using all available CPUs: {args.num_cpus}")
-
-    # Initialize Ray deployment
+    # Initialize Ray deployment with host, port, and runtime environment
     ray_deployer = DeployRay(
         num_cpus=args.num_cpus,
         num_gpus=args.num_gpus,
         include_dashboard=args.include_dashboard,
+        host=args.host,
+        port=args.port,
         runtime_env={
             "env_vars": {
                 "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
@@ -150,46 +138,20 @@ def main():
         },
     )
 
-    # Set up signal handlers
-    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
-    signal.signal(
-        signal.SIGTERM,
-        lambda signum, frame: signal_handler(signum, frame, ray_deployer),
+    # Deploy the HuggingFace model using the new API
+    # This method handles the complete deployment lifecycle internally
+    ray_deployer.deploy_huggingface_model(
+        hf_model_id_path=args.model_path,
+        task=args.task,
+        trust_remote_code=args.trust_remote_code,
+        device_map=args.device_map,
+        max_memory=args.max_memory,
+        model_id=args.model_id,
+        num_replicas=args.num_replicas,
+        num_cpus_per_replica=args.num_cpus_per_replica,
+        num_gpus_per_replica=args.num_gpus_per_replica,
+        max_ongoing_requests=args.max_ongoing_requests,
     )
-
-    try:
-        # Start Ray Serve
-        ray_deployer.start(host=args.host, port=args.port)
-
-        # Create the HuggingFace model deployment
-        app = HFRayDeployable.options(
-            num_replicas=args.num_replicas,
-            ray_actor_options={
-                "num_gpus": args.num_gpus_per_replica,
-                "num_cpus": args.num_cpus_per_replica,
-            },
-        ).bind(
-            hf_model_id_path=args.model_path,
-            task=args.task,
-            trust_remote_code=args.trust_remote_code,
-            model_id=args.model_id,
-            device_map=args.device_map,
-            max_memory=args.max_memory,
-        )
-
-        # Deploy the model
-        ray_deployer.run(app, args.model_id)
-
-        LOGGER.info(f"Model deployed successfully at {args.host}:{args.port}")
-        LOGGER.info("Press Ctrl+C to stop the deployment")
-
-        # Keep the script running
-        while True:
-            signal.pause()
-    except Exception as e:
-        LOGGER.error(f"Error during deployment: {str(e)}")
-        ray_deployer.stop()
-        sys.exit(1)
 
 
 if __name__ == "__main__":
