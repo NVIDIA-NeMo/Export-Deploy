@@ -13,11 +13,14 @@
 # limitations under the License.
 
 
+import logging
 import tempfile
 from pathlib import Path
-from typing import List, Literal
+from typing import List, Literal, Dict, Any
 
 import numpy as np
+
+LOGGER = logging.getLogger("NeMo")
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
@@ -259,39 +262,108 @@ class vLLMExporter(ITritonDeployable):
         log probabilities, and random seed.
         """
         try:
-            infer_input = {"input_texts": str_ndarray2list(inputs.pop("prompts"))}
-            if "max_tokens" in inputs:
-                infer_input["max_tokens"] = int(inputs.pop("max_tokens"))
-            if "min_tokens" in inputs:
-                infer_input["min_tokens"] = int(inputs.pop("min_tokens"))
-            if "n_log_probs" in inputs:
-                infer_input["n_log_probs"] = int(inputs.pop("n_log_probs"))
-            if "n_prompt_log_probs" in inputs:
-                infer_input["n_prompt_log_probs"] = int(inputs.pop("n_prompt_log_probs"))
-            if "seed" in inputs:
-                infer_input["seed"] = int(inputs.pop("seed"))
-            if "top_k" in inputs:
-                infer_input["top_k"] = int(inputs.pop("top_k"))
-            if "top_p" in inputs:
-                infer_input["top_p"] = float(inputs.pop("top_p"))
-            if "temperature" in inputs:
-                infer_input["temperature"] = float(inputs.pop("temperature"))
+            # Convert triton-specific inputs
+            prompts = str_ndarray2list(inputs.pop("prompts"))
 
-            output = self.forward(**infer_input)
-            if isinstance(output, dict):
-                output_infer = {"sentences": cast_output(output["sentences"], np.bytes_)}
-                if "log_probs" in output.keys():
-                    output_infer["log_probs"] = cast_output(output["log_probs"], np.bytes_)
-                if "prompt_log_probs" in output.keys():
-                    output_infer["prompt_log_probs"] = cast_output(output["prompt_log_probs"], np.bytes_)
-            else:
-                err_msg = "An error occurred: the output format is expected to be a dict."
-                output_infer = {"sentences": cast_output([err_msg], np.bytes_)}
+            # Convert numpy arrays to Python types for triton inputs
+            processed_inputs = {}
+            for key, value in inputs.items():
+                processed_inputs[key] = value
+
+            output_infer = self._infer_fn(prompts, processed_inputs)
+
+            # Format output for triton
+            output_infer["sentences"] = cast_output(output_infer["sentences"], np.bytes_)
+            if "log_probs" in output_infer.keys():
+                output_infer["log_probs"] = cast_output(output_infer["log_probs"], np.bytes_)
+            if "prompt_log_probs" in output_infer.keys():
+                output_infer["prompt_log_probs"] = cast_output(output_infer["prompt_log_probs"], np.bytes_)
+
         except Exception as error:
             err_msg = "An error occurred: {0}".format(str(error))
             output_infer = {"sentences": cast_output([err_msg], np.bytes_)}
 
         return output_infer
+
+    def _infer_fn(self, prompts, inputs):
+        """Shared helper function to prepare inference inputs and execute forward pass.
+
+        Args:
+            prompts: List of input prompts
+            inputs: Dictionary of input parameters
+
+        Returns:
+            output_dict: Dictionary containing generated text and optional log probabilities
+        """
+        infer_input = {"input_texts": prompts}
+
+        # Process common parameters
+        if "max_tokens" in inputs:
+            infer_input["max_tokens"] = int(inputs["max_tokens"])
+        if "min_tokens" in inputs:
+            infer_input["min_tokens"] = int(inputs["min_tokens"])
+        if "n_log_probs" in inputs:
+            infer_input["n_log_probs"] = int(inputs["n_log_probs"])
+        if "n_prompt_log_probs" in inputs:
+            infer_input["n_prompt_log_probs"] = int(inputs["n_prompt_log_probs"])
+        if "seed" in inputs:
+            infer_input["seed"] = int(inputs["seed"])
+        if "top_k" in inputs:
+            infer_input["top_k"] = int(inputs["top_k"])
+        if "top_p" in inputs:
+            infer_input["top_p"] = float(inputs["top_p"])
+        if "temperature" in inputs:
+            infer_input["temperature"] = float(inputs["temperature"])
+        if "lora_model_name" in inputs:
+            infer_input["lora_model_name"] = inputs["lora_model_name"]
+
+        output = self.forward(**infer_input)
+
+        if isinstance(output, dict):
+            return output
+        else:
+            err_msg = "An error occurred: the output format is expected to be a dict."
+            return {"sentences": [err_msg]}
+
+    def ray_infer_fn(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """Ray inference function that processes input dictionary and returns output without byte casting.
+
+        Args:
+            inputs (Dict[str, Any]): Input dictionary containing:
+                - prompts: List of input prompts
+                - max_tokens: Maximum number of tokens to generate (optional)
+                - min_tokens: Minimum number of tokens to generate (optional)
+                - top_k: Top-k sampling parameter (optional)
+                - top_p: Top-p sampling parameter (optional)
+                - temperature: Sampling temperature (optional)
+                - seed: Random seed for generation (optional)
+                - n_log_probs: Number of log probabilities to return for generated tokens (optional)
+                - n_prompt_log_probs: Number of log probabilities to return for prompt tokens (optional)
+                - lora_model_name: Name of the LoRA model to use for generation (optional)
+
+        Returns:
+            Dict[str, Any]: Output dictionary containing:
+                - sentences: List of generated text outputs
+                - log_probs: Log probabilities for generated tokens (if requested)
+                - prompt_log_probs: Log probabilities for prompt tokens (if requested)
+        """
+        output_dict = {}
+
+        # Extract prompts - handle both list and single string cases
+        prompts = inputs.get("prompts", [])
+        if isinstance(prompts, str):
+            prompts = [prompts]
+
+        try:
+            output_dict = self._infer_fn(prompts, inputs)
+
+        except Exception as error:
+            err_msg = f"An error occurred: {str(error)}"
+            LOGGER.error(err_msg)
+            output_dict["sentences"] = [err_msg] * len(prompts)
+            output_dict["error"] = err_msg
+
+        return output_dict
 
     def _dict_to_str(self, messages):
         """Serializes dict to str."""

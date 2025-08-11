@@ -299,6 +299,7 @@ class DeployRay:
         num_cpus_per_replica: float = 8,
         num_gpus_per_replica: int = 1,
         max_ongoing_requests: int = 10,
+        use_vllm_backend: bool = False,
         test_mode: bool = False,
     ):
         """Deploy a Hugging Face model using Ray Serve.
@@ -321,6 +322,8 @@ class DeployRay:
             num_cpus_per_replica (float, optional): CPUs per model replica. Defaults to 8.
             num_gpus_per_replica (int, optional): GPUs per model replica. Defaults to 1.
             max_ongoing_requests (int, optional): Maximum number of ongoing requests per replica. Defaults to 10.
+            use_vllm_backend (bool, optional): Whether to use vLLM backend for deployment. If True, exports the HF ckpt
+            to vLLM format and uses vLLM backend for inference. Defaults to False.
             test_mode (bool, optional): Enable test mode. Defaults to False.
 
         Raises:
@@ -356,6 +359,7 @@ class DeployRay:
                 device_map=device_map,
                 max_memory=max_memory,
                 model_id=model_id,
+                use_vllm_backend=use_vllm_backend,
             )
 
             # Deploy the model
