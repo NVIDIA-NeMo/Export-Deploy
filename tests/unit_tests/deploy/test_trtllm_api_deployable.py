@@ -128,7 +128,7 @@ class TestTensorRTLLMAPIDeployable:
             mock_llm.generate.assert_called_once()
             mock_sampling_params.assert_called_once_with(max_tokens=100, temperature=0.8, top_k=50, top_p=0.95)
 
-    def test_triton_input_output_config(self, mock_pytorch_config):
+    def test_triton_input_output_config(self):
         from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
         with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM"):
