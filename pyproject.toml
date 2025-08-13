@@ -74,6 +74,7 @@ vllm = [
 trtllm = [
     "transformers~=4.51.0",
     "tensorrt-llm~=0.20.0",
+    "cuda-python~=12.8.0",
     "nvidia-modelopt[torch]>=0.29.0a0,<0.30.0; sys_platform != 'darwin'",
 ]
 te = ["transformer-engine[pytorch]==2.5.0"]
