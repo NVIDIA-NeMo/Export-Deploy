@@ -350,9 +350,9 @@ jobs:
     needs: [pre-flight, Nemo_CICD_Test]
     if: |
       (
-        needs.pre-flight.outputs.docs_only == 'true'
-        || needs.pre-flight.outputs.is_deployment_workflow == 'true'
-        || success()
+        needs.pre-flight.outputs.docs_only == 'false'
+        && needs.pre-flight.outputs.is_deployment_workflow == 'false'
+        && success()
       )
       && !cancelled()
     strategy:
