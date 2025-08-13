@@ -60,12 +60,14 @@ dependencies = [
     "einops",
     "ijson",
     "pyarrow<21.0.0",
+
 ]
 
 [project.optional-dependencies]
 inframework = []
-vllm = ["vllm==0.9.1", "pandas", "timm", "transformers~=4.53.0"]
-trtllm = ["transformers~=4.51.0", "tensorrt-llm>=1.0.0a0,<1.1.0"]
+vllm = ["vllm~=0.10.0", "pandas", "timm", "transformers~=4.53.0"]
+trtllm = ["tensorrt-llm>=1.0.0a0,<1.1.0,>=1.0.0rc6", "transformers~=4.53.0"]
+trt-onnx = ["tensorrt==10.11.0.33", "transformers==4.51.3", "onnx==1.18.0"]
 te = ["transformer-engine[pytorch]>=2.7.0a0,<2.8.0; sys_platform != 'darwin'"]
 
 [dependency-groups]
@@ -107,7 +109,7 @@ default-groups = ["linting", "build", "test"]
 #  --link-mode=copy (slower but more reliable; supresses warning)
 #  --link-mode=symlink (fastest option when uv cache and venv on different file-system; caveat: venv is brittle since it depends on the environment/container)
 link-mode = "copy"
-conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }]]
+conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }, { extra = "trt-onnx" }]]
 override-dependencies = [
     "urllib3>1.27.0",
     "tiktoken>=0.9.0",                                                    # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
