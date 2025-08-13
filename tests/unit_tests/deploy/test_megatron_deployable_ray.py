@@ -19,8 +19,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import ray
-from ray import serve
 import requests
+from ray import serve
 
 from nemo_deploy.deploy_ray import DeployRay
 from nemo_deploy.nlp.megatronllm_deployable_ray import (
@@ -227,8 +227,6 @@ class TestMegatronRayDeployable:
         # Deploy the deployment
         serve.run(deployment_handle, name="test-model-deployment")
 
-        # Get a handle to interact with the deployment
-        handle = serve.get_app_handle("test-model-deployment")
 
         # Test that we can call the endpoints
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
@@ -259,9 +257,6 @@ class TestMegatronRayDeployable:
 
         # Deploy the deployment
         serve.run(deployment_handle, name="test-multi-gpu-deployment")
-
-        # Get a handle to interact with the deployment
-        handle = serve.get_app_handle("test-multi-gpu-deployment")
 
         # Test basic functionality
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
@@ -304,7 +299,6 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-list-models-deployment")
-        handle = serve.get_app_handle("test-list-models-deployment")
 
         response = requests.get("http://127.0.0.1:8000/v1/models", timeout=10).json()
 
@@ -330,7 +324,6 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-health-deployment")
-        handle = serve.get_app_handle("test-health-deployment")
 
         response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
 
@@ -353,7 +346,6 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-cuda-graphs-deployment")
-        handle = serve.get_app_handle("test-cuda-graphs-deployment")
 
         # Verify the deployable was created successfully
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
@@ -376,7 +368,6 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-flash-decode-deployment")
-        handle = serve.get_app_handle("test-flash-decode-deployment")
 
         # Verify the deployable was created successfully
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
@@ -399,7 +390,6 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-legacy-ckpt-deployment")
-        handle = serve.get_app_handle("test-legacy-ckpt-deployment")
 
         # Verify the deployable was created successfully
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
@@ -424,7 +414,6 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-multi-node-deployment")
-        handle = serve.get_app_handle("test-multi-node-deployment")
 
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
@@ -448,7 +437,6 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-pipeline-parallel-deployment")
-        handle = serve.get_app_handle("test-pipeline-parallel-deployment")
 
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
@@ -472,7 +460,6 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-context-parallel-deployment")
-        handle = serve.get_app_handle("test-context-parallel-deployment")
 
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
