@@ -27,7 +27,7 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    "megatron-core>=0.13.0a0,<0.14.0",
+    "megatron-core>=0.14.0a0,<0.15.0",
     "nvidia-modelopt[torch]>=0.29.0a0,<0.32.0; sys_platform != 'darwin'",
     "nvidia-resiliency-ext>=0.3.0a0,<0.4.0; sys_platform != 'darwin'",
     "accelerate",
@@ -74,6 +74,7 @@ vllm = [
 trtllm = [
     "transformers~=4.51.0",
     "tensorrt-llm~=0.20.0",
+    "cuda-python~=12.8.0",
     "nvidia-modelopt[torch]>=0.29.0a0,<0.30.0; sys_platform != 'darwin'",
 ]
 te = ["transformer-engine[pytorch]==2.5.0"]
@@ -102,6 +103,7 @@ vllm = [
     { index = "pytorch-cu128", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
+nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "620d2ba07835c230b2e1ee25fe1322504ce01d79" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
