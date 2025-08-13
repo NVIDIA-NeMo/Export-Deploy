@@ -28,7 +28,7 @@ defaults:
 
 jobs:
   pre-flight:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@ko3n1g/feat/detect-deployment-workflow
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@v0.53.0
 
   build-test-publish-wheel:
     needs: [pre-flight]
