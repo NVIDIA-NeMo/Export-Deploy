@@ -227,7 +227,6 @@ class TestMegatronRayDeployable:
         # Deploy the deployment
         serve.run(deployment_handle, name="test-model-deployment")
 
-
         # Test that we can call the endpoints
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
