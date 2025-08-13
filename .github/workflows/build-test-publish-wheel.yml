@@ -48,3 +48,17 @@ jobs:
       SLACK_WEBHOOK: ${{ secrets.SLACK_RELEASE_ENDPOINT }}
       SLACK_WEBHOOK_ADMIN: ${{ secrets.SLACK_WEBHOOK_ADMIN }}
       GH_TOKEN: ${{ secrets.PAT }}
+
+  build-test-publish-wheel-summary:
+    needs: [pre-flight, build-test-publish-wheel]
+    if: |
+      (
+        needs.pre-flight.outputs.docs_only == 'true'
+        || needs.pre-flight.outputs.is_deployment_workflow == 'true'
+        || success()
+      )
+      && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Result
+        run: echo Build test publish wheel successful
