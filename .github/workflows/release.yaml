@@ -36,7 +36,19 @@ on:
         type: string
 
 jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      app-token: ${{ steps.app-token.outputs.token }}
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
   release:
+    needs: [preflight]
     uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_release_library.yml@ko3n1g/feat/auto-releases
     with:
       release-ref: ${{ inputs.release-ref }}
@@ -51,4 +63,6 @@ jobs:
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
       SLACK_WEBHOOK_ADMIN: ${{ secrets.SLACK_WEBHOOK_ADMIN }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_RELEASE_ENDPOINT }}
-      PAT: ${{ secrets.PAT }}
+      PAT: ${{ needs.preflight.outputs.app-token }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      SSH_PWD: ${{ secrets.SSH_PWD }}
