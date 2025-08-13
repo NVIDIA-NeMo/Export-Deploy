@@ -346,7 +346,7 @@ jobs:
           fi
 
   coverage-placeholder:
-    needs: [pre-flight]
+    needs: [pre-flight, Nemo_CICD_Test]
     name: codecov/patch
     if: |
       (needs.pre-flight.outputs.docs_only == 'true'
