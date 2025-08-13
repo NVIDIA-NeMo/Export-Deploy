@@ -27,7 +27,14 @@ defaults:
     shell: bash -x -e -u -o pipefail {0}
 
 jobs:
+  pre-flight:
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@ko3n1g/feat/detect-deployment-workflow
+
   build-test-publish-wheel:
+    needs: [pre-flight]
+    if: |
+      !(needs.pre-flight.outputs.docs_only == 'true'
+      || needs.pre-flight.outputs.is_deployment_workflow == 'true')
     uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_build_test_publish_wheel.yml@v0.38.0
     with:
       dry-run: true
