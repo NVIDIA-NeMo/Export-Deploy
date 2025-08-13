@@ -22,11 +22,20 @@ on:
     branches:
       - main
       - "pull-request/[0-9]+"
+      - "deploy-release/*"
+
 env:
   UV_PROJECT_ENVIRONMENT: "./venv"
 
 jobs:
+  pre-flight:
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@v0.53.0
+
   pip-test-no-cuda:
+    needs: [pre-flight]
+    if: |
+      !(needs.pre-flight.outputs.docs_only == 'true'
+      || needs.pre-flight.outputs.is_deployment_workflow == 'true')
     runs-on: ${{ matrix.arch }}
     name: Pip - Python${{ matrix.python-version }} - ${{ matrix.arch == 'ubuntu-latest' && 'AMD64/Linux' || (matrix.arch == 'ubuntu-24.04-arm' && 'ARM64/Linux' || 'ARM64/Darwin') }} - No CUDA
     strategy:
@@ -80,6 +89,10 @@ jobs:
           python-binary: ./venv/bin/python
 
   pip-test-cuda:
+    needs: [pre-flight]
+    if: |
+      !(needs.pre-flight.outputs.docs_only == 'true'
+      || needs.pre-flight.outputs.is_deployment_workflow == 'true')
     runs-on: linux-amd64-cpu16
     name: Pip - Python${{ matrix.python-version }}${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }} - AMD64/Linux - NGC CUDA
     container:
@@ -140,6 +153,10 @@ jobs:
           python-binary: ./venv/bin/python
 
   uv-test-cuda:
+    needs: [pre-flight]
+    if: |
+      !(needs.pre-flight.outputs.docs_only == 'true'
+      || needs.pre-flight.outputs.is_deployment_workflow == 'true')
     runs-on: linux-amd64-cpu16
     name: UV - AMD64/Linux - NGC ${{ contains(matrix.image, 'cuda') && 'CUDA' || 'PyTorch' }}
     container:
@@ -196,6 +213,10 @@ jobs:
           python-binary: /opt/venv/bin/python
 
   uv-test-no-cuda:
+    needs: [pre-flight]
+    if: |
+      !(needs.pre-flight.outputs.docs_only == 'true'
+      || needs.pre-flight.outputs.is_deployment_workflow == 'true')
     runs-on: ${{ matrix.arch }}
     name: UV - Python ${{ matrix.python-version }} - ${{ matrix.arch == 'ubuntu-latest' && 'AMD64/Linux' || 'ARM64/Darwin' }} - No CUDA
     environment: nemo-ci
@@ -254,9 +275,16 @@ jobs:
           python-binary: ./venv/bin/python
 
   install-test-summary:
-    needs: [pip-test-no-cuda, uv-test-cuda, pip-test-cuda, uv-test-no-cuda]
+    needs: [pre-flight, pip-test-no-cuda, uv-test-cuda, pip-test-cuda, uv-test-no-cuda]
     runs-on: ubuntu-latest
     name: Install test summary
+    if: |
+      (
+        needs.pre-flight.outputs.docs_only == 'true'
+        || needs.pre-flight.outputs.is_deployment_workflow == 'true'
+        || success()
+      )
+      && !cancelled()
     steps:
       - name: Result
         run: echo Install check successful
