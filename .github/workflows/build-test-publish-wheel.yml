@@ -20,6 +20,7 @@ on:
       - main
       - "r**"
       - "pull-request/**"
+      - "deploy-release/*"
 
 defaults:
   run:

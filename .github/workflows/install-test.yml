@@ -22,6 +22,8 @@ on:
     branches:
       - main
       - "pull-request/[0-9]+"
+      - "deploy-release/*"
+
 env:
   UV_PROJECT_ENVIRONMENT: "./venv"
 
