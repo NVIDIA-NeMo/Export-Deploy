@@ -23,5 +23,4 @@ on:
 
 jobs:
   build-docs:
-    needs: [pre-flight]
     uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_build_docs.yml@v0.48.0
