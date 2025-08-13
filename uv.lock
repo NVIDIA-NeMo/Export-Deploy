@@ -1134,41 +1134,32 @@ wheels = [
 
 [[package]]
 name = "cuda-bindings"
-version = "13.0.0"
+version = "12.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cuda-pathfinder" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8e/01/cc08a8d66a5c68a8ff1e708930ee3fa1137df491f5aed59aa8a1bfa67ca2/cuda_bindings-13.0.0-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:de13f1d770fa318e1e44a391478270dade22361c6053e5455ee8cb336e5b1505", size = 12230651, upload-time = "2025-08-07T02:40:52.114Z" },
-    { url = "https://files.pythonhosted.org/packages/85/1a/840df75bafc8268653fb596379b071a6295e913ced6d733c515492bd5c2e/cuda_bindings-13.0.0-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:bcb611c3e1a470a947cf4c52190ff65463a76ee5f629a3324f500e8e78a978d8", size = 12652887, upload-time = "2025-08-07T02:40:54.491Z" },
-    { url = "https://files.pythonhosted.org/packages/53/d8/fa72c4a775f1dd020fdb7b271ce1269f6ea0b1ef4340593372758ff1a0df/cuda_bindings-13.0.0-cp310-cp310-win_amd64.whl", hash = "sha256:9ac03f6a3629b59ffe90725c9d4ab82d4b16cf797d64aa3857376f08bf58235d", size = 11807758, upload-time = "2025-08-07T02:40:56.638Z" },
-    { url = "https://files.pythonhosted.org/packages/81/b0/fb27fbbe0d872e4db07ba0c7393a9fe748fb145b11e14efa1fe570480688/cuda_bindings-13.0.0-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e9f017c7907f5a3560bc6746a0088631be2e435d2a194b04a63870f6660b1716", size = 12294066, upload-time = "2025-08-07T02:40:58.833Z" },
-    { url = "https://files.pythonhosted.org/packages/89/ad/dfba84a1f5259584c7aed9fba93acf74ebcc6cfc608345bd6a27fef76c34/cuda_bindings-13.0.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d74f0f6de5006a4ffd2dd30544b10359488d9af71d1cb755205cb3094102a2d9", size = 12708768, upload-time = "2025-08-07T02:41:01.22Z" },
-    { url = "https://files.pythonhosted.org/packages/e8/b4/988f40da7a7aa9756f0c724ac416d4399b1b12dc636a976529e4a094883f/cuda_bindings-13.0.0-cp311-cp311-win_amd64.whl", hash = "sha256:fd0020b182dfdb6518036287a93774d642ed2f9a76c1c3d2104072459dbe52bd", size = 11841433, upload-time = "2025-08-07T02:41:03.508Z" },
-    { url = "https://files.pythonhosted.org/packages/94/f6/89f536526e57d8ff2568e9c7363ebdf8a2f12058ee26fd6ab2a735a24fab/cuda_bindings-13.0.0-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:200605a72e3956cffaee6a0448c2b36461eb88f625a233bea1d47bcc2cf8d747", size = 11880615, upload-time = "2025-08-07T02:41:05.599Z" },
-    { url = "https://files.pythonhosted.org/packages/4c/fd/f633a08f9c9fe408156b2eae757327a76d0967d6accd3e8b2bc0862afd99/cuda_bindings-13.0.0-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:21f653f32db0a278b68059a995822a067f78b2ffaf63b05a420de4609c57a9e8", size = 12249404, upload-time = "2025-08-07T02:41:07.934Z" },
-    { url = "https://files.pythonhosted.org/packages/b0/7b/d5d1a90480f5c76ea5c3a9d57121125e6320d1913e12296cfcbad500b6f0/cuda_bindings-13.0.0-cp312-cp312-win_amd64.whl", hash = "sha256:da68049a1dd3b693fa6469b14eeb7e9a4bb0d49f0ac22bb7aafe15932af98643", size = 12028122, upload-time = "2025-08-07T02:41:09.78Z" },
-]
-
-[[package]]
-name = "cuda-pathfinder"
-version = "1.1.0"
-source = { registry = "https://pypi.org/simple" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/52/07/7978a4c4d8e70620170aa247ce16241a72d4cf6e4336bd3b296926baf7df/cuda_pathfinder-1.1.0-py3-none-any.whl", hash = "sha256:3e66fe0af8ead20eca25e077d2e0cb2dcc027d4297d550a74f99a0211e610799", size = 17673, upload-time = "2025-08-07T01:34:08.562Z" },
+    { url = "https://files.pythonhosted.org/packages/e1/9a/8a07dbf7073811f1ecc0cdf058607064a3fa0fe75b3e5405cc8ca1d5a5be/cuda_bindings-12.8.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:673cc41c65f17774525bf0123309d5c0a35f2089b8ec639d957d012cbaf86538", size = 11060371, upload-time = "2025-01-25T03:27:26.807Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/c4/0dac1eb970f94c5d180d724eac69394b5fdcb60f986f77d86030b0f510e5/cuda_bindings-12.8.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7167b0c4d872a7c0935a2ee4025eb1669702815366c2f0fb4c938fbd3dac09c7", size = 11413425, upload-time = "2025-01-25T03:27:31.066Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/95/fb848f2993a8b78af07844ed852a1ac7ca7d8b3ddfd88264ac507a0c560b/cuda_bindings-12.8.0-cp310-cp310-win_amd64.whl", hash = "sha256:bd96b0ac01164dbebddbdcb3b2075f5b2f7517ce3d16c6a99ff34cf4f58d9a60", size = 11055391, upload-time = "2025-01-25T03:27:36.564Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/45/4db82dec1cec4579cd9c41fe171f7580b5b65aa0556baa0f60cff893674a/cuda_bindings-12.8.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:435f48a20acc9a89889784e4e7c333765bc40c6ae202101bde27b4abf7ba0233", size = 10991437, upload-time = "2025-01-25T03:27:40.459Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/cc/27485aa29bbaadcc9eca07aaea1198807d7c2171550c290533a039d4efee/cuda_bindings-12.8.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:33182c8aadf1c4ecf5e2672b5f0023f3be06011c22c916663eae6f33b1af90ff", size = 11331750, upload-time = "2025-01-25T03:27:44.381Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/71/b04b633274819037021d1b5fd73cb112433aba0f3c0831b0aa560dd21328/cuda_bindings-12.8.0-cp311-cp311-win_amd64.whl", hash = "sha256:70272dfe67d8cfbde34d7cd54b1754e8224924183392c59d64e623cdfab59e7e", size = 11089043, upload-time = "2025-01-25T03:27:48.185Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/16/621f2ff6e4c6a0c1d57f5a0a373d1fb9d10eb9a7f05052cc64eba2e7dab2/cuda_bindings-12.8.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0865c9b75ee8f0535044c3f0f06ca34a37131192b573ab59e20a9e058da1ead4", size = 10904424, upload-time = "2025-01-25T03:27:52.688Z" },
+    { url = "https://files.pythonhosted.org/packages/59/11/aee1afd60a5d6af67994dd88697912be22366a6e548e52e6cd2defdbe678/cuda_bindings-12.8.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e0e6a889c87238e6cd55e9b25ce4fd1d90fe2d4169982860fed5f0bc3230795e", size = 11235285, upload-time = "2025-01-25T03:27:56.564Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/c7/eedad18aeb461e9a3c1f8e2ea856caa50202a572b024912cb561f847a054/cuda_bindings-12.8.0-cp312-cp312-win_amd64.whl", hash = "sha256:d0123d841cb3053d227e18b08ea7680d0b5ca64fab4664a2b80b7c83c8edf1ee", size = 11224401, upload-time = "2025-01-25T03:28:00.327Z" },
 ]
 
 [[package]]
 name = "cuda-python"
-version = "13.0.0"
+version = "12.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cuda-bindings" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/99/7df7b57a5eba85b25a76c9c247c88e79770b4902bce266dbf0fc58f21198/cuda_python-13.0.0-py3-none-any.whl", hash = "sha256:c0b2257f2460d6d32b142ad9b53747c9bdcf0d2b2a747f45023cc1eec75c8b6e", size = 7602, upload-time = "2025-08-07T03:31:46.322Z" },
+    { url = "https://files.pythonhosted.org/packages/14/2c/02bb311b996ffb91d05f8c1fb79131bf50855f7410dd33d09f800fe78c58/cuda_python-12.8.0-py3-none-any.whl", hash = "sha256:3fca3a03c247d6aa1c414989dfe0dd21e9500307b8573f72216ed57d99344c5a", size = 11930, upload-time = "2025-01-25T03:30:07.301Z" },
 ]
 
 [[package]]
@@ -3875,6 +3866,7 @@ trt-onnx = [
     { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" } },
 ]
 trtllm = [
+    { name = "cuda-python" },
     { name = "tensorrt-llm" },
     { name = "transformers", version = "4.53.1", source = { registry = "https://pypi.org/simple" } },
 ]
@@ -3923,6 +3915,7 @@ test = [
 requires-dist = [
     { name = "accelerate" },
     { name = "cloudpickle" },
+    { name = "cuda-python", marker = "extra == 'trtllm'", specifier = "~=12.8.0" },
     { name = "decord", marker = "platform_machine != 'aarch64' and sys_platform != 'darwin'" },
     { name = "einops" },
     { name = "fastapi" },
