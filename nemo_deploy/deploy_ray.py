@@ -44,6 +44,7 @@ except (ImportError, ModuleNotFoundError):
 
 LOGGER = logging.getLogger("NeMo")
 
+
 def get_available_cpus():
     """Get the total number of available CPUs in the system."""
     return multiprocessing.cpu_count()
@@ -185,7 +186,7 @@ class DeployRay:
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
         random_seed: Optional[int] = None,
-        test_mode: bool = False
+        test_mode: bool = False,
     ):
         """Deploy an inframework NeMo model using Ray Serve.
 
@@ -221,17 +222,13 @@ class DeployRay:
         gpus_per_replica = num_gpus // num_replicas
 
         # Validate parallelism configuration
-        parallelism_per_replica = (
-            tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size
-        )
+        parallelism_per_replica = tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size
 
         if parallelism_per_replica != gpus_per_replica:
             LOGGER.error(
                 f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
             )
-            LOGGER.error(
-                f"Total GPUs: {num_gpus}, Num replicas: {num_replicas}, GPUs per replica: {gpus_per_replica}"
-            )
+            LOGGER.error(f"Total GPUs: {num_gpus}, Num replicas: {num_replicas}, GPUs per replica: {gpus_per_replica}")
             LOGGER.error(
                 f"Each replica needs: tensor_parallel({tensor_model_parallel_size}) * "
                 f"pipeline_parallel({pipeline_model_parallel_size}) * "
@@ -252,9 +249,7 @@ class DeployRay:
             # Create the Multi-Rank Megatron model deployment
             app = MegatronRayDeployable.options(
                 num_replicas=num_replicas,
-                ray_actor_options={
-                    "num_cpus": num_cpus_per_replica
-                },
+                ray_actor_options={"num_cpus": num_cpus_per_replica},
             ).bind(
                 nemo_checkpoint_filepath=nemo_checkpoint,
                 num_gpus=gpus_per_replica,
@@ -267,7 +262,7 @@ class DeployRay:
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
-                random_seed=random_seed
+                random_seed=random_seed,
             )
 
             # Deploy the model
@@ -297,7 +292,7 @@ class DeployRay:
         num_cpus_per_replica: float = 8,
         num_gpus_per_replica: int = 1,
         max_ongoing_requests: int = 10,
-        test_mode: bool = False
+        test_mode: bool = False,
     ):
         """Deploy a Hugging Face model using Ray Serve.
 
@@ -326,7 +321,9 @@ class DeployRay:
         if not HAVE_RAY:
             raise UnavailableError(MISSING_RAY_MSG)
 
-        LOGGER.info(f"Configuration: {num_replicas} replicas, {num_gpus_per_replica} GPUs per replica, {num_cpus_per_replica} CPUs per replica")
+        LOGGER.info(
+            f"Configuration: {num_replicas} replicas, {num_gpus_per_replica} GPUs per replica, {num_cpus_per_replica} CPUs per replica"
+        )
 
         # Set up signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -356,7 +353,9 @@ class DeployRay:
             # Deploy the model
             serve.run(app, name=model_id)
 
-            LOGGER.info(f"HuggingFace model '{hf_model_id_path}' deployed successfully at {self.host}:{self.port or 'auto'}")
+            LOGGER.info(
+                f"HuggingFace model '{hf_model_id_path}' deployed successfully at {self.host}:{self.port or 'auto'}"
+            )
             LOGGER.info("Press Ctrl+C to stop the deployment")
 
             # Keep the deployment running
@@ -381,7 +380,7 @@ class DeployRay:
         num_cpus_per_replica: float = 8,
         num_gpus_per_replica: int = 1,
         max_ongoing_requests: int = 10,
-        test_mode: bool = False
+        test_mode: bool = False,
     ):
         """Deploy a TensorRT-LLM model using Ray Serve.
 
@@ -421,7 +420,9 @@ class DeployRay:
                 "work only with the TensorRT-LLM C++ runtime. Set use_python_runtime=False."
             )
 
-        LOGGER.info(f"Configuration: {num_replicas} replicas, {num_gpus_per_replica} GPUs per replica, {num_cpus_per_replica} CPUs per replica")
+        LOGGER.info(
+            f"Configuration: {num_replicas} replicas, {num_gpus_per_replica} GPUs per replica, {num_cpus_per_replica} CPUs per replica"
+        )
 
         # Set up signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)

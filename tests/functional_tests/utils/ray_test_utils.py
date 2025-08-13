@@ -77,9 +77,7 @@ def query_ray_deployment(
                 logger.info(f"Completions endpoint response: {text}")
                 return text
             else:
-                logger.error(
-                    f"Completions endpoint error: {response.status_code} - {response.text}"
-                )
+                logger.error(f"Completions endpoint error: {response.status_code} - {response.text}")
                 return ""
         else:
             chat_url = f"{base_url}/v1/chat/completions/"
@@ -93,17 +91,11 @@ def query_ray_deployment(
             response = requests.post(chat_url, json=payload, timeout=30)
             if response.status_code == 200:
                 result = response.json()
-                text = (
-                    result.get("choices", [{}])[0]
-                    .get("message", {})
-                    .get("content", "")
-                )
+                text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
                 logger.info(f"Chat completions endpoint response: {text}")
                 return text
             else:
-                logger.error(
-                    f"Chat completions endpoint error: {response.status_code} - {response.text}"
-                )
+                logger.error(f"Chat completions endpoint error: {response.status_code} - {response.text}")
                 return ""
     except Exception as e:
         logger.error(f"Exception during query: {e}")

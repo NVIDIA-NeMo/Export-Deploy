@@ -30,17 +30,17 @@ class TestDeployRay:
     def setup_method(self):
         """Setup for each test method."""
         self.deploy_proc = None
-    
+
     def teardown_method(self):
         """Cleanup after each test method."""
         if self.deploy_proc is not None:
             terminate_deployment_process(self.deploy_proc)
             # Avoid double termination in case test used finally to clean up
             self.deploy_proc = None
-    
+
     def test_deploy_ray(self):
         nemo_checkpoint_path = "/home/TestData/llm/models/llama32_1b_nemo2"
-        
+
         try:
             # Run Ray deployment
             self.deploy_proc = subprocess.Popen(
@@ -64,17 +64,17 @@ class TestDeployRay:
                     "--port",
                     str(8000),
                     "--enable_flash_decode",
-                    "--enable_cuda_graphs"
+                    "--enable_cuda_graphs",
                 ]
             )
             print("Deployment started. Waiting for it to be ready...")
-            
+
             # Wait for deployment to be ready
             if not wait_for_deployment_ready(host="0.0.0.0", port=8000, max_wait_time=180):
                 assert False, "Deployment failed to become ready within timeout"
-            
+
             time.sleep(20)
-            
+
             output = query_ray_deployment(
                 host="0.0.0.0",
                 port=8000,

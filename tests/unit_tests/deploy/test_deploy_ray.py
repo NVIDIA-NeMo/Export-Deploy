@@ -236,7 +236,9 @@ class TestDeployRay(unittest.TestCase):
     @patch("nemo_deploy.deploy_ray.TensorRTLLMRayDeployable")
     @patch("nemo_deploy.deploy_ray.signal.signal")
     @patch.object(DeployRay, "_start")
-    def test_deploy_tensorrt_llm_cpp_runtime_accepts_cpp_options(self, mock_start, mock_signal, mock_trt, mock_serve, mock_ray):
+    def test_deploy_tensorrt_llm_cpp_runtime_accepts_cpp_options(
+        self, mock_start, mock_signal, mock_trt, mock_serve, mock_ray
+    ):
         deploy = DeployRay()
 
         mock_app = MagicMock()

@@ -85,7 +85,7 @@ class ModelWorker:
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
-                random_seed=random_seed
+                random_seed=random_seed,
             )
             if rank != 0:
                 self.model.generate_other_ranks()
@@ -124,7 +124,7 @@ class MegatronRayDeployable:
         enable_flash_decode: bool = False,
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
-        random_seed: Optional[int] = None
+        random_seed: Optional[int] = None,
     ):
         """Initialize the distributed Megatron LLM model deployment.
 
@@ -180,7 +180,7 @@ class MegatronRayDeployable:
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
-                random_seed=random_seed
+                random_seed=random_seed,
             )
             worker_futures.append(rank_0_worker)
 
@@ -204,7 +204,7 @@ class MegatronRayDeployable:
                     enable_cuda_graphs=enable_cuda_graphs,
                     enable_flash_decode=enable_flash_decode,
                     max_batch_size=max_batch_size,
-                    random_seed=random_seed
+                    random_seed=random_seed,
                 )
                 worker_futures.append(worker)
 

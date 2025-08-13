@@ -107,7 +107,7 @@ class HFRayDeployable:
 
         This function sets up unique MASTER_PORT environment variables for each Ray Serve
         replica to ensure they can initialize their own torch.distributed process groups
-        without port conflicts. 
+        without port conflicts.
         """
         import os
 
