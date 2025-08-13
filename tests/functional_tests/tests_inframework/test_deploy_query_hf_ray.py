@@ -20,8 +20,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 from tests.functional_tests.utils.ray_test_utils import (
-    terminate_deployment_process,
     query_ray_deployment,
+    terminate_deployment_process,
     wait_for_deployment_ready,
 )
 

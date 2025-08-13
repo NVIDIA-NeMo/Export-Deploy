@@ -16,10 +16,9 @@ import logging
 import signal
 import subprocess
 import time
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
 import requests
-
 
 logger = logging.getLogger(__name__)
 

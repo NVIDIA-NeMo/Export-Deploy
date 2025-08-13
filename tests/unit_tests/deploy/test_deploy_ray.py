@@ -20,6 +20,14 @@ from nemo_deploy.deploy_ray import DeployRay
 
 
 class TestDeployRay(unittest.TestCase):
+    def setUp(self):
+        # Ensure tests run even when Ray is not installed
+        self._have_ray_patcher = patch("nemo_deploy.deploy_ray.HAVE_RAY", True)
+        self._have_ray_patcher.start()
+
+    def tearDown(self):
+        self._have_ray_patcher.stop()
+
     @patch("nemo_deploy.deploy_ray.ray")
     def test_init_with_existing_cluster(self, mock_ray):
         # Test initialization connecting to existing cluster
@@ -49,12 +57,27 @@ class TestDeployRay(unittest.TestCase):
             runtime_env=None,
         )
 
+    @patch("nemo_deploy.deploy_ray.get_available_cpus", return_value=12)
+    @patch("nemo_deploy.deploy_ray.ray")
+    def test_init_uses_available_cpus_on_local_start(self, mock_ray, mock_get_cpus):
+        # When num_cpus is None and connection fails, it should use get_available_cpus()
+        mock_ray.init.side_effect = [ConnectionError, None]
+        DeployRay(num_cpus=None, num_gpus=1, include_dashboard=False)
+        # Second call is for local init with computed CPUs
+        mock_ray.init.assert_called_with(
+            num_cpus=12,
+            num_gpus=1,
+            include_dashboard=False,
+            ignore_reinit_error=True,
+            runtime_env=None,
+        )
+
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
     def test_start_with_port(self, mock_serve, mock_ray):
-        # Test starting Ray Serve with specified port
-        deploy = DeployRay()
-        deploy.start(host="localhost", port=8080)
+        # Test starting Ray Serve with specified port via _start()
+        deploy = DeployRay(host="localhost", port=8080)
+        deploy._start()
 
         mock_serve.start.assert_called_once_with(
             http_options={
@@ -67,11 +90,11 @@ class TestDeployRay(unittest.TestCase):
     @patch("nemo_deploy.deploy_ray.serve")
     @patch("nemo_deploy.deploy_ray.find_available_port")
     def test_start_without_port(self, mock_find_port, mock_serve, mock_ray):
-        # Test starting Ray Serve with auto-detected port
+        # Test starting Ray Serve with auto-detected port via _start()
         mock_find_port.return_value = 9090
 
-        deploy = DeployRay()
-        deploy.start(host="0.0.0.0")
+        deploy = DeployRay(host="0.0.0.0")
+        deploy._start()
 
         mock_find_port.assert_called_once_with(8000, "0.0.0.0")
         mock_serve.start.assert_called_once_with(
@@ -83,21 +106,166 @@ class TestDeployRay(unittest.TestCase):
 
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
-    def test_run(self, mock_serve, mock_ray):
-        # Test running a model
+    @patch("nemo_deploy.deploy_ray.HFRayDeployable")
+    @patch("nemo_deploy.deploy_ray.signal.signal")
+    @patch.object(DeployRay, "_start")
+    def test_deploy_hf_runs(self, mock_start, mock_signal, mock_hf_deployable, mock_serve, mock_ray):
+        # Test running a HuggingFace model triggers serve.run
         deploy = DeployRay()
+
         mock_app = MagicMock()
+        mock_options = MagicMock()
+        mock_options.bind.return_value = mock_app
+        mock_hf_deployable.options.return_value = mock_options
 
-        deploy.run(mock_app, "test_model")
+        deploy.deploy_huggingface_model(
+            hf_model_id_path="test-hf-model",
+            model_id="test_model",
+            test_mode=True,
+        )
 
+        mock_start.assert_called_once()
         mock_serve.run.assert_called_once_with(mock_app, name="test_model")
+        mock_hf_deployable.options.assert_called_once()
+
+    @patch("nemo_deploy.deploy_ray.ray")
+    @patch("nemo_deploy.deploy_ray.serve")
+    @patch("nemo_deploy.deploy_ray.MegatronRayDeployable")
+    @patch("nemo_deploy.deploy_ray.signal.signal")
+    @patch.object(DeployRay, "_start")
+    def test_deploy_inframework_runs(self, mock_start, mock_signal, mock_megatron, mock_serve, mock_ray):
+        # Parallelism per replica (2) equals GPUs per replica (2): valid
+        deploy = DeployRay()
+
+        mock_app = MagicMock()
+        mock_options = MagicMock()
+        mock_options.bind.return_value = mock_app
+        mock_megatron.options.return_value = mock_options
+
+        deploy.deploy_inframework_model(
+            nemo_checkpoint="/path/to/model.nemo",
+            num_gpus=4,
+            tensor_model_parallel_size=2,
+            pipeline_model_parallel_size=1,
+            context_parallel_size=1,
+            num_replicas=2,
+            num_cpus_per_replica=4,
+            model_id="nemo-model",
+            test_mode=True,
+        )
+
+        mock_start.assert_called_once()
+        mock_serve.run.assert_called_once_with(mock_app, name="nemo-model")
+        mock_megatron.options.assert_called_once()
+        # Ensure actor options include provided CPUs
+        _, kwargs = mock_megatron.options.call_args
+        assert kwargs["ray_actor_options"]["num_cpus"] == 4
+
+    @patch("nemo_deploy.deploy_ray.LOGGER")
+    def test_deploy_inframework_invalid_parallelism_exits(self, mock_logger):
+        deploy = DeployRay.__new__(DeployRay)  # Bypass __init__ to avoid ray.init
+        # Set required attributes used by deploy method
+        deploy.host = "0.0.0.0"
+        deploy.port = None
+
+        with self.assertRaises(SystemExit):
+            DeployRay.deploy_inframework_model(
+                deploy,
+                nemo_checkpoint="/path/to/model.nemo",
+                num_gpus=2,
+                tensor_model_parallel_size=2,
+                pipeline_model_parallel_size=2,
+                context_parallel_size=1,
+                num_replicas=1,
+                test_mode=True,
+            )
+        # Ensure we logged the validation error
+        assert mock_logger.error.call_count >= 1
+
+    @patch("nemo_deploy.deploy_ray.ray")
+    @patch("nemo_deploy.deploy_ray.serve")
+    @patch("nemo_deploy.deploy_ray.TensorRTLLMRayDeployable")
+    @patch("nemo_deploy.deploy_ray.signal.signal")
+    @patch.object(DeployRay, "_start")
+    def test_deploy_tensorrt_llm_python_runtime_runs(self, mock_start, mock_signal, mock_trt, mock_serve, mock_ray):
+        deploy = DeployRay()
+
+        mock_app = MagicMock()
+        mock_options = MagicMock()
+        mock_options.bind.return_value = mock_app
+        mock_trt.options.return_value = mock_options
+
+        deploy.deploy_tensorrt_llm_model(
+            trt_llm_path="/path/to/trt-llm",
+            model_id="trt-model",
+            num_replicas=2,
+            num_cpus_per_replica=3,
+            num_gpus_per_replica=1,
+            max_ongoing_requests=5,
+            test_mode=True,
+        )
+
+        mock_start.assert_called_once()
+        mock_serve.run.assert_called_once_with(mock_app, name="trt-model")
+        mock_trt.options.assert_called_once()
+        _, kwargs = mock_trt.options.call_args
+        assert kwargs["ray_actor_options"]["num_cpus"] == 3
+        assert kwargs["ray_actor_options"]["num_gpus"] == 1
+        assert kwargs["num_replicas"] == 2
+        assert kwargs["max_ongoing_requests"] == 5
+
+    @patch("nemo_deploy.deploy_ray.ray")
+    @patch("nemo_deploy.deploy_ray.serve")
+    def test_deploy_tensorrt_llm_invalid_cpp_options_error(self, mock_serve, mock_ray):
+        deploy = DeployRay.__new__(DeployRay)  # Avoid __init__
+        deploy.host = "0.0.0.0"
+        deploy.port = None
+
+        with self.assertRaises(ValueError):
+            DeployRay.deploy_tensorrt_llm_model(
+                deploy,
+                trt_llm_path="/path/to/trt-llm",
+                enable_chunked_context=True,
+                use_python_runtime=True,
+                test_mode=True,
+            )
+        mock_serve.run.assert_not_called()
+
+    @patch("nemo_deploy.deploy_ray.ray")
+    @patch("nemo_deploy.deploy_ray.serve")
+    @patch("nemo_deploy.deploy_ray.TensorRTLLMRayDeployable")
+    @patch("nemo_deploy.deploy_ray.signal.signal")
+    @patch.object(DeployRay, "_start")
+    def test_deploy_tensorrt_llm_cpp_runtime_accepts_cpp_options(self, mock_start, mock_signal, mock_trt, mock_serve, mock_ray):
+        deploy = DeployRay()
+
+        mock_app = MagicMock()
+        mock_options = MagicMock()
+        mock_options.bind.return_value = mock_app
+        mock_trt.options.return_value = mock_options
+
+        deploy.deploy_tensorrt_llm_model(
+            trt_llm_path="/path/to/trt-llm",
+            model_id="trt-model",
+            use_python_runtime=False,
+            enable_chunked_context=True,
+            max_tokens_in_paged_kv_cache=12345,
+            test_mode=True,
+        )
+
+        mock_start.assert_called_once()
+        mock_serve.run.assert_called_once_with(mock_app, name="trt-model")
+        # Ensure C++ runtime specific args were bound
+        _, bind_kwargs = mock_options.bind.call_args
+        assert bind_kwargs["enable_chunked_context"] is True
+        assert bind_kwargs["max_tokens_in_paged_kv_cache"] == 12345
 
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
     def test_stop(self, mock_serve, mock_ray):
-        # Test stopping Ray Serve and Ray
+        # Test stopping Ray Serve and Ray via _stop()
         deploy = DeployRay()
-        deploy.stop()
+        deploy._stop()
 
         mock_serve.shutdown.assert_called_once()
         mock_ray.shutdown.assert_called_once()
@@ -111,7 +279,7 @@ class TestDeployRay(unittest.TestCase):
         mock_ray.shutdown.side_effect = Exception("Ray shutdown error")
 
         deploy = DeployRay()
-        deploy.stop()
+        deploy._stop()
 
         # Verify we log warnings but don't crash
         assert mock_logger.warning.call_count == 2

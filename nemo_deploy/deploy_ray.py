@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import multiprocessing
 import logging
+import multiprocessing
 import signal
 import sys
 from typing import Optional
+
 from nemo_deploy.ray_utils import find_available_port
 from nemo_export_deploy_common.import_utils import MISSING_RAY_MSG, UnavailableError
 
@@ -24,8 +25,9 @@ try:
     import ray
     from ray import serve
     from ray.serve import Application
-    from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
+
     from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
+    from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
     from nemo_export.tensorrt_llm_deployable_ray import TensorRTLLMRayDeployable
 
     HAVE_RAY = True
