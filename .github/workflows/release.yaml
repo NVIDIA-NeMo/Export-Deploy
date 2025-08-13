@@ -55,3 +55,4 @@ jobs:
       PAT: ${{ secrets.PAT }}
       SSH_KEY: ${{ secrets.SSH_KEY }}
       SSH_PWD: ${{ secrets.SSH_PWD }}
+      BOT_KEY: ${{ secrets.BOT_KEY }}
