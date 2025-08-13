@@ -351,7 +351,7 @@ jobs:
     if: |
       (needs.pre-flight.outputs.docs_only == 'true'
       || needs.pre-flight.outputs.is_deployment_workflow == 'true')
-      && (success() || skipped())
+      && !failure()
       && !cancelled()
     runs-on: ubuntu-latest
     steps:
