@@ -455,6 +455,7 @@ class vLLMExporter(ITritonDeployable):
 
                 top_prompt_logprobs.append(lpbs)
 
+        # TODO athitten: If output contains input prompt + generated text, extract only the generated text.
         output = {"sentences": output}
         if len(top_logprobs) > 0:
             max_len = max(len(arr) for arr in top_logprobs)
