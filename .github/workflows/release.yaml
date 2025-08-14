@@ -35,6 +35,10 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write # To read repository content
+  pull-requests: write # To create PRs
+
 jobs:
   release:
     uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_release_library.yml@ko3n1g/feat/auto-releases
