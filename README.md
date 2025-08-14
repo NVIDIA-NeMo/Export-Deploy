@@ -74,7 +74,6 @@ Refer to the table below for an overview of optimized inference and deployment s
 | NeMo Framework - MMs         | &#x2611;                              | &#x2612;                      | &#x2612;                      |
 | Hugging Face                 | &#x2611;                              | &#x2611;                      | &#x2611;                      |
 
-
 ## 🔧 Install
 
 For quick exploration of NeMo Export-Deploy, we recommend installing our pip package:
@@ -98,7 +97,7 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
   nvcr.io/nvidia/nemo:${TAG}
 ```
 
-#### Install TensorRT-LLM (or vLLM)
+#### Install TensorRT-LLM, vLLM, or TRT-ONNX backend
 
 Starting with version 25.07, the NeMo FW container no longer includes TensorRT-LLM and vLLM pre-installed. Please run the following command inside the container:
 
@@ -114,6 +113,13 @@ For vLLM:
 ```bash
 cd /opt/Export-Deploy
 uv sync --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
+```
+
+For TRT-ONNX:
+
+```bash
+cd /opt/Export-Deploy
+uv sync --link-mode symlink --locked --extra trt-onnx $(cat /opt/uv_args.txt)
 ```
 
 ### Build with Dockerfile
@@ -191,6 +197,20 @@ Now proceed with the main installation:
 
 ```bash
 pip install --no-build-isolation .[te,vllm]
+```
+
+#### Install TransformerEngine + TRT-ONNX
+
+For highly optimized TransformerEngine path with TRT-ONNX backend, please make sure to install the following prerequisites first:
+
+```bash
+pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
+```
+
+Now proceed with the main installation:
+
+```bash
+pip install --no-build-isolation .[te,trt-onnx]
 ```
 
 ## 🚀 Get Started Quickly

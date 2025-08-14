@@ -1,3 +1,17 @@
+# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 [build-system]
 requires = ["setuptools>=42", "wheel", "cython>=3.0.0"]
 build-backend = "setuptools.build_meta"
@@ -116,9 +130,8 @@ link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }, { extra = "trt-onnx" }]]
 override-dependencies = [
     "urllib3>1.27.0",
-    "tiktoken>=0.9.0",                                                    # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
+    "tiktoken>=0.9.0",                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
-    "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
 ]
 prerelease = "allow"
 
