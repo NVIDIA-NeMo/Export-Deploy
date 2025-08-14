@@ -151,7 +151,7 @@ For complete feature coverage, we recommend to install [TransformerEngine](https
 
 - Python 3.12
 - PyTorch 2.7
-- CUDA 12.8
+- CUDA 12.9
 - Ubuntu 24.04
 
 #### Install TransformerEngine + InFramework
