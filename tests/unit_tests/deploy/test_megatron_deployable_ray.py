@@ -19,6 +19,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import ray
+import requests
 from ray import serve
 
 from nemo_deploy.deploy_ray import DeployRay
@@ -63,7 +64,7 @@ def deploy_ray_instance(ray_cluster):
 
     # Cleanup
     try:
-        deploy_ray.stop()
+        deploy_ray._stop()
     except Exception:
         pass
 
@@ -196,14 +197,14 @@ class TestMegatronRayDeployable:
     def test_deploy_ray_start_and_stop(self, deploy_ray_instance):
         """Test starting and stopping Ray Serve."""
         # Start Ray Serve
-        deploy_ray_instance.start(port=8000)
+        deploy_ray_instance._start()
 
         # Verify serve is running - check if status function works
         status = serve.status()
         assert status is not None  # Just verify we can get status
 
         # Stop should work without errors
-        deploy_ray_instance.stop()
+        deploy_ray_instance._stop()
 
     def test_megatron_ray_deployable_initialization_single_gpu(
         self,
@@ -217,7 +218,6 @@ class TestMegatronRayDeployable:
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
-            num_nodes=1,
             tensor_model_parallel_size=1,
             pipeline_model_parallel_size=1,
             context_parallel_size=1,
@@ -227,14 +227,11 @@ class TestMegatronRayDeployable:
         # Deploy the deployment
         serve.run(deployment_handle, name="test-model-deployment")
 
-        # Get a handle to interact with the deployment
-        deployable = serve.get_app_handle("test-model-deployment")
-
         # Test that we can call the endpoints
-        health_response = deployable.health_check.remote().result()
+        health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
 
-        models_response = deployable.list_models.remote().result()
+        models_response = requests.get("http://127.0.0.1:8000/v1/models", timeout=10).json()
         assert models_response["object"] == "list"
         assert len(models_response["data"]) == 1
         assert models_response["data"][0]["id"] == "test-model"
@@ -251,7 +248,6 @@ class TestMegatronRayDeployable:
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=2,
-            num_nodes=1,
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=1,
             context_parallel_size=1,
@@ -261,11 +257,8 @@ class TestMegatronRayDeployable:
         # Deploy the deployment
         serve.run(deployment_handle, name="test-multi-gpu-deployment")
 
-        # Get a handle to interact with the deployment
-        deployable = serve.get_app_handle("test-multi-gpu-deployment")
-
         # Test basic functionality
-        health_response = deployable.health_check.remote().result()
+        health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
 
     def test_megatron_ray_deployable_invalid_parallelism(
@@ -280,7 +273,6 @@ class TestMegatronRayDeployable:
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
-            num_nodes=1,
             tensor_model_parallel_size=2,  # This would require 2 GPUs
             pipeline_model_parallel_size=1,
             context_parallel_size=1,
@@ -302,14 +294,12 @@ class TestMegatronRayDeployable:
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
-            num_nodes=1,
             model_id="test-list-models",
         )
 
         serve.run(deployment_handle, name="test-list-models-deployment")
-        deployable = serve.get_app_handle("test-list-models-deployment")
 
-        response = deployable.list_models.remote().result()
+        response = requests.get("http://127.0.0.1:8000/v1/models", timeout=10).json()
 
         assert response["object"] == "list"
         assert len(response["data"]) == 1
@@ -329,14 +319,12 @@ class TestMegatronRayDeployable:
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
-            num_nodes=1,
             model_id="test-health-model",
         )
 
         serve.run(deployment_handle, name="test-health-deployment")
-        deployable = serve.get_app_handle("test-health-deployment")
 
-        response = deployable.health_check.remote().result()
+        response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
 
         assert response["status"] == "healthy"
 
@@ -352,16 +340,14 @@ class TestMegatronRayDeployable:
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
-            num_nodes=1,
             enable_cuda_graphs=True,
             model_id="test-cuda-graphs-model",
         )
 
         serve.run(deployment_handle, name="test-cuda-graphs-deployment")
-        deployable = serve.get_app_handle("test-cuda-graphs-deployment")
 
         # Verify the deployable was created successfully
-        health_response = deployable.health_check.remote().result()
+        health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
 
     def test_initialization_with_flash_decode(
@@ -376,16 +362,14 @@ class TestMegatronRayDeployable:
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
-            num_nodes=1,
             enable_flash_decode=True,
             model_id="test-flash-decode-model",
         )
 
         serve.run(deployment_handle, name="test-flash-decode-deployment")
-        deployable = serve.get_app_handle("test-flash-decode-deployment")
 
         # Verify the deployable was created successfully
-        health_response = deployable.health_check.remote().result()
+        health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
 
     def test_initialization_with_legacy_checkpoint(
@@ -400,16 +384,14 @@ class TestMegatronRayDeployable:
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
-            num_nodes=1,
             legacy_ckpt=True,
             model_id="test-legacy-ckpt-model",
         )
 
         serve.run(deployment_handle, name="test-legacy-ckpt-deployment")
-        deployable = serve.get_app_handle("test-legacy-ckpt-deployment")
 
         # Verify the deployable was created successfully
-        health_response = deployable.health_check.remote().result()
+        health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
 
     def test_multi_node_initialization(
@@ -423,8 +405,7 @@ class TestMegatronRayDeployable:
         """Test initialization with multiple nodes."""
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
-            num_gpus=2,
-            num_nodes=2,
+            num_gpus=4,
             tensor_model_parallel_size=4,
             pipeline_model_parallel_size=1,
             context_parallel_size=1,
@@ -432,9 +413,8 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-multi-node-deployment")
-        deployable = serve.get_app_handle("test-multi-node-deployment")
 
-        health_response = deployable.health_check.remote().result()
+        health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
 
     def test_pipeline_parallelism_initialization(
@@ -449,7 +429,6 @@ class TestMegatronRayDeployable:
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=4,
-            num_nodes=1,
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=2,
             context_parallel_size=1,
@@ -457,9 +436,8 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-pipeline-parallel-deployment")
-        deployable = serve.get_app_handle("test-pipeline-parallel-deployment")
 
-        health_response = deployable.health_check.remote().result()
+        health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
 
     def test_context_parallelism_initialization(
@@ -474,7 +452,6 @@ class TestMegatronRayDeployable:
         deployment_handle = MegatronRayDeployable.bind(
             nemo_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=2,
-            num_nodes=1,
             tensor_model_parallel_size=1,
             pipeline_model_parallel_size=1,
             context_parallel_size=2,
@@ -482,7 +459,6 @@ class TestMegatronRayDeployable:
         )
 
         serve.run(deployment_handle, name="test-context-parallel-deployment")
-        deployable = serve.get_app_handle("test-context-parallel-deployment")
 
-        health_response = deployable.health_check.remote().result()
+        health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"

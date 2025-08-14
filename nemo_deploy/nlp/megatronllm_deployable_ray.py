@@ -16,7 +16,7 @@
 import logging
 import os
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import numpy as np
 import ray
@@ -53,6 +53,8 @@ class ModelWorker:
         enable_cuda_graphs: bool = False,
         enable_flash_decode: bool = False,
         legacy_ckpt: bool = False,
+        max_batch_size: int = 32,
+        random_seed: Optional[int] = None,
     ):
         # Use replica-specific environment variables to avoid conflicts
         os.environ["MASTER_PORT"] = master_port
@@ -82,6 +84,8 @@ class ModelWorker:
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
+                max_batch_size=max_batch_size,
+                random_seed=random_seed,
             )
             if rank != 0:
                 self.model.generate_other_ranks()
@@ -111,7 +115,6 @@ class MegatronRayDeployable:
         self,
         nemo_checkpoint_filepath: str,
         num_gpus: int = 1,
-        num_nodes: int = 1,
         tensor_model_parallel_size: int = 1,
         pipeline_model_parallel_size: int = 1,
         context_parallel_size: int = 1,
@@ -120,13 +123,14 @@ class MegatronRayDeployable:
         enable_cuda_graphs: bool = False,
         enable_flash_decode: bool = False,
         legacy_ckpt: bool = False,
+        max_batch_size: int = 32,
+        random_seed: Optional[int] = None,
     ):
         """Initialize the distributed Megatron LLM model deployment.
 
         Args:
             nemo_checkpoint_filepath (str): Path to the .nemo checkpoint file.
-            num_gpus (int): Number of GPUs to use per replica.
-            num_nodes (int): Number of nodes to use for deployment.
+            num_gpus (int): Number of GPUs to use for the deployment
             tensor_model_parallel_size (int): Size of tensor model parallelism.
             pipeline_model_parallel_size (int): Size of pipeline model parallelism.
             context_parallel_size (int): Size of context parallelism.
@@ -136,16 +140,16 @@ class MegatronRayDeployable:
             max_batch_size (int): Maximum batch size for request batching.
             batch_wait_timeout_s (float): Maximum time to wait for batching requests.
             legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
+            random_seed (int): Random seed for model initialization.
         """
         try:
             self.model_id = model_id
-            world_size = num_gpus * num_nodes
 
             # Validate parallelism configuration
             total_parallel_size = tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size
-            if total_parallel_size != world_size:
+            if total_parallel_size != num_gpus:
                 raise ValueError(
-                    f"Total parallelism size ({total_parallel_size}) must equal total GPUs per replica ({world_size})"
+                    f"Total parallelism size ({total_parallel_size}) must equal total GPUs per replica ({num_gpus})"
                 )
 
             # Generate a unique replica ID based on the actor handle
@@ -165,7 +169,7 @@ class MegatronRayDeployable:
             rank_0_worker = ModelWorker.remote(
                 nemo_checkpoint_filepath=nemo_checkpoint_filepath,
                 rank=0,
-                world_size=world_size,
+                world_size=num_gpus,
                 tensor_model_parallel_size=tensor_model_parallel_size,
                 pipeline_model_parallel_size=pipeline_model_parallel_size,
                 context_parallel_size=context_parallel_size,
@@ -175,6 +179,8 @@ class MegatronRayDeployable:
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
+                max_batch_size=max_batch_size,
+                random_seed=random_seed,
             )
             worker_futures.append(rank_0_worker)
 
@@ -184,11 +190,11 @@ class MegatronRayDeployable:
             time.sleep(1)  # Give rank 0 time to start the distributed backend
 
             # Create remaining workers in parallel
-            for rank in range(1, world_size):
+            for rank in range(1, num_gpus):
                 worker = ModelWorker.remote(
                     nemo_checkpoint_filepath=nemo_checkpoint_filepath,
                     rank=rank,
-                    world_size=world_size,
+                    world_size=num_gpus,
                     tensor_model_parallel_size=tensor_model_parallel_size,
                     pipeline_model_parallel_size=pipeline_model_parallel_size,
                     context_parallel_size=context_parallel_size,
@@ -197,17 +203,19 @@ class MegatronRayDeployable:
                     replica_id=replica_id,
                     enable_cuda_graphs=enable_cuda_graphs,
                     enable_flash_decode=enable_flash_decode,
+                    max_batch_size=max_batch_size,
+                    random_seed=random_seed,
                 )
                 worker_futures.append(worker)
 
             # Wait for all workers to be created and store them
             self.workers = worker_futures
-            LOGGER.info(f"Replica {replica_id} - All {world_size} workers created successfully")
+            LOGGER.info(f"Replica {replica_id} - All {num_gpus} workers created successfully")
 
             # Primary worker for coordinating inference
             self.primary_worker = self.workers[0]
 
-            LOGGER.info(f"Replica {replica_id} - Initialized {world_size} model workers across {num_nodes} nodes")
+            LOGGER.info(f"Replica {replica_id} - Initialized {num_gpus} model workers")
 
         except Exception as e:
             LOGGER.error(f"Error initializing distributed model deployment: {str(e)}")

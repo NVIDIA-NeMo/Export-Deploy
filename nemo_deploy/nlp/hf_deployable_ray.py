@@ -15,7 +15,7 @@
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import numpy as np
 import torch
@@ -62,8 +62,8 @@ class HFRayDeployable:
         task: str = "text-generation",
         trust_remote_code: bool = True,
         model_id: str = "nemo-model",
-        device_map: str = "auto",
-        max_memory: str = None,
+        device_map: Optional[str] = None,
+        max_memory: Optional[str] = None,
     ):
         """Initialize the HuggingFace model deployment.
 
@@ -81,7 +81,7 @@ class HFRayDeployable:
         """
         try:
             max_memory_dict = None
-            self._setup_unique_distributed_parameters(device_map)
+            self._setup_unique_distributed_parameters()
             if device_map == "balanced":
                 if not max_memory:
                     raise ValueError("max_memory must be provided when device_map is 'balanced'")
@@ -102,29 +102,25 @@ class HFRayDeployable:
             LOGGER.error(f"Error initializing HuggingFaceLLMServe replica: {str(e)}")
             raise
 
-    def _setup_unique_distributed_parameters(self, device_map):
+    def _setup_unique_distributed_parameters(self):
         """Configure unique distributed communication parameters for each model replica.
 
         This function sets up unique MASTER_PORT environment variables for each Ray Serve
         replica to ensure they can initialize their own torch.distributed process groups
-        without port conflicts. Only runs for 'balanced' or 'auto' device maps.
-
-        Args:
-            device_map (str): The device mapping strategy ('auto', 'balanced', etc.)
+        without port conflicts.
         """
-        if device_map == "balanced" or device_map == "auto":
-            import os
+        import os
 
-            import torch.distributed as dist
+        import torch.distributed as dist
 
-            # Check if torch.distributed is already initialized
-            if not dist.is_initialized():
-                # Get a unique port based on current process ID to avoid conflicts
+        # Check if torch.distributed is already initialized
+        if not dist.is_initialized():
+            # Get a unique port based on current process ID to avoid conflicts
 
-                unique_port = find_available_port(29500, "127.0.0.1")
-                # Set environment variables for torch.distributed
-                os.environ["MASTER_ADDR"] = "127.0.0.1"
-                os.environ["MASTER_PORT"] = str(unique_port)
+            unique_port = find_available_port(29500, "127.0.0.1")
+            # Set environment variables for torch.distributed
+            os.environ["MASTER_ADDR"] = "127.0.0.1"
+            os.environ["MASTER_PORT"] = str(unique_port)
 
     @app.post("/v1/completions/")
     async def completions(self, request: Dict[Any, Any]):
@@ -267,16 +263,9 @@ class HFRayDeployable:
             prompt = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages])
             prompt += "\nassistant:"
 
-            # Create a modified request with the prompt
-            chat_request = request.copy()
-            chat_request["prompt"] = prompt
-
-            # Extract parameters from the request dictionary
-            messages = request.get("messages", [])
-
-            # Prepare inference parameters
+            # Prepare inference parameters using the formatted prompt
             inference_inputs = {
-                "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
+                "prompts": [prompt],  # Use formatted prompt string instead of raw messages
                 "max_length": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
@@ -330,7 +319,7 @@ class HFRayDeployable:
                         ),
                         "finish_reason": (
                             "length"
-                            if generated_texts and len(generated_texts[0]) >= inference_inputs["max_length"]
+                            if generated_texts and len(generated_texts[0]) >= request.get("max_tokens", 256)
                             else "stop"
                         ),
                     }

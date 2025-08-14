@@ -17,13 +17,11 @@ import json
 import logging
 import multiprocessing
 import os
-import signal
 import sys
 from pathlib import Path
 
 from nemo_deploy.deploy_ray import DeployRay
 from nemo_export.tensorrt_llm import TensorRTLLM
-from nemo_export.tensorrt_llm_deployable_ray import TensorRTLLMRayDeployable
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -214,13 +212,6 @@ def parse_args():
     return parser.parse_args()
 
 
-def signal_handler(signum, frame, deployer):
-    """Handle interrupt signals."""
-    LOGGER.info("Received interrupt signal. Shutting down gracefully...")
-    deployer.stop()
-    sys.exit(0)
-
-
 def main():
     args = parse_args()
 
@@ -323,11 +314,13 @@ def main():
     else:
         LOGGER.warning(f"Engine directory not found at: {engine_dir}")
 
-    # Initialize Ray deployment
+    # Initialize Ray deployment with host and port
     ray_deployer = DeployRay(
         num_cpus=args.num_cpus,
         num_gpus=args.num_gpus,
         include_dashboard=args.include_dashboard,
+        host=args.host,
+        port=args.port,
         runtime_env={
             "env_vars": {
                 "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
@@ -335,47 +328,19 @@ def main():
         },
     )
 
-    # Set up signal handlers
-    signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, ray_deployer))
-    signal.signal(
-        signal.SIGTERM,
-        lambda signum, frame: signal_handler(signum, frame, ray_deployer),
-    )
-    # Start Ray Serve
-    ray_deployer.start(host=args.host, port=args.port)
-
-    # Prepare deployment parameters
-    deployment_kwargs = {
-        "trt_llm_path": args.trt_llm_path,
-        "model_id": args.model_id,
-        "use_python_runtime": use_python_runtime,
-        "multi_block_mode": args.multi_block_mode,
-        "lora_ckpt_list": args.lora_ckpt_list,
-    }
-
-    # Add C++ runtime specific options if using C++ runtime
-    if not use_python_runtime:
-        deployment_kwargs["enable_chunked_context"] = args.enable_chunked_context
-        deployment_kwargs["max_tokens_in_paged_kv_cache"] = args.max_tokens_in_paged_kv_cache
-
-    # Create the TensorRT-LLM model deployment
-    app = TensorRTLLMRayDeployable.options(
+    # Deploy the TensorRT-LLM model using the deploy_tensorrt_llm_model API
+    ray_deployer.deploy_tensorrt_llm_model(
+        trt_llm_path=args.trt_llm_path,
+        model_id=args.model_id,
+        use_python_runtime=use_python_runtime,
+        multi_block_mode=args.multi_block_mode,
+        lora_ckpt_list=args.lora_ckpt_list,
+        enable_chunked_context=args.enable_chunked_context,
+        max_tokens_in_paged_kv_cache=args.max_tokens_in_paged_kv_cache,
         num_replicas=args.num_replicas,
-        ray_actor_options={
-            "num_gpus": args.num_gpus_per_replica,
-            "num_cpus": args.num_cpus_per_replica,
-        },
-    ).bind(**deployment_kwargs)
-
-    # Deploy the model
-    ray_deployer.run(app, args.model_id)
-
-    LOGGER.info(f"TensorRT-LLM model deployed successfully at {args.host}:{args.port}")
-    LOGGER.info("Press Ctrl+C to stop the deployment")
-
-    # Keep the script running
-    while True:
-        signal.pause()
+        num_cpus_per_replica=args.num_cpus_per_replica,
+        num_gpus_per_replica=args.num_gpus_per_replica,
+    )
 
 
 if __name__ == "__main__":
