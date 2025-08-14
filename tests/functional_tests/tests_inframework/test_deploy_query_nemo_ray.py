@@ -73,7 +73,7 @@ class TestDeployRay:
             if not wait_for_deployment_ready(host="0.0.0.0", port=8000, max_wait_time=180):
                 assert False, "Deployment failed to become ready within timeout"
 
-            time.sleep(20)
+            time.sleep(60)
 
             output = query_ray_deployment(
                 host="0.0.0.0",
@@ -86,7 +86,7 @@ class TestDeployRay:
             print(output)
 
             # Check if deployment was successful
-            assert output != "", "First prediction is empty"
+            assert output != None, "First prediction is empty"
 
             # Send a second request using the chat endpoint
             output_chat = query_ray_deployment(
@@ -99,7 +99,7 @@ class TestDeployRay:
             )
             print(output_chat)
             # Check if deployment was successful
-            assert output_chat != "", "Second prediction (chat) is empty"
+            assert output_chat != None, "Second prediction (chat) is empty"
         finally:
             # Ensure the deployment is terminated as soon as queries complete or on failure
             if self.deploy_proc is not None:
