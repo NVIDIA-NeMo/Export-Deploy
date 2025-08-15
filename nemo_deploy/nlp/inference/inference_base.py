@@ -16,10 +16,21 @@
 import atexit
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Union, Any
+from typing import Any, List, Optional, Tuple, Union
 
 import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
+from megatron.bridge.training.checkpointing import (
+    _load_model_weights_from_checkpoint,
+    get_checkpoint_run_config_filename,
+    read_run_config,
+)
+from megatron.bridge.training.mlm_compat.arguments import _load_args_from_checkpoint, _transformer_config_from_args
+from megatron.bridge.training.mlm_compat.model import _gpt_provider, _mamba_provider
+from megatron.bridge.training.model_load_save import load_tokenizer
+from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
+from megatron.bridge.training.utils.checkpoint_utils import file_exists
+from megatron.bridge.utils.instantiate_utils import instantiate
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
 from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
@@ -38,18 +49,6 @@ from megatron.core.inference.text_generation_controllers.text_generation_control
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
 from packaging import version
-
-from megatron.bridge.training.checkpointing import (
-    _load_model_weights_from_checkpoint,
-    get_checkpoint_run_config_filename,
-    read_run_config,
-)
-from megatron.bridge.training.mlm_compat.arguments import _load_args_from_checkpoint, _transformer_config_from_args
-from megatron.bridge.training.mlm_compat.model import _gpt_provider, _mamba_provider
-from megatron.bridge.utils.instantiate_utils import instantiate
-from megatron.bridge.training.utils.checkpoint_utils import file_exists
-from megatron.bridge.training.model_load_save import load_tokenizer
-from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
 
 from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
 
@@ -216,6 +215,7 @@ def load_nemo_checkpoint_to_tron_model(model: List[MegatronModule], path: Path, 
 
     _load_dist_shards_into_model(model, weights_dir, legacy_ckpt)
 
+
 def torch_dtype_from_mcore_config(config: Any) -> torch.dtype:
     """Convert Megatron-Core config dtype settings to torch dtype.
 
@@ -232,6 +232,7 @@ def torch_dtype_from_mcore_config(config: Any) -> torch.dtype:
     else:
         return torch.float32
 
+
 def _call_model_provider(model_cfg, mbridge_ckpt, model_type, mlm_args):
     """Handles provider call for both MBridge and MLM providers."""
     if mbridge_ckpt:
@@ -240,12 +241,15 @@ def _call_model_provider(model_cfg, mbridge_ckpt, model_type, mlm_args):
         provider = _gpt_provider if model_type == "gpt" else _mamba_provider
         return provider(mlm_args, model_cfg)
 
-def load_megatron_checkpoint(model_cfg, checkpoint_path, return_state_dict=False, mbridge_ckpt=False, model_type="gpt", mlm_args=None):
+
+def load_megatron_checkpoint(
+    model_cfg, checkpoint_path, return_state_dict=False, mbridge_ckpt=False, model_type="gpt", mlm_args=None
+):
     target_dtype = torch_dtype_from_mcore_config(model_cfg)
     if model_cfg.params_dtype != target_dtype:
         logger.info(f"Converting params_dtype from {model_cfg.params_dtype} to {target_dtype}")
         model_cfg.params_dtype = target_dtype
-    
+
     model = _call_model_provider(model_cfg, mbridge_ckpt, model_type, mlm_args)
     maybe_state_dict = _load_model_weights_from_checkpoint(
         checkpoint_path, [model], return_state_dict=return_state_dict
@@ -255,7 +259,8 @@ def load_megatron_checkpoint(model_cfg, checkpoint_path, return_state_dict=False
         return maybe_state_dict
     else:
         return model
-    
+
+
 def setup_megatron_model_and_tokenizer_for_inference(
     checkpoint_path: Union[str, Path],
     tensor_model_parallel_size: Optional[int] = None,
@@ -263,7 +268,7 @@ def setup_megatron_model_and_tokenizer_for_inference(
     context_parallel_size: Optional[int] = None,
     expert_model_parallel_size: Optional[int] = None,
     micro_batch_size: Optional[int] = None,
-    model_type: str = "gpt"
+    model_type: str = "gpt",
 ) -> Tuple[List[MegatronModule], MegatronTokenizer]:
     run_config_filename = get_checkpoint_run_config_filename(checkpoint_path)
     mlm_args = None
@@ -281,7 +286,7 @@ def setup_megatron_model_and_tokenizer_for_inference(
     else:
         model_config = _transformer_config_from_args(mlm_args)
         assert model_type in ("gpt", "mamba"), f"model type {model_type} not supported."
-    
+
     if tensor_model_parallel_size is not None:
         model_config.tensor_model_parallel_size = tensor_model_parallel_size
     if pipeline_model_parallel_size is not None:
@@ -294,9 +299,17 @@ def setup_megatron_model_and_tokenizer_for_inference(
     rng_config = RNGConfig(inference_rng_tracker=True)
     dist_config = DistributedInitConfig(distributed_backend="nccl")
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
-    model = load_megatron_checkpoint(model_config, checkpoint_path, return_state_dict=False, mbridge_ckpt=mbridge_ckpt, model_type=model_type, mlm_args=mlm_args)
+    model = load_megatron_checkpoint(
+        model_config,
+        checkpoint_path,
+        return_state_dict=False,
+        mbridge_ckpt=mbridge_ckpt,
+        model_type=model_type,
+        mlm_args=mlm_args,
+    )
     tokenizer = load_tokenizer(checkpoint_path)
     return [model], tokenizer
+
 
 def setup_model_and_tokenizer_for_inference(
     checkpoint_path: Union[str, Path],
@@ -413,6 +426,7 @@ def setup_model_and_tokenizer_for_inference(
 
     return model, tokenizer_wrapper
 
+
 class MCoreEngineWithCleanup:
     """Wrapper around MCoreEngine that ensures proper cleanup of distributed resources.
 
@@ -424,14 +438,14 @@ class MCoreEngineWithCleanup:
         self,
         mcore_engine: MCoreEngine,
         model_inference_wrapper: GPTInferenceWrapper,
-        tokenizer: MCoreTokenizerWrappper,
+        tokenizer: Union[MCoreTokenizerWrappper, MegatronTokenizer],
     ):
         """Initialize the MCoreEngineWithCleanup.
 
         Args:
             mcore_engine (MCoreEngine): The underlying MCoreEngine instance
             model_inference_wrapper (GPTInferenceWrapper): The model inference wrapper
-            tokenizer (MCoreTokenizerWrappper): The tokenizer wrapper
+            tokenizer (Union[MCoreTokenizerWrappper, MegatronTokenizer]): The tokenizer instance
         """
         self.mcore_engine = mcore_engine
         self.model_inference_wrapper = model_inference_wrapper
@@ -463,8 +477,9 @@ def create_mcore_engine(
     enable_cuda_graphs: bool = False,
     legacy_ckpt: bool = False,
     model_type: str = "gpt",
-    model_format: str = "nemo"
-) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, MCoreTokenizerWrappper]:
+    model_format: str = "nemo",
+    micro_batch_size: Optional[int] = None,
+) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MCoreEngine for inference.
 
     Args:
@@ -483,11 +498,12 @@ def create_mcore_engine(
         legacy_ckpt (bool): Whether to use legacy checkpoint format
         model_type (str): Type of model to load (default: "gpt")
         model_format (str): Format of model to load (default: "nemo")
+        micro_batch_size (Optional[int]): Micro batch size for model execution
     Returns:
-        Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, MCoreTokenizerWrappper]: Tuple containing:
+        Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]: Tuple containing:
             - MCoreEngineWithCleanup: Engine for text generation with proper cleanup
             - GPTInferenceWrapper: Inference-wrapped model
-            - MCoreTokenizerWrappper: Tokenizer wrapper
+            - Union[MCoreTokenizerWrappper, MegatronTokenizer]: Tokenizer instance
     """
     if not HAVE_NEMO:
         raise UnavailableError(MISSING_NEMO_MSG)
@@ -499,7 +515,9 @@ def create_mcore_engine(
     expert_model_parallel_size = expert_model_parallel_size if expert_model_parallel_size is not None else 1
 
     # Calculate total devices needed for the parallelism configuration
-    total_devices_needed = tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size * expert_model_parallel_size
+    total_devices_needed = (
+        tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size * expert_model_parallel_size
+    )
     if num_devices is None:
         total_devices_available = get_world_size_safe()
     else:
@@ -531,7 +549,9 @@ def create_mcore_engine(
             tensor_model_parallel_size=tensor_model_parallel_size,
             pipeline_model_parallel_size=pipeline_model_parallel_size,
             context_parallel_size=context_parallel_size,
-            expert_model_parallel_size=expert_model_parallel_size
+            expert_model_parallel_size=expert_model_parallel_size,
+            micro_batch_size=micro_batch_size,
+            model_type=model_type,
         )
     else:
         raise ValueError(f"Model format {model_format} not supported.")
