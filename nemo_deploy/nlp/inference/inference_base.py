@@ -21,15 +21,11 @@ from typing import Any, List, Optional, Tuple, Union
 import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
 from megatron.bridge.training.checkpointing import (
-    _load_model_weights_from_checkpoint,
     get_checkpoint_run_config_filename,
     read_run_config,
 )
-from megatron.bridge.training.mlm_compat.arguments import _load_args_from_checkpoint, _transformer_config_from_args
-from megatron.bridge.training.mlm_compat.model import _gpt_provider, _mamba_provider
-from megatron.bridge.training.model_load_save import load_tokenizer
+from megatron.bridge.training.model_load_save import load_megatron_model, load_tokenizer
 from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
-from megatron.bridge.training.utils.checkpoint_utils import file_exists
 from megatron.bridge.utils.instantiate_utils import instantiate
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
 from megatron.core.dist_checkpointing.serialization import (
@@ -216,51 +212,6 @@ def load_nemo_checkpoint_to_tron_model(model: List[MegatronModule], path: Path, 
     _load_dist_shards_into_model(model, weights_dir, legacy_ckpt)
 
 
-def torch_dtype_from_mcore_config(config: Any) -> torch.dtype:
-    """Convert Megatron-Core config dtype settings to torch dtype.
-
-    Args:
-        config: Megatron-Core configuration object with bf16/fp16 flags.
-
-    Returns:
-        The corresponding torch dtype.
-    """
-    if hasattr(config, "bf16") and config.bf16:
-        return torch.bfloat16
-    elif hasattr(config, "fp16") and config.fp16:
-        return torch.float16
-    else:
-        return torch.float32
-
-
-def _call_model_provider(model_cfg, mbridge_ckpt, model_type, mlm_args):
-    """Handles provider call for both MBridge and MLM providers."""
-    if mbridge_ckpt:
-        return model_cfg.provide()
-    else:
-        provider = _gpt_provider if model_type == "gpt" else _mamba_provider
-        return provider(mlm_args, model_cfg)
-
-
-def load_megatron_checkpoint(
-    model_cfg, checkpoint_path, return_state_dict=False, mbridge_ckpt=False, model_type="gpt", mlm_args=None
-):
-    target_dtype = torch_dtype_from_mcore_config(model_cfg)
-    if model_cfg.params_dtype != target_dtype:
-        logger.info(f"Converting params_dtype from {model_cfg.params_dtype} to {target_dtype}")
-        model_cfg.params_dtype = target_dtype
-
-    model = _call_model_provider(model_cfg, mbridge_ckpt, model_type, mlm_args)
-    maybe_state_dict = _load_model_weights_from_checkpoint(
-        checkpoint_path, [model], return_state_dict=return_state_dict
-    )
-    if return_state_dict:
-        del model
-        return maybe_state_dict
-    else:
-        return model
-
-
 def setup_megatron_model_and_tokenizer_for_inference(
     checkpoint_path: Union[str, Path],
     tensor_model_parallel_size: Optional[int] = None,
@@ -271,22 +222,8 @@ def setup_megatron_model_and_tokenizer_for_inference(
     model_type: str = "gpt",
 ) -> Tuple[List[MegatronModule], MegatronTokenizer]:
     run_config_filename = get_checkpoint_run_config_filename(checkpoint_path)
-    mlm_args = None
-    if file_exists(run_config_filename):
-        run_config = read_run_config(run_config_filename)
-        mbridge_ckpt = True
-    else:
-        try:
-            mlm_args = _load_args_from_checkpoint(checkpoint_path)
-            mbridge_ckpt = False
-        except AssertionError:
-            raise RuntimeError(f"Checkpoint at {checkpoint_path} is not in a supported format.")
-    if mbridge_ckpt:
-        model_config = instantiate(run_config["model"])
-    else:
-        model_config = _transformer_config_from_args(mlm_args)
-        assert model_type in ("gpt", "mamba"), f"model type {model_type} not supported."
-
+    run_config = read_run_config(run_config_filename)
+    model_config = instantiate(run_config["model"])
     if tensor_model_parallel_size is not None:
         model_config.tensor_model_parallel_size = tensor_model_parallel_size
     if pipeline_model_parallel_size is not None:
@@ -299,14 +236,7 @@ def setup_megatron_model_and_tokenizer_for_inference(
     rng_config = RNGConfig(inference_rng_tracker=True)
     dist_config = DistributedInitConfig(distributed_backend="nccl")
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
-    model = load_megatron_checkpoint(
-        model_config,
-        checkpoint_path,
-        return_state_dict=False,
-        mbridge_ckpt=mbridge_ckpt,
-        model_type=model_type,
-        mlm_args=mlm_args,
-    )
+    model = load_megatron_model(checkpoint_path, model_type=model_type, use_cpu_init=False)
     tokenizer = load_tokenizer(checkpoint_path)
     return [model], tokenizer
 
