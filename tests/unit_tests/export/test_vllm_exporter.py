@@ -425,3 +425,67 @@ def test_dict_to_str_method(exporter):
     expected = json.dumps(test_dict)
     assert result == expected
     assert isinstance(result, str)
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_ray_infer_fn_basic_usage(exporter, mock_llm):
+    """Test ray_infer_fn with basic input."""
+    # Mock the forward method
+    exporter.model = MagicMock()
+    exporter.forward = MagicMock(return_value={"sentences": ["Generated text"]})
+
+    inputs = {
+        "prompts": ["Hello, how are you?"],
+        "max_tokens": 50,
+        "temperature": 0.7,
+    }
+
+    result = exporter.ray_infer_fn(inputs)
+
+    assert result["sentences"] == ["Generated text"]
+    exporter.forward.assert_called_once_with(
+        input_texts=["Hello, how are you?"],
+        max_tokens=50,
+        temperature=0.7,
+    )
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_ray_infer_fn_single_string_prompt(exporter, mock_llm):
+    """Test ray_infer_fn with single string prompt (should be converted to list)."""
+    exporter.model = MagicMock()
+    exporter.forward = MagicMock(return_value={"sentences": ["Generated text"]})
+
+    inputs = {
+        "prompts": "Hello, how are you?",
+        "max_tokens": 50,
+    }
+
+    result = exporter.ray_infer_fn(inputs)
+
+    assert result["sentences"] == ["Generated text"]
+    exporter.forward.assert_called_once_with(
+        input_texts=["Hello, how are you?"],
+        max_tokens=50,
+    )
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_ray_infer_fn_with_error_handling(exporter, mock_llm):
+    """Test ray_infer_fn when forward method raises an exception."""
+    exporter.model = MagicMock()
+    exporter.forward = MagicMock(side_effect=Exception("Forward error"))
+
+    inputs = {
+        "prompts": ["Hello, how are you?"],
+        "max_tokens": 50,
+    }
+
+    result = exporter.ray_infer_fn(inputs)
+
+    assert "error" in result
+    assert result["error"] == "An error occurred: Forward error"
+    assert result["sentences"] == ["An error occurred: Forward error"]
