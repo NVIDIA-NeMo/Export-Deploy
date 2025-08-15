@@ -354,4 +354,3 @@ def test_ray_infer_fn_with_numpy_arrays(exporter, mock_llm):
         n_log_probs=5,
         n_prompt_log_probs=3,
     )
-

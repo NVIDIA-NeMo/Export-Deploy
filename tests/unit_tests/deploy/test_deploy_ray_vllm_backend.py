@@ -93,7 +93,9 @@ class TestDeployRayVLLMBackend(unittest.TestCase):
     @patch("nemo_deploy.deploy_ray.HFRayDeployable")
     @patch("nemo_deploy.deploy_ray.signal.signal")
     @patch.object(DeployRay, "_start")
-    def test_deploy_hf_with_vllm_backend_default(self, mock_start, mock_signal, mock_hf_deployable, mock_serve, mock_ray):
+    def test_deploy_hf_with_vllm_backend_default(
+        self, mock_start, mock_signal, mock_hf_deployable, mock_serve, mock_ray
+    ):
         """Test deploy_huggingface_model with default use_vllm_backend (should be False)."""
         deploy = DeployRay()
 
@@ -121,7 +123,9 @@ class TestDeployRayVLLMBackend(unittest.TestCase):
     @patch("nemo_deploy.deploy_ray.HFRayDeployable")
     @patch("nemo_deploy.deploy_ray.signal.signal")
     @patch.object(DeployRay, "_start")
-    def test_deploy_hf_with_vllm_backend_and_other_params(self, mock_start, mock_signal, mock_hf_deployable, mock_serve, mock_ray):
+    def test_deploy_hf_with_vllm_backend_and_other_params(
+        self, mock_start, mock_signal, mock_hf_deployable, mock_serve, mock_ray
+    ):
         """Test deploy_huggingface_model with use_vllm_backend and other parameters."""
         deploy = DeployRay()
 
@@ -171,7 +175,9 @@ class TestDeployRayVLLMBackend(unittest.TestCase):
     @patch("nemo_deploy.deploy_ray.HFRayDeployable")
     @patch("nemo_deploy.deploy_ray.signal.signal")
     @patch.object(DeployRay, "_start")
-    def test_deploy_hf_vllm_backend_with_error_handling(self, mock_start, mock_signal, mock_hf_deployable, mock_serve, mock_ray):
+    def test_deploy_hf_vllm_backend_with_error_handling(
+        self, mock_start, mock_signal, mock_hf_deployable, mock_serve, mock_ray
+    ):
         """Test deploy_huggingface_model with use_vllm_backend=True and error handling."""
         deploy = DeployRay()
 
@@ -193,4 +199,3 @@ class TestDeployRayVLLMBackend(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
