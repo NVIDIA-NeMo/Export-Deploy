@@ -49,7 +49,7 @@ jobs:
       python-package: nemo_export_deploy_common
       library-name: NeMo-Export-Deploy
       dry-run: ${{ inputs.dry-run || false }}
-      vversion-bump-branch: ${{ inputs.version-bump-branch || github.ref_name }}
+      version-bump-branch: ${{ inputs.version-bump-branch || github.ref_name }}
       create-gh-release: ${{ inputs.create-gh-release || true }}
       packaging: uv
       app-id: ${{ vars.BOT_ID }}
