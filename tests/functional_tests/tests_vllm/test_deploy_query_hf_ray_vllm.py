@@ -102,7 +102,7 @@ class TestDeployRayHFVLLM:
                 use_chat=True,
             )
             print(f"Chat completion response: {output_chat}")
-            
+
             # Check if deployment was successful
             assert output_chat != "", "Second prediction (chat) is empty"
 
@@ -116,7 +116,7 @@ class TestDeployRayHFVLLM:
                 temperature=0.9,
             )
             print(f"High temperature response: {output_temp}")
-            
+
             # Check if deployment was successful
             assert output_temp != "", "High temperature prediction is empty"
 
@@ -190,12 +190,11 @@ class TestDeployRayHFVLLM:
                     max_tokens=15,
                     temperature=0.7,
                 )
-                print(f"Request {i+1} response: {output}")
-                assert output != "", f"Prediction {i+1} is empty"
+                print(f"Request {i + 1} response: {output}")
+                assert output != "", f"Prediction {i + 1} is empty"
 
         finally:
             # Ensure the deployment is terminated as soon as queries complete or on failure
             if self.deploy_proc is not None:
                 terminate_deployment_process(self.deploy_proc)
                 self.deploy_proc = None
-

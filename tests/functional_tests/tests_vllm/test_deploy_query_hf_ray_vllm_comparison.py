@@ -118,7 +118,7 @@ class TestDeployRayHFVLLMComparison:
 
             # Test both deployments with the same prompt
             test_prompt = "What is the capital of France?"
-            
+
             # Query vLLM deployment
             output_vllm = query_ray_deployment(
                 host="0.0.0.0",
@@ -151,7 +151,7 @@ class TestDeployRayHFVLLMComparison:
 
             # Test chat completion on both
             chat_prompt = [{"role": "user", "content": "Hello, how are you?"}]
-            
+
             # Query vLLM deployment with chat
             output_vllm_chat = query_ray_deployment(
                 host="0.0.0.0",
@@ -248,9 +248,9 @@ class TestDeployRayHFVLLMComparison:
                     max_tokens=15,
                     temperature=0.7,
                 )
-                print(f"Request {i+1} response: {output}")
+                print(f"Request {i + 1} response: {output}")
                 responses.append(output)
-                assert output != "", f"Prediction {i+1} is empty"
+                assert output != "", f"Prediction {i + 1} is empty"
 
             # Verify all requests were processed
             assert len(responses) == len(prompts), "Not all requests were processed"
@@ -261,4 +261,3 @@ class TestDeployRayHFVLLMComparison:
             if self.deploy_proc_vllm is not None:
                 terminate_deployment_process(self.deploy_proc_vllm)
                 self.deploy_proc_vllm = None
-
