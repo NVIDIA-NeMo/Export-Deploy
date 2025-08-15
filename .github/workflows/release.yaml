@@ -53,6 +53,9 @@ jobs:
       create-gh-release: ${{ inputs.create-gh-release || true }}
       packaging: uv
       app-id: ${{ vars.BOT_ID }}
+      skip-test-wheel: true
+      custom-container: nvcr.io/nvidia/pytorch:25.05-py3
+      no-build-isolation: true
     secrets:
       TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
