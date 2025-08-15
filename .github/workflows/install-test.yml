@@ -45,7 +45,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.12"]
-        extra-groups: ["", "te,trtllm", "te,vllm"]
+        extra-groups: ["", "te,trtllm", "te,vllm", "te,trt-onnx"]
     env:
       EXTRA: ${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }}
     steps:
