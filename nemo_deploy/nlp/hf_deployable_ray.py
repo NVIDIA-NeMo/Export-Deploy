@@ -62,8 +62,8 @@ class HFRayDeployable:
         task: str = "text-generation",
         trust_remote_code: bool = True,
         model_id: str = "nemo-model",
-        device_map: str = "auto",
-        max_memory: str = None,
+        device_map: Optional[str] = None,
+        max_memory: Optional[str] = None,
         use_vllm_backend: bool = False,
     ):
         """Initialize the HuggingFace model deployment.
@@ -282,6 +282,7 @@ class HFRayDeployable:
                 "output_logits": request.get("output_logits", False),
                 "output_scores": request.get("output_scores", False),
             }
+
             # Run model inference in the thread pool
             results = self.model.ray_infer_fn(inference_inputs)
             # Extract generated texts from results
@@ -300,6 +301,7 @@ class HFRayDeployable:
             logits = results.get("logits", None)
             if logits is not None and isinstance(logits, np.ndarray):
                 logits = logits.tolist()
+
             output = {
                 "id": f"chatcmpl-{int(time.time())}",
                 "object": "chat.completion",

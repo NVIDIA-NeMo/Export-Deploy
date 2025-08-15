@@ -24,10 +24,6 @@ from nemo_export_deploy_common.import_utils import MISSING_RAY_MSG, UnavailableE
 try:
     import ray
     from ray import serve
-    from ray.serve import Application
-    from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
-    from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
-    from nemo_export.tensorrt_llm_deployable_ray import TensorRTLLMRayDeployable
 
     from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
     from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
@@ -50,12 +46,6 @@ LOGGER = logging.getLogger("NeMo")
 def get_available_cpus():
     """Get the total number of available CPUs in the system."""
     return multiprocessing.cpu_count()
-
-
-def get_available_cpus():
-    """Get the total number of available CPUs in the system."""
-    return multiprocessing.cpu_count()
-
 
 class DeployRay:
     """A class for managing Ray deployment and serving of models.
@@ -325,7 +315,6 @@ class DeployRay:
             use_vllm_backend (bool, optional): Whether to use vLLM backend for deployment. If True, exports the HF ckpt
             to vLLM format and uses vLLM backend for inference. Defaults to False.
             test_mode (bool, optional): Enable test mode. Defaults to False.
-
         Raises:
             Exception: If Ray is not installed or deployment fails.
         """
@@ -418,7 +407,6 @@ class DeployRay:
             num_gpus_per_replica (int, optional): GPUs per model replica. Defaults to 1.
             max_ongoing_requests (int, optional): Maximum number of ongoing requests per replica. Defaults to 10.
             test_mode (bool, optional): Enable test mode. Defaults to False.
-
         Raises:
             Exception: If Ray is not installed or deployment fails.
             ValueError: If C++ runtime specific options are used with Python runtime.
