@@ -186,7 +186,7 @@ class DeployRay:
         max_batch_size: int = 32,
         random_seed: Optional[int] = None,
         test_mode: bool = False,
-        megatron_checkpoint: str = None,
+        megatron_checkpoint_filepath: str = None,
         model_type: str = "gpt",
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
@@ -213,7 +213,7 @@ class DeployRay:
             enable_flash_decode (bool, optional): Enable Flash Attention decode. Defaults to False.
             legacy_ckpt (bool, optional): Use legacy checkpoint format. Defaults to False.
             test_mode (bool, optional): Enable test mode. Defaults to False.
-            megatron_checkpoint (str, optional): Path to the Megatron checkpoint file. Defaults to None.
+            megatron_checkpoint_filepath (str, optional): Path to the Megatron checkpoint file. Defaults to None.
             model_type (str, optional): Type of model to load. Defaults to "gpt".
             model_format (str, optional): Format of model to load. Defaults to "nemo".
             micro_batch_size (Optional[int], optional): Micro batch size for model execution. Defaults to None.
@@ -270,7 +270,7 @@ class DeployRay:
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
                 random_seed=random_seed,
-                megatron_checkpoint=megatron_checkpoint,
+                megatron_checkpoint_filepath=megatron_checkpoint_filepath,
                 model_type=model_type,
                 model_format=model_format,
                 micro_batch_size=micro_batch_size,
