@@ -94,6 +94,7 @@ class HFRayDeployable:
                     max_memory_dict = {i: "75GiB" for i in range(num_gpus)}
             if use_vllm_backend:
                 from nemo_export.vllm_exporter import vLLMExporter
+
                 vllm_exporter = vLLMExporter()
                 vllm_exporter.export(model_path_id=hf_model_id_path)
                 self.model = vllm_exporter

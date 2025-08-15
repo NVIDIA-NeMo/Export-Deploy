@@ -16,7 +16,7 @@
 import logging
 import tempfile
 from pathlib import Path
-from typing import List, Literal, Dict, Any
+from typing import Any, Dict, List, Literal
 
 import numpy as np
 

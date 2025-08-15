@@ -43,9 +43,11 @@ except (ImportError, ModuleNotFoundError):
 
 LOGGER = logging.getLogger("NeMo")
 
+
 def get_available_cpus():
     """Get the total number of available CPUs in the system."""
     return multiprocessing.cpu_count()
+
 
 class DeployRay:
     """A class for managing Ray deployment and serving of models.
