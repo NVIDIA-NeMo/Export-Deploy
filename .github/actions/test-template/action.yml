@@ -146,7 +146,7 @@ runs:
     - name: Start container
       shell: bash
       run: |
-        MNT_PATH=/mnt/datadrive/TestData # ${{ steps.azure-fileshare.outputs.mnt_path }}
+        MNT_PATH=/mnt/datadrive # ${{ steps.azure-fileshare.outputs.mnt_path }}
 
         ARG=("")
         if [[ "${{ inputs.cpu-only }}" == "false" ]]; then
