@@ -33,8 +33,8 @@ if [[ "$BASE_IMAGE" != "pytorch" && "$BASE_IMAGE" != "cuda" ]]; then
     exit 1
 fi
 
-if [[ "$INFERENCE_FRAMEWORK" != "trtllm" && "$INFERENCE_FRAMEWORK" != "vllm" && "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
-    echo "Error: --inference-framework must be either 'trtllm' or 'vllm' or 'inframework'"
+if [[ "$INFERENCE_FRAMEWORK" != "trtllm" && "$INFERENCE_FRAMEWORK" != "vllm" && "$INFERENCE_FRAMEWORK" != "inframework" && "$INFERENCE_FRAMEWORK" != "trt-onnx" ]]; then
+    echo "Error: --inference-framework must be either 'trtllm' or 'vllm' or 'inframework' or 'trt-onnx'"
     echo "Usage: $0 --inference-framework {trtllm|vllm|inframework}"
     exit 1
 fi

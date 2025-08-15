@@ -38,6 +38,7 @@ def mock_tokenizer():
     tokenizer.pad_token = "[PAD]"
     tokenizer.eos_token = "[EOS]"
     tokenizer.batch_decode = MagicMock(return_value=["Generated text"])
+    tokenizer.decode = MagicMock(return_value="Generated text")
     tokenizer.return_value = {
         "input_ids": torch.tensor([[1, 2, 3]]),
         "attention_mask": torch.tensor([[1, 1, 1]]),
@@ -163,7 +164,8 @@ class TestHuggingFaceLLMDeploy:
         output = deployer.generate(text_inputs=["test prompt"])
         assert output == ["Generated text"]
         mock_model.generate.assert_called_once()
-        mock_tokenizer.batch_decode.assert_called_once()
+        # self.tokenizer.decode is used instead of tokenizer.batch_decode to convert the generated tokens to text.
+        mock_tokenizer.decode.assert_called_once()
 
     def test_generate_with_output_logits_and_scores(self, mock_model, mock_tokenizer, mock_torch_cuda):
         mock_model.generate.return_value = {
