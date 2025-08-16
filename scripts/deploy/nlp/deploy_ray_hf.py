@@ -117,6 +117,11 @@ def parse_args():
         default="0",
         help="Comma-separated list of CUDA visible devices",
     )
+    parser.add_argument(
+        "--use_vllm_backend",
+        action="store_true",
+        help="Whether to use vLLM backend for deployment",
+    )
     return parser.parse_args()
 
 
@@ -151,6 +156,7 @@ def main():
         num_cpus_per_replica=args.num_cpus_per_replica,
         num_gpus_per_replica=args.num_gpus_per_replica,
         max_ongoing_requests=args.max_ongoing_requests,
+        use_vllm_backend=args.use_vllm_backend,
     )
 
 

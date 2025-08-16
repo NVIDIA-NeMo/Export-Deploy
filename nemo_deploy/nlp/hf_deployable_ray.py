@@ -64,6 +64,7 @@ class HFRayDeployable:
         model_id: str = "nemo-model",
         device_map: Optional[str] = None,
         max_memory: Optional[str] = None,
+        use_vllm_backend: bool = False,
     ):
         """Initialize the HuggingFace model deployment.
 
@@ -74,6 +75,8 @@ class HFRayDeployable:
             device_map (str): Device mapping strategy. Defaults to "auto".
             model_id (str): Model identifier. Defaults to "nemo-model".
             max_memory (str): Maximum memory allocation when using balanced device map.
+            use_vllm_backend (bool, optional): Whether to use vLLM backend for deployment. If True, exports the HF ckpt
+            to vLLM format and uses vLLM backend for inference. Defaults to False.
 
         Raises:
             ImportError: If Ray is not installed.
@@ -89,13 +92,20 @@ class HFRayDeployable:
                 if num_gpus > 1:
                     print(f"Using tensor parallel across {num_gpus} GPUs for large model")
                     max_memory_dict = {i: "75GiB" for i in range(num_gpus)}
-            self.model = HuggingFaceLLMDeploy(
-                hf_model_id_path=hf_model_id_path,
-                task=task,
-                trust_remote_code=trust_remote_code,
-                device_map=device_map,
-                max_memory=max_memory_dict,
-            )
+            if use_vllm_backend:
+                from nemo_export.vllm_exporter import vLLMExporter
+
+                vllm_exporter = vLLMExporter()
+                vllm_exporter.export(model_path_id=hf_model_id_path)
+                self.model = vllm_exporter
+            else:
+                self.model = HuggingFaceLLMDeploy(
+                    hf_model_id_path=hf_model_id_path,
+                    task=task,
+                    trust_remote_code=trust_remote_code,
+                    device_map=device_map,
+                    max_memory=max_memory_dict,
+                )
             self.model_id = model_id
 
         except Exception as e:
@@ -319,6 +329,8 @@ class HFRayDeployable:
                         ),
                         "finish_reason": (
                             "length"
+                            # inference_inputs["max_length"] errors out since max_length is popped from
+                            # inference_inputs in ray_infer_fn hence use request.get("max_tokens", 256)
                             if generated_texts and len(generated_texts[0]) >= request.get("max_tokens", 256)
                             else "stop"
                         ),

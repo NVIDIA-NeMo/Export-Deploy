@@ -185,6 +185,10 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             padding=self.tokenizer_padding,
             truncation=self.tokenizer_truncation,
         )
+
+        # Store input lengths to extract only generated tokens later
+        input_lengths = [len(input_ids) for input_ids in inputs["input_ids"]]
+
         kwargs = {**inputs, **kwargs}
         kwargs.pop("text_inputs")
         for key, val in kwargs.items():
@@ -195,13 +199,33 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             generated_ids = self.model.generate(**kwargs)
         return_dict_in_generate = kwargs.get("return_dict_in_generate", False)
         if return_dict_in_generate:
-            output = {"sentences": self.tokenizer.batch_decode(generated_ids["sequences"], skip_special_tokens=True)}
+            # Handle dict output (when logits/scores are requested)
+            sequences = generated_ids["sequences"]
+            output = {"sentences": []}
+
+            # Extract only the generated tokens (skip input tokens) as the default behavior.
+            # This is required as HF model's generate returns the input/prompt tokens as well by default and there is
+            # no generic flag/arg to disable it. (return_full_text is specific to some models)
+            for i, seq in enumerate(sequences):
+                input_len = input_lengths[i] if i < len(input_lengths) else 0
+                generated_tokens = seq[input_len:]  # Skip input tokens
+                generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+                output["sentences"].append(generated_text)
+
             if kwargs.get("output_logits", False):
                 output["logits"] = generated_ids["logits"]
             if kwargs.get("output_scores", False):
                 output["scores"] = generated_ids["scores"]
         else:
-            output = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+            # Handle list output (normal case)
+            output = []
+            # Extract only the generated tokens (skip input tokens) as the default behavior.
+            for i, seq in enumerate(generated_ids):
+                input_len = input_lengths[i] if i < len(input_lengths) else 0
+                generated_tokens = seq[input_len:]  # Skip input tokens
+                generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+                output.append(generated_text)
+
         return output
 
     def generate_other_ranks(self):
@@ -459,6 +483,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                         output_logits.append(lp)
                 output_infer["logits"] = np.array(output_logits).transpose(1, 0, 2)
         else:
+            # Handle case where output is a list of strings (when return_dict_in_generate=False)
             output_infer = {"sentences": output}
             if cast_output_func:
                 output_infer["sentences"] = cast_output_func(output, np.bytes_)

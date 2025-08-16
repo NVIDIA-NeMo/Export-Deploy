@@ -130,6 +130,35 @@ class TestDeployRay(unittest.TestCase):
 
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
+    @patch("nemo_deploy.deploy_ray.HFRayDeployable")
+    @patch("nemo_deploy.deploy_ray.signal.signal")
+    @patch.object(DeployRay, "_start")
+    def test_deploy_hf_with_vllm_backend(self, mock_start, mock_signal, mock_hf_deployable, mock_serve, mock_ray):
+        # Test running a HuggingFace model with vLLM backend
+        deploy = DeployRay()
+
+        mock_app = MagicMock()
+        mock_options = MagicMock()
+        mock_options.bind.return_value = mock_app
+        mock_hf_deployable.options.return_value = mock_options
+
+        deploy.deploy_huggingface_model(
+            hf_model_id_path="test-hf-model",
+            model_id="test_model",
+            use_vllm_backend=True,
+            test_mode=True,
+        )
+
+        mock_start.assert_called_once()
+        mock_serve.run.assert_called_once_with(mock_app, name="test_model")
+        mock_hf_deployable.options.assert_called_once()
+
+        # Verify the bind call includes use_vllm_backend=True
+        _, bind_kwargs = mock_options.bind.call_args
+        assert bind_kwargs["use_vllm_backend"] is True
+
+    @patch("nemo_deploy.deploy_ray.ray")
+    @patch("nemo_deploy.deploy_ray.serve")
     @patch("nemo_deploy.deploy_ray.MegatronRayDeployable")
     @patch("nemo_deploy.deploy_ray.signal.signal")
     @patch.object(DeployRay, "_start")
