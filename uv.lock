@@ -4070,6 +4070,7 @@ dependencies = [
     { name = "torch" },
     { name = "torchmetrics" },
     { name = "torchvision" },
+    { name = "transformer-engine", extra = ["pytorch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "uvicorn" },
     { name = "wandb" },
     { name = "webdataset" },
@@ -4078,9 +4079,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-te = [
-    { name = "transformer-engine", extra = ["pytorch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
 trt-onnx = [
     { name = "onnx" },
     { name = "tensorrt" },
@@ -4169,7 +4167,7 @@ requires-dist = [
     { name = "torch" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
     { name = "torchvision" },
-    { name = "transformer-engine", extras = ["pytorch"], marker = "sys_platform != 'darwin' and extra == 'te'", specifier = ">=2.6.0a0,<2.7.0" },
+    { name = "transformer-engine", extras = ["pytorch"], marker = "sys_platform != 'darwin'", specifier = ">=2.6.0a0,<2.7.0" },
     { name = "transformers", marker = "extra == 'trt-onnx'", specifier = "==4.51.3" },
     { name = "transformers", marker = "extra == 'trtllm'", specifier = "~=4.53.0" },
     { name = "transformers", marker = "extra == 'vllm'", specifier = "~=4.53.0" },
@@ -4181,7 +4179,7 @@ requires-dist = [
     { name = "webdataset", specifier = ">=0.2.86" },
     { name = "zarr", specifier = ">=2.18.2,<3.0.0" },
 ]
-provides-extras = ["inframework", "vllm", "trtllm", "trt-onnx", "te"]
+provides-extras = ["inframework", "vllm", "trtllm", "trt-onnx"]
 
 [package.metadata.requires-dev]
 build = [
