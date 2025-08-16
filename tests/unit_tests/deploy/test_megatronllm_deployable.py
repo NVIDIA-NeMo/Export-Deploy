@@ -19,6 +19,7 @@ import pytest
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 
 from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeploy, MegatronLLMDeployableNemo2, dict_to_str
+from nemo_export_deploy_common.import_utils import UnavailableError
 
 
 @pytest.fixture
@@ -551,6 +552,88 @@ def test_str_to_dict(deployable):
     result = deployable.str_to_dict(json_str)
     assert isinstance(result, dict)
     assert result["key"] == "value"
+
+
+@pytest.mark.run_only_on("GPU")
+def test_init_triton_unavailable_raises():
+    """Init should raise when Triton is unavailable (covers HAVE_TRITON guard)."""
+    with patch("nemo_deploy.nlp.megatronllm_deployable.HAVE_TRITON", False):
+        with pytest.raises(UnavailableError):
+            MegatronLLMDeployableNemo2(nemo_checkpoint_filepath="dummy.nemo")
+
+
+@pytest.mark.run_only_on("GPU")
+def test_init_with_nemo_model_format_uses_nemo_path():
+    """Init with model_format=='nemo' should use nemo checkpoint path."""
+    with (
+        patch("nemo_deploy.nlp.megatronllm_deployable.HAVE_TRITON", True),
+        patch("nemo_deploy.nlp.megatronllm_deployable.create_mcore_engine") as mock_create,
+    ):
+        mock_engine, mock_model, mock_tokenizer = MagicMock(), MagicMock(), MagicMock()
+        mock_create.return_value = (mock_engine, mock_model, mock_tokenizer)
+
+        deployable = MegatronLLMDeployableNemo2(
+            nemo_checkpoint_filepath="foo.nemo",
+            model_format="nemo",
+            enable_cuda_graphs=True,
+            max_batch_size=16,
+        )
+
+        # Verify correct path and args passed
+        kwargs = mock_create.call_args.kwargs
+        assert str(kwargs["path"]).endswith("foo.nemo")
+        assert kwargs["model_format"] == "nemo"
+        assert kwargs["model_type"] == "gpt"
+
+        # Attributes set on instance
+        assert deployable.enable_cuda_graphs is True
+        assert deployable.max_batch_size == 16
+
+
+@pytest.mark.run_only_on("GPU")
+@pytest.mark.parametrize("model_type", ["gpt", "mamba"])
+def test_init_with_megatron_model_format_valid_types(model_type):
+    """Init with model_format=='megatron' should accept supported model types and use megatron path."""
+    with (
+        patch("nemo_deploy.nlp.megatronllm_deployable.HAVE_TRITON", True),
+        patch("nemo_deploy.nlp.megatronllm_deployable.create_mcore_engine") as mock_create,
+    ):
+        mock_engine, mock_model, mock_tokenizer = MagicMock(), MagicMock(), MagicMock()
+        mock_create.return_value = (mock_engine, mock_model, mock_tokenizer)
+
+        MegatronLLMDeployableNemo2(
+            megatron_checkpoint_filepath="bar.ckpt",
+            model_format="megatron",
+            model_type=model_type,
+        )
+
+        kwargs = mock_create.call_args.kwargs
+        assert str(kwargs["path"]).endswith("bar.ckpt")
+        assert kwargs["model_format"] == "megatron"
+        assert kwargs["model_type"] == model_type
+
+
+@pytest.mark.run_only_on("GPU")
+def test_init_with_megatron_model_format_invalid_type_raises():
+    """Init with model_format=='megatron' and unsupported model_type should raise ValueError."""
+    with patch("nemo_deploy.nlp.megatronllm_deployable.HAVE_TRITON", True):
+        with pytest.raises(ValueError, match="Model type bert not supported for Megatron models."):
+            MegatronLLMDeployableNemo2(
+                megatron_checkpoint_filepath="bar.ckpt",
+                model_format="megatron",
+                model_type="bert",
+            )
+
+
+@pytest.mark.run_only_on("GPU")
+def test_init_with_invalid_model_format_raises():
+    """Init with unsupported model_format should raise ValueError."""
+    with patch("nemo_deploy.nlp.megatronllm_deployable.HAVE_TRITON", True):
+        with pytest.raises(ValueError, match="Model format hf not supported."):
+            MegatronLLMDeployableNemo2(
+                nemo_checkpoint_filepath="foo.nemo",
+                model_format="hf",
+            )
 
 
 @pytest.mark.run_only_on("GPU")
