@@ -38,6 +38,7 @@ from nemo_deploy.nlp.inference.inference_base import (
     setup_model_and_tokenizer_for_inference,
 )
 from nemo_deploy.nlp.inference.tron_utils import DistributedInitConfig, RNGConfig
+from nemo_export_deploy_common.import_utils import UnavailableError
 
 
 @pytest.mark.run_only_on("GPU")
@@ -494,6 +495,124 @@ class TestInferenceBase(unittest.TestCase):
         self.assertEqual(len(result_models), 1)
         self.assertIs(result_models[0], mock_model)
         self.assertIs(result_tokenizer, mock_tokenizer)
+
+    @patch("nemo_deploy.nlp.inference.inference_base.setup_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.nlp.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.nlp.inference.inference_base.TextGenerationController")
+    @patch("nemo_deploy.nlp.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.nlp.inference.inference_base.get_world_size_safe")
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    def test_create_mcore_engine_world_size_and_defaults(
+        self,
+        mock_get_world_size_safe,
+        mock_gpt_wrapper,
+        mock_controller,
+        mock_mcore_engine,
+        mock_setup,
+    ):
+        # num_devices=None path should use get_world_size_safe and default parallel sizes = 1
+        mock_get_world_size_safe.return_value = 8
+        mock_model = MagicMock()
+        mock_model.config = MagicMock()
+        mock_model.config.hidden_size = 128
+        # tokenizer present -> vocab from tokenizer
+        mock_tokenizer = MagicMock()
+        mock_tokenizer.vocab_size = 12345
+        mock_setup.return_value = ([mock_model], mock_tokenizer)
+
+        result = create_mcore_engine(path=self.mock_path)
+
+        self.assertEqual(len(result), 3)
+        mock_get_world_size_safe.assert_called_once()
+        # Defaults forwarded to setup when None
+        mock_setup.assert_called_once_with(
+            checkpoint_path=self.mock_path,
+            tensor_model_parallel_size=1,
+            pipeline_model_parallel_size=1,
+            context_parallel_size=1,
+            expert_model_parallel_size=1,
+            params_dtype=torch.bfloat16,
+            enable_flash_decode=False,
+            enable_cuda_graphs=False,
+            legacy_ckpt=False,
+        )
+
+    @patch("nemo_deploy.nlp.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.nlp.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.nlp.inference.inference_base.TextGenerationController")
+    @patch("nemo_deploy.nlp.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    def test_create_mcore_engine_megatron_format_uses_model_vocab(
+        self,
+        mock_gpt_wrapper,
+        mock_controller,
+        mock_mcore_engine,
+        mock_setup_megatron,
+    ):
+        # Return tokenizer None so vocab falls back to model.config.vocab_size
+        mock_model = MagicMock()
+        mock_model.config = MagicMock()
+        mock_model.config.hidden_size = 256
+        mock_model.config.vocab_size = 32000
+        mock_setup_megatron.return_value = ([mock_model], None)
+
+        _ = create_mcore_engine(
+            path=self.mock_path,
+            model_format="megatron",
+            micro_batch_size=16,
+            model_type="t5",
+            num_devices=1,
+            num_nodes=1,
+        )
+
+        # Verify megatron setup called with passthrough args
+        mock_setup_megatron.assert_called_once_with(
+            checkpoint_path=self.mock_path,
+            tensor_model_parallel_size=1,
+            pipeline_model_parallel_size=1,
+            context_parallel_size=1,
+            expert_model_parallel_size=1,
+            micro_batch_size=16,
+            model_type="t5",
+        )
+        # Verify padded vocab taken from model.config
+        _, kwargs = mock_gpt_wrapper.call_args
+        # GPTInferenceWrapper is called positionally; get second positional arg if needed
+        args, _ = mock_gpt_wrapper.call_args
+        inference_cfg = args[1]
+        self.assertEqual(inference_cfg.padded_vocab_size, 32000)
+
+    @patch("nemo_deploy.nlp.inference.inference_base.get_world_size_safe")
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    def test_create_mcore_engine_unknown_format_raises(self, mock_get_world_size_safe):
+        mock_get_world_size_safe.return_value = 1
+        with self.assertRaises(ValueError):
+            create_mcore_engine(path=self.mock_path, model_format="unknown")
+
+    @patch("nemo_deploy.nlp.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    def test_create_mcore_engine_missing_vocab_raises(
+        self,
+        mock_setup_megatron,
+    ):
+        # tokenizer None and model.config without vocab_size attribute -> error
+        mock_model = MagicMock()
+
+        class Cfg:
+            pass
+
+        cfg = Cfg()
+        cfg.hidden_size = 64
+        mock_model.config = cfg
+        mock_setup_megatron.return_value = ([mock_model], None)
+
+        with self.assertRaises(ValueError):
+            create_mcore_engine(path=self.mock_path, model_format="megatron", num_devices=1, num_nodes=1)
+
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", False)
+    def test_create_mcore_engine_unavailable_nemo_raises(self):
+        with self.assertRaises(UnavailableError):
+            create_mcore_engine(path=self.mock_path)
 
 
 if __name__ == "__main__":
