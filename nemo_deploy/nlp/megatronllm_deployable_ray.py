@@ -55,6 +55,10 @@ class ModelWorker:
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
         random_seed: Optional[int] = None,
+        megatron_checkpoint_filepath: str = None,
+        model_type: str = "gpt",
+        model_format: str = "nemo",
+        micro_batch_size: Optional[int] = None,
     ):
         # Use replica-specific environment variables to avoid conflicts
         os.environ["MASTER_PORT"] = master_port
@@ -86,6 +90,10 @@ class ModelWorker:
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
                 random_seed=random_seed,
+                megatron_checkpoint_filepath=megatron_checkpoint_filepath,
+                model_type=model_type,
+                model_format=model_format,
+                micro_batch_size=micro_batch_size,
             )
             if rank != 0:
                 self.model.generate_other_ranks()
@@ -125,6 +133,10 @@ class MegatronRayDeployable:
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
         random_seed: Optional[int] = None,
+        megatron_checkpoint_filepath: str = None,
+        model_type: str = "gpt",
+        model_format: str = "nemo",
+        micro_batch_size: Optional[int] = None,
     ):
         """Initialize the distributed Megatron LLM model deployment.
 
@@ -141,6 +153,10 @@ class MegatronRayDeployable:
             batch_wait_timeout_s (float): Maximum time to wait for batching requests.
             legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
             random_seed (int): Random seed for model initialization.
+            megatron_checkpoint_filepath (str): Path to the Megatron checkpoint file.
+            model_type (str): Type of model to load.
+            model_format (str): Format of model to load.
+            micro_batch_size (Optional[int]): Micro batch size for model execution.
         """
         try:
             self.model_id = model_id
@@ -181,6 +197,10 @@ class MegatronRayDeployable:
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
                 random_seed=random_seed,
+                megatron_checkpoint_filepath=megatron_checkpoint_filepath,
+                model_type=model_type,
+                model_format=model_format,
+                micro_batch_size=micro_batch_size,
             )
             worker_futures.append(rank_0_worker)
 
@@ -205,6 +225,10 @@ class MegatronRayDeployable:
                     enable_flash_decode=enable_flash_decode,
                     max_batch_size=max_batch_size,
                     random_seed=random_seed,
+                    megatron_checkpoint_filepath=megatron_checkpoint_filepath,
+                    model_type=model_type,
+                    model_format=model_format,
+                    micro_batch_size=micro_batch_size,
                 )
                 worker_futures.append(worker)
 

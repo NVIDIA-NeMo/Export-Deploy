@@ -139,6 +139,30 @@ def parse_args():
         default=None,
         help="Random seed for reproducible inference",
     )
+    parser.add_argument(
+        "--megatron_checkpoint",
+        type=str,
+        default=None,
+        help="Path to the Megatron checkpoint file",
+    )
+    parser.add_argument(
+        "--model_type",
+        type=str,
+        default="gpt",
+        help="Type of model to load",
+    )
+    parser.add_argument(
+        "--model_format",
+        type=str,
+        default="nemo",
+        help="Format of model to load",
+    )
+    parser.add_argument(
+        "--micro_batch_size",
+        type=int,
+        default=None,
+        help="Micro batch size for model execution",
+    )
     return parser.parse_args()
 
 
@@ -175,6 +199,10 @@ def main():
         legacy_ckpt=args.legacy_ckpt,
         max_batch_size=args.max_batch_size,
         random_seed=args.random_seed,
+        megatron_checkpoint_filepath=args.megatron_checkpoint,
+        model_type=args.model_type,
+        model_format=args.model_format,
+        micro_batch_size=args.micro_batch_size,
     )
 
 
