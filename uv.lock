@@ -57,12 +57,7 @@ prerelease-mode = "allow"
 [manifest]
 overrides = [
     { name = "fsspec", extras = ["http"], specifier = ">=2023.1.0,<=2024.9.0" },
-    { name = "megatron-bridge", git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=main" },
-    { name = "megatron-core", specifier = ">=0.14.0a0,<0.15.0" },
-    { name = "nvidia-modelopt", extras = ["torch"], marker = "sys_platform != 'darwin'", specifier = ">=0.29.0a0,<0.32.0" },
-    { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin'", specifier = ">=0.3.0a0,<0.4.0" },
     { name = "tiktoken", specifier = ">=0.9.0" },
-    { name = "transformer-engine", extras = ["pytorch"], specifier = "==2.5.0" },
     { name = "urllib3", specifier = ">1.27.0" },
 ]
 
