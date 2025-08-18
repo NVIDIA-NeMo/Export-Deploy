@@ -62,7 +62,7 @@ class TestDeployRay:
                     "--host",
                     "0.0.0.0",
                     "--port",
-                    str(8000)
+                    str(8000),
                 ]
             )
             logging.info("Deployment started. Waiting for it to be ready...")
