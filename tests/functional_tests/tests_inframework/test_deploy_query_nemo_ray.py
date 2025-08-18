@@ -62,9 +62,7 @@ class TestDeployRay:
                     "--host",
                     "0.0.0.0",
                     "--port",
-                    str(8000),
-                    # "--enable_flash_decode", # Flash-attention is not installed
-                    # "--enable_cuda_graphs", # in github actions CI.
+                    str(8000)
                 ]
             )
             logging.info("Deployment started. Waiting for it to be ready...")
@@ -73,7 +71,7 @@ class TestDeployRay:
             if not wait_for_deployment_ready(host="0.0.0.0", port=8000, max_wait_time=180):
                 assert False, "Deployment failed to become ready within timeout"
 
-            time.sleep(60)
+            time.sleep(120)
 
             output = query_ray_deployment(
                 host="0.0.0.0",
