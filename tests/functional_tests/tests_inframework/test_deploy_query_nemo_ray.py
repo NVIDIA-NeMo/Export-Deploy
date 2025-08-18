@@ -63,8 +63,8 @@ class TestDeployRay:
                     "0.0.0.0",
                     "--port",
                     str(8000),
-                    "--enable_flash_decode",
-                    "--enable_cuda_graphs",
+                    # "--enable_flash_decode", # Flash-attention is not installed
+                    # "--enable_cuda_graphs", # in github actions CI.
                 ]
             )
             logging.info("Deployment started. Waiting for it to be ready...")
