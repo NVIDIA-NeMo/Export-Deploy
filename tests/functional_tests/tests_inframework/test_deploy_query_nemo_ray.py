@@ -63,8 +63,6 @@ class TestDeployRay:
                     "0.0.0.0",
                     "--port",
                     str(8000),
-                    "--enable_flash_decode",
-                    "--enable_cuda_graphs",
                 ]
             )
             print("Deployment started. Waiting for it to be ready...")
@@ -86,7 +84,7 @@ class TestDeployRay:
             print(output)
 
             # Check if deployment was successful
-            assert output != None, "First prediction is empty"
+            assert output != "", "First prediction is empty"
 
             # Send a second request using the chat endpoint
             output_chat = query_ray_deployment(
@@ -99,7 +97,7 @@ class TestDeployRay:
             )
             print(output_chat)
             # Check if deployment was successful
-            assert output_chat != None, "Second prediction (chat) is empty"
+            assert output_chat != "", "Second prediction (chat) is empty"
         finally:
             # Ensure the deployment is terminated as soon as queries complete or on failure
             if self.deploy_proc is not None:
