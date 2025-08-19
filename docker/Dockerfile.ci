@@ -27,5 +27,5 @@ ENV TORCH_CUDA_ARCH_LIST="6.0;6.1;7.0;7.5;8.0;8.6;9.0"
 
 RUN --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
     export PAT=$(cat /run/secrets/GH_TOKEN)
-    bash docker/common/install.sh --base-image ubuntu --inference-framework $INFERENCE_FRAMEWORK
+    bash docker/common/install.sh --base-image ubuntu --use-uv --inference-framework $INFERENCE_FRAMEWORK
 EOF
