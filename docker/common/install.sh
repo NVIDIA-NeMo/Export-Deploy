@@ -136,7 +136,13 @@ main() {
 
         pip install --pre --no-cache-dir --upgrade pip
         pip install --pre --no-cache-dir torch pybind11 wheel_stub ninja wheel packaging
-        pip install --pre --no-cache-dir --no-build-isolation .[$EXTRA]
+
+        if [[ -n "${EXTRA}" ]]; then
+            EXTRA_ARGS="[$EXTRA]"
+        else
+            EXTRA_ARGS=""
+        fi
+        pip install --pre --no-cache-dir --no-build-isolation $EXTRA_ARGS
     fi
 
 }
