@@ -153,7 +153,7 @@ jobs:
           python-binary: /opt/venv/bin/python
 
   install-test-summary:
-    needs: [pre-flight, uv-test-cuda, pip-test-bare-metal]
+    needs: [pre-flight, uv-test-bare-metal, pip-test-bare-metal]
     runs-on: ubuntu-latest
     name: Install test summary
     if: |
