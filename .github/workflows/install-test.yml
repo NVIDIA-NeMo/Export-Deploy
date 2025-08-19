@@ -63,6 +63,8 @@ jobs:
 
       - name: Install nemo-export-deploy${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }}
         shell: bash -x -e -u -o pipefail {0}
+        env:
+          EXTRA: ${{ matrix.extra-groups }}
         run: |
           if [[ -n "${EXTRA}" ]]; then
             FRAMEWORK=("--inference-framework" "$EXTRA")
