@@ -83,6 +83,8 @@ main() {
         apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 libcutlass-dev 
     fi
 
+    unset PIP_CONSTRAINT
+
     if [[ "$USE_UV" == "true" ]]; then
 
         # Install uv
@@ -95,7 +97,6 @@ main() {
         export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 
         if [[ "$BASE_IMAGE" == "pytorch" ]]; then
-            unset PIP_CONSTRAINT
             UV_ARGS=(
                 "--no-install-package" "torch"
                 "--no-install-package" "torchvision"
