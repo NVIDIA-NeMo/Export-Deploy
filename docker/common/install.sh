@@ -64,19 +64,20 @@ main() {
     # Install dependencies
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install -y curl git cmake libcutlass-dev libnvinfer-lean-dev libopenmpi-dev
+    apt-get install -y curl git cmake libopenmpi-dev software-properties-common
     if [[ "$BASE_IMAGE" == "ubuntu" ]]; then
         apt-get install -y wget software-properties-common
         wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
         dpkg -i cuda-keyring_1.1-1_all.deb
         rm cuda-keyring_1.1-1_all.deb
-        add-apt-repository ppa:deadsnakes/ppa -y
         apt-get update
-        apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 python3 python$PYTHON_VERSION-dev python$PYTHON_VERSION-venv
-        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYTHON_VERSION 1
-    else
-        apt-get install -y python3-pip python3-venv
+        apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 python3 libcutlass-dev libnvinfer-lean-dev 
+        
     fi
+    add-apt-repository ppa:deadsnakes/ppa -y
+    apt-get update
+    apt-get install -y python$PYTHON_VERSION-dev python$PYTHON_VERSION-venv
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYTHON_VERSION 1
     apt-get clean
 
     if [[ "$USE_UV" == "true" ]]; then
@@ -128,7 +129,9 @@ main() {
         uv pip install --no-deps -e .
     else
         if [[ "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
-            EXTRA="$INFERENCE_FRAMEWORK"
+            EXTRA="[$INFERENCE_FRAMEWORK]"
+        else
+            EXTRA=""
         fi
 
         python3 -m venv $UV_PROJECT_ENVIRONMENT
@@ -137,12 +140,8 @@ main() {
         pip install --pre --no-cache-dir --upgrade pip
         pip install --pre --no-cache-dir torch pybind11 wheel_stub ninja wheel packaging
 
-        if [[ -n "${EXTRA}" ]]; then
-            EXTRA_ARGS="[$EXTRA]"
-        else
-            EXTRA_ARGS=""
-        fi
-        pip install --pre --no-cache-dir --no-build-isolation $EXTRA_ARGS
+ 
+        pip install --pre --no-cache-dir --no-build-isolation .$EXTRA
     fi
 
 }
