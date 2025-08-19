@@ -101,35 +101,34 @@ jobs:
     runs-on: linux-amd64-cpu16
     name: UV - AMD64/Linux - NGC ${{ contains(matrix.image, 'cuda') && 'CUDA' || 'PyTorch' }}
     container:
-      image: ${{ matrix.image }}
+      image: "nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04"
     environment: nemo-ci
-    strategy:
-      fail-fast: false
-      matrix:
-        image: ["nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04", "nvcr.io/nvidia/pytorch:25.05-py3"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install project
-        env:
-          PAT: ${{ secrets.PAT }}
-          BASE_IMAGE: ${{ contains(matrix.image, 'cuda') && 'cuda' || 'pytorch' }}
-        shell: bash
+      - name: Set PATH
         run: |
-          echo -e "machine github.com\n  login token\n  password ${{ secrets.PAT }}" > ~/.netrc
-          chmod 600 ~/.netrc 
+          echo "UV_PROJECT_ENVIRONMENT=/opt/venv" | tee -a "$GITHUB_ENV"
+          echo "VIRTUAL_ENV=/opt/venv" | tee -a "$GITHUB_ENV"
+          echo "UV_LINK_MODE=copy" | tee -a "$GITHUB_ENV"
+          echo "CUDA_HOME=/usr/local/cuda" | tee -a "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH" | tee -a "$GITHUB_ENV"
+          echo "PATH=$HOME/.local/bin:$PATH:$CUDA_HOME/bin" | tee -a "$GITHUB_ENV"
+          echo "CUDACXX=/usr/local/cuda/bin/nvcc" | tee -a "$GITHUB_ENV"
 
-          export PATH="$HOME/.local/bin:$PATH"
-          export UV_PROJECT_ENVIRONMENT=/opt/venv
-          export PATH="$UV_PROJECT_ENVIRONMENT/bin:$PATH"
-          export UV_LINK_MODE=copy
-          export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+      - name: Install nemo-export-deploy${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }}
+        shell: bash -x -e -u -o pipefail {0}
+        env:
+          EXTRA: ${{ matrix.extra-groups }}
+        run: |
+          if [[ -n "${EXTRA}" ]]; then
+            FRAMEWORK=("--inference-framework" "$EXTRA")
+          else
+            FRAMEWORK=("--inference-framework" "inframework")
+          fi
 
-          bash docker/common/install.sh \
-            --base-image $BASE_IMAGE \
-            --inference-framework inframework
-
+          bash docker/common/install.sh --base-image cuda --python-version 3.12 "${FRAMEWORK[@]}"
           uv run python -m ensurepip --upgrade
           ln -sf /opt/venv/bin/pip3 /opt/venv/bin/pip
           uv pip install --no-deps -e .
