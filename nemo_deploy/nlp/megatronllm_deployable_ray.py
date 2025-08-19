@@ -15,11 +15,11 @@
 
 import logging
 import os
+import random
 import time
 from typing import Any, Dict, Optional
 
 import numpy as np
-import random
 import ray
 import torch
 from fastapi import FastAPI, HTTPException

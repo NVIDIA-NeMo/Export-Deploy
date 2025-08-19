@@ -182,7 +182,7 @@ def main():
         include_dashboard=args.include_dashboard,
         host=args.host,
         port=args.port,
-        runtime_env=runtime_env
+        runtime_env=runtime_env,
     )
 
     # Deploy the inframework model using the updated API
