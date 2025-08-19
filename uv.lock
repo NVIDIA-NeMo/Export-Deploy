@@ -4188,7 +4188,7 @@ requires-dist = [
     { name = "tensorstore" },
     { name = "tiktoken" },
     { name = "timm", marker = "extra == 'vllm'" },
-    { name = "torch" },
+    { name = "torch", specifier = "==2.7.1" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
     { name = "torchvision" },
     { name = "transformer-engine", extras = ["pytorch"], marker = "sys_platform != 'darwin'", specifier = ">=2.6.0a0,<2.7.0" },
@@ -4211,7 +4211,7 @@ build = [
     { name = "ninja" },
     { name = "pybind11" },
     { name = "setuptools" },
-    { name = "torch" },
+    { name = "torch", specifier = "==2.7.1" },
 ]
 docs = [
     { name = "myst-parser" },
