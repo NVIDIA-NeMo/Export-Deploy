@@ -82,6 +82,11 @@ main() {
         apt-get update
         apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 libcutlass-dev 
     fi
+    # Install OpenMPI
+    apt-get install libopenmpi-dev
+
+    # Clean up
+    apt-get clean
 
     unset PIP_CONSTRAINT
 
