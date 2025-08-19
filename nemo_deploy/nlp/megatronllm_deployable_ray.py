@@ -19,6 +19,7 @@ import time
 from typing import Any, Dict, Optional
 
 import numpy as np
+import random
 import ray
 import torch
 from fastapi import FastAPI, HTTPException
@@ -173,7 +174,7 @@ class MegatronRayDeployable:
 
             # Pre-allocate master port to avoid race conditions between workers
             # Use replica-specific port to avoid conflicts between replicas
-            base_port = 29500 + (replica_id % 100) * 100
+            base_port = random.randint(29500, 29999) + (replica_id % 100) * 100
             master_port = str(find_available_port(base_port, ray._private.services.get_node_ip_address()))
             LOGGER.info(f"Replica {replica_id} - Pre-allocated master port: {master_port}")
 
