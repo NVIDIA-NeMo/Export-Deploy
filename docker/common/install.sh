@@ -22,7 +22,7 @@ while [[ $# -gt 0 ]]; do
         ;;
     *)
         echo "Unknown option: $1"
-        echo "Usage: $0 --base-image {pytorch|cuda} --inference-framework {trtllm|vllm|inframework|trt-onnx} [--python-version] [--use-uv]"
+        echo "Usage: $0 --base-image {pytorch|ubuntu} --inference-framework {trtllm|vllm|inframework|trt-onnx} [--python-version] [--use-uv]"
         exit 1
         ;;
     esac
@@ -39,13 +39,13 @@ fi
 # Validate base image argument
 if [[ -z "${BASE_IMAGE:-}" || -z "${INFERENCE_FRAMEWORK:-}" ]]; then
     echo "Error: --base-image and --inference-framework arguments are required"
-    echo "Usage: $0 --base-image {pytorch|cuda} --inference-framework {trtllm|vllm|inframework}"
+    echo "Usage: $0 --base-image {pytorch|ubuntu} --inference-framework {trtllm|vllm|inframework}"
     exit 1
 fi
 
-if [[ "$BASE_IMAGE" != "pytorch" && "$BASE_IMAGE" != "cuda" ]]; then
-    echo "Error: --base-image must be either 'pytorch' or 'cuda'"
-    echo "Usage: $0 --base-image {pytorch|cuda}"
+if [[ "$BASE_IMAGE" != "pytorch" && "$BASE_IMAGE" != "ubuntu" ]]; then
+    echo "Error: --base-image must be either 'pytorch' or 'ubuntu'"
+    echo "Usage: $0 --base-image {pytorch|ubuntu}"
     exit 1
 fi
 
@@ -61,9 +61,6 @@ main() {
         chmod 600 ~/.netrc
     fi
 
-    # Install dependencies
-    export DEBIAN_FRONTEND=noninteractive
-
     # Install Python
     apt-get update
     apt-get install -y software-properties-common
@@ -76,14 +73,14 @@ main() {
     apt-get install -y wget curl git cmake
 
     # Install CUDA
-    if [[ "$BASE_IMAGE" != "pytorch" ]]; then
+    if [[ "$BASE_IMAGE" = "ubuntu" ]]; then
         rm /etc/apt/sources.list.d/cuda*.list || true
         rm /etc/apt/sources.list.d/nvidia-cuda.list || true
         wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
         dpkg -i cuda-keyring_1.1-1_all.deb
+        rm cuda-keyring_1.1-1_all.deb
         apt-get update
         apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 libcutlass-dev 
-        rm cuda-keyring_1.1-1_all.deb
     fi
 
     if [[ "$USE_UV" == "true" ]]; then

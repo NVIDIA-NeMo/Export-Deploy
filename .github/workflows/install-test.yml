@@ -31,15 +31,15 @@ jobs:
   pre-flight:
     uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@v0.53.0
 
-  pip-test-cuda:
+  pip-test-bare-metal:
     needs: [pre-flight]
     if: |
       !(needs.pre-flight.outputs.docs_only == 'true'
       || needs.pre-flight.outputs.is_deployment_workflow == 'true')
     runs-on: linux-amd64-cpu16
-    name: Pip - Python${{ matrix.python-version }}${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }} - AMD64/Linux - NGC CUDA
+    name: Pip - Python${{ matrix.python-version }}${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }} - Bare Metal
     container:
-      image: nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
+      image: ubuntu:24.04
     environment: nemo-ci
     strategy:
       fail-fast: false
@@ -72,7 +72,7 @@ jobs:
             FRAMEWORK=("--inference-framework" "inframework")
           fi
 
-          bash docker/common/install.sh --base-image cuda --python-version 3.12 "${FRAMEWORK[@]}"
+          bash docker/common/install.sh --base-image ubuntu --python-version 3.12 "${FRAMEWORK[@]}"
 
       - name: Checkout check-imports
         uses: actions/checkout@v4
