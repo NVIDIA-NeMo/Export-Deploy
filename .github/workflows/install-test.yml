@@ -63,7 +63,7 @@ jobs:
 
       - name: Install nemo-export-deploy${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }}
         run: |
-          if [ -z "${EXTRA}" ];]
+          if [ -z "${EXTRA}" ]; then
             FRAMEWORK=("--inference-framework" "$EXTRA")
           else
             FRAMEWORK=()
