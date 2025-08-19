@@ -41,6 +41,7 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
+    "flash-attn~=2.8.3",
     "megatron-core>=0.14.0a0,<0.15.0",
     "megatron-bridge>=0.1.0a0,<0.2.0",
     "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
@@ -119,7 +120,7 @@ vllm = [
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
-no-build-isolation-package = ["transformer-engine", "transformer-engine-torch"]
+no-build-isolation-package = ["transformer-engine", "transformer-engine-torch", "flash-attn"]
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
 # and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
 # avoid including these in the default dependency set, but for now it's required.

@@ -23,7 +23,10 @@ ENV HOME=/root
 ENV PATH="$HOME/.local/bin:$PATH"
 ENV CUDA_HOME=/usr/local/cuda
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
-RUN --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
     export PAT=$(cat /run/secrets/GH_TOKEN)
     bash docker/common/install.sh --base-image cuda --inference-framework $INFERENCE_FRAMEWORK
 EOF

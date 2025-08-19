@@ -89,7 +89,7 @@ main() {
 
     # Install dependencies
     uv sync --locked --only-group build ${UV_ARGS[@]}
-    uv sync \
+    uv sync -v \
         --link-mode copy \
         --locked \
         --all-groups ${UV_ARGS[@]}
