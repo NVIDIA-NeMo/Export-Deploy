@@ -76,7 +76,7 @@ dependencies = [
     "einops",
     "ijson",
     "pyarrow<21.0.0",
-
+    "flash-attn==2.8.1",
 ]
 
 [project.optional-dependencies]
