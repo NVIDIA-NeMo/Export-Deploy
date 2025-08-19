@@ -95,6 +95,7 @@ main() {
         export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 
         if [[ "$BASE_IMAGE" == "pytorch" ]]; then
+            unset PIP_CONSTRAINT
             UV_ARGS=(
                 "--no-install-package" "torch"
                 "--no-install-package" "torchvision"
