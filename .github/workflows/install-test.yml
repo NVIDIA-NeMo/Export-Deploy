@@ -65,7 +65,8 @@ jobs:
 
           PIP_ARGS=()
 
-          pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.7.1 setuptools pybind11 wheel_stub psutil numpy
+          pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.7.1 
+          pip install setuptools setuptools pybind11 wheel_stub psutil numpy packaging wheel
           PIP_ARGS=(--no-build-isolation)
 
           if [[ $EXTRA == *"trtllm"* ]]; then
