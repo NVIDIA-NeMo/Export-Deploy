@@ -79,9 +79,9 @@ main() {
     if [[ "$BASE_IMAGE" != "pytorch" ]]; then
         wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
         dpkg -i cuda-keyring_1.1-1_all.deb
-        rm cuda-keyring_1.1-1_all.deb
         apt-get update
         apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 libcutlass-dev 
+        rm cuda-keyring_1.1-1_all.deb
     fi
 
     if [[ "$USE_UV" == "true" ]]; then
