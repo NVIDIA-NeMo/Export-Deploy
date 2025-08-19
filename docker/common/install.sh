@@ -82,8 +82,8 @@ main() {
         apt-get update
         apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 libcutlass-dev 
     fi
-    # Install OpenMPI
-    apt-get install -y libopenmpi-dev
+    # Install OpenMPI and nvinfer
+    apt-get install -y libopenmpi-dev libnvinfer-lean-dev
 
     # Clean up
     apt-get clean
