@@ -65,7 +65,7 @@ jobs:
 
           PIP_ARGS=()
 
-          pip install torch setuptools pybind11 wheel_stub
+          pip install torch setuptools pybind11 wheel_stub psutil numpy
           PIP_ARGS=(--no-build-isolation)
 
           if [[ $EXTRA == *"trtllm"* ]]; then
