@@ -63,7 +63,13 @@ jobs:
 
       - name: Install nemo-export-deploy${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }}
         run: |
-          bash docker/common/install.sh --base-image cuda --python-version 3.12 --inference-framework inframework
+          if [ -z "${EXTRA}" ];]
+            FRAMEWORK=("--inference-framework" "$EXTRA")
+          else
+            FRAMEWORK=()
+          fi
+
+          bash docker/common/install.sh --base-image cuda --python-version 3.12 "${FRAMEWORK[@]}"
 
       - name: Checkout check-imports
         uses: actions/checkout@v4
