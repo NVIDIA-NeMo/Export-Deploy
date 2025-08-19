@@ -62,6 +62,7 @@ jobs:
           echo "TORCH_CUDA_ARCH_LIST=6.0;6.1;7.0;7.5;8.0;8.6;9.0" | tee -a "$GITHUB_ENV"
 
       - name: Install nemo-export-deploy${{ matrix.extra-groups != '' && format('[{0}]', matrix.extra-groups) || '' }}
+        shell: bash -x -e -u -o pipefail {0}
         run: |
           if [[ -n "${EXTRA}" ]]; then
             FRAMEWORK=("--inference-framework" "$EXTRA")

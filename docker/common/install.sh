@@ -63,21 +63,28 @@ main() {
 
     # Install dependencies
     export DEBIAN_FRONTEND=noninteractive
+
+    # Install Python
+    add-apt-repository ppa:deadsnakes/ppa -y
     apt-get update
-    apt-get install -y curl git cmake libopenmpi-dev software-properties-common
+    apt-get install -y software-properties-common
+    apt-get install -y python$PYTHON_VERSION-dev python$PYTHON_VERSION-venv
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYTHON_VERSION 1
+    
+    # Install tools
+    apt-get update
+
+    # Install CUDA
+    apt-get install -y wget curl git cmake
     if [[ "$BASE_IMAGE" == "ubuntu" ]]; then
-        apt-get install -y wget software-properties-common
         wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
         dpkg -i cuda-keyring_1.1-1_all.deb
         rm cuda-keyring_1.1-1_all.deb
         apt-get update
-        apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 python3 libcutlass-dev libnvinfer-lean-dev 
-        
+        apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 libopenmpi-dev libcutlass-dev 
     fi
-    add-apt-repository ppa:deadsnakes/ppa -y
-    apt-get update
-    apt-get install -y python$PYTHON_VERSION-dev python$PYTHON_VERSION-venv
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYTHON_VERSION 1
+
+    # Clean up
     apt-get clean
 
     if [[ "$USE_UV" == "true" ]]; then
@@ -91,7 +98,6 @@ main() {
         export UV_LINK_MODE=copy
         export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 
-        UV_ARGS=()
         if [[ "$BASE_IMAGE" == "pytorch" ]]; then
             UV_ARGS=(
                 "--no-install-package" "torch"
@@ -110,6 +116,8 @@ main() {
                 "--no-install-package" "nvidia-cusparselt-cu12"
                 "--no-install-package" "nvidia-nccl-cu12"
             )
+        else
+            UV_ARGS=()
         fi
 
         if [[ "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
