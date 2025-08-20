@@ -2,7 +2,7 @@
 
 This section demonstrates how to deploy NeMo LLM models using Ray Serve (referred to as 'Ray for NeMo Models'). Ray deployment support provides scalable and flexible deployment for NeMo models, offering features such as automatic scaling, load balancing, and multi-replica deployment with support for advanced parallelism strategies.
 
-**Note:** Currently, only single-node deployment is supported.
+**Note:** Single-node examples are shown below. For multi-node clusters managed by SLURM, you can deploy across nodes using the `ray.sub` helper described in the section "Multi-node on SLURM using ray.sub".
 
 ## Quick Example
 
@@ -73,13 +73,13 @@ Follow these steps to deploy your NeMo model on Ray Serve:
 
    Available Parameters:
    
-   - ``--nemo_checkpoint``: Path to the .nemo checkpoint file (required).
+   - ``--nemo_checkpoint``: Path to the NeMo checkpoint file (required).
    - ``--num_gpus``: Number of GPUs to use per node. Default is 1.
    - ``--tensor_model_parallel_size``: Size of the tensor model parallelism. Default is 1.
    - ``--pipeline_model_parallel_size``: Size of the pipeline model parallelism. Default is 1.
    - ``--expert_model_parallel_size``: Size of the expert model parallelism. Default is 1.
    - ``--context_parallel_size``: Size of the context parallelism. Default is 1.
-   - ``--model_id``: Identifier for the model in the API responses. Default is "nemo-model".
+   - ``--model_id``: Identifier for the model in the API responses. Default is ``nemo-model``.
    - ``--host``: Host address to bind the Ray Serve server to. Default is 0.0.0.0.
    - ``--port``: Port number to use for the Ray Serve server. Default is 1024.
    - ``--num_cpus``: Number of CPUs to allocate for the Ray cluster. If None, will use all available CPUs.
@@ -91,7 +91,7 @@ Follow these steps to deploy your NeMo model on Ray Serve:
    - ``--num_replicas``: Number of replicas for the deployment. Default is 1.
    - ``--legacy_ckpt``: Whether to use legacy checkpoint format.
 
-3. To use a different model, modify the ``--nemo_checkpoint`` parameter with the path to your .nemo checkpoint file.
+3. To use a different model, modify the ``--nemo_checkpoint`` parameter with the path to your NeMo checkpoint file.
 
 
 ### Configure Model Parallelism
@@ -232,7 +232,7 @@ Use the ``query_ray_deployment.py`` script to test your deployed NeMo model:
 3. Available parameters for testing:
    - ``--host``: Host address of the Ray Serve server. Default is 0.0.0.0.
    - ``--port``: Port number of the Ray Serve server. Default is 1024.
-   - ``--model_id``: Identifier for the model in the API responses. Default is "nemo-model".
+   - ``--model_id``: Identifier for the model in the API responses. Default is ``nemo-model``.
 
 ### Configure Advanced Deployments
 
@@ -300,3 +300,66 @@ curl -X POST http://localhost:1024/v1/completions/ \
 **Note:** Only NeMo 2.0 checkpoints are supported by default. For older checkpoints, use the ``--legacy_ckpt`` flag.
 
 For more information on Ray Serve, visit the [Ray Serve documentation](https://docs.ray.io/en/latest/serve/index.html). 
+
+### Multi-node on SLURM using ray.sub
+
+Use `scripts/deploy/utils/ray.sub` to bring up a Ray cluster across multiple SLURM nodes and run your in-framework NeMo deployment automatically. This script configures the Ray head and workers, handles ports, and can optionally run a driver command once the cluster is online.
+
+- **Script location**: `scripts/deploy/utils/ray.sub`
+- **Upstream reference**: See the NeMo RL cluster setup doc for background on this pattern: [NVIDIA-NeMo RL cluster guide](https://github.com/NVIDIA-NeMo/RL/blob/main/docs/cluster.md)
+
+#### Prerequisites
+
+- A SLURM cluster with container support for `srun --container-image` and `--container-mounts`.
+- A container image that includes Export-Deploy at `/opt/Export-Deploy` and the needed dependencies.
+- A `.nemo` checkpoint accessible on the cluster filesystem.
+
+#### Quick start (2 nodes, 16 GPUs total)
+
+1) Set environment variables to parameterize `ray.sub` (these are read by the script at submission time):
+
+```bash
+export CONTAINER=nvcr.io/nvidia/nemo:vr
+export MOUNTS="${PWD}/:/opt/checkpoints/"
+
+# Optional tuning
+export GPUS_PER_NODE=8                   # default 8; set to your node GPU count
+
+# Driver command to run after the cluster is ready (multi-node NeMo deployment)
+export COMMAND='python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+  --nemo_checkpoint /opt/checkpoints/model.nemo \
+  --model_id llama \
+  --num_replicas 16 \
+  --num_gpus 16
+```
+
+2) Submit the job (you can override SBATCH directives on the command line):
+
+```bash
+sbatch --nodes=2 --account <ACCOUNT> --partition <PARTITION> \
+  --job-name nemo-ray --time 01:00:00 \
+  /opt/Export-Deploy/scripts/deploy/utils/ray.sub
+```
+
+The script will:
+- Start a Ray head on node 0 and one Ray worker per remaining node
+- Wait until all nodes register their resources
+- Launch the `COMMAND` on the head node (driver) once the cluster is healthy
+
+3) Attaching and monitoring:
+- Logs: `$SLURM_SUBMIT_DIR/<jobid>-logs/` contains `ray-head.log`, `ray-worker-<n>.log`, and (if set) synced Ray logs.
+- Interactive shell: the job creates `<jobid>-attach.sh`. For head: `bash <jobid>-attach.sh`. For worker i: `bash <jobid>-attach.sh i`.
+- Ray status: once attached to the head container, run `ray status`.
+
+4) Query the deployment (from within the head container):
+
+```bash
+python /opt/Export-Deploy/scripts/deploy/nlp/query_ray_deployment.py \
+  --model_id llama --host 0.0.0.0 --port 1024
+```
+
+#### Notes
+
+- Set `--num_gpus` in the deploy command to the total GPUs across all nodes; adjust `--num_replicas` and model parallel sizes per your topology.
+- If your cluster uses GRES, `ray.sub` auto-detects and sets `--gres=gpu:<GPUS_PER_NODE>`; ensure `GPUS_PER_NODE` matches the node’s GPU count.
+- You can leave `--cuda_visible_devices` unset for multi-node runs; per-node visibility is managed by Ray workers.
