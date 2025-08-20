@@ -326,11 +326,7 @@ export MOUNTS="${PWD}/:/opt/checkpoints/"
 export GPUS_PER_NODE=8                   # default 8; set to your node GPU count
 
 # Driver command to run after the cluster is ready (multi-node NeMo deployment)
-export COMMAND='python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
-  --nemo_checkpoint /opt/checkpoints/model.nemo \
-  --model_id llama \
-  --num_replicas 16 \
-  --num_gpus 16
+export COMMAND="python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py --nemo_checkpoint /opt/checkpoints/model.nemo --model_id llama --num_replicas 16 --num_gpus 16"
 ```
 
 2) Submit the job (you can override SBATCH directives on the command line):

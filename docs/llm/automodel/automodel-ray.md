@@ -255,12 +255,7 @@ export MOUNTS="${PWD}/:/opt/checkpoints/"
 export GPUS_PER_NODE=8
 
 # Driver command to run after the cluster is ready (multi-node AutoModel deployment)
-export COMMAND='python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py \
-  --model_path meta-llama/Llama-3.2-1B \
-  --model_id llama \
-  --num_replicas 16 \
-  --num_gpus 16 \
-  --num_gpus_per_replica 1
+export COMMAND="python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_hf.py --model_path meta-llama/Llama-3.2-1B --model_id llama --num_replicas 16 --num_gpus 16 --num_gpus_per_replica 1"
 ```
 
 2) Submit the job:
