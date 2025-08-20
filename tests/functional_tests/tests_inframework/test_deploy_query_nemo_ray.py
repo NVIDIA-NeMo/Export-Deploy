@@ -64,7 +64,7 @@ class TestDeployRay:
                     "--port",
                     str(8000),
                     "--cuda_visible_devices",
-                    "0"
+                    "0",
                 ]
             )
             print("Deployment started. Waiting for it to be ready...")
