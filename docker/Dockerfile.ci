@@ -31,4 +31,5 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
     export PAT=$(cat /run/secrets/GH_TOKEN)
     bash docker/common/install.sh --base-image ubuntu --use-uv --inference-framework $INFERENCE_FRAMEWORK
+    uv cache prune --ci
 EOF
