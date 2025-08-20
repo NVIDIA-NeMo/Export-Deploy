@@ -103,7 +103,7 @@ def parse_args():
     parser.add_argument(
         "--cuda_visible_devices",
         type=str,
-        default="0,1",
+        default=None,
         help="Comma-separated list of CUDA visible devices",
     )
     parser.add_argument(
@@ -170,17 +170,19 @@ def main():
     """Main function to deploy a Megatron model using Ray."""
     args = parse_args()
     # Initialize Ray deployment with updated DeployRay class
+    runtime_env = {}
+    if args.cuda_visible_devices is not None:
+        runtime_env["env_vars"] = {
+            "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
+        }
+
     ray_deployer = DeployRay(
         num_cpus=args.num_cpus,
         num_gpus=args.num_gpus,
         include_dashboard=args.include_dashboard,
         host=args.host,
         port=args.port,
-        runtime_env={
-            "env_vars": {
-                "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
-            }
-        },
+        runtime_env=runtime_env,
     )
 
     # Deploy the inframework model using the updated API
