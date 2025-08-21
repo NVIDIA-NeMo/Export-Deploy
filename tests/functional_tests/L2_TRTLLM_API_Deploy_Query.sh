@@ -15,3 +15,4 @@
 coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_trtllm_api_deploy_query.py \
   --hf_model_path /home/TestData/hf/Llama-3.2-1B \
   --tensor_parallel_size 2
+coverage combine -q

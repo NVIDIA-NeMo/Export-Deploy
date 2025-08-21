@@ -153,6 +153,34 @@ def get_args(argv):
         type=int,
         help="Max sequence length for inference",
     )
+    parser.add_argument(
+        "-mc",
+        "--megatron_checkpoint",
+        type=str,
+        default=None,
+        help="Path to the Megatron checkpoint file",
+    )
+    parser.add_argument(
+        "-mt",
+        "--model_type",
+        type=str,
+        default="gpt",
+        help="Type of model to load",
+    )
+    parser.add_argument(
+        "-mf",
+        "--model_format",
+        type=str,
+        default="nemo",
+        help="Format of model to load",
+    )
+    parser.add_argument(
+        "-mb",
+        "--micro_batch_size",
+        type=int,
+        default=None,
+        help="Micro batch size for model execution",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -187,6 +215,10 @@ def nemo_deploy(argv):
         enable_flash_decode=args.enable_flash_decode,
         enable_cuda_graphs=args.enable_cuda_graphs,
         legacy_ckpt=args.legacy_ckpt,
+        megatron_checkpoint_filepath=args.megatron_checkpoint,
+        model_type=args.model_type,
+        model_format=args.model_format,
+        micro_batch_size=args.micro_batch_size,
     )
 
     if torch.distributed.is_initialized():

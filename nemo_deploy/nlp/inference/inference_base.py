@@ -16,10 +16,17 @@
 import atexit
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
+from megatron.bridge.training.checkpointing import (
+    get_checkpoint_run_config_filename,
+    read_run_config,
+)
+from megatron.bridge.training.model_load_save import load_megatron_model, load_tokenizer
+from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
+from megatron.bridge.utils.instantiate_utils import instantiate
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
 from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
@@ -51,6 +58,7 @@ from .tron_utils import (
     initialize_distributed,
 )
 
+logger = logging.getLogger("NeMo")
 try:
     import triton
 
@@ -140,7 +148,7 @@ atexit.register(cleanup_distributed)
 
 
 def initialize_megatron_for_inference(
-    model_config: Union[GPTConfig, T5Config],
+    model_config,
     dist_config: DistributedInitConfig,
     rng_config: RNGConfig,
     micro_batch_size: int,
@@ -148,7 +156,7 @@ def initialize_megatron_for_inference(
     """Initialize the Megatron-Tron runtime components required for inference.
 
     Args:
-        model_config (Union[GPTConfig, T5Config]): The model configuration object that
+        model_config : The model configuration object that
                                                   specifies tensor/pipeline parallel sizes
                                                   and model architecture details
         dist_config (DistributedInitConfig): Distributed launcher configuration that controls
@@ -202,6 +210,35 @@ def load_nemo_checkpoint_to_tron_model(model: List[MegatronModule], path: Path, 
     LOGGER.info(f"Loading NeMo checkpoint from {weights_dir}")
 
     _load_dist_shards_into_model(model, weights_dir, legacy_ckpt)
+
+
+def setup_megatron_model_and_tokenizer_for_inference(
+    checkpoint_path: Union[str, Path],
+    tensor_model_parallel_size: Optional[int] = None,
+    pipeline_model_parallel_size: Optional[int] = None,
+    context_parallel_size: Optional[int] = None,
+    expert_model_parallel_size: Optional[int] = None,
+    micro_batch_size: Optional[int] = None,
+    model_type: str = "gpt",
+) -> Tuple[List[MegatronModule], MegatronTokenizer]:
+    run_config_filename = get_checkpoint_run_config_filename(checkpoint_path)
+    run_config = read_run_config(run_config_filename)
+    model_config = instantiate(run_config["model"])
+    if tensor_model_parallel_size is not None:
+        model_config.tensor_model_parallel_size = tensor_model_parallel_size
+    if pipeline_model_parallel_size is not None:
+        model_config.pipeline_model_parallel_size = pipeline_model_parallel_size
+    if context_parallel_size is not None:
+        model_config.context_parallel_size = context_parallel_size
+    if expert_model_parallel_size is not None:
+        model_config.expert_model_parallel_size = expert_model_parallel_size
+    # Initialize Megatron for inference
+    rng_config = RNGConfig(inference_rng_tracker=True)
+    dist_config = DistributedInitConfig(distributed_backend="nccl")
+    initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
+    model = load_megatron_model(checkpoint_path, model_type=model_type, use_cpu_init=False)
+    tokenizer = load_tokenizer(checkpoint_path)
+    return [model], tokenizer
 
 
 def setup_model_and_tokenizer_for_inference(
@@ -331,14 +368,14 @@ class MCoreEngineWithCleanup:
         self,
         mcore_engine: MCoreEngine,
         model_inference_wrapper: GPTInferenceWrapper,
-        tokenizer: MCoreTokenizerWrappper,
+        tokenizer: Union[MCoreTokenizerWrappper, MegatronTokenizer],
     ):
         """Initialize the MCoreEngineWithCleanup.
 
         Args:
             mcore_engine (MCoreEngine): The underlying MCoreEngine instance
             model_inference_wrapper (GPTInferenceWrapper): The model inference wrapper
-            tokenizer (MCoreTokenizerWrappper): The tokenizer wrapper
+            tokenizer (Union[MCoreTokenizerWrappper, MegatronTokenizer]): The tokenizer instance
         """
         self.mcore_engine = mcore_engine
         self.model_inference_wrapper = model_inference_wrapper
@@ -369,7 +406,10 @@ def create_mcore_engine(
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
     legacy_ckpt: bool = False,
-) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, MCoreTokenizerWrappper]:
+    model_type: str = "gpt",
+    model_format: str = "nemo",
+    micro_batch_size: Optional[int] = None,
+) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MCoreEngine for inference.
 
     Args:
@@ -386,52 +426,28 @@ def create_mcore_engine(
         enable_flash_decode (bool): Whether to enable flash attention decoding
         enable_cuda_graphs (bool): Whether to enable CUDA graphs optimization
         legacy_ckpt (bool): Whether to use legacy checkpoint format
+        model_type (str): Type of model to load (default: "gpt")
+        model_format (str): Format of model to load (default: "nemo")
+        micro_batch_size (Optional[int]): Micro batch size for model execution
     Returns:
-        Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, MCoreTokenizerWrappper]: Tuple containing:
+        Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]: Tuple containing:
             - MCoreEngineWithCleanup: Engine for text generation with proper cleanup
             - GPTInferenceWrapper: Inference-wrapped model
-            - MCoreTokenizerWrappper: Tokenizer wrapper
+            - Union[MCoreTokenizerWrappper, MegatronTokenizer]: Tokenizer instance
     """
     if not HAVE_NEMO:
         raise UnavailableError(MISSING_NEMO_MSG)
 
-    # Load model context to get default parallelism settings from checkpoint
-    checkpoint_path = Path(path)
-    model_context = io.load_context(path=ckpt_to_context_subdir(checkpoint_path), subpath="model")
-    model_config = model_context.config
-
-    # Disable gradient_accumulation_fusion since its not required for inference
-    # and only available with Apex. We don't support Apex for community cuda-based
-    # installs.
-    if hasattr(model_config, "gradient_accumulation_fusion"):
-        model_config.gradient_accumulation_fusion = False
-
-    # Use checkpoint values as defaults if not specified
-    tp_size = (
-        tensor_model_parallel_size
-        if tensor_model_parallel_size is not None
-        else model_config.tensor_model_parallel_size
-    )
-    pp_size = (
-        pipeline_model_parallel_size
-        if pipeline_model_parallel_size is not None
-        else model_config.pipeline_model_parallel_size
-    )
-    cp_size = context_parallel_size if context_parallel_size is not None else model_config.context_parallel_size
-    ep_size = (
-        expert_model_parallel_size
-        if expert_model_parallel_size is not None
-        else model_config.expert_model_parallel_size
-    )
-
     # Default to 1 for any parallelism dimension that's None
-    tp_size = tp_size if tp_size is not None else 1
-    pp_size = pp_size if pp_size is not None else 1
-    cp_size = cp_size if cp_size is not None else 1
-    ep_size = ep_size if ep_size is not None else 1
+    tensor_model_parallel_size = tensor_model_parallel_size if tensor_model_parallel_size is not None else 1
+    pipeline_model_parallel_size = pipeline_model_parallel_size if pipeline_model_parallel_size is not None else 1
+    context_parallel_size = context_parallel_size if context_parallel_size is not None else 1
+    expert_model_parallel_size = expert_model_parallel_size if expert_model_parallel_size is not None else 1
 
     # Calculate total devices needed for the parallelism configuration
-    total_devices_needed = tp_size * pp_size * cp_size * ep_size
+    total_devices_needed = (
+        tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size * expert_model_parallel_size
+    )
     if num_devices is None:
         total_devices_available = get_world_size_safe()
     else:
@@ -441,22 +457,34 @@ def create_mcore_engine(
         raise ValueError(
             f"Insufficient devices for requested parallelism configuration. "
             f"Need {total_devices_needed} devices "
-            f"(TP={tp_size} × PP={pp_size} × CP={cp_size} × EP={ep_size}), "
+            f"(TP={tensor_model_parallel_size} × PP={pipeline_model_parallel_size} × CP={context_parallel_size} × EP={expert_model_parallel_size}), "
             f"but only have {total_devices_available} devices "
             f"({num_nodes} nodes × {num_devices} devices)."
         )
-
-    modelList, tokenizer = setup_model_and_tokenizer_for_inference(
-        checkpoint_path=path,
-        tensor_model_parallel_size=tensor_model_parallel_size,
-        pipeline_model_parallel_size=pipeline_model_parallel_size,
-        context_parallel_size=context_parallel_size,
-        expert_model_parallel_size=expert_model_parallel_size,
-        params_dtype=params_dtype,
-        enable_flash_decode=enable_flash_decode,
-        enable_cuda_graphs=enable_cuda_graphs,
-        legacy_ckpt=legacy_ckpt,
-    )
+    if model_format == "nemo":
+        modelList, tokenizer = setup_model_and_tokenizer_for_inference(
+            checkpoint_path=path,
+            tensor_model_parallel_size=tensor_model_parallel_size,
+            pipeline_model_parallel_size=pipeline_model_parallel_size,
+            context_parallel_size=context_parallel_size,
+            expert_model_parallel_size=expert_model_parallel_size,
+            params_dtype=params_dtype,
+            enable_flash_decode=enable_flash_decode,
+            enable_cuda_graphs=enable_cuda_graphs,
+            legacy_ckpt=legacy_ckpt,
+        )
+    elif model_format == "megatron":
+        modelList, tokenizer = setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=path,
+            tensor_model_parallel_size=tensor_model_parallel_size,
+            pipeline_model_parallel_size=pipeline_model_parallel_size,
+            context_parallel_size=context_parallel_size,
+            expert_model_parallel_size=expert_model_parallel_size,
+            micro_batch_size=micro_batch_size,
+            model_type=model_type,
+        )
+    else:
+        raise ValueError(f"Model format {model_format} not supported.")
     model = modelList[0]
     vocab_size = None
     if tokenizer is not None:
