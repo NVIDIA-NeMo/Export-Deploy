@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from io import BytesIO
+from typing import List, Optional
 
 import numpy as np
 import requests
@@ -182,3 +183,106 @@ class NemoQueryMultimodal:
                 return sentences
             else:
                 return result_dict["outputs"]
+
+
+class NemoQueryMultimodalPytorch:
+    """Sends a query to Triton for Multimodal inference using PyTorch deployment.
+
+    Example:
+        from nemo_deploy.multimodal import NemoQueryMultimodalPytorch
+
+        nq = NemoQueryMultimodalPytorch(url="localhost", model_name="qwen")
+
+        output = nq.query_multimodal(
+            prompts=prompts,
+            images=images,
+            max_length=100,
+            top_k=1,
+            top_p=0.0,
+            temperature=1.0,
+        )
+        print("output: ", output)
+    """
+
+    def __init__(self, url, model_name):
+        self.url = url
+        self.model_name = model_name
+
+    def query_multimodal(
+        self,
+        prompts: List[str],
+        images: List[Image.Image],
+        max_length: Optional[int] = None,
+        max_batch_size: Optional[int] = None,
+        top_k: Optional[int] = None,
+        top_p: Optional[float] = None,
+        temperature: Optional[float] = None,
+        random_seed: Optional[int] = None,
+        init_timeout: float = 60.0,
+    ):
+        """Query the Triton server synchronously for multimodal inference.
+
+        Args:
+            prompts (List[str]): List of input text prompts.
+            images (List[Image.Image]): List of input PIL Images.
+            max_length (Optional[int]): Maximum number of tokens to generate.
+            max_batch_size (Optional[int]): Maximum batch size for inference.
+            top_k (Optional[int]): Limits to the top K tokens to consider at each step.
+            top_p (Optional[float]): Limits to the top tokens within cumulative probability p.
+            temperature (Optional[float]): Sampling temperature.
+            random_seed (Optional[int]): Random seed for generation.
+            init_timeout (float): Timeout for the connection.
+
+        Returns:
+            dict: Dictionary containing generated sentences.
+        """
+        if not HAVE_TRITON:
+            raise UnavailableError(MISSING_TRITON_MSG)
+
+        # Convert prompts to numpy arrays
+        prompts_np = str_list2numpy(prompts)
+
+        inputs = {
+            "prompts": prompts_np,
+            "images": np.array(images),
+        }
+
+        # Add optional parameters if provided
+        if max_length is not None:
+            inputs["max_length"] = np.full(prompts_np.shape, max_length, dtype=np.int_)
+
+        if max_batch_size is not None:
+            inputs["max_batch_size"] = np.full(prompts_np.shape, max_batch_size, dtype=np.int_)
+
+        if top_k is not None:
+            inputs["top_k"] = np.full(prompts_np.shape, top_k, dtype=np.int_)
+
+        if top_p is not None:
+            inputs["top_p"] = np.full(prompts_np.shape, top_p, dtype=np.single)
+
+        if temperature is not None:
+            inputs["temperature"] = np.full(prompts_np.shape, temperature, dtype=np.single)
+
+        if random_seed is not None:
+            inputs["random_seed"] = np.full(prompts_np.shape, random_seed, dtype=np.int_)
+
+        with ModelClient(self.url, self.model_name, init_timeout_s=init_timeout) as client:
+            result_dict = client.infer_batch(**inputs)
+
+            # Handle output based on the model configuration
+            output_type = client.model_config.outputs[0].dtype
+
+            if output_type == np.bytes_:
+                # Decode bytes output
+                if "sentences" in result_dict:
+                    sentences = np.char.decode(result_dict["sentences"].astype("bytes"), "utf-8")
+                else:
+                    return "Unknown output keyword: sentences not found"
+
+                # Prepare response
+                response = {"sentences": sentences}
+
+                return response
+            else:
+                # Return raw output if not bytes
+                return result_dict
