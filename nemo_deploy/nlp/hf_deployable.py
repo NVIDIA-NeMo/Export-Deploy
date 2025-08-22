@@ -385,7 +385,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             temperature = inputs.pop("temperature", 1.0)
             top_k = int(inputs.pop("top_k", 1))
             top_p = inputs.pop("top_p", 0.0)
-            num_tokens_to_generate = inputs.pop("max_length", 256)
+            num_tokens_to_generate = inputs.pop("max_tokens", 256)
             output_logits = inputs.pop("output_logits", False)
             output_scores = inputs.pop("output_scores", False)
             return self._infer_fn_common(
