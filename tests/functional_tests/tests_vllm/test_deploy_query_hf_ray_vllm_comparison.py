@@ -81,6 +81,47 @@ class TestDeployRayHFVLLMComparison:
 
             time.sleep(20)
 
+            # Test vLLM deployment first
+            test_prompt = "What is the capital of France?"
+
+            # Query vLLM deployment
+            output_vllm = query_ray_deployment(
+                host="0.0.0.0",
+                port=8004,
+                model_id="hf-llm-vllm",
+                prompt=test_prompt,
+                max_tokens=20,
+                temperature=0.7,
+            )
+            print(f"vLLM backend response: {output_vllm}")
+
+            # Both should return non-empty responses
+            assert output_vllm != "", "vLLM backend prediction is empty"
+            assert len(output_vllm) > 0, "vLLM backend returned empty response"
+
+            # Test chat completion on vLLM
+            chat_prompt = [{"role": "user", "content": "Hello, how are you?"}]
+
+            # Query vLLM deployment with chat
+            output_vllm_chat = query_ray_deployment(
+                host="0.0.0.0",
+                port=8004,
+                model_id="hf-llm-vllm",
+                prompt=chat_prompt,
+                max_tokens=20,
+                use_chat=True,
+            )
+            print(f"vLLM backend chat response: {output_vllm_chat}")
+
+            # Both should return non-empty responses for chat
+            assert output_vllm_chat != "", "vLLM backend chat prediction is empty"
+
+            # Now terminate the vLLM deployment and start the regular one
+            print("Terminating vLLM deployment and starting regular deployment...")
+            terminate_deployment_process(self.deploy_proc_vllm)
+            self.deploy_proc_vllm = None
+            time.sleep(10)  # Give time for cleanup
+
             # Deploy without vLLM backend (regular HF)
             self.deploy_proc_regular = subprocess.Popen(
                 [
@@ -116,20 +157,6 @@ class TestDeployRayHFVLLMComparison:
 
             time.sleep(20)
 
-            # Test both deployments with the same prompt
-            test_prompt = "What is the capital of France?"
-
-            # Query vLLM deployment
-            output_vllm = query_ray_deployment(
-                host="0.0.0.0",
-                port=8004,
-                model_id="hf-llm-vllm",
-                prompt=test_prompt,
-                max_tokens=20,
-                temperature=0.7,
-            )
-            print(f"vLLM backend response: {output_vllm}")
-
             # Query regular deployment
             output_regular = query_ray_deployment(
                 host="0.0.0.0",
@@ -141,27 +168,9 @@ class TestDeployRayHFVLLMComparison:
             )
             print(f"Regular backend response: {output_regular}")
 
-            # Both should return non-empty responses
-            assert output_vllm != "", "vLLM backend prediction is empty"
-            assert output_regular != "", "Regular backend prediction is empty"
-
             # Both should be able to handle the same prompt (responses may differ due to randomness)
-            assert len(output_vllm) > 0, "vLLM backend returned empty response"
+            assert output_regular != "", "Regular backend prediction is empty"
             assert len(output_regular) > 0, "Regular backend returned empty response"
-
-            # Test chat completion on both
-            chat_prompt = [{"role": "user", "content": "Hello, how are you?"}]
-
-            # Query vLLM deployment with chat
-            output_vllm_chat = query_ray_deployment(
-                host="0.0.0.0",
-                port=8004,
-                model_id="hf-llm-vllm",
-                prompt=chat_prompt,
-                max_tokens=20,
-                use_chat=True,
-            )
-            print(f"vLLM backend chat response: {output_vllm_chat}")
 
             # Query regular deployment with chat
             output_regular_chat = query_ray_deployment(
@@ -175,7 +184,6 @@ class TestDeployRayHFVLLMComparison:
             print(f"Regular backend chat response: {output_regular_chat}")
 
             # Both should return non-empty responses for chat
-            assert output_vllm_chat != "", "vLLM backend chat prediction is empty"
             assert output_regular_chat != "", "Regular backend chat prediction is empty"
 
         finally:
