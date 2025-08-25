@@ -31,11 +31,8 @@ jobs:
     uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@v0.53.0
 
   build-container:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_build_container.yml@v0.37.0
+    uses: ./.github/workflows/_build_container.yml
     needs: [pre-flight]
-    permissions:
-      id-token: write
-      contents: read
     with:
       image-name: nemo-export-deploy
       dockerfile: docker/Dockerfile.ci
