@@ -26,7 +26,6 @@ from fastapi import FastAPI, HTTPException
 from ray import serve
 
 from ..ray_utils import find_available_port
-from .megatronllm_deployable import MegatronLLMDeployableNemo2
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -61,6 +60,7 @@ class ModelWorker:
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
     ):
+        from .megatronllm_deployable import MegatronLLMDeployableNemo2
         # Use replica-specific environment variables to avoid conflicts
         os.environ["MASTER_PORT"] = master_port
         os.environ["MASTER_ADDR"] = ray._private.services.get_node_ip_address()
