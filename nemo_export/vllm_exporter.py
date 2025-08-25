@@ -148,6 +148,7 @@ class vLLMExporter(ITritonDeployable):
                         target="hf",
                         output_path=tmp_hf_export_dir,
                         overwrite=True,
+                        ckpt_load_strictness=False,
                     )
                 except Exception as e:
                     raise Exception(
