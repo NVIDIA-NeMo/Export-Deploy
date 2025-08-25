@@ -27,6 +27,10 @@ from ray import serve
 
 from ..ray_utils import find_available_port
 
+# Note: Expose a module-level symbol for testing/mocking. If not patched by tests,
+# ModelWorker will lazily import the real class within its __init__.
+MegatronLLMDeployableNemo2 = None
+
 LOGGER = logging.getLogger("NeMo")
 
 app = FastAPI()
@@ -60,8 +64,6 @@ class ModelWorker:
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
     ):
-        from .megatronllm_deployable import MegatronLLMDeployableNemo2
-
         # Use replica-specific environment variables to avoid conflicts
         os.environ["MASTER_PORT"] = master_port
         os.environ["MASTER_ADDR"] = ray._private.services.get_node_ip_address()
@@ -79,7 +81,13 @@ class ModelWorker:
             LOGGER.info(f"Replica {replica_id} - MASTER_ADDR: {os.environ['MASTER_ADDR']}")
 
         try:
-            self.model = MegatronLLMDeployableNemo2(
+            # Prefer a patched module-level symbol if provided by tests;
+            # otherwise lazily import the real implementation locally.
+            DeployableClass = MegatronLLMDeployableNemo2
+            if DeployableClass is None:
+                from .megatronllm_deployable import MegatronLLMDeployableNemo2 as DeployableClass
+
+            self.model = DeployableClass(
                 nemo_checkpoint_filepath=nemo_checkpoint_filepath,
                 num_devices=world_size,
                 num_nodes=world_size // torch.cuda.device_count(),
