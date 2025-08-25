@@ -70,7 +70,7 @@ def query_ray_deployment(
                 "max_tokens": max_tokens,
                 "temperature": temperature,
             }
-            response = requests.post(completions_url, json=payload, timeout=30)
+            response = requests.post(completions_url, json=payload, timeout=300)
             if response.status_code == 200:
                 result = response.json()
                 text = result.get("choices", [{}])[0].get("text", "")
