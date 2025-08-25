@@ -24,13 +24,14 @@ from megatron.bridge.training.checkpointing import (
     get_checkpoint_run_config_filename,
     read_run_config,
 )
-from megatron.bridge.training.model_load_save import load_megatron_model, load_tokenizer
+from megatron.bridge.training.model_load_save import load_megatron_model, load_tokenizer, load_model_config, build_and_load_model
 from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
 from megatron.bridge.utils.instantiate_utils import instantiate
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
 from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
 )
+from megatron.core.inference.contexts import StaticInferenceContext
 from megatron.core.dist_checkpointing.validation import StrictHandling
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
@@ -56,6 +57,7 @@ from .tron_utils import (
     get_model_from_config,
     get_world_size_safe,
     initialize_distributed,
+    torch_distributed_init
 )
 
 logger = logging.getLogger("NeMo")
@@ -221,9 +223,34 @@ def setup_megatron_model_and_tokenizer_for_inference(
     micro_batch_size: Optional[int] = None,
     model_type: str = "gpt",
 ) -> Tuple[List[MegatronModule], MegatronTokenizer]:
-    run_config_filename = get_checkpoint_run_config_filename(checkpoint_path)
-    run_config = read_run_config(run_config_filename)
-    model_config = instantiate(run_config["model"])
+    """Initialize a Megatron model and tokenizer for inference from a Megatron-LM/MBridge checkpoint.
+
+    This function initializes torch.distributed (NCCL), applies requested parallel sizes
+    on top of values stored in the checkpoint, sets up the Megatron runtime for inference,
+    builds the model, and loads the corresponding tokenizer.
+
+    Args:
+        checkpoint_path (Union[str, Path]): Path to the Megatron-LM checkpoint directory or file.
+        tensor_model_parallel_size (Optional[int]): Desired tensor-parallel world size. Defaults
+            to the value stored in the checkpoint when not provided.
+        pipeline_model_parallel_size (Optional[int]): Desired pipeline-parallel world size.
+            Defaults to the checkpoint value when not provided.
+        context_parallel_size (Optional[int]): Desired context-parallel world size. Defaults
+            to the checkpoint value when not provided.
+        expert_model_parallel_size (Optional[int]): Desired expert-parallel world size. Defaults
+            to the checkpoint value when not provided.
+        micro_batch_size (Optional[int]): Micro-batch size to use during runtime initialization.
+        model_type (str): Model family to build (for example, "gpt").
+
+    Returns:
+        Tuple[List[MegatronModule], MegatronTokenizer, Any]:
+            - List of instantiated Megatron modules (virtual pipeline when applicable)
+            - Tokenizer instance compatible with the model
+            - Additional Megatron-LM args loaded from the checkpoint (mlm_args)
+    """
+    dist_config = DistributedInitConfig(distributed_backend="nccl")
+    torch_distributed_init(dist_config)
+    model_config, mlm_args = load_model_config(checkpoint_path)
     if tensor_model_parallel_size is not None:
         model_config.tensor_model_parallel_size = tensor_model_parallel_size
     if pipeline_model_parallel_size is not None:
@@ -234,11 +261,10 @@ def setup_megatron_model_and_tokenizer_for_inference(
         model_config.expert_model_parallel_size = expert_model_parallel_size
     # Initialize Megatron for inference
     rng_config = RNGConfig(inference_rng_tracker=True)
-    dist_config = DistributedInitConfig(distributed_backend="nccl")
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
-    model = load_megatron_model(checkpoint_path, model_type=model_type, use_cpu_init=False)
+    model = build_and_load_model(checkpoint_path=checkpoint_path, model_cfg=model_config, model_type=model_type, megatron_args=mlm_args, use_cpu_init=False)
     tokenizer = load_tokenizer(checkpoint_path)
-    return [model], tokenizer
+    return model, tokenizer, mlm_args
 
 
 def setup_model_and_tokenizer_for_inference(
@@ -315,6 +341,7 @@ def setup_model_and_tokenizer_for_inference(
     # Initialize Megatron for inference
     rng_config = RNGConfig(inference_rng_tracker=True)
     dist_config = DistributedInitConfig(distributed_backend="nccl")
+    torch_distributed_init(dist_config)
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
 
     # Needed for model creation
@@ -461,6 +488,7 @@ def create_mcore_engine(
             f"but only have {total_devices_available} devices "
             f"({num_nodes} nodes × {num_devices} devices)."
         )
+    mlm_args = None
     if model_format == "nemo":
         modelList, tokenizer = setup_model_and_tokenizer_for_inference(
             checkpoint_path=path,
@@ -474,7 +502,7 @@ def create_mcore_engine(
             legacy_ckpt=legacy_ckpt,
         )
     elif model_format == "megatron":
-        modelList, tokenizer = setup_megatron_model_and_tokenizer_for_inference(
+        modelList, tokenizer, mlm_args = setup_megatron_model_and_tokenizer_for_inference(
             checkpoint_path=path,
             tensor_model_parallel_size=tensor_model_parallel_size,
             pipeline_model_parallel_size=pipeline_model_parallel_size,
@@ -487,11 +515,13 @@ def create_mcore_engine(
         raise ValueError(f"Model format {model_format} not supported.")
     model = modelList[0]
     vocab_size = None
-    if tokenizer is not None:
+    if mlm_args is not None:
+        vocab_size = getattr(mlm_args, "padded_vocab_size", None)
+    if vocab_size is None and tokenizer is not None:
         vocab_size = tokenizer.vocab_size
-    elif hasattr(model.config, "vocab_size"):
+    if vocab_size is None and hasattr(model.config, "vocab_size"):
         vocab_size = model.config.vocab_size
-    else:
+    if vocab_size is None:
         raise ValueError("Unable to find vocab size.")
 
     inference_wrapper_config = InferenceWrapperConfig(
@@ -502,6 +532,7 @@ def create_mcore_engine(
         inference_max_seq_length=inference_max_seq_length,
         inference_max_requests=max_batch_size,
     )
+    # inference_context = StaticInferenceContext.from_config(inference_wrapper_config)
 
     model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config)
     text_generation_controller = TextGenerationController(
