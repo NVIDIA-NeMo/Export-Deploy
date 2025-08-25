@@ -33,6 +33,9 @@ jobs:
   build-container:
     uses: ./.github/workflows/_build_container.yml
     needs: [pre-flight]
+    permissions:
+      id-token: write
+      contents: read
     with:
       image-name: nemo-export-deploy
       dockerfile: docker/Dockerfile.ci
