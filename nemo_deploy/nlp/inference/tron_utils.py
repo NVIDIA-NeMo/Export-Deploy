@@ -162,6 +162,7 @@ def print_rank_0(message: str) -> None:
     if rank == 0:
         LOGGER.info(message)
 
+
 def torch_distributed_init(dist_config: DistributedInitConfig):
     """Initialize torch.distributed using a TCP init method and env-provided ranks.
 

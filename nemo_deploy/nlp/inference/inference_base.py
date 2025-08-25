@@ -20,19 +20,14 @@ from typing import Any, List, Optional, Tuple, Union
 
 import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
-from megatron.bridge.training.checkpointing import (
-    get_checkpoint_run_config_filename,
-    read_run_config,
-)
-from megatron.bridge.training.model_load_save import load_megatron_model, load_tokenizer, load_model_config, build_and_load_model
+from megatron.bridge.training.model_load_save import build_and_load_model, load_model_config, load_tokenizer
 from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
-from megatron.bridge.utils.instantiate_utils import instantiate
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
 from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
 )
-from megatron.core.inference.contexts import StaticInferenceContext
 from megatron.core.dist_checkpointing.validation import StrictHandling
+from megatron.core.inference.contexts import StaticInferenceContext
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
@@ -57,7 +52,7 @@ from .tron_utils import (
     get_model_from_config,
     get_world_size_safe,
     initialize_distributed,
-    torch_distributed_init
+    torch_distributed_init,
 )
 
 logger = logging.getLogger("NeMo")
@@ -262,7 +257,13 @@ def setup_megatron_model_and_tokenizer_for_inference(
     # Initialize Megatron for inference
     rng_config = RNGConfig(inference_rng_tracker=True)
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
-    model = build_and_load_model(checkpoint_path=checkpoint_path, model_cfg=model_config, model_type=model_type, megatron_args=mlm_args, use_cpu_init=False)
+    model = build_and_load_model(
+        checkpoint_path=checkpoint_path,
+        model_cfg=model_config,
+        model_type=model_type,
+        megatron_args=mlm_args,
+        use_cpu_init=False,
+    )
     tokenizer = load_tokenizer(checkpoint_path)
     return model, tokenizer, mlm_args
 
@@ -532,9 +533,9 @@ def create_mcore_engine(
         inference_max_seq_length=inference_max_seq_length,
         inference_max_requests=max_batch_size,
     )
-    # inference_context = StaticInferenceContext.from_config(inference_wrapper_config)
+    inference_context = StaticInferenceContext.from_config(inference_wrapper_config)
 
-    model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config)
+    model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config, inference_context)
     text_generation_controller = TextGenerationController(
         inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
     )
