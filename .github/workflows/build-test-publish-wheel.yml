@@ -36,11 +36,7 @@ jobs:
     with:
       image-name: nemo-export-deploy
       dockerfile: docker/Dockerfile.ci
-      image-label: nemo-export-deploy
-      prune-filter-timerange: 24h
-      use-inline-cache: false
       runner: linux-amd64-cpu16
-      has-azure-credentials: true
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
