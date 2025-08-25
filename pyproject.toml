@@ -61,7 +61,7 @@ dependencies = [
     "lightning",
     "omegaconf>=2.3.0",
     "peft",
-    "torch",
+    "torch==2.7.1",
     "torchvision",
     "torchmetrics>=0.11.0",
     "wandb",
@@ -76,7 +76,6 @@ dependencies = [
     "einops",
     "ijson",
     "pyarrow<21.0.0",
-
 ]
 
 [project.optional-dependencies]
@@ -91,7 +90,7 @@ trt-onnx = ["tensorrt==10.11.0.33", "transformers==4.51.3", "onnx==1.18.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch", "pybind11", "Cython>=3.0.0", "ninja"]
+build = ["setuptools", "torch==2.7.1", "pybind11", "Cython>=3.0.0", "ninja"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
