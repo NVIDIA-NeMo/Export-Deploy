@@ -41,7 +41,7 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    "megatron-bridge>=0.1.0a0,<0.3.0",
+    "megatron-bridge>=0.2.0a0,<0.3.0",
     "fastapi",
     "pydantic-settings",
     "ray",
@@ -56,7 +56,6 @@ dependencies = [
     "torchmetrics>=0.11.0",
     "webdataset>=0.2.86",
     "nvidia-pytriton ; platform_system != 'Darwin' ",
-    "flashinfer-python>=0.2.5 ; platform_system != 'Darwin'",
     "Pillow ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "decord ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "pyparsing>2.0.2",
