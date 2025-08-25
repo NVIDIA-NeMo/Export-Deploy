@@ -63,6 +63,8 @@ class TestDeployRay:
                     "0.0.0.0",
                     "--port",
                     str(8000),
+                    "--cuda_visible_devices",
+                    "0",
                 ]
             )
             logging.info("Deployment started. Waiting for it to be ready...")
