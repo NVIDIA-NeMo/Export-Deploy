@@ -171,8 +171,8 @@ class HFRayDeployable:
 
             inference_inputs = {
                 "prompts": request.get("prompts", []),
-                "max_length": request.get("max_tokens", 256),
-                "temperature": temperature,
+                "max_tokens": request.get("max_tokens", 256),
+                "temperature": request.get("temperature", 0.0),
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0.0),
                 "output_logits": request.get("output_logits", False),
@@ -276,7 +276,7 @@ class HFRayDeployable:
             # Prepare inference parameters using the formatted prompt
             inference_inputs = {
                 "prompts": [prompt],  # Use formatted prompt string instead of raw messages
-                "max_length": request.get("max_tokens", 256),
+                "max_tokens": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0.0),
