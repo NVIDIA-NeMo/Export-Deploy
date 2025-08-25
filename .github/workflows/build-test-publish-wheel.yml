@@ -30,24 +30,8 @@ jobs:
   pre-flight:
     uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@v0.53.0
 
-  build-container:
-    uses: ./.github/workflows/_build_container.yml
-    needs: [pre-flight]
-    permissions:
-      id-token: write
-      contents: read
-    with:
-      image-name: nemo-export-deploy
-      dockerfile: docker/Dockerfile.ci
-      runner: linux-amd64-cpu16
-    secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      PAT: ${{ secrets.PAT }}
-
   build-test-publish-wheel:
-    needs: [pre-flight, build-container]
+    needs: [pre-flight]
     if: |
       !(needs.pre-flight.outputs.docs_only == 'true'
       || needs.pre-flight.outputs.is_deployment_workflow == 'true')
@@ -59,7 +43,7 @@ jobs:
       packaging: uv
       no-publish: ${{ !(github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/r')) }}
       skip-test-wheel: true
-      custom-container: nemoci.azurecr.io/nemo-export-deploy:${{ github.run_id }}
+      custom-container: nvcr.io/nvidia/pytorch:25.05-py3
       no-build-isolation: true
       runner: linux-amd64-cpu16
     secrets:
