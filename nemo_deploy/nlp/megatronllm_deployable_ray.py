@@ -61,6 +61,7 @@ class ModelWorker:
         micro_batch_size: Optional[int] = None,
     ):
         from .megatronllm_deployable import MegatronLLMDeployableNemo2
+
         # Use replica-specific environment variables to avoid conflicts
         os.environ["MASTER_PORT"] = master_port
         os.environ["MASTER_ADDR"] = ray._private.services.get_node_ip_address()
