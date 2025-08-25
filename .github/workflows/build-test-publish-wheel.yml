@@ -59,7 +59,7 @@ jobs:
       packaging: uv
       no-publish: ${{ !(github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/r')) }}
       skip-test-wheel: true
-      custom-container: nvcr.io/nvidia/pytorch:25.05-py3
+      custom-container: nemoci.azurecr.io/nemo-export-deploy:${{ github.run_id }}
       no-build-isolation: true
       runner: linux-amd64-cpu16
     secrets:

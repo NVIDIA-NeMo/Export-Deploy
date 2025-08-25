@@ -80,6 +80,8 @@ jobs:
       use-inline-cache: false
       runner: ${{ inputs.runner }}
       has-azure-credentials: true
+      build-args: |
+        INFERENCE_FRAMEWORK=inframework
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
