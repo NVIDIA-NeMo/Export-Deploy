@@ -33,6 +33,8 @@ jobs:
   build-container:
     uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_build_container.yml@v0.37.0
     needs: [pre-flight]
+    permissions:
+      id-token: write
     with:
       image-name: nemo-export-deploy
       dockerfile: docker/Dockerfile.ci
