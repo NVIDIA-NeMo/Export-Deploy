@@ -18,6 +18,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
+
+if not torch.cuda.is_available():
+    pytest.skip("GPU-only tests", allow_module_level=True)
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
