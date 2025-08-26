@@ -19,12 +19,27 @@ from typing import List, Optional
 import numpy as np
 import torch
 from megatron.core.inference.common_inference_params import CommonInferenceParams
-from nemo.collections.vlm.inference.base import generate, setup_model_and_tokenizer
 from PIL.Image import Image
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, ndarray2img, str_ndarray2list
-from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError, null_decorator
+from nemo_export_deploy_common.import_utils import (
+    MISSING_NEMO_MSG,
+    MISSING_TRITON_MSG,
+    UnavailableError,
+    null_decorator,
+)
+
+try:
+    from nemo.collections.vlm.inference.base import generate, setup_model_and_tokenizer
+
+    HAVE_NEMO = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_NEMO = False
+    from typing import Any
+
+    generate = Any
+    setup_model_and_tokenizer = Any
 
 try:
     from pytriton.decorators import batch, first_value
@@ -75,6 +90,8 @@ class NeMoMultimodalDeployable(ITritonDeployable):
     ):
         if not HAVE_TRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
+        if not HAVE_NEMO:
+            raise UnavailableError(MISSING_NEMO_MSG)
 
         self.nemo_checkpoint_filepath = nemo_checkpoint_filepath
         self.num_devices = num_devices
