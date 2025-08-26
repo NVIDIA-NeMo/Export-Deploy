@@ -17,6 +17,11 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+import torch
+
+if not torch.cuda.is_available():
+    pytest.skip("GPU-only tests", allow_module_level=True)
+
 from nemo.collections import llm
 
 HF_PATH = "/home/TestData/nlp/megatron_llama/llama-ci-hf"
