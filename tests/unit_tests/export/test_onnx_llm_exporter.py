@@ -19,6 +19,9 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 
+if not torch.cuda.is_available():
+    pytest.skip("GPU-only tests", allow_module_level=True)
+
 from nemo_export.onnx_llm_exporter import OnnxLLMExporter
 from nemo_export_deploy_common.import_utils import UnavailableError
 
