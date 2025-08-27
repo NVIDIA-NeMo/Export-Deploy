@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument(
         "--nemo_checkpoint",
         type=str,
-        required=True,
+        default=None,
         help="Path to the .nemo checkpoint file",
     )
     parser.add_argument(
@@ -152,12 +152,6 @@ def parse_args():
         help="Type of model to load",
     )
     parser.add_argument(
-        "--model_format",
-        type=str,
-        default="nemo",
-        help="Format of model to load",
-    )
-    parser.add_argument(
         "--micro_batch_size",
         type=int,
         default=None,
@@ -184,7 +178,12 @@ def main():
         port=args.port,
         runtime_env=runtime_env,
     )
-
+    if args.nemo_checkpoint:
+        model_format = "nemo"
+    elif args.megatron_checkpoint:
+        model_format = "megatron"
+    else:
+        raise ValueError("Either --nemo_checkpoint or --megatron_checkpoint must be provided")
     # Deploy the inframework model using the updated API
     ray_deployer.deploy_inframework_model(
         nemo_checkpoint=args.nemo_checkpoint,
@@ -203,7 +202,7 @@ def main():
         random_seed=args.random_seed,
         megatron_checkpoint_filepath=args.megatron_checkpoint,
         model_type=args.model_type,
-        model_format=args.model_format,
+        model_format=model_format,
         micro_batch_size=args.micro_batch_size,
     )
 
