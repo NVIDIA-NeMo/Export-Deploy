@@ -192,6 +192,9 @@ class TestInferenceBase(unittest.TestCase):
         mock_ckpt_to_weights.assert_called_once_with(self.mock_path, is_saving=False)
         mock_load_shards.assert_called_once_with(self.mock_model_list, self.mock_weights_dir, False)
 
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.nlp.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
+    @patch("nemo_deploy.nlp.inference.inference_base.torch_distributed_init")
     @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
     @patch("nemo_deploy.nlp.inference.inference_base.check_is_distributed_checkpoint")
     @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_weights_subdir")
@@ -212,6 +215,8 @@ class TestInferenceBase(unittest.TestCase):
         mock_weights_subdir,
         mock_check_dist,
         mock_load_context,
+        mock_torch_dist_init,
+        mock_set_modelopt,
     ):
         # Setup mocks
         mock_context = MagicMock()
@@ -241,7 +246,10 @@ class TestInferenceBase(unittest.TestCase):
         mock_load_ckpt.assert_called_once()
         mock_peel.assert_called_once()
         mock_tokenizer_wrapper.assert_called_once()
+        mock_torch_dist_init.assert_called_once()
+        mock_set_modelopt.assert_called_once()
 
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.nlp.inference.inference_base.check_is_distributed_checkpoint")
     @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_weights_subdir")
     @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_context_subdir")
@@ -310,6 +318,7 @@ class TestInferenceBase(unittest.TestCase):
         # Verify cleanup was called
         mock_cleanup.assert_called_once()
 
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
     @patch("nemo_deploy.nlp.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_context_subdir")
@@ -351,6 +360,7 @@ class TestInferenceBase(unittest.TestCase):
         mock_controller.assert_called_once()
         mock_mcore_engine.assert_called_once()
 
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
     @patch("nemo_deploy.nlp.inference.inference_base.get_world_size_safe")
     def test_create_mcore_engine_insufficient_devices(self, mock_world_size, mock_load_context):
@@ -370,39 +380,37 @@ class TestInferenceBase(unittest.TestCase):
                 pipeline_model_parallel_size=2,
             )
 
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.nlp.inference.inference_base.load_tokenizer")
-    @patch("nemo_deploy.nlp.inference.inference_base.load_megatron_model")
+    @patch("nemo_deploy.nlp.inference.inference_base.build_and_load_model")
     @patch("nemo_deploy.nlp.inference.inference_base.initialize_megatron_for_inference")
-    @patch("nemo_deploy.nlp.inference.inference_base.instantiate")
-    @patch("nemo_deploy.nlp.inference.inference_base.read_run_config")
-    @patch("nemo_deploy.nlp.inference.inference_base.get_checkpoint_run_config_filename")
+    @patch("nemo_deploy.nlp.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.nlp.inference.inference_base.load_model_config")
     def test_setup_megatron_model_and_tokenizer_overrides(
         self,
-        mock_get_run_cfg_filename,
-        mock_read_run_cfg,
-        mock_instantiate,
+        mock_load_model_config,
+        mock_torch_dist_init,
         mock_init_megatron,
-        mock_load_model,
+        mock_build_and_load_model,
         mock_load_tokenizer,
     ):
         # Setup mocks
-        mock_get_run_cfg_filename.return_value = "/fake/run_config.yaml"
-        mock_read_run_cfg.return_value = {"model": {"_target_": "FakeModelConfig"}}
         mock_model_config = MagicMock()
         # Set defaults to something different so we can verify overrides
         mock_model_config.tensor_model_parallel_size = 1
         mock_model_config.pipeline_model_parallel_size = 1
         mock_model_config.context_parallel_size = 1
         mock_model_config.expert_model_parallel_size = 1
-        mock_instantiate.return_value = mock_model_config
+        mock_mlm_args = MagicMock()
+        mock_load_model_config.return_value = (mock_model_config, mock_mlm_args)
 
         mock_model = MagicMock(spec=MegatronModule)
         mock_tokenizer = MagicMock()
-        mock_load_model.return_value = mock_model
+        mock_build_and_load_model.return_value = [mock_model]
         mock_load_tokenizer.return_value = mock_tokenizer
 
         # Call function under test
-        result_models, result_tokenizer = setup_megatron_model_and_tokenizer_for_inference(
+        result_models, result_tokenizer, result_mlm_args = setup_megatron_model_and_tokenizer_for_inference(
             checkpoint_path=self.mock_path,
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=3,
@@ -412,10 +420,8 @@ class TestInferenceBase(unittest.TestCase):
             model_type="t5",
         )
 
-        # Verify run-config flow
-        mock_get_run_cfg_filename.assert_called_once_with(self.mock_path)
-        mock_read_run_cfg.assert_called_once_with("/fake/run_config.yaml")
-        mock_instantiate.assert_called_once_with({"_target_": "FakeModelConfig"})
+        # Verify config load and overrides
+        mock_load_model_config.assert_called_once_with(self.mock_path)
 
         # Verify overrides on model_config
         self.assertEqual(mock_model_config.tensor_model_parallel_size, 2)
@@ -435,46 +441,45 @@ class TestInferenceBase(unittest.TestCase):
         self.assertEqual(args[3], 8)
 
         # Verify model and tokenizer loading
-        mock_load_model.assert_called_once_with(self.mock_path, model_type="t5", use_cpu_init=False)
+        mock_build_and_load_model.assert_called_once()
         mock_load_tokenizer.assert_called_once_with(self.mock_path)
 
         # Verify return types
         self.assertEqual(len(result_models), 1)
         self.assertIs(result_models[0], mock_model)
         self.assertIs(result_tokenizer, mock_tokenizer)
+        self.assertIs(result_mlm_args, mock_mlm_args)
 
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.nlp.inference.inference_base.load_tokenizer")
-    @patch("nemo_deploy.nlp.inference.inference_base.load_megatron_model")
+    @patch("nemo_deploy.nlp.inference.inference_base.build_and_load_model")
     @patch("nemo_deploy.nlp.inference.inference_base.initialize_megatron_for_inference")
-    @patch("nemo_deploy.nlp.inference.inference_base.instantiate")
-    @patch("nemo_deploy.nlp.inference.inference_base.read_run_config")
-    @patch("nemo_deploy.nlp.inference.inference_base.get_checkpoint_run_config_filename")
+    @patch("nemo_deploy.nlp.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.nlp.inference.inference_base.load_model_config")
     def test_setup_megatron_model_and_tokenizer_defaults(
         self,
-        mock_get_run_cfg_filename,
-        mock_read_run_cfg,
-        mock_instantiate,
+        mock_load_model_config,
+        mock_torch_dist_init,
         mock_init_megatron,
-        mock_load_model,
+        mock_build_and_load_model,
         mock_load_tokenizer,
     ):
         # Setup mocks
-        mock_get_run_cfg_filename.return_value = "/fake/run_config.yaml"
-        mock_read_run_cfg.return_value = {"model": {"_target_": "FakeModelConfig"}}
         mock_model_config = MagicMock()
         mock_model_config.tensor_model_parallel_size = 7
         mock_model_config.pipeline_model_parallel_size = 8
         mock_model_config.context_parallel_size = 9
         mock_model_config.expert_model_parallel_size = 10
-        mock_instantiate.return_value = mock_model_config
+        mock_mlm_args = MagicMock()
+        mock_load_model_config.return_value = (mock_model_config, mock_mlm_args)
 
         mock_model = MagicMock(spec=MegatronModule)
         mock_tokenizer = MagicMock()
-        mock_load_model.return_value = mock_model
+        mock_build_and_load_model.return_value = [mock_model]
         mock_load_tokenizer.return_value = mock_tokenizer
 
         # Call without overrides and with default model_type
-        result_models, result_tokenizer = setup_megatron_model_and_tokenizer_for_inference(
+        result_models, result_tokenizer, result_mlm_args = setup_megatron_model_and_tokenizer_for_inference(
             checkpoint_path=self.mock_path
         )
 
@@ -489,12 +494,13 @@ class TestInferenceBase(unittest.TestCase):
         self.assertIsNone(args[3])
 
         # Default model_type is "gpt"
-        mock_load_model.assert_called_once_with(self.mock_path, model_type="gpt", use_cpu_init=False)
+        mock_build_and_load_model.assert_called_once()
 
         # Verify returns
         self.assertEqual(len(result_models), 1)
         self.assertIs(result_models[0], mock_model)
         self.assertIs(result_tokenizer, mock_tokenizer)
+        self.assertIs(result_mlm_args, mock_mlm_args)
 
     @patch("nemo_deploy.nlp.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.nlp.inference.inference_base.MCoreEngine")
@@ -554,7 +560,7 @@ class TestInferenceBase(unittest.TestCase):
         mock_model.config = MagicMock()
         mock_model.config.hidden_size = 256
         mock_model.config.vocab_size = 32000
-        mock_setup_megatron.return_value = ([mock_model], None)
+        mock_setup_megatron.return_value = ([mock_model], None, None)
 
         _ = create_mcore_engine(
             path=self.mock_path,
@@ -604,7 +610,7 @@ class TestInferenceBase(unittest.TestCase):
         cfg = Cfg()
         cfg.hidden_size = 64
         mock_model.config = cfg
-        mock_setup_megatron.return_value = ([mock_model], None)
+        mock_setup_megatron.return_value = ([mock_model], None, None)
 
         with self.assertRaises(ValueError):
             create_mcore_engine(path=self.mock_path, model_format="megatron", num_devices=1, num_nodes=1)
