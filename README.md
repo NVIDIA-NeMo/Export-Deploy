@@ -167,7 +167,7 @@ Now proceed with the main installation:
 ```bash
 git clone https://github.com/NVIDIA-NeMo/Export-Deploy
 cd Export-Deploy/
-pip install --no-build-isolation .[te]
+pip install --no-build-isolation .
 ```
 
 #### Install TransformerEngine + TensorRT-LLM
@@ -182,7 +182,7 @@ pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
 Now proceed with the main installation:
 
 ```bash
-pip install --no-build-isolation .[te,trtllm]
+pip install --no-build-isolation .[trtllm]
 ```
 
 #### Install TransformerEngine + vLLM
@@ -196,7 +196,7 @@ pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
 Now proceed with the main installation:
 
 ```bash
-pip install --no-build-isolation .[te,vllm]
+pip install --no-build-isolation .[vllm]
 ```
 
 #### Install TransformerEngine + TRT-ONNX
@@ -210,7 +210,7 @@ pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
 Now proceed with the main installation:
 
 ```bash
-pip install --no-build-isolation .[te,trt-onnx]
+pip install --no-build-isolation .[trt-onnx]
 ```
 
 ## 🚀 Get Started Quickly

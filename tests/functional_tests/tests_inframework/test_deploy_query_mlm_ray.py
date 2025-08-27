@@ -26,7 +26,7 @@ from tests.functional_tests.utils.ray_test_utils import (
 )
 
 
-class TestDeployRay:
+class TestDeployRayMLM:
     def setup_method(self):
         """Setup for each test method."""
         self.deploy_proc = None
@@ -39,7 +39,7 @@ class TestDeployRay:
             self.deploy_proc = None
 
     def test_deploy_ray(self):
-        nemo_checkpoint_path = "/home/TestData/llm/models/llama32_1b_nemo2"
+        mlm_checkpoint_path = "/home/TestData/megatron_bridge/checkpoints/llama3_145m-mlm_saved-distckpt"
 
         try:
             # Run Ray deployment
@@ -51,12 +51,10 @@ class TestDeployRay:
                     "--source=/workspace/",
                     "--parallel-mode",
                     "scripts/deploy/nlp/deploy_ray_inframework.py",
-                    "--nemo_checkpoint",
-                    nemo_checkpoint_path,
+                    "--megatron_checkpoint",
+                    mlm_checkpoint_path,
                     "--model_id",
                     "llama",
-                    "--tensor_model_parallel_size",
-                    str(1),
                     "--num_gpus",
                     str(1),
                     "--host",

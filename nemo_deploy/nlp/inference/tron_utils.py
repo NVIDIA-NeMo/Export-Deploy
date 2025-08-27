@@ -163,23 +163,26 @@ def print_rank_0(message: str) -> None:
         LOGGER.info(message)
 
 
-def initialize_distributed(
-    model_config: Union[GPTConfig, T5Config],
-    dist_config: DistributedInitConfig,
-    num_distributed_optimizer_instances: int,
-    get_embedding_ranks: Optional[Callable[[List[int], Optional[int]], List[int]]],
-    get_position_embedding_ranks: Optional[Callable[[List[int], Optional[int]], List[int]]],
-) -> None:
-    """Initialize torch.distributed and core model parallel.
+def torch_distributed_init(dist_config: DistributedInitConfig):
+    """Initialize torch.distributed using a TCP init method and env-provided ranks.
+
+    This function is idempotent: if torch.distributed is already initialized it
+    logs and returns. Otherwise, it sets the current CUDA device based on
+    `LOCAL_RANK` (when GPUs are available), constructs the TCP `init_method`
+    from `MASTER_ADDR` and `MASTER_PORT`, and initializes the process group
+    with the backend and timeout specified in ``dist_config``. After init, it
+    issues a barrier scoped to the current device.
 
     Args:
-        model_config (Union[GPTConfig, T5Config]): Configuration for the model architecture
-        dist_config (DistributedInitConfig): Configuration for distributed initialization
-        num_distributed_optimizer_instances (int): Number of optimizer instances for distributed training
-        get_embedding_ranks (Optional[Callable[[List[int], Optional[int]], List[int]]]): Function to get the ranks
-            for embedding parallel
-        get_position_embedding_ranks (Optional[Callable[[List[int], Optional[int]], List[int]]]): Function to get
-            the ranks for position embedding parallel
+        dist_config (DistributedInitConfig): Configuration including backend and
+            timeout used for the process group initialization.
+
+    Environment:
+        - ``MASTER_ADDR``: Master node address (default: "localhost").
+        - ``MASTER_PORT``: Master node port (default: "6000").
+        - ``WORLD_SIZE``: Total number of ranks (default: "1").
+        - ``RANK``: Global rank of this process (default: "0").
+        - ``LOCAL_RANK``: Local rank on the node/GPU index (default: "0").
     """
     device_count = torch.cuda.device_count()
     if torch.distributed.is_initialized():
@@ -216,6 +219,27 @@ def initialize_distributed(
 
         torch.distributed.init_process_group(**init_process_group_kwargs)
         torch.distributed.barrier(device_ids=[get_local_rank_preinit()])
+
+
+def initialize_distributed(
+    model_config: Union[GPTConfig, T5Config],
+    dist_config: DistributedInitConfig,
+    num_distributed_optimizer_instances: int,
+    get_embedding_ranks: Optional[Callable[[List[int], Optional[int]], List[int]]],
+    get_position_embedding_ranks: Optional[Callable[[List[int], Optional[int]], List[int]]],
+) -> None:
+    """Initialize core model parallel.
+
+    Args:
+        model_config (Union[GPTConfig, T5Config]): Configuration for the model architecture
+        dist_config (DistributedInitConfig): Configuration for distributed initialization
+        num_distributed_optimizer_instances (int): Number of optimizer instances for distributed training
+        get_embedding_ranks (Optional[Callable[[List[int], Optional[int]], List[int]]]): Function to get the ranks
+            for embedding parallel
+        get_position_embedding_ranks (Optional[Callable[[List[int], Optional[int]], List[int]]]): Function to get
+            the ranks for position embedding parallel
+    """
+    device_count = torch.cuda.device_count()
 
     # Set the tensor model-parallel, pipeline model-parallel, and
     # data-parallel communicators.

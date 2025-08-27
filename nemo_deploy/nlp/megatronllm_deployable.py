@@ -136,6 +136,10 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         enable_flash_decode (bool): enable flash decode for inference. Defaults to False.
         enable_cuda_graphs (bool): enable CUDA graphs for inference. Defaults to False.`
         legacy_ckpt (bool): use legacy checkpoint format. Defaults to False.
+        megatron_checkpoint_filepath (str): path for the megatron checkpoint.
+        model_type (str): type of model to load. Defaults to "gpt".(Only for Megatron models)
+        model_format (str): format of model to load. Defaults to "nemo".
+        micro_batch_size (Optional[int]): micro batch size for model execution. Defaults to None.(Only for Megatron models)
     """
 
     def __init__(
@@ -155,14 +159,27 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         max_batch_size: int = 8,
         random_seed: Optional[int] = None,
         legacy_ckpt: bool = False,
+        megatron_checkpoint_filepath: str = None,
+        model_type: str = "gpt",
+        model_format: str = "nemo",
+        micro_batch_size: Optional[int] = None,
     ):
         if not HAVE_TRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
 
+        if model_format == "nemo":
+            checkpoint_filepath = nemo_checkpoint_filepath
+        elif model_format == "megatron":
+            if model_type not in ["gpt", "mamba"]:
+                raise ValueError(f"Model type {model_type} not supported for Megatron models.")
+            checkpoint_filepath = megatron_checkpoint_filepath
+        else:
+            raise ValueError(f"Model format {model_format} not supported.")
+
         self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = create_mcore_engine(
             num_devices=num_devices,
             num_nodes=num_nodes,
-            path=Path(nemo_checkpoint_filepath),
+            path=Path(checkpoint_filepath),
             params_dtype=params_dtype,
             inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
             inference_max_seq_length=inference_max_seq_length,
@@ -175,6 +192,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             enable_flash_decode=enable_flash_decode,
             enable_cuda_graphs=enable_cuda_graphs,
             legacy_ckpt=legacy_ckpt,
+            model_type=model_type,
+            model_format=model_format,
+            micro_batch_size=micro_batch_size,
         )
         self.enable_cuda_graphs = enable_cuda_graphs
         self.max_batch_size = max_batch_size

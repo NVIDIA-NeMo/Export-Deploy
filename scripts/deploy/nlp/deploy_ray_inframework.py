@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument(
         "--nemo_checkpoint",
         type=str,
-        required=True,
+        default=None,
         help="Path to the .nemo checkpoint file",
     )
     parser.add_argument(
@@ -103,7 +103,7 @@ def parse_args():
     parser.add_argument(
         "--cuda_visible_devices",
         type=str,
-        default="0,1",
+        default=None,
         help="Comma-separated list of CUDA visible devices",
     )
     parser.add_argument(
@@ -139,6 +139,24 @@ def parse_args():
         default=None,
         help="Random seed for reproducible inference",
     )
+    parser.add_argument(
+        "--megatron_checkpoint",
+        type=str,
+        default=None,
+        help="Path to the Megatron checkpoint file",
+    )
+    parser.add_argument(
+        "--model_type",
+        type=str,
+        default="gpt",
+        help="Type of model to load",
+    )
+    parser.add_argument(
+        "--micro_batch_size",
+        type=int,
+        default=None,
+        help="Micro batch size for model execution",
+    )
     return parser.parse_args()
 
 
@@ -146,19 +164,26 @@ def main():
     """Main function to deploy a Megatron model using Ray."""
     args = parse_args()
     # Initialize Ray deployment with updated DeployRay class
+    runtime_env = {}
+    if args.cuda_visible_devices is not None:
+        runtime_env["env_vars"] = {
+            "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
+        }
+
     ray_deployer = DeployRay(
         num_cpus=args.num_cpus,
         num_gpus=args.num_gpus,
         include_dashboard=args.include_dashboard,
         host=args.host,
         port=args.port,
-        runtime_env={
-            "env_vars": {
-                "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
-            }
-        },
+        runtime_env=runtime_env,
     )
-
+    if args.nemo_checkpoint:
+        model_format = "nemo"
+    elif args.megatron_checkpoint:
+        model_format = "megatron"
+    else:
+        raise ValueError("Either --nemo_checkpoint or --megatron_checkpoint must be provided")
     # Deploy the inframework model using the updated API
     ray_deployer.deploy_inframework_model(
         nemo_checkpoint=args.nemo_checkpoint,
@@ -175,6 +200,10 @@ def main():
         legacy_ckpt=args.legacy_ckpt,
         max_batch_size=args.max_batch_size,
         random_seed=args.random_seed,
+        megatron_checkpoint_filepath=args.megatron_checkpoint,
+        model_type=args.model_type,
+        model_format=model_format,
+        micro_batch_size=args.micro_batch_size,
     )
 
 

@@ -42,8 +42,10 @@ requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
     "megatron-core>=0.14.0a0,<0.15.0",
+    "megatron-bridge>=0.1.0a0,<0.2.0",
     "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
     "nvidia-resiliency-ext>=0.4.0a0,<0.5.0; sys_platform != 'darwin'",
+    "transformer-engine[pytorch]>=2.6.0a0,<2.7.0; sys_platform != 'darwin'",
     "accelerate",
     "fastapi",
     "pydantic-settings",
@@ -59,7 +61,7 @@ dependencies = [
     "lightning",
     "omegaconf>=2.3.0",
     "peft",
-    "torch",
+    "torch==2.7.1",
     "torchvision",
     "torchmetrics>=0.11.0",
     "wandb",
@@ -74,7 +76,6 @@ dependencies = [
     "einops",
     "ijson",
     "pyarrow<21.0.0",
-
 ]
 
 [project.optional-dependencies]
@@ -86,11 +87,11 @@ trtllm = [
     "cuda-python~=12.8.0",
 ]
 trt-onnx = ["tensorrt==10.11.0.33", "transformers==4.51.3", "onnx==1.18.0"]
-te = ["transformer-engine[pytorch]>=2.6.0a0,<2.7.0; sys_platform != 'darwin'"]
+fa = ["flash-attn==2.8.1"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch", "pybind11", "Cython>=3.0.0", "ninja"]
+build = ["setuptools", "torch==2.7.1", "pybind11", "Cython>=3.0.0", "ninja"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
@@ -108,16 +109,22 @@ nemo-run = ["nemo-run"]
 
 [tool.uv.sources]
 xformers = [{ index = "pytorch-cu128" }]
+torch = [{ index = "pytorch-cu128" }]
 vllm = [
     { index = "pytorch-cu128", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
-# transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "5f1142e8c12172510d34709df3629be6f88dc993" } # on release_v2.6.0
+# megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "ecf05926b4765aada82c8eabab4a374e8e83a9c5" }
+transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "0289e76380088358a584d809faf69effab1a7cda" } # on release_v2.7.0
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
-no-build-isolation-package = ["transformer-engine", "transformer-engine-torch"]
+no-build-isolation-package = [
+    "transformer-engine",
+    "transformer-engine-torch",
+    "flash-attn",
+]
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
 # and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
 # avoid including these in the default dependency set, but for now it's required.
@@ -134,6 +141,11 @@ override-dependencies = [
     "fsspec[http]>=2023.1.0,<=2024.9.0",
 ]
 prerelease = "allow"
+
+# Needed when building from source
+[[tool.uv.dependency-metadata]]
+name = "flash-attn"
+requires-dist = ["torch", "einops", "setuptools", "psutil", "ninja"]
 
 [[tool.uv.index]]
 name = "pypi"

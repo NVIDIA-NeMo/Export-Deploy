@@ -25,4 +25,4 @@ coverage run \
     -o log_cli=true \
     -o log_cli_level=INFO \
     -vs -m "not pleasefixme" --tb=short tests/functional_tests/tests_vllm
-coverage combine
+coverage combine -q
