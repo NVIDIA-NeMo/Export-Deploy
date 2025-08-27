@@ -85,35 +85,6 @@ python /opt/Export-Deploy/scripts/deploy/nlp/query_trtllm_api.py --url "http://l
 **TensorRT-LLM API parameters:**
 - `--max_length`: Maximum length of generated sequence (default: 256)
 
-
-### Multimodal Models
-
-For multimodal models that process text and images/videos using the [deployment script described here](../../mm/index.md):
-
-```shell
-python /opt/Export-Deploy/scripts/deploy/multimodal/query.py --url "http://localhost:8000" --model_name neva --model_type neva --input_text "What is in this image?" --input_media "/path/to/image.jpg"
-```
-
-**Multimodal-specific parameters:**
-- `--model_type`: Type of multimodal model (required)
-- `--input_text`: Text input (required)
-- `--input_media`: Path to image/video file (required)
-- `--batch_size`: Batch size (default: 1)
-- `--repetition_penalty`: Repetition penalty (default: 1.0)
-- `--num_beams`: Number of beams for beam search (default: 1)
-
-### Common Parameters
-
-The following parameters are available across most query scripts:
-
-- `--url` / `--host`: URL or host for the server
-- `--model_name` / `--model_id`: Name of the deployed model
-- `--prompt` / `--input_text`: Text prompt to send
-- `--prompt_file`: File containing the prompt text
-- `--top_k`: Top-k sampling parameter
-- `--top_p`: Top-p (nucleus) sampling parameter
-- `--temperature`: Sampling temperature for randomness control
-- `--init_timeout`: Timeout for server initialization (default: 60.0)
    
 
 ## Send a Query using the NeMo APIs
@@ -215,25 +186,6 @@ output = nq.query_llm(
 print(output)
 ```
 
-### NemoQueryMultimodal (Multimodal Models)
-
-For multimodal models that process both text and images/videos:
-
-```python
-from nemo_deploy.multimodal import NemoQueryMultimodal
-
-nq = NemoQueryMultimodal(url="localhost:8000", model_name="neva", model_type="neva")
-output = nq.query(
-    input_text="What is in this image?",
-    input_media="/path/to/image.jpg",
-    max_output_len=30,
-    top_k=1,
-    top_p=0.0,
-    temperature=1.0
-)
-print(output)
-```
-
 ## Query Class Selection Guide
 
 Choose the appropriate query class based on your deployment type:
@@ -243,6 +195,5 @@ Choose the appropriate query class based on your deployment type:
 - **NemoQueryLLMPyTorch**: PyTorch-based model deployments
 - **NemoQueryLLMHF**: HuggingFace model deployments 
 - **NemoQueryvLLM**: vLLM deployments that return OpenAI-compatible responses
-- **NemoQueryMultimodal**: Multimodal models that process text with images or videos
 
 
