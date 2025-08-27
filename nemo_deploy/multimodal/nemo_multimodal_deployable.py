@@ -70,21 +70,17 @@ class NeMoMultimodalDeployable(ITritonDeployable):
 
     Args:
         nemo_checkpoint_filepath (str): path for the nemo checkpoint.
-        num_devices (int): number of GPUs.
-        num_nodes (int): number of nodes.
-        tensor_model_parallel_size (int): tensor parallelism.
-        pipeline_parallelism_size (int): pipeline parallelism.
+        tensor_parallel_size (int): tensor parallelism.
+        pipeline_parallel_size (int): pipeline parallelism.
         params_dtype (torch.dtype): data type for model parameters.
         inference_batch_times_seqlen_threshold (int): sequence threshold.
     """
 
     def __init__(
         self,
-        num_devices: int = None,
-        num_nodes: int = None,
         nemo_checkpoint_filepath: str = None,
-        tensor_model_parallel_size: int = 1,
-        pipeline_model_parallel_size: int = 1,
+        tensor_parallel_size: int = 1,
+        pipeline_parallel_size: int = 1,
         params_dtype: torch.dtype = torch.bfloat16,
         inference_batch_times_seqlen_threshold: int = 1000,
     ):
@@ -94,17 +90,15 @@ class NeMoMultimodalDeployable(ITritonDeployable):
             raise UnavailableError(MISSING_NEMO_MSG)
 
         self.nemo_checkpoint_filepath = nemo_checkpoint_filepath
-        self.num_devices = num_devices
-        self.num_nodes = num_nodes
-        self.tensor_model_parallel_size = tensor_model_parallel_size
-        self.pipeline_model_parallel_size = pipeline_model_parallel_size
+        self.tensor_parallel_size = tensor_parallel_size
+        self.pipeline_parallel_size = pipeline_parallel_size
         self.params_dtype = params_dtype
         self.inference_batch_times_seqlen_threshold = inference_batch_times_seqlen_threshold
 
         self.inference_wrapped_model, self.processor = setup_model_and_tokenizer(
             path=nemo_checkpoint_filepath,
-            tp_size=tensor_model_parallel_size,
-            pp_size=pipeline_model_parallel_size,
+            tp_size=tensor_parallel_size,
+            pp_size=pipeline_parallel_size,
             params_dtype=params_dtype,
             inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
         )

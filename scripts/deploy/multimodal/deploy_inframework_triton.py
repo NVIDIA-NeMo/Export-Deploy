@@ -70,30 +70,17 @@ def get_args(argv):
         type=str,
         help="HTTP address for the Triton server",
     )
-    parser.add_argument(
-        "-ng",
-        "--num_gpus",
-        default=None,
-        type=int,
-        help="Number of GPUs for the deployment",
-    )
-    parser.add_argument(
-        "-nn",
-        "--num_nodes",
-        default=None,
-        type=int,
-        help="Number of Nodes for the deployment",
-    )
+
     parser.add_argument(
         "-tps",
-        "--tensor_parallelism_size",
+        "--tensor_parallel_size",
         default=1,
         type=int,
         help="Tensor parallelism size",
     )
     parser.add_argument(
         "-pps",
-        "--pipeline_parallelism_size",
+        "--pipeline_parallel_size",
         default=1,
         type=int,
         help="Pipeline parallelism size",
@@ -159,11 +146,9 @@ def nemo_deploy(argv):
     params_dtype = dtype_map[args.params_dtype]
 
     model = NeMoMultimodalDeployable(
-        num_devices=args.num_gpus,
-        num_nodes=args.num_nodes,
         nemo_checkpoint_filepath=args.nemo_checkpoint,
-        tensor_model_parallel_size=args.tensor_parallelism_size,
-        pipeline_model_parallel_size=args.pipeline_parallelism_size,
+        tensor_parallel_size=args.tensor_parallel_size,
+        pipeline_parallel_size=args.pipeline_parallel_size,
         params_dtype=params_dtype,
         inference_batch_times_seqlen_threshold=args.inference_batch_times_seqlen_threshold,
     )
