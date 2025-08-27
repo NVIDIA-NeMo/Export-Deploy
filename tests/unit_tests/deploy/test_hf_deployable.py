@@ -361,17 +361,17 @@ class TestHuggingFaceLLMDeploy:
     def test_ray_infer_fn_max_tokens_edge_cases(self, mock_model, mock_tokenizer, mock_torch_cuda):
         """Test ray_infer_fn method with edge case max_tokens values."""
         deployer = HuggingFaceLLMDeploy(model=mock_model, tokenizer=mock_tokenizer, task="text-generation")
-        
+
         # Test with max_tokens = 0
         inputs = {"prompts": ["test prompt"], "max_tokens": 0}
         output = deployer.ray_infer_fn(inputs)
         assert "sentences" in output
-        
+
         # Test with max_tokens = 1
         inputs = {"prompts": ["test prompt"], "max_tokens": 1}
         output = deployer.ray_infer_fn(inputs)
         assert "sentences" in output
-        
+
         # Test with very large max_tokens
         inputs = {"prompts": ["test prompt"], "max_tokens": 10000}
         output = deployer.ray_infer_fn(inputs)
