@@ -91,10 +91,8 @@ def sample_image():
 def deployable(mock_setup_model_and_tokenizer, mock_triton_imports):
     return NeMoMultimodalDeployable(
         nemo_checkpoint_filepath="test_checkpoint.nemo",
-        num_devices=1,
-        num_nodes=1,
-        tensor_model_parallel_size=1,
-        pipeline_model_parallel_size=1,
+        tensor_parallel_size=1,
+        pipeline_parallel_size=1,
         params_dtype=torch.bfloat16,
         inference_batch_times_seqlen_threshold=1000,
     )
@@ -103,15 +101,11 @@ def deployable(mock_setup_model_and_tokenizer, mock_triton_imports):
 class TestNeMoMultimodalDeployable:
     def test_initialization_success(self, mock_setup_model_and_tokenizer, mock_triton_imports):
         """Test successful initialization of NeMoMultimodalDeployable."""
-        deployable = NeMoMultimodalDeployable(
-            nemo_checkpoint_filepath="test_checkpoint.nemo", num_devices=1, num_nodes=1
-        )
+        deployable = NeMoMultimodalDeployable(nemo_checkpoint_filepath="test_checkpoint.nemo")
 
         assert deployable.nemo_checkpoint_filepath == "test_checkpoint.nemo"
-        assert deployable.num_devices == 1
-        assert deployable.num_nodes == 1
-        assert deployable.tensor_model_parallel_size == 1
-        assert deployable.pipeline_model_parallel_size == 1
+        assert deployable.tensor_parallel_size == 1
+        assert deployable.pipeline_parallel_size == 1
         assert deployable.params_dtype == torch.bfloat16
         assert deployable.inference_batch_times_seqlen_threshold == 1000
         assert deployable.inference_wrapped_model is not None
@@ -121,16 +115,14 @@ class TestNeMoMultimodalDeployable:
         """Test initialization with custom parameters."""
         deployable = NeMoMultimodalDeployable(
             nemo_checkpoint_filepath="custom_checkpoint.nemo",
-            num_devices=4,
-            num_nodes=2,
-            tensor_model_parallel_size=2,
-            pipeline_model_parallel_size=2,
+            tensor_parallel_size=2,
+            pipeline_parallel_size=2,
             params_dtype=torch.float16,
             inference_batch_times_seqlen_threshold=2000,
         )
 
-        assert deployable.tensor_model_parallel_size == 2
-        assert deployable.pipeline_model_parallel_size == 2
+        assert deployable.tensor_parallel_size == 2
+        assert deployable.pipeline_parallel_size == 2
         assert deployable.params_dtype == torch.float16
         assert deployable.inference_batch_times_seqlen_threshold == 2000
 
@@ -138,8 +130,8 @@ class TestNeMoMultimodalDeployable:
         """Test that initialization calls setup_model_and_tokenizer with correct parameters."""
         NeMoMultimodalDeployable(
             nemo_checkpoint_filepath="test_checkpoint.nemo",
-            tensor_model_parallel_size=2,
-            pipeline_model_parallel_size=2,
+            tensor_parallel_size=2,
+            pipeline_parallel_size=2,
             params_dtype=torch.float16,
             inference_batch_times_seqlen_threshold=1500,
         )
@@ -328,6 +320,12 @@ class TestNeMoMultimodalDeployable:
     def test_initialization_no_triton(self):
         """Test that initialization fails when Triton is not available."""
         with pytest.raises(UnavailableError):
+            NeMoMultimodalDeployable(nemo_checkpoint_filepath="test_checkpoint.nemo")
+
+    @patch("nemo_deploy.multimodal.nemo_multimodal_deployable.HAVE_NEMO", False)
+    def test_initialization_no_nemo(self):
+        """Test that initialization fails when NeMo is not available."""
+        with pytest.raises(UnavailableError, match="nemo is not available. Please install it with `pip install nemo`."):
             NeMoMultimodalDeployable(nemo_checkpoint_filepath="test_checkpoint.nemo")
 
     def test_initialization_missing_checkpoint(self, mock_triton_imports):
