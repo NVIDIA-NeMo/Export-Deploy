@@ -86,7 +86,7 @@ trtllm = [
     "cuda-python~=12.8.0",
 ]
 trt-onnx = ["tensorrt==10.11.0.33", "transformers==4.51.3", "onnx==1.18.0"]
-fa = ["flash-attn==2.8.1"]
+fa = ["flash-attn==2.7.3"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
