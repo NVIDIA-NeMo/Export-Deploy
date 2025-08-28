@@ -24,8 +24,10 @@ from PIL import Image
 from pytriton.model_config import Tensor
 
 from nemo_deploy.utils import (
+    MISSING_PIL_MSG,
     NEMO1,
     NEMO2,
+    UnavailableError,
     broadcast_list,
     cast_output,
     ndarray2img,
@@ -170,6 +172,29 @@ class TestImageConversions:
         assert len(result) == 2
         assert all(isinstance(img, Image.Image) for img in result)
         assert all(img.size == (100, 100) for img in result)
+
+    def test_ndarray2img_no_pil(self, monkeypatch):
+        # Mock HAVE_PIL to be False
+        monkeypatch.setattr("nemo_deploy.utils.HAVE_PIL", False)
+
+        # Create a test image array
+        img_array = np.random.randint(0, 255, size=(2, 100, 100, 3), dtype=np.uint8)
+
+        # Should raise UnavailableError when PIL is not available
+        with pytest.raises(UnavailableError, match=MISSING_PIL_MSG):
+            ndarray2img(img_array)
+
+    def test_ndarray2img_5d(self):
+        # Create a 5D test image array (batch, time, height, width, channels)
+        img_array = np.random.randint(0, 255, size=(2, 3, 100, 100, 3), dtype=np.uint8)
+        result = ndarray2img(img_array)
+
+        assert isinstance(result, list)
+        assert len(result) == 2  # batch size
+        assert all(isinstance(img_list, list) for img_list in result)
+        assert all(len(img_list) == 3 for img_list in result)  # time dimension
+        assert all(isinstance(img, Image.Image) for img_list in result for img in img_list)
+        assert all(img.size == (100, 100) for img_list in result for img in img_list)
 
 
 class TestCastOutput:
