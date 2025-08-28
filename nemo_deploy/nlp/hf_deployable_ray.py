@@ -174,7 +174,7 @@ class HFRayDeployable:
                 "max_tokens": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 0.0),
                 "top_k": request.get("top_k", 0),
-                "top_p": request.get("top_p", 0.0),
+                "top_p": request.get("top_p", 0),
                 "output_logits": request.get("output_logits", False),
                 "output_scores": request.get("output_scores", False),
             }
@@ -279,7 +279,7 @@ class HFRayDeployable:
                 "max_tokens": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
-                "top_p": request.get("top_p", 0.0),
+                "top_p": request.get("top_p", 0),
                 "output_logits": request.get("output_logits", False),
                 "output_scores": request.get("output_scores", False),
             }

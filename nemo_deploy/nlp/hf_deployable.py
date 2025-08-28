@@ -294,7 +294,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             prompts = str_ndarray2list(inputs.pop("prompts"))
             temperature = inputs.pop("temperature")[0][0] if "temperature" in inputs else 1.0
             top_k = int(inputs.pop("top_k")[0][0] if "top_k" in inputs else 1)
-            top_p = inputs.pop("top_p")[0][0] if "top_k" in inputs else 0.0
+            top_p = inputs.pop("top_p")[0][0] if "top_p" in inputs else 0
             num_tokens_to_generate = inputs.pop("max_length")[0][0] if "max_length" in inputs else 256
             output_logits = inputs.pop("output_logits")[0][0] if "output_logits" in inputs else False
             output_scores = inputs.pop("output_scores")[0][0] if "output_scores" in inputs else False
