@@ -352,3 +352,60 @@ class TestNeMoMultimodalDeployable:
             # This should work as the mock handles it, but in real scenario it might fail
             result = deployable.generate(prompts=prompts, images=images)
             assert len(result) == 2
+
+    def test_triton_infer_fn_without_decorators(self, deployable, sample_image):
+        """Test triton_infer_fn using __wrapped__ to bypass decorators."""
+        # Create sample inputs that would normally be processed by decorators
+        inputs = {
+            "prompts": np.array([b"test prompt 1", b"test prompt 2"]),
+            "images": np.array([np.array(sample_image), np.array(sample_image)]),
+            "temperature": np.array([0.7]),
+            "top_k": np.array([10]),
+            "top_p": np.array([0.9]),
+            "max_length": np.array([100]),
+            "random_seed": np.array([42]),
+            "max_batch_size": np.array([2]),
+        }
+
+        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.str_ndarray2list") as mock_str2list:
+            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.ndarray2img") as mock_ndarray2img:
+                with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.cast_output") as mock_cast:
+                    with patch.object(deployable, "_infer_fn") as mock_infer:
+                        # Setup mocks
+                        mock_str2list.return_value = ["test prompt 1", "test prompt 2"]
+                        mock_ndarray2img.return_value = [sample_image, sample_image]
+                        mock_cast.return_value = np.array([b"Generated text 1", b"Generated text 2"])
+                        mock_infer.return_value = {"sentences": ["Generated text 1", "Generated text 2"]}
+
+                        # Use __wrapped__ twice to access the original function without both decorators
+                        # First decorator: @first_value, Second decorator: @batch
+                        original_function = deployable.triton_infer_fn.__wrapped__.__wrapped__
+
+                        # Call the original function directly
+                        result = original_function(**inputs)
+
+                        # Verify the function was called with correct parameters
+                        mock_str2list.assert_called_once_with(inputs["prompts"])
+                        mock_ndarray2img.assert_called_once_with(inputs["images"])
+
+                        # Verify _infer_fn was called with correct parameters
+                        mock_infer.assert_called_once_with(
+                            prompts=["test prompt 1", "test prompt 2"],
+                            images=[sample_image, sample_image],
+                            temperature=0.7,
+                            top_k=10,
+                            top_p=0.9,
+                            num_tokens_to_generate=100,
+                            random_seed=42,
+                            max_batch_size=2,
+                        )
+
+                        # Verify output formatting
+                        mock_cast.assert_called_once_with(["Generated text 1", "Generated text 2"], np.bytes_)
+
+                        # Verify final result
+                        assert "sentences" in result
+                        assert len(result["sentences"]) == 2
+                        np.testing.assert_array_equal(
+                            result["sentences"], np.array([b"Generated text 1", b"Generated text 2"])
+                        )
