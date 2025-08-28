@@ -33,7 +33,6 @@ include = [
 version = { attr = "nemo_export_deploy_common.package_info.__version__" } # any module attribute compatible with ast.literal_eval
 readme = { file = "README.md", content-type = "text/markdown" }
 
-
 [project]
 name = "NeMo-Export-Deploy"
 dynamic = ["version", "readme"]
@@ -61,7 +60,7 @@ dependencies = [
     "lightning",
     "omegaconf>=2.3.0",
     "peft",
-    "torch==2.7.1",
+    "torch==2.8.0",
     "torchvision",
     "torchmetrics>=0.11.0",
     "wandb",
@@ -91,7 +90,7 @@ fa = ["flash-attn==2.8.1"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch==2.7.1", "pybind11", "Cython>=3.0.0", "ninja"]
+build = ["setuptools", "torch==2.8.0", "pybind11", "Cython>=3.0.0", "ninja"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
@@ -139,8 +138,11 @@ override-dependencies = [
     "urllib3>1.27.0",
     "tiktoken>=0.9.0",                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
+    "torch==2.8.0+cu128",
+    "triton==3.4.0",
 ]
 prerelease = "allow"
+
 
 # Needed when building from source
 [[tool.uv.dependency-metadata]]
