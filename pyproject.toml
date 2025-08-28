@@ -13,7 +13,7 @@
 # limitations under the License.
 
 [build-system]
-requires = ["setuptools>=42", "wheel", "cython>=3.0.0"]
+requires = ["setuptools>=77", "wheel", "cython>=3.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -90,7 +90,7 @@ fa = ["flash-attn==2.8.1"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch==2.8.0", "pybind11", "Cython>=3.0.0", "ninja"]
+build = ["setuptools>=77", "torch==2.8.0", "pybind11", "Cython>=3.0.0", "ninja"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs

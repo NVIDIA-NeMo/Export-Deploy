@@ -151,7 +151,7 @@ main() {
 
         pip install --pre --no-cache-dir --upgrade pip
         pip install --pre --no-cache-dir torch==2.8.0 --index-url https://download.pytorch.org/whl/cu129
-        pip install --pre --no-cache-dir pybind11 wheel_stub ninja wheel packaging
+        pip install --pre --no-cache-dir pybind11 wheel_stub ninja wheel packaging "setuptools>=77"
 
  
         pip install --pre --no-cache-dir --no-build-isolation .$EXTRA
