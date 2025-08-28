@@ -2,59 +2,198 @@
 
 After starting the service with the scripts supplied in the TensorRT-LLM, vLLM, and In-Framework sections, the service will be in standby mode, ready to receive incoming requests. There are multiple methods available for sending queries to this service.
 
-* Use the Query Script: Execute the query script within the currently running container.
+* Use the Query Script or Classes: Execute the query script or classes within the currently running container.
 * PyTriton: Utilize PyTriton to send requests directly.
 * HTTP Requests: Make HTTP requests using various tools or libraries.
 
 
 ## Send a Query using the Script
 
-The following example shows how to execute the query script within the currently running container.
+Choose the appropriate query script based on your deployment type. Each deployment method has its own specialized query script with relevant parameters.
 
-1. To use a query script, run the following command:
 
-   ```shell
-   python /opt/Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name nemotron --prompt "What is the capital of United States?"
-   ```
-   
-2. Change the url and the ``model_name`` based on your server and the model name of your service. The code in the script can be used as a basis for your client code as well.
+### General TensorRT-LLM Models
 
-3. If the there is a prompt embedding table, run the following command to send a query:
+For the models deployed with TensorRT-LLM using the [deployment script described here](../nemo_models/optimized/tensorrt-llm.md):
 
-   ```shell
-   python /opt/Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name nemotron --prompt "What is the capital of United States?" --task_id "task 1"
-   ```
-   
-4. The following parameters are defined in the ``deploy_triton.py`` script:
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
+```
 
-   - ``--url``: url for the triton server. Default="0.0.0.0".
-   - ``--model_name``: name of the triton model to query.
-   - ``--prompt``: user prompt.
-   - ``--max_output_len``: Max output token length. Default=128.
-   - ``--top_k``: considers only the top N most likely tokens at each step.
-   - ``--top_p``: determines the cumulative probability distribution used for sampling the next token in the generated response. Controls the diversity of the output.
-   - ``--temperature``: controls the randomness of the generated output. Higher value, such as 1.0, leads to more randomness and diversity in the generated text, a lower value, like 0.2, produces more focused and deterministic responses.
-   - ``--task_id``: id of a task if ptuning is enabled.
+**Additional parameters:**
+- `--prompt_file`: Read prompt from file instead of command line
+- `--max_output_len`: Max output token length (default: 128)
+- `--top_k`: Top-k sampling (default: 1)
+- `--top_p`: Top-p sampling (default: 0.0)
+- `--temperature`: Sampling temperature (default: 1.0)
+- `--lora_task_uids`: LoRA task UIDs for LoRA-enabled models
+- `--stop_words_list`: List of stop words
+- `--bad_words_list`: List of words to avoid
+- `--no_repeat_ngram_size`: N-gram size for repetition penalty
+
+### In-Framework PyTorch NeMo Models
+
+For NeMo models deployed with PyTorch in-framework using the [deployment script described here](../nemo_models/in-framework.md):
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
+```
+
+**Specific parameters:**
+- `--compute_logprob`: Return log probabilities
+
+
+### In-Framework HuggingFace Models
+
+For HuggingFace models deployed with in-framework backend using the [deployment script described here](../automodel/automodel-in-framework.md):
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework_hf.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
+```
+
+**Additional parameters:**
+- `--output_logits`: Return raw logits from the model output
+- `--output_scores`: Return token probability scores from the model output
+
+
+### vLLM Deployments
+
+For models deployed with vLLM using the [deployment script described here](../nemo_models/optimized/vllm.md):
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/query_vllm.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
+```
+
+**vLLM-specific parameters:**
+- `--max_tokens`: Maximum tokens to generate (default: 16)
+- `--min_tokens`: Minimum tokens to generate (default: 0)
+- `--n_log_probs`: Number of log probabilities per output token
+- `--n_prompt_log_probs`: Number of log probabilities per prompt token
+- `--seed`: Random seed for generation
+
+**Note:** The `--max_output_len` parameter is not available in the `query_vllm.py` script. Instead, use `--max_tokens` to control the maximum number of output tokens.
+
+
+### TensorRT-LLM API Deployments
+
+For models deployed using TensorRT-LLM API using the [deployment script described here](../nemo_models/optimized/tensorrt-llm.md):
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/query_trtllm_api.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
+```
+
+**TensorRT-LLM API parameters:**
+- `--max_length`: Maximum length of generated sequence (default: 256)
+
    
 
 ## Send a Query using the NeMo APIs
 
-The NeMo Framework provides NemoQueryLLM APIs to send a query to the Triton server for convenience. These APIs are only accessible from the NeMo Framework container.
+The NeMo Framework provides multiple query APIs to send requests to the Triton server for different deployment types. These APIs are only accessible from the NeMo Framework container. Choose the appropriate query class based on your deployment method:
 
-1. To run the request example using NeMo APIs, run the following command:
+### NemoQueryLLM  (TensorRT-LLM Models)
+
+For deployed TensorRT-LLM models with comprehensive parameter support:
+
+1. To run the request example using the general NeMo API, run the following command:
 
    ```python
    from nemo_deploy.nlp import NemoQueryLLM
 
-   nq = NemoQueryLLM(url="localhost:8000", model_name="nemotron")
+   nq = NemoQueryLLM(url="localhost:8000", model_name="llama")
    output = nq.query_llm(prompts=["What is the capital of United States?"], max_output_len=10, top_k=1, top_p=0.0, temperature=1.0)
    print(output)
    ```
 
-2. Change the url and the ``model_name`` based on your server and the model name of your service. Please check the NeMoQuery docstrings for details.
-
-3. If there is a prompt embedding table, run the following command to send a query:
+2. If there is a LoRA model, run the following command to send a query:
 
    ```python
-   output = nq.query_llm(prompts=["What is the capital of United States?"], max_output_len=10, top_k=1, top_p=0.0, temperature=1.0, task_id="0")
+   output = nq.query_llm(prompts=["What is the capital of United States?"], max_output_len=10, top_k=1, top_p=0.0, temperature=1.0, lora_uids=["0"])
    ```
+
+### NemoQueryLLMPyTorch (PyTorch-based Models)
+
+For PyTorch-based LLM deployments with extended parameter support:
+
+```python
+from nemo_deploy.nlp import NemoQueryLLMPyTorch
+
+nq = NemoQueryLLMPyTorch(url="localhost:8000", model_name="llama")
+output = nq.query_llm(
+    prompts=["What is the capital of United States?"],
+    max_length=100,
+    top_k=1,
+    top_p=0.0,
+    temperature=1.0,
+    use_greedy=True,
+    repetition_penalty=1.0
+)
+print(output)
+```
+
+### NemoQueryLLMHF (HuggingFace Models)
+
+For HuggingFace model deployments:
+
+```python
+from nemo_deploy.nlp import NemoQueryLLMHF
+
+nq = NemoQueryLLMHF(url="localhost:8000", model_name="llama")
+output = nq.query_llm(
+    prompts=["What is the capital of United States?"],
+    max_length=100,
+    top_k=1,
+    top_p=0.0,
+    temperature=1.0
+)
+print(output)
+```
+
+### NemoQueryTRTLLMAPI (TensorRT-LLM API)
+
+For TensorRT-LLM API deployments:
+
+```python
+from nemo_deploy.nlp import NemoQueryTRTLLMAPI
+
+nq = NemoQueryTRTLLMAPI(url="localhost:8000", model_name="llama")
+output = nq.query_llm(
+    prompts=["What is the capital of United States?"],
+    max_length=100,
+    top_k=1,
+    top_p=0.8,
+    temperature=1.0
+)
+print(output)
+```
+
+### NemoQueryvLLM (vLLM Deployments)
+
+For vLLM deployments with OpenAI-compatible responses:
+
+```python
+from nemo_deploy.nlp import NemoQueryvLLM
+
+nq = NemoQueryvLLM(url="localhost:8000", model_name="llama")
+output = nq.query_llm(
+    prompts=["What is the capital of United States?"],
+    max_tokens=100,
+    top_k=1,
+    top_p=0.8,
+    temperature=1.0,
+    seed=42
+)
+print(output)
+```
+
+## Query Class Selection Guide
+
+Choose the appropriate query class based on your deployment type:
+
+- **NemoQueryLLM**: TensorRT-LLM model deployments using TensorRT-LLM engine
+- **NemoQueryTRTLLMAPI**: TensorRT-LLM API deployments with simplified parameter set. This is specific to TensorRT-LLM's new API to export models to TensorRT-LLM
+- **NemoQueryLLMPyTorch**: PyTorch-based model deployments
+- **NemoQueryLLMHF**: HuggingFace model deployments 
+- **NemoQueryvLLM**: vLLM deployments that return OpenAI-compatible responses
+
+
