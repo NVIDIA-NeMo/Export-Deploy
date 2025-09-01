@@ -63,10 +63,6 @@ overrides = [
     { name = "urllib3", specifier = ">1.27.0" },
 ]
 
-[[manifest.dependency-metadata]]
-name = "flash-attn"
-requires-dist = ["torch", "einops", "setuptools", "psutil", "ninja"]
-
 [[package]]
 name = "absl-py"
 version = "2.3.1"
@@ -1924,19 +1920,6 @@ wheels = [
 ]
 
 [[package]]
-name = "flash-attn"
-version = "2.8.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "einops" },
-    { name = "ninja" },
-    { name = "psutil" },
-    { name = "setuptools" },
-    { name = "torch" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e8/6d/7066d160bdffa2f9da29a8c3957f266b17a03ca0b3bdc8fdae86d9881fe7/flash_attn-2.8.1.tar.gz", hash = "sha256:0ff003899fcb244f357905b04f622d5c9736887126dd6675f8f4bc52954e3923", size = 8166563, upload-time = "2025-07-10T05:16:39.729Z" }
-
-[[package]]
 name = "flashinfer-python"
 version = "0.2.5"
 source = { registry = "https://pypi.org/simple" }
@@ -3566,9 +3549,9 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "accelerate" },
     { name = "datasets", version = "3.1.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "datasets", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra == 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "datasets", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "hydra-core" },
-    { name = "megatron-core", extra = ["dev", "mlm"], marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm'" },
+    { name = "megatron-core", extra = ["dev", "mlm"] },
     { name = "omegaconf" },
     { name = "pyyaml" },
     { name = "regex" },
@@ -4060,8 +4043,8 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-fa = [
-    { name = "flash-attn" },
+inframework = [
+    { name = "megatron-bridge" },
 ]
 trt-onnx = [
     { name = "megatron-bridge" },
@@ -4125,8 +4108,8 @@ requires-dist = [
     { name = "cuda-python", marker = "extra == 'trtllm'", specifier = "~=12.8.0" },
     { name = "decord", marker = "platform_machine != 'aarch64' and sys_platform != 'darwin'" },
     { name = "fastapi" },
-    { name = "flash-attn", marker = "extra == 'fa'", specifier = "==2.8.1" },
     { name = "ijson" },
+    { name = "megatron-bridge", marker = "extra == 'inframework'", specifier = ">=0.2.0a0,<0.3.0" },
     { name = "megatron-bridge", marker = "extra == 'trt-onnx'", specifier = ">=0.2.0a0,<0.3.0" },
     { name = "megatron-bridge", marker = "extra == 'trtllm'", specifier = ">=0.2.0a0,<0.3.0" },
     { name = "megatron-bridge", marker = "extra == 'vllm'", specifier = ">=0.2.0a0,<0.3.0" },
@@ -4157,7 +4140,7 @@ requires-dist = [
     { name = "vllm", marker = "python_full_version < '3.9' and platform_machine == 'x86_64' and extra == 'vllm'", specifier = "~=0.10.0", index = "https://download.pytorch.org/whl/cu128" },
     { name = "webdataset", specifier = ">=0.2.86" },
 ]
-provides-extras = ["inframework", "vllm", "trtllm", "trt-onnx", "fa"]
+provides-extras = ["inframework", "vllm", "trtllm", "trt-onnx"]
 
 [package.metadata.requires-dev]
 build = [

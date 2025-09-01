@@ -62,12 +62,14 @@ main() {
     fi
 
     # Install Python
-    apt-get update
-    apt-get install -y software-properties-common
-    add-apt-repository ppa:deadsnakes/ppa -y
-    apt-get install -y python$PYTHON_VERSION-dev python$PYTHON_VERSION-venv
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYTHON_VERSION 1
-    
+    if [[ "$BASE_IMAGE" = "ubuntu" ]]; then
+        apt-get update
+        apt-get install -y software-properties-common
+        add-apt-repository ppa:deadsnakes/ppa -y
+        apt-get install -y python$PYTHON_VERSION-dev python$PYTHON_VERSION-venv
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYTHON_VERSION 1
+    fi
+
     # Install tools
     apt-get update
     apt-get install -y wget curl git cmake
@@ -123,9 +125,7 @@ main() {
             UV_ARGS=()
         fi
 
-        if [[ "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
-            UV_ARGS+=("--extra" "$INFERENCE_FRAMEWORK")
-        fi
+        UV_ARGS+=("--extra" "$INFERENCE_FRAMEWORK")
 
         # Create virtual environment and install dependencies
         uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
@@ -133,9 +133,9 @@ main() {
         # Install dependencies
         uv sync --locked --only-group build ${UV_ARGS[@]}
         uv sync \
+            -v \
             --link-mode copy \
             --locked \
-            --extra fa \
             --all-groups ${UV_ARGS[@]}
         # Install the package
         uv pip install --no-deps -e .
