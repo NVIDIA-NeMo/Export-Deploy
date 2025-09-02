@@ -61,29 +61,14 @@ dependencies = [
     "ijson",
     "pyarrow<21.0.0",
     "megatron-core[mlm,dev]>=0.15.0a0,<0.16.0",
+    "megatron-bridge>=0.2.0a0,<0.3.0",
 ]
 
 [project.optional-dependencies]
 inframework = ["megatron-bridge>=0.2.0a0,<0.3.0"]
-vllm = [
-    "vllm~=0.10.0",
-    "pandas",
-    "timm",
-    "transformers~=4.53.0",
-    "megatron-bridge>=0.2.0a0,<0.3.0",
-]
-trtllm = [
-    "tensorrt-llm>=1.1.0a0,<1.2.0",
-    "cuda-python~=12.8.0",
-    "megatron-bridge>=0.2.0a0,<0.3.0",
-    "transformers~=4.55.0",
-]
-trt-onnx = [
-    "tensorrt==10.11.0.33",
-    "onnx==1.18.0",
-    "megatron-bridge>=0.2.0a0,<0.3.0",
-    "transformers~=4.51.0",
-]
+vllm = ["vllm~=0.10.0", "pandas", "timm"]
+trtllm = ["tensorrt-llm>=1.0.0a0,<1.1.0,>=1.0.0rc6", "cuda-python~=12.8.0"]
+trt-onnx = ["tensorrt==10.11.0.33", "onnx==1.18.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
