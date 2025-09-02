@@ -26,10 +26,7 @@ from fastapi import FastAPI, HTTPException
 from ray import serve
 
 from ..ray_utils import find_available_port
-
-# Note: Expose a module-level symbol for testing/mocking. If not patched by tests,
-# ModelWorker will lazily import the real class within its __init__.
-MegatronLLMDeployableNemo2 = None
+from .megatronllm_deployable import MegatronLLMDeployableNemo2
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -81,13 +78,7 @@ class ModelWorker:
             LOGGER.info(f"Replica {replica_id} - MASTER_ADDR: {os.environ['MASTER_ADDR']}")
 
         try:
-            # Prefer a patched module-level symbol if provided by tests;
-            # otherwise lazily import the real implementation locally.
-            DeployableClass = MegatronLLMDeployableNemo2
-            if DeployableClass is None:
-                from .megatronllm_deployable import MegatronLLMDeployableNemo2 as DeployableClass
-
-            self.model = DeployableClass(
+            self.model = MegatronLLMDeployableNemo2(
                 nemo_checkpoint_filepath=nemo_checkpoint_filepath,
                 num_devices=world_size,
                 num_nodes=world_size // torch.cuda.device_count(),
