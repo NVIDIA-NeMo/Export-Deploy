@@ -60,12 +60,11 @@ dependencies = [
     "pyparsing>2.0.2",
     "ijson",
     "pyarrow<21.0.0",
-    "megatron-core[mlm,dev]>=0.15.0a0,<0.16.0",
-    "megatron-bridge>=0.2.0a0,<0.3.0",
+    "megatron-bridge>=0.1.0a0,<0.2.0",
 ]
 
 [project.optional-dependencies]
-inframework = ["megatron-bridge>=0.2.0a0,<0.3.0"]
+inframework = []
 vllm = ["vllm~=0.10.0", "pandas", "timm"]
 trtllm = ["tensorrt-llm>=1.0.0a0,<1.1.0,>=1.0.0rc6", "cuda-python~=12.8.0"]
 trt-onnx = ["tensorrt==10.11.0.33", "onnx==1.18.0", "transformers==4.51.3"]
@@ -115,9 +114,8 @@ link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }, { extra = "trt-onnx" }]]
 override-dependencies = [
     "urllib3>1.27.0",
-    "tiktoken>=0.9.0",                             # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
+    "tiktoken>=0.9.0",                            # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
-    "transformer-engine[pytorch]>=2.7.0a0,<2.8.0",
     "megatron-energon[av-decode]>=6.0.0,<7.dev0",
 ]
 prerelease = "allow"
