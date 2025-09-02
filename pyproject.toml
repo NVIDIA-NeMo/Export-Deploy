@@ -60,7 +60,7 @@ dependencies = [
     "pyparsing>2.0.2",
     "ijson",
     "pyarrow<21.0.0",
-    "megatron-bridge>=0.1.0a0,<0.2.0",
+    "megatron-bridge>=0.2.0a0,<0.3.0",
 ]
 
 [project.optional-dependencies]
