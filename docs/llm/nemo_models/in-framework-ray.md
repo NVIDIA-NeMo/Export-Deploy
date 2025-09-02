@@ -264,6 +264,37 @@ For more advanced deployment scenarios:
       --cuda_visible_devices "0,1"
    ```
 
+### Deploy MegatronLM and MBridge Models
+
+You can deploy checkpoints saved in MegatronLM or MBridge formats by using the `--megatron_checkpoint` flag instead of `--nemo_checkpoint`.
+
+- MBridge example:
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   --megatron_checkpoint /opt/checkpoints/llama3_145m-mbridge_saved-distckpt/ \
+   --model_id llama \
+   --tensor_model_parallel_size 2 \
+   --pipeline_model_parallel_size 2 \
+   --num_gpus 4
+```
+
+- MegatronLM example:
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
+   --megatron_checkpoint /opt/checkpoints/checkpoints/llama3_145m-mlm_saved-distckpt/ \
+   --model_id llama \
+   --tensor_model_parallel_size 2 \
+   --pipeline_model_parallel_size 2 \
+   --num_gpus 4 \
+   --model_type gpt
+```
+
+Notes:
+- Use `--model_type gpt` for MegatronLM GPT-style checkpoints.
+- Parallelism settings must be compatible with available GPUs (see Configure Model Parallelism).
+
 ## API Endpoints
 
 Once deployed, your NeMo model will be available through OpenAI-compatible API endpoints:
