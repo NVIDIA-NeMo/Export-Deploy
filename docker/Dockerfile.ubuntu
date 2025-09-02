@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:24.04
+FROM nvcr.io/nvidia/pytorch:25.06-py3
 WORKDIR /workspace
 COPY . .
 ARG INFERENCE_FRAMEWORK
@@ -30,6 +30,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/root/.cache/uv \
     --mount=type=secret,id=GH_TOKEN bash -ex <<"EOF"
     export PAT=$(cat /run/secrets/GH_TOKEN)
-    bash docker/common/install.sh --base-image ubuntu --use-uv --inference-framework $INFERENCE_FRAMEWORK
+    bash docker/common/install.sh --base-image pytorch --use-uv --inference-framework $INFERENCE_FRAMEWORK
     uv cache prune --ci
 EOF

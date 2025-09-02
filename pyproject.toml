@@ -80,14 +80,9 @@ dependencies = [
 
 [project.optional-dependencies]
 inframework = []
-vllm = ["vllm~=0.10.0", "pandas", "timm", "transformers~=4.53.0"]
-trtllm = [
-    "tensorrt-llm>=1.0.0a0,<1.1.0,>=1.0.0rc6",
-    "transformers~=4.53.0",
-    "cuda-python~=12.8.0",
-]
-trt-onnx = ["tensorrt==10.11.0.33", "transformers==4.51.3", "onnx==1.18.0"]
-fa = ["flash-attn==2.8.1"]
+vllm = ["vllm~=0.10.0", "pandas", "timm"]
+trtllm = ["tensorrt-llm>=1.0.0a0,<1.1.0,>=1.0.0rc6", "cuda-python~=12.8.0"]
+trt-onnx = ["tensorrt==10.11.0.33", "onnx==1.18.0", "transformers==4.51.3"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
@@ -120,11 +115,7 @@ transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", 
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
-no-build-isolation-package = [
-    "transformer-engine",
-    "transformer-engine-torch",
-    "flash-attn",
-]
+no-build-isolation-package = ["transformer-engine", "transformer-engine-torch"]
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
 # and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
 # avoid including these in the default dependency set, but for now it's required.
@@ -141,11 +132,6 @@ override-dependencies = [
     "fsspec[http]>=2023.1.0,<=2024.9.0",
 ]
 prerelease = "allow"
-
-# Needed when building from source
-[[tool.uv.dependency-metadata]]
-name = "flash-attn"
-requires-dist = ["torch", "einops", "setuptools", "psutil", "ninja"]
 
 [[tool.uv.index]]
 name = "pypi"
