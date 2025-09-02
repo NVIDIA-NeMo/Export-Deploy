@@ -83,10 +83,11 @@ main() {
         rm cuda-keyring_1.1-1_all.deb
         apt-get update
         apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 libcutlass-dev 
-    fi
-    # Install OpenMPI and nvinfer
-    apt-get install -y libopenmpi-dev libnvinfer-lean-dev
 
+        # Install OpenMPI and nvinfer
+        apt-get install -y libopenmpi-dev libnvinfer-lean-dev
+    fi
+    
     # Clean up
     apt-get clean
 
