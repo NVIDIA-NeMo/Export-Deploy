@@ -16,11 +16,6 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-import torch
-
-if not torch.cuda.is_available():
-    pytest.skip("GPU-only tests", allow_module_level=True)
-
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 
 from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeploy, MegatronLLMDeployableNemo2, dict_to_str
