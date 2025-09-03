@@ -3291,6 +3291,26 @@ wheels = [
 ]
 
 [[package]]
+name = "lightning"
+version = "2.6.0.dev20250831"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fsspec", extra = ["http"] },
+    { name = "lightning-utilities" },
+    { name = "packaging" },
+    { name = "pytorch-lightning" },
+    { name = "pyyaml" },
+    { name = "torch" },
+    { name = "torchmetrics" },
+    { name = "tqdm" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/13/9a/c0d813ab761847f59c188990eaa4181dd17e0cb25ae67bdf36f334d2a9d4/lightning-2.6.0.dev20250831.tar.gz", hash = "sha256:8fd956324a6a8327231fe4c4d92e35b5a3558bced1ce17d908e319e40aa6b1f5", size = 640872, upload-time = "2025-08-31T00:29:27.627Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/79/c7/88d72466ae7dccb5d0a84f3e2bbeefc8a334d8e433fec6f9d34e037fefe9/lightning-2.6.0.dev20250831-py3-none-any.whl", hash = "sha256:79e5ff44467b11d1899e9390056fe694496d49e9edc946ba13c9ffd20c7e4309", size = 832580, upload-time = "2025-08-31T00:29:22.929Z" },
+]
+
+[[package]]
 name = "lightning-utilities"
 version = "0.15.2"
 source = { registry = "https://pypi.org/simple" }
@@ -4145,7 +4165,6 @@ wheels = [
 name = "nemo-export-deploy"
 source = { editable = "." }
 dependencies = [
-    { name = "cloudpickle" },
     { name = "decord", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (platform_machine == 'aarch64' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (platform_machine == 'aarch64' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine == 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "fastapi", version = "0.115.4", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "fastapi", version = "0.116.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
@@ -4153,8 +4172,6 @@ dependencies = [
     { name = "megatron-bridge" },
     { name = "megatron-core", extra = ["dev", "mlm"] },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "omegaconf" },
-    { name = "peft" },
     { name = "pillow", version = "10.3.0", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm') or (platform_machine == 'aarch64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "pillow", version = "11.3.0", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (platform_machine != 'aarch64' and sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or (platform_machine == 'aarch64' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (platform_machine == 'aarch64' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "pyarrow" },
@@ -4211,7 +4228,13 @@ nemo-run = [
     { name = "nemo-run" },
 ]
 nemo-toolkit = [
+    { name = "cloudpickle" },
+    { name = "fiddle" },
+    { name = "hydra-core" },
+    { name = "lightning" },
     { name = "nemo-toolkit", extra = ["automodel", "common-only", "eval", "multimodal-only", "nlp-only"] },
+    { name = "omegaconf" },
+    { name = "peft" },
 ]
 test = [
     { name = "click" },
@@ -4222,7 +4245,6 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cloudpickle" },
     { name = "cuda-python", marker = "extra == 'trtllm'", specifier = "~=12.8.0" },
     { name = "decord", marker = "platform_machine != 'aarch64' and sys_platform != 'darwin'" },
     { name = "fastapi" },
@@ -4230,10 +4252,8 @@ requires-dist = [
     { name = "megatron-bridge", specifier = ">=0.2.0a0,<0.3.0" },
     { name = "megatron-core", extras = ["dev", "mlm"], specifier = ">=0.15.0a0,<0.16.0" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
-    { name = "omegaconf", specifier = ">=2.3.0" },
     { name = "onnx", marker = "extra == 'trt-onnx'", specifier = "==1.18.0" },
     { name = "pandas", marker = "extra == 'vllm'" },
-    { name = "peft" },
     { name = "pillow", marker = "platform_machine != 'aarch64' and sys_platform != 'darwin'" },
     { name = "pyarrow", specifier = "<21.0.0" },
     { name = "pydantic-settings" },
@@ -4277,7 +4297,15 @@ linting = [
     { name = "ruff", specifier = "~=0.9.0" },
 ]
 nemo-run = [{ name = "nemo-run" }]
-nemo-toolkit = [{ name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], specifier = ">=2.5.0a0,<2.6.0" }]
+nemo-toolkit = [
+    { name = "cloudpickle" },
+    { name = "fiddle" },
+    { name = "hydra-core", specifier = ">1.3,<=1.3.2" },
+    { name = "lightning" },
+    { name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], specifier = ">=2.5.0a0,<2.6.0" },
+    { name = "omegaconf", specifier = ">=2.3.0" },
+    { name = "peft" },
+]
 test = [
     { name = "click" },
     { name = "coverage" },

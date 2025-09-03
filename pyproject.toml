@@ -48,10 +48,6 @@ dependencies = [
     "ray",
     "ray[serve]",
     "uvicorn",
-    # Lightning deps
-    "cloudpickle",
-    "omegaconf>=2.3.0",
-    "peft",
     "torch==2.7.1",
     "torchvision",
     "torchmetrics>=0.11.0",
@@ -86,6 +82,13 @@ linting = ["pre-commit>=3.6.0", "ruff~=0.9.0"]
 test = ["pytest", "pytest-mock", "coverage", "click"]
 nemo-toolkit = [
     "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]>=2.5.0a0,<2.6.0",
+    # Lightning deps
+    "cloudpickle",
+    "fiddle",
+    "hydra-core>1.3,<=1.3.2",
+    "lightning",
+    "omegaconf>=2.3.0",
+    "peft",
 ]
 nemo-run = ["nemo-run"]
 
