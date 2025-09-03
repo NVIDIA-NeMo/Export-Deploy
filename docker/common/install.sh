@@ -156,7 +156,6 @@ main() {
         pip install --pre --no-cache-dir --no-build-isolation .$EXTRA
     fi
 
-    cd /usr/local/lib/python3.12/dist-packages
     patch -p1 $(python -c "import triton; print(triton.__path__[0])")/runtime/autotuner.py external/patches/triton-lang_triton_6570_lazy_init.patch
 
 }
