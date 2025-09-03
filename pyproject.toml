@@ -110,6 +110,9 @@ no-build-isolation-package = [
     "transformer-engine",
     "transformer-engine-torch",
     "flash-attn",
+    "mamba-ssm",
+    "causal-conv1d",
+    "nv-grouped-gemm",
 ]
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
 # and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
