@@ -139,6 +139,8 @@ main() {
             --all-groups ${UV_ARGS[@]}
         # Install the package
         uv pip install --no-deps -e .
+
+        patch -p1 $(uv run python -c "import triton; print(triton.__path__[0])")/runtime/autotuner.py external/patches/triton-lang_triton_6570_lazy_init.patch
     else
         if [[ "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
             EXTRA="[$INFERENCE_FRAMEWORK]"
@@ -154,6 +156,8 @@ main() {
 
  
         pip install --pre --no-cache-dir --no-build-isolation .$EXTRA
+
+        patch -p1 $(python -c "import triton; print(triton.__path__[0])")/runtime/autotuner.py external/patches/triton-lang_triton_6570_lazy_init.patch
     fi
 
 }
