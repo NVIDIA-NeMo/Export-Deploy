@@ -31,3 +31,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     bash docker/common/install.sh --base-image pytorch --use-uv --inference-framework $INFERENCE_FRAMEWORK
     uv cache prune --ci
 EOF
+
+RUN --mount=type=bind,source=external/patches/triton-lang_triton_6570_lazy_init.patch,target=/opt/triton-lang_triton_6570_lazy_init.patch \
+    cd /usr/local/lib/python3.12/dist-packages && \
+    patch -p1 $(python -c "import triton; print(triton.__path__[0])")/runtime/autotuner.py /opt/triton-lang_triton_6570_lazy_init.patch
