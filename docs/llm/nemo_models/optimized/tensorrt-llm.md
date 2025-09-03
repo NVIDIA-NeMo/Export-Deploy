@@ -164,7 +164,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
 
 ### Export and Deploy a LLM Model with TensorRT-LLM API
 
-Alternatively, if the **deploy_triton** script is unable to export your model to TensorRT-LLM, you can leverage the new [TensorRT-LLM LLM API](https://nvidia.github.io/TensorRT-LLM/quick-start-guide.html#llm-api). This API provides a streamlined way to export and deploy models. See the example below:
+Alternatively, if the **deploy_triton** script is unable to export your model to TensorRT-LLM, you can leverage the new [TensorRT-LLM LLM API](https://nvidia.github.io/TensorRT-LLM/latest/quick-start-guide.html#run-offline-inference-with-llm-api). This API provides a streamlined way to export and deploy models. See the example below:
 
 ```shell
 python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
