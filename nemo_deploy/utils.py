@@ -173,7 +173,10 @@ def ndarray2img(img_ndarray: np.ndarray) -> typing.List[Image.Image]:
     if not HAVE_PIL:
         raise UnavailableError(MISSING_PIL_MSG)
 
-    img_list = [Image.fromarray(i) for i in img_ndarray]
+    if img_ndarray.ndim == 5:
+        img_list = [[Image.fromarray(i) for i in img_array] for img_array in img_ndarray]
+    else:
+        img_list = [Image.fromarray(i) for i in img_ndarray]
     return img_list
 
 
