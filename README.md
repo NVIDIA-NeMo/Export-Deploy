@@ -128,7 +128,7 @@ For containerized development, use our Dockerfile for building your own containe
 
 ```bash
 docker build \
-    -f docker/Dockerfile.ci \
+    -f docker/Dockerfile.pytorch \
     -t nemo-export-deploy \
     --build-arg INFERENCE_FRAMEWORK=$INFERENCE_FRAMEWORK \
     .

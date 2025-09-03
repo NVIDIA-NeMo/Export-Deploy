@@ -151,7 +151,7 @@ runs:
       uses: reproducible-containers/buildkit-cache-dance@5b81f4d29dc8397a7d341dba3aeecc7ec54d6361
       with:
         cache-dir: cache-mount
-        dockerfile: docker/Dockerfile.ci
+        dockerfile: docker/Dockerfile.pytorch
         skip-extraction: ${{ steps.cache.outputs.cache-hit }}
 
     - name: Build container
@@ -160,7 +160,7 @@ runs:
         GH_TOKEN: ${{ inputs.PAT }}
       run: |
         echo ::group::Build test container
-        docker build -f docker/Dockerfile.ci --build-arg INFERENCE_FRAMEWORK=${{ inputs.inference-framework }} --secret id=GH_TOKEN -t export-deploy .
+        docker build -f docker/Dockerfile.pytorch --build-arg INFERENCE_FRAMEWORK=${{ inputs.inference-framework }} --secret id=GH_TOKEN -t export-deploy .
         echo ::endgroup::
 
     - name: Start container
