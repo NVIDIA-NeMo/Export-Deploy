@@ -266,7 +266,9 @@ class MegatronRayDeployable:
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0.0),
-                "compute_logprob": True if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0) else False,
+                "compute_logprob": True
+                if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0)
+                else False,
                 "apply_chat_template": False,
                 "n_top_logprobs": request.get("logprobs", 0),
                 "echo": request.get("echo", False),
@@ -288,7 +290,7 @@ class MegatronRayDeployable:
             if log_probs_data is not None and isinstance(log_probs_data, np.ndarray):
                 log_probs_data = log_probs_data.tolist()
 
-                        # Convert numpy arrays to Python lists for JSON serialization
+                # Convert numpy arrays to Python lists for JSON serialization
             top_log_probs_data = results.get("top_logprobs", None)
             if top_log_probs_data is not None and isinstance(top_log_probs_data, np.ndarray):
                 top_log_probs_data = top_log_probs_data.tolist()
