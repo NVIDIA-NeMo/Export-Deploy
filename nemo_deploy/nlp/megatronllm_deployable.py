@@ -163,6 +163,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         model_type: str = "gpt",
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
+        **model_config_kwargs,
     ):
         if not HAVE_TRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
@@ -195,6 +196,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             model_type=model_type,
             model_format=model_format,
             micro_batch_size=micro_batch_size,
+            **model_config_kwargs,
         )
         self.enable_cuda_graphs = enable_cuda_graphs
         self.max_batch_size = max_batch_size
