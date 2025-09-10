@@ -60,6 +60,7 @@ class ModelWorker:
         model_type: str = "gpt",
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
+        **model_config_kwargs,
     ):
         # Use replica-specific environment variables to avoid conflicts
         os.environ["MASTER_PORT"] = master_port
@@ -95,6 +96,7 @@ class ModelWorker:
                 model_type=model_type,
                 model_format=model_format,
                 micro_batch_size=micro_batch_size,
+                **model_config_kwargs,
             )
             if rank != 0:
                 self.model.generate_other_ranks()
@@ -138,6 +140,7 @@ class MegatronRayDeployable:
         model_type: str = "gpt",
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
+        **model_config_kwargs,
     ):
         """Initialize the distributed Megatron LLM model deployment.
 
@@ -202,6 +205,7 @@ class MegatronRayDeployable:
                 model_type=model_type,
                 model_format=model_format,
                 micro_batch_size=micro_batch_size,
+                **model_config_kwargs,
             )
             worker_futures.append(rank_0_worker)
 
@@ -230,6 +234,7 @@ class MegatronRayDeployable:
                     model_type=model_type,
                     model_format=model_format,
                     micro_batch_size=micro_batch_size,
+                    **model_config_kwargs,
                 )
                 worker_futures.append(worker)
 

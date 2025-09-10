@@ -279,6 +279,7 @@ def setup_model_and_tokenizer_for_inference(
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
     legacy_ckpt: bool = False,
+    **model_config_kwargs,
 ) -> Tuple[List[MegatronModule], MCoreTokenizerWrappper]:
     """Initialize a Megatron-Core model and tokenizer for inference from a NeMo-2.0 checkpoint.
 
@@ -310,6 +311,10 @@ def setup_model_and_tokenizer_for_inference(
     model_context = io.load_context(path=ckpt_to_context_subdir(checkpoint_path), subpath="model")
 
     model_config = model_context.config
+
+    for name, value in model_config_kwargs.items():
+        if hasattr(model_config, name):
+            setattr(model_config, name, value)
 
     # Disable gradient_accumulation_fusion since its not required for inference
     # and only available with Apex. We don't support Apex for community cuda-based
@@ -437,6 +442,7 @@ def create_mcore_engine(
     model_type: str = "gpt",
     model_format: str = "nemo",
     micro_batch_size: Optional[int] = None,
+    **model_config_kwargs,
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MCoreEngine for inference.
 
@@ -501,6 +507,7 @@ def create_mcore_engine(
             enable_flash_decode=enable_flash_decode,
             enable_cuda_graphs=enable_cuda_graphs,
             legacy_ckpt=legacy_ckpt,
+            **model_config_kwargs,
         )
     elif model_format == "megatron":
         modelList, tokenizer, mlm_args = setup_megatron_model_and_tokenizer_for_inference(

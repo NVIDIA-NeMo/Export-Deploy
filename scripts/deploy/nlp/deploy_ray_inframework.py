@@ -54,6 +54,20 @@ def parse_args():
         help="Size of the pipeline model parallelism",
     )
     parser.add_argument(
+        "-nlfps",
+        "--num_layers_in_first_pipeline_stage",
+        default=None,
+        type=int,
+        help="Number of layers in the first pipeline stage",
+    )
+    parser.add_argument(
+        "-nllps",
+        "--num_layers_in_last_pipeline_stage",
+        default=None,
+        type=int,
+        help="Number of layers in the last pipeline stage",
+    )
+    parser.add_argument(
         "--expert_model_parallel_size",
         type=int,
         default=1,
@@ -64,6 +78,20 @@ def parse_args():
         type=int,
         default=1,
         help="Size of the context parallelism",
+    )
+    parser.add_argument(
+        "-eps",
+        "--account_for_embedding_in_pipeline_split",
+        default=False,
+        action="store_true",
+        help="Account for embedding in the pipeline split",
+    )
+    parser.add_argument(
+        "-lps",
+        "--account_for_loss_in_pipeline_split",
+        default=False,
+        action="store_true",
+        help="Account for loss in the pipeline split",
     )
     parser.add_argument(
         "--model_id",
@@ -184,6 +212,18 @@ def main():
         model_format = "megatron"
     else:
         raise ValueError("Either --nemo_checkpoint or --megatron_checkpoint must be provided")
+
+    model_config_kwargs = {
+        "account_for_embedding_in_pipeline_split": args.account_for_embedding_in_pipeline_split,
+        "account_for_loss_in_pipeline_split": args.account_for_loss_in_pipeline_split,
+    }
+
+    if args.num_layers_in_first_pipeline_stage is not None:
+        model_config_kwargs["num_layers_in_first_pipeline_stage"] = args.num_layers_in_first_pipeline_stage
+
+    if args.num_layers_in_last_pipeline_stage is not None:
+        model_config_kwargs["num_layers_in_last_pipeline_stage"] = args.num_layers_in_last_pipeline_stage
+
     # Deploy the inframework model using the updated API
     ray_deployer.deploy_inframework_model(
         nemo_checkpoint=args.nemo_checkpoint,
@@ -204,6 +244,7 @@ def main():
         model_type=args.model_type,
         model_format=model_format,
         micro_batch_size=args.micro_batch_size,
+        **model_config_kwargs,
     )
 
 
