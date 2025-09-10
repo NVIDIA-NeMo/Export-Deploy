@@ -17,6 +17,7 @@ import logging
 import sys
 
 import torch
+import uvicorn
 
 from nemo_deploy import DeployPyTriton
 
@@ -55,6 +56,20 @@ def get_args(argv):
         default=1,
         type=int,
         help="Version for the service",
+    )
+    parser.add_argument(
+        "-sp",
+        "--server_port",
+        default=8080,
+        type=int,
+        help="Port for the REST server to listen for requests",
+    )
+    parser.add_argument(
+        "-sa",
+        "--server_address",
+        default="0.0.0.0",
+        type=str,
+        help="HTTP address for the REST server",
     )
     parser.add_argument(
         "-trp",
@@ -275,16 +290,27 @@ def nemo_deploy(argv):
 
                 LOGGER.info("Triton deploy function will be called.")
                 nm.deploy()
+                nm.run()
             except Exception as error:
                 LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
                 return
 
             try:
+                # start fastapi server which acts as a proxy to Pytriton server. Applies to PyTriton backend only.
+                try:
+                    LOGGER.info("REST service will be started.")
+                    uvicorn.run(
+                        "nemo_deploy.service.fastapi_interface_to_pytriton:app",
+                        host=args.server_address,
+                        port=args.server_port,
+                        reload=True,
+                    )
+                except Exception as error:
+                    LOGGER.error("Error message has occurred during REST service start. Error message: " + str(error))
                 LOGGER.info("Model serving on Triton will be started.")
                 nm.serve()
             except Exception as error:
                 LOGGER.error("Error message has occurred during deploy function. Error message: " + str(error))
-                return
 
             torch.distributed.broadcast(torch.tensor([1], dtype=torch.long, device="cuda"), src=0)
 
