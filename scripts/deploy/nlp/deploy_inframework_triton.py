@@ -99,6 +99,20 @@ def get_args(argv):
         help="Pipeline parallelism size",
     )
     parser.add_argument(
+        "-nlfps",
+        "--num_layers_in_first_pipeline_stage",
+        default=None,
+        type=int,
+        help="Number of layers in the first pipeline stage",
+    )
+    parser.add_argument(
+        "-nllps",
+        "--num_layers_in_last_pipeline_stage",
+        default=None,
+        type=int,
+        help="Number of layers in the last pipeline stage",
+    )
+    parser.add_argument(
         "-cps",
         "--context_parallel_size",
         default=1,
@@ -111,6 +125,20 @@ def get_args(argv):
         default=1,
         type=int,
         help="Distributes MoE Experts across sub data parallel dimension.",
+    )
+    parser.add_argument(
+        "-eps",
+        "--account_for_embedding_in_pipeline_split",
+        default=False,
+        action="store_true",
+        help="Account for embedding in the pipeline split",
+    )
+    parser.add_argument(
+        "-lps",
+        "--account_for_loss_in_pipeline_split",
+        default=False,
+        action="store_true",
+        help="Account for loss in the pipeline split",
     )
     parser.add_argument(
         "-mbs",
@@ -203,6 +231,17 @@ def nemo_deploy(argv):
     if args.nemo_checkpoint is None:
         raise ValueError("In-Framework deployment requires a checkpoint folder.")
 
+    model_config_kwargs = {
+        "account_for_embedding_in_pipeline_split": args.account_for_embedding_in_pipeline_split,
+        "account_for_loss_in_pipeline_split": args.account_for_loss_in_pipeline_split,
+    }
+
+    if args.num_layers_in_first_pipeline_stage is not None:
+        model_config_kwargs["num_layers_in_first_pipeline_stage"] = args.num_layers_in_first_pipeline_stage
+
+    if args.num_layers_in_last_pipeline_stage is not None:
+        model_config_kwargs["num_layers_in_last_pipeline_stage"] = args.num_layers_in_last_pipeline_stage
+
     model = MegatronLLMDeployableNemo2(
         num_devices=args.num_gpus,
         num_nodes=args.num_nodes,
@@ -219,6 +258,7 @@ def nemo_deploy(argv):
         model_type=args.model_type,
         model_format=args.model_format,
         micro_batch_size=args.micro_batch_size,
+        **model_config_kwargs,
     )
 
     if torch.distributed.is_initialized():

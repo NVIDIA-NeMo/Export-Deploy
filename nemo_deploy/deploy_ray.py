@@ -190,6 +190,7 @@ class DeployRay:
         model_type: str = "gpt",
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
+        **model_config_kwargs,
     ):
         """Deploy an inframework NeMo/Megatron model using Ray Serve.
 
@@ -274,6 +275,7 @@ class DeployRay:
                 model_type=model_type,
                 model_format=model_format,
                 micro_batch_size=micro_batch_size,
+                **model_config_kwargs,
             )
 
             # Deploy the model
