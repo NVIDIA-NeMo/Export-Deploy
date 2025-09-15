@@ -173,19 +173,7 @@ Deploy multiple replicas of your NeMo model for increased throughput:
 
 Enable performance optimizations for faster inference:
 
-1. **CUDA Graphs**: Reduces kernel launch overhead:
-
-   ```shell
-   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
-      --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
-      --model_id llama \
-      --enable_cuda_graphs \
-      --num_gpus 2 \
-      --tensor_model_parallel_size 2 \
-      --cuda_visible_devices "0,1"
-   ```
-
-2. **Flash Attention Decode**: Optimizes attention computation:
+1. **Flash Attention Decode**: Optimizes attention computation:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
@@ -197,7 +185,7 @@ Enable performance optimizations for faster inference:
       --cuda_visible_devices "0,1"
    ```
 
-3. **Combined Optimizations**:
+2. **Flash Attention Decode and Cuda Graphs**:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
