@@ -22,7 +22,7 @@ This section shows how to use scripts and APIs to export a NeMo LLM (*.nemo*) or
 
    ```shell
    cd /opt/Export-Deploy
-   uv sync --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
+   uv sync --inexact --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
 
    ```
 
