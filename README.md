@@ -105,21 +105,21 @@ For TensorRT-LLM:
 
 ```bash
 cd /opt/Export-Deploy
-uv sync --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
+uv sync --inexact --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
 ```
 
 For vLLM:
 
 ```bash
 cd /opt/Export-Deploy
-uv sync --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
+uv sync --inexact --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
 ```
 
 For TRT-ONNX:
 
 ```bash
 cd /opt/Export-Deploy
-uv sync --link-mode symlink --locked --extra trt-onnx $(cat /opt/uv_args.txt)
+uv sync --inexact --link-mode symlink --locked --extra trt-onnx $(cat /opt/uv_args.txt)
 ```
 
 ### Build with Dockerfile

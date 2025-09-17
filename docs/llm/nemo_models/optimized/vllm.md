@@ -1,4 +1,3 @@
-
 # Deploy NeMo Models by Exporting vLLM
 
 This section shows how to use scripts and APIs to export a NeMo LLM to vLLM and deploy it with the NVIDIA Triton Inference Server.
@@ -23,7 +22,7 @@ This section shows how to use scripts and APIs to export a NeMo LLM to vLLM and 
 
    ```shell
    cd /opt/Export-Deploy
-   uv sync --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
+   uv sync --inexact --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
 
    ```
 
@@ -31,8 +30,7 @@ This section shows how to use scripts and APIs to export a NeMo LLM to vLLM and 
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
-       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
-       --model_type llama \
+       --model_path_id /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
        --triton_model_name llama \
        --tensor_parallelism_size 1
    ```
@@ -51,7 +49,7 @@ This section shows how to use scripts and APIs to export a NeMo LLM to vLLM and 
    python /opt/Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "The capital of Canada is" -mol 50
    ```
 
-8. To export and deploy a different model such as Llama3, Mixtral, or Starcoder, change the *model_type* in the *scripts/deploy/nlp/deploy_vllm_triton.py* script. Please check below to see the list of the model types.
+8. To export and deploy a different model such as Llama3, Mixtral, or Starcoder, the script automatically detects the model type from the checkpoint. Please check below to see the list of supported model types.
 
 
 ## Use a Script to Deploy NeMo LLMs on a Triton Server
@@ -68,64 +66,46 @@ After executing the script, it will export the model to vLLM and then initiate t
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
-       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
-       --model_type llama \
+       --model_path_id /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
        --triton_model_name llama \
        --tensor_parallelism_size 1
    ```
 
    The following parameters are defined in the ``deploy_vllm_triton.py`` script:
 
-   - ``--nemo_checkpoint``: path of the .nemo or .qnemo checkpoint file.
-   - ``--model_type``: type of the model. Can be "llama", "mistral", "mixtral", "starcoder2", "gemma".
+   - ``--model_path_id``: path of the .nemo checkpoint folder, or Hugging Face model ID or path.
+   - ``--tokenizer``: tokenizer file if it is not provided in the checkpoint.
+   - ``--lora_ckpt``: list of LoRA checkpoints in HF format.
    - ``--triton_model_name``: name of the model on Triton.
    - ``--triton_model_version``: version of the model. Default is 1.
    - ``--triton_port``: port for the Triton server to listen for requests. Default is 8000.
    - ``--triton_http_address``: HTTP address for the Triton server. Default is 0.0.0.0.
-   - ``--triton_model_repository``: Temporary folder for weight conversion. Default is a new folder in /tmp/.
    - ``--tensor_parallelism_size``: Number of GPUs to split the tensors for tensor parallelism. Default is 1.
-   - ``--dtype``: data type of the deployed model. Default is "bfloat16".
-   - ``--max_model_len``: maximum input + output length of the model. Default is 512. 
+   - ``--dtype``: data type of the deployed model. Choices are "auto", "bfloat16", "float16", "float32". Default is "auto".
+   - ``--quantization``: quantization method for vLLM. Choices are "awq", "gptq", "fp8". Default is None.
+   - ``--seed``: random seed for reproducibility. Default is 0.
+   - ``--gpu_memory_utilization``: GPU memory utilization percentage for vLLM. Default is 0.9.
+   - ``--swap_space``: the size (GiB) of CPU memory per GPU to use as swap space. Default is 4.
+   - ``--cpu_offload_gb``: the size (GiB) of CPU memory to use for offloading the model weights. Default is 0.
+   - ``--enforce_eager``: whether to enforce eager execution. Default is False.
+   - ``--max_seq_len_to_capture``: maximum sequence len covered by CUDA graphs. Default is 8192.
    - ``--max_batch_size``: maximum batch size of the model. Default is 8. 
    - ``--debug_mode``: enables more verbose output. 
-   - ``--weight_storage``: strategy for storing converted weights for vLLM. Can be "auto", "cache", "file", "memory". Use ``--help`` for more information.
    
    **Note:** The parameters described here are generalized and should be compatible with any NeMo checkpoint. It is important, however, that you check the LLM model table in the main [Deploy NeMo LLM main page](../../index.md) for optimized inference model compatibility. We are actively working on extending support to other checkpoints.
 
-3. To export and deploy a different model such as Llama3, Mixtral, and Starcoder, change the *model_type* parameter in the *scripts/deploy/nlp/deploy_vllm_triton.py* script. Please see the table below to learn more about which *model_type* is used for a LLM model.
+3. The script automatically detects the model type from the checkpoint. Please see the table below to learn more about which models are supported.
  
-   |Model Name| model_type   |
-   |:---------|--------------|
-   |Llama 2   | llama        |
-   |Llama 3   | llama        |
-   |Gemma     | gemma        |
-   |StarCoder2| starcoder2   |
-   |Mistral   | mistral      |
-   |Mixtral   | mixtral      | 
+   |Model Name| Support Status   |
+   |:---------|------------------|
+   |Llama 2   | Supported        |
+   |Llama 3   | Supported        |
+   |Gemma     | Supported        |
+   |StarCoder2| Supported        |
+   |Mistral   | Supported        |
+   |Mixtral   | Supported        | 
    
-4. Export faster by caching weights.
-
-   Whenever the deployment script is executed, it initiates the service by exporting the NeMo checkpoint to vLLM, which includes converting weights to a compatible format. By default, for a single-GPU use case, the conversion happens in-memory and is quick. For multiple GPUs, the conversion happens through a temporary file, and there is an option to keep that file between runs for quicker deployment. To do that, you'll need to create an empty directory and make it available to the deployment script.
-
-   Stop the running container and then run the following command to specify an empty directory:
-
-   ```shell
-   mkdir tmp_triton_model_repository
-
-   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:vr
-
-   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
-       --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
-       --model_type llama \
-       --triton_model_name llama \
-       --triton_model_repository /opt/checkpoints/tmp_triton_model_repository \
-       --weight_storage cache \
-       --tensor_parallelism_size 1
-   ```
-   
-   The ``--weight_storage cache`` setting indicates that weights will be converted through a file in the directory specified by ``--triton_model_repository``. This file will only be overwritten if it’s older than the input .nemo file.
-
-5. Access the models with a Hugging Face token.
+4. Access the models with a Hugging Face token.
 
    If you want to run inference using the StarCoder1, StarCoder2, or LLama3 models, you'll need to generate a Hugging Face token that has access to these models. Visit `Hugging Face <https://huggingface.co/>`__ for more information. After you have the token, perform one of the following steps.
 
@@ -154,13 +134,12 @@ You can use the APIs in the export module to export a NeMo checkpoint to vLLM. T
 from nemo_export.vllm_exporter import vLLMExporter
 
 checkpoint_file = "/opt/checkpoints/hf_llama31_8B_nemo2.nemo"
-model_dir = "/opt/checkpoints/hf_llama31_8B_nemo2.nemo/vllm_export"
 
 exporter = vLLMExporter()
 exporter.export(
-    nemo_checkpoint=checkpoint_file,
-    model_dir=model_dir,
-    model_type="llama",
+    model_path_id=checkpoint_file,
+    tensor_parallel_size=1,
+    dtype="auto",
 )
    
 output = exporter.forward(["What is the best city in the world?"], max_output_len=50, top_k=1, top_p=0.0, temperature=1.0)
