@@ -525,10 +525,10 @@ def create_mcore_engine(
     vocab_size = None
     if mlm_args is not None:
         vocab_size = getattr(mlm_args, "padded_vocab_size", None)
-    if vocab_size is None and tokenizer is not None:
-        vocab_size = tokenizer.vocab_size
     if vocab_size is None and hasattr(model.config, "vocab_size"):
         vocab_size = model.config.vocab_size
+    if vocab_size is None and tokenizer is not None:
+        vocab_size = tokenizer.vocab_size
     if vocab_size is None:
         raise ValueError("Unable to find vocab size.")
 
