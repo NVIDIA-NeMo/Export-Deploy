@@ -67,9 +67,7 @@ class ModelWorker:
         # Use replica-specific environment variables to avoid conflicts
         os.environ["MASTER_PORT"] = master_port
         # All ranks must use the SAME MASTER_ADDR (rank 0 node IP)
-        os.environ["MASTER_ADDR"] = (
-            master_addr if master_addr else ray._private.services.get_node_ip_address()
-        )
+        os.environ["MASTER_ADDR"] = master_addr if master_addr else ray._private.services.get_node_ip_address()
         os.environ["RANK"] = str(rank)
         os.environ["WORLD_SIZE"] = str(world_size)
         os.environ["LOCAL_RANK"] = str(rank % torch.cuda.device_count())
@@ -171,7 +169,12 @@ class MegatronRayDeployable:
             self.model_id = model_id
 
             # Validate parallelism configuration
-            total_parallel_size = tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size * expert_model_parallel_size
+            total_parallel_size = (
+                tensor_model_parallel_size
+                * pipeline_model_parallel_size
+                * context_parallel_size
+                * expert_model_parallel_size
+            )
             if total_parallel_size != num_gpus:
                 raise ValueError(
                     f"Total parallelism size ({total_parallel_size}) must equal total GPUs per replica ({num_gpus})"
@@ -201,9 +204,7 @@ class MegatronRayDeployable:
                     break
 
             rank_0_worker = ModelWorker.options(
-                scheduling_strategy=NodeAffinitySchedulingStrategy(
-                    node_id=deployment_node_id, soft=False
-                )
+                scheduling_strategy=NodeAffinitySchedulingStrategy(node_id=deployment_node_id, soft=False)
             ).remote(
                 nemo_checkpoint_filepath=nemo_checkpoint_filepath,
                 rank=0,
