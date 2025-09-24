@@ -24,6 +24,7 @@ import ray
 import torch
 from fastapi import FastAPI, HTTPException
 from ray import serve
+from ray.util.scheduling_strategies import NodeAffinitySchedulingStrategy
 
 from ..ray_utils import find_available_port
 from .megatronllm_deployable import MegatronLLMDeployableNemo2
@@ -50,6 +51,7 @@ class ModelWorker:
         context_parallel_size: int,
         expert_model_parallel_size: int,
         master_port: str,
+        master_addr: Optional[str] = None,
         replica_id: int = 0,
         enable_cuda_graphs: bool = False,
         enable_flash_decode: bool = False,
@@ -64,7 +66,8 @@ class ModelWorker:
     ):
         # Use replica-specific environment variables to avoid conflicts
         os.environ["MASTER_PORT"] = master_port
-        os.environ["MASTER_ADDR"] = ray._private.services.get_node_ip_address()
+        # All ranks must use the SAME MASTER_ADDR (rank 0 node IP)
+        os.environ["MASTER_ADDR"] = master_addr if master_addr else ray._private.services.get_node_ip_address()
         os.environ["RANK"] = str(rank)
         os.environ["WORLD_SIZE"] = str(world_size)
         os.environ["LOCAL_RANK"] = str(rank % torch.cuda.device_count())
@@ -166,7 +169,12 @@ class MegatronRayDeployable:
             self.model_id = model_id
 
             # Validate parallelism configuration
-            total_parallel_size = tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size
+            total_parallel_size = (
+                tensor_model_parallel_size
+                * pipeline_model_parallel_size
+                * context_parallel_size
+                * expert_model_parallel_size
+            )
             if total_parallel_size != num_gpus:
                 raise ValueError(
                     f"Total parallelism size ({total_parallel_size}) must equal total GPUs per replica ({num_gpus})"
@@ -178,7 +186,8 @@ class MegatronRayDeployable:
             # Pre-allocate master port to avoid race conditions between workers
             # Use replica-specific port to avoid conflicts between replicas
             base_port = random.randint(29500, 29999) + (replica_id % 100) * 100
-            master_port = str(find_available_port(base_port, ray._private.services.get_node_ip_address()))
+            deploy_node_ip = ray._private.services.get_node_ip_address()
+            master_port = str(find_available_port(base_port, deploy_node_ip))
             LOGGER.info(f"Replica {replica_id} - Pre-allocated master port: {master_port}")
 
             # Create workers with proper synchronization for distributed initialization
@@ -186,7 +195,17 @@ class MegatronRayDeployable:
             worker_futures = []
 
             # Create rank 0 worker first
-            rank_0_worker = ModelWorker.remote(
+            # Force rank 0 to run on the same node as this deployment so MASTER_ADDR is routable
+            # Resolve the node_id for this deployment's node
+            deployment_node_id = None
+            for node in ray.nodes():
+                if node.get("Alive") and node.get("NodeManagerAddress") == deploy_node_ip:
+                    deployment_node_id = node.get("NodeID")
+                    break
+
+            rank_0_worker = ModelWorker.options(
+                scheduling_strategy=NodeAffinitySchedulingStrategy(node_id=deployment_node_id, soft=False)
+            ).remote(
                 nemo_checkpoint_filepath=nemo_checkpoint_filepath,
                 rank=0,
                 world_size=num_gpus,
@@ -195,6 +214,7 @@ class MegatronRayDeployable:
                 context_parallel_size=context_parallel_size,
                 expert_model_parallel_size=expert_model_parallel_size,
                 master_port=master_port,
+                master_addr=deploy_node_ip,
                 replica_id=replica_id,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
@@ -225,6 +245,7 @@ class MegatronRayDeployable:
                     context_parallel_size=context_parallel_size,
                     expert_model_parallel_size=expert_model_parallel_size,
                     master_port=master_port,
+                    master_addr=deploy_node_ip,
                     replica_id=replica_id,
                     enable_cuda_graphs=enable_cuda_graphs,
                     enable_flash_decode=enable_flash_decode,
