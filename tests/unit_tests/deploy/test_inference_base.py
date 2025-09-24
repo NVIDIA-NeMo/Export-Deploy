@@ -588,6 +588,81 @@ class TestInferenceBase(unittest.TestCase):
         inference_cfg = args[1]
         self.assertEqual(inference_cfg.padded_vocab_size, 32000)
 
+    @patch("nemo_deploy.nlp.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.nlp.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.nlp.inference.inference_base.TextGenerationController")
+    @patch("nemo_deploy.nlp.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    def test_create_mcore_engine_megatron_uses_mlm_args_vocab(
+        self,
+        mock_gpt_wrapper,
+        mock_controller,
+        mock_mcore_engine,
+        mock_setup_megatron,
+    ):
+        # mlm_args provides padded_vocab_size which should take precedence
+        mock_model = MagicMock()
+        mock_model.config = MagicMock()
+        mock_model.config.hidden_size = 512
+        # Also set a different vocab on model/tokenizer to ensure mlm_args wins
+        mock_model.config.vocab_size = 11111
+        mock_tokenizer = MagicMock()
+        mock_tokenizer.vocab_size = 22222
+
+        mlm_args = MagicMock()
+        mlm_args.padded_vocab_size = 64000
+        mock_setup_megatron.return_value = ([mock_model], mock_tokenizer, mlm_args)
+
+        _ = create_mcore_engine(
+            path=self.mock_path,
+            model_format="megatron",
+            num_devices=1,
+            num_nodes=1,
+        )
+
+        args, _ = mock_gpt_wrapper.call_args
+        inference_cfg = args[1]
+        self.assertEqual(inference_cfg.padded_vocab_size, 64000)
+
+    @patch("nemo_deploy.nlp.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.nlp.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.nlp.inference.inference_base.TextGenerationController")
+    @patch("nemo_deploy.nlp.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    def test_create_mcore_engine_megatron_uses_tokenizer_vocab(
+        self,
+        mock_gpt_wrapper,
+        mock_controller,
+        mock_mcore_engine,
+        mock_setup_megatron,
+    ):
+        # tokenizer.vocab_size should be used when mlm_args is None and model.config lacks vocab_size
+        mock_model = MagicMock()
+
+        class Cfg:
+            pass
+
+        cfg = Cfg()
+        cfg.hidden_size = 384
+        # no vocab_size attribute on purpose
+        mock_model.config = cfg
+
+        mock_tokenizer = MagicMock()
+        mock_tokenizer.vocab_size = 42424
+
+        mock_setup_megatron.return_value = ([mock_model], mock_tokenizer, None)
+
+        _ = create_mcore_engine(
+            path=self.mock_path,
+            model_format="megatron",
+            num_devices=1,
+            num_nodes=1,
+        )
+
+        args, _ = mock_gpt_wrapper.call_args
+        inference_cfg = args[1]
+        self.assertEqual(inference_cfg.padded_vocab_size, 42424)
+
     @patch("nemo_deploy.nlp.inference.inference_base.get_world_size_safe")
     @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
     def test_create_mcore_engine_unknown_format_raises(self, mock_get_world_size_safe):

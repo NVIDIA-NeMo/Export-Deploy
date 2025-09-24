@@ -230,7 +230,12 @@ class DeployRay:
         gpus_per_replica = num_gpus // num_replicas
 
         # Validate parallelism configuration
-        parallelism_per_replica = tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size
+        parallelism_per_replica = (
+            tensor_model_parallel_size
+            * pipeline_model_parallel_size
+            * context_parallel_size
+            * expert_model_parallel_size
+        )
 
         if parallelism_per_replica != gpus_per_replica:
             LOGGER.error(
@@ -240,7 +245,8 @@ class DeployRay:
             LOGGER.error(
                 f"Each replica needs: tensor_parallel({tensor_model_parallel_size}) * "
                 f"pipeline_parallel({pipeline_model_parallel_size}) * "
-                f"context_parallel({context_parallel_size}) = {parallelism_per_replica} GPUs"
+                f"context_parallel({context_parallel_size}) * "
+                f"expert_parallel({expert_model_parallel_size}) = {parallelism_per_replica} GPUs"
             )
             sys.exit(1)
 
