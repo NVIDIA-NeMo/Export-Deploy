@@ -168,18 +168,6 @@ class MegatronRayDeployable:
         try:
             self.model_id = model_id
 
-            # Validate parallelism configuration
-            total_parallel_size = (
-                tensor_model_parallel_size
-                * pipeline_model_parallel_size
-                * context_parallel_size
-                * expert_model_parallel_size
-            )
-            if total_parallel_size != num_gpus:
-                raise ValueError(
-                    f"Total parallelism size ({total_parallel_size}) must equal total GPUs per replica ({num_gpus})"
-                )
-
             # Generate a unique replica ID based on the actor handle
             replica_id = abs(hash(str(self))) % 10000
 
