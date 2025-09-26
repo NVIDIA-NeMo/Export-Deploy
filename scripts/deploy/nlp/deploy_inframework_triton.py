@@ -243,8 +243,11 @@ def nemo_deploy(argv):
     if not megatron_llm_supported:
         raise ValueError("MegatronLLMDeployable is not supported in this environment.")
 
-    if args.nemo_checkpoint is None:
+    if args.model_format == "nemo" and args.nemo_checkpoint is None:
         raise ValueError("In-Framework deployment requires a checkpoint folder.")
+
+    if args.model_format == "megatron" and args.megatron_checkpoint is None:
+        raise ValueError("In-Framework deployment requires a Megatron checkpoint folder.")
 
     model_config_kwargs = {
         "account_for_embedding_in_pipeline_split": args.account_for_embedding_in_pipeline_split,
