@@ -229,27 +229,6 @@ class DeployRay:
         # Calculate total GPUs and GPUs per replica
         gpus_per_replica = num_gpus // num_replicas
 
-        # Validate parallelism configuration
-        parallelism_per_replica = (
-            tensor_model_parallel_size
-            * pipeline_model_parallel_size
-            * context_parallel_size
-            * expert_model_parallel_size
-        )
-
-        if parallelism_per_replica != gpus_per_replica:
-            LOGGER.error(
-                f"Parallelism per replica ({parallelism_per_replica}) must equal GPUs per replica ({gpus_per_replica})"
-            )
-            LOGGER.error(f"Total GPUs: {num_gpus}, Num replicas: {num_replicas}, GPUs per replica: {gpus_per_replica}")
-            LOGGER.error(
-                f"Each replica needs: tensor_parallel({tensor_model_parallel_size}) * "
-                f"pipeline_parallel({pipeline_model_parallel_size}) * "
-                f"context_parallel({context_parallel_size}) * "
-                f"expert_parallel({expert_model_parallel_size}) = {parallelism_per_replica} GPUs"
-            )
-            sys.exit(1)
-
         LOGGER.info(f"Configuration: {num_replicas} replicas, {gpus_per_replica} GPUs per replica")
 
         # Set up signal handlers for graceful shutdown

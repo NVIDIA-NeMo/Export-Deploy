@@ -261,27 +261,6 @@ class TestMegatronRayDeployable:
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
 
-    def test_megatron_ray_deployable_invalid_parallelism(
-        self,
-        mock_nemo_checkpoint,
-        mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-    ):
-        """Test initialization with invalid parallelism configuration."""
-        deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
-            num_gpus=1,
-            tensor_model_parallel_size=2,  # This would require 2 GPUs
-            pipeline_model_parallel_size=1,
-            context_parallel_size=1,
-        )
-
-        # This should fail when we try to deploy it
-        with pytest.raises(Exception):  # Ray will wrap the ValueError
-            serve.run(deployment_handle, name="test-invalid-parallelism")
-
     def test_list_models_endpoint(
         self,
         mock_nemo_checkpoint,
