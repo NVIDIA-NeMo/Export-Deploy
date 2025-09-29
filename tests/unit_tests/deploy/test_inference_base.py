@@ -529,7 +529,6 @@ class TestInferenceBase(unittest.TestCase):
         result = create_mcore_engine(path=self.mock_path)
 
         self.assertEqual(len(result), 3)
-        mock_get_world_size_safe.assert_called_once()
         # Defaults forwarded to setup when None
         mock_setup.assert_called_once_with(
             checkpoint_path=self.mock_path,
