@@ -18,7 +18,7 @@ warnings.warn(
     "The 'nemo_deploy.nlp' module is deprecated and will be renamed to 'nemo_deploy.llm' in the next release. "
     "To ensure compatibility with future versions, please change your imports from 'nemo_deploy.nlp' to 'nemo_deploy.llm' as soon as possible.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 from nemo_deploy.nlp.query_llm import (
