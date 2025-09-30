@@ -503,7 +503,9 @@ def create_mcore_engine(
             padded_vocab_size = getattr(mlm_args, "padded_vocab_size", None)
         else:
             padded_vocab_size = calculate_padded_vocab_size(
-                model.config.vocab_size, model.config.make_vocab_size_divisible_by, model.config.tensor_model_parallel_size
+                model.config.vocab_size,
+                model.config.make_vocab_size_divisible_by,
+                model.config.tensor_model_parallel_size,
             )
     else:
         raise ValueError(f"Model format {model_format} not supported.")
