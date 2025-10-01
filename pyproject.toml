@@ -81,8 +81,8 @@ dependencies = [
 [project.optional-dependencies]
 inframework = []
 vllm = ["vllm~=0.10.0", "pandas", "timm"]
-trtllm = ["tensorrt-llm==1.2.0rc0", "cuda-python~=12.8.0"]
-trt-onnx = ["tensorrt==10.11.0.33", "onnx==1.18.0", "transformers==4.51.3"]
+trtllm = ["tensorrt-llm==1.2.0rc0", "cuda-python>=13"]
+trt-onnx = ["tensorrt==10.13.0", "onnx==1.18.0", "transformers==4.56.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
