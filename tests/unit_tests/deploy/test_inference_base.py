@@ -249,6 +249,140 @@ class TestInferenceBase(unittest.TestCase):
         mock_set_modelopt.assert_called_once()
 
     @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.nlp.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
+    @patch("nemo_deploy.nlp.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
+    @patch("nemo_deploy.nlp.inference.inference_base.check_is_distributed_checkpoint")
+    @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_weights_subdir")
+    @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_context_subdir")
+    @patch("nemo_deploy.nlp.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.nlp.inference.inference_base.get_model_from_config")
+    @patch("nemo_deploy.nlp.inference.inference_base.load_nemo_checkpoint_to_tron_model")
+    def test_setup_model_calls_configure_model(
+        self,
+        mock_load_ckpt,
+        mock_get_model,
+        mock_init_megatron,
+        mock_context_subdir,
+        mock_weights_subdir,
+        mock_check_dist,
+        mock_load_context,
+        mock_torch_dist_init,
+        mock_set_modelopt,
+    ):
+        # Ensure distributed checkpoint path
+        mock_check_dist.return_value = True
+        # Context with tokenizer
+        mock_context = MagicMock()
+        mock_context.config = self.model_config
+        mock_context.tokenizer = self.mock_tokenizer
+        mock_load_context.return_value = mock_context
+
+        # Model list with a module having configure_model
+        self.mock_model.configure_model = MagicMock()
+        mock_get_model.return_value = self.mock_model_list
+
+        # Call the function under test
+        from nemo_deploy.nlp.inference.inference_base import setup_model_and_tokenizer_for_inference
+
+        setup_model_and_tokenizer_for_inference(checkpoint_path=self.mock_path)
+
+        # Verify that configure_model(tokenizer) was invoked
+        self.mock_model.configure_model.assert_called_once_with(self.mock_tokenizer)
+
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.nlp.inference.inference_base.calculate_padded_vocab_size")
+    @patch("nemo_deploy.nlp.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.nlp.inference.inference_base.TextGenerationController")
+    @patch("nemo_deploy.nlp.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.nlp.inference.inference_base.StaticInferenceContext")
+    @patch("nemo_deploy.nlp.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    def test_create_mcore_engine_megatron_with_mlm_args(
+        self,
+        mock_setup_meg,
+        mock_static_ctx,
+        mock_engine_class,
+        mock_tg_ctrl_class,
+        mock_gpt_wrapper_class,
+        mock_calc_pad_vocab,
+    ):
+        # Prepare model.config used by InferenceWrapperConfig
+        mock_model = MagicMock()
+        mock_model.config = MagicMock()
+        mock_model.config.hidden_size = 256
+        mock_model.config.vocab_size = 32000
+        mock_model.config.make_vocab_size_divisible_by = 128
+        mock_model.config.tensor_model_parallel_size = 1
+
+        mock_tokenizer = MagicMock()
+
+        # mlm_args with explicit padded_vocab_size
+        mlm_args = MagicMock()
+        mlm_args.padded_vocab_size = 1234
+
+        mock_setup_meg.return_value = ([mock_model], mock_tokenizer, mlm_args)
+        mock_static_ctx.from_config.return_value = MagicMock()
+
+        from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
+
+        create_mcore_engine(path=self.mock_path, model_format="megatron")
+
+        # Ensure we did NOT compute padded vocab when mlm_args provides it
+        mock_calc_pad_vocab.assert_not_called()
+
+        # Validate padded_vocab_size flowed into GPTInferenceWrapper config
+        args, kwargs = mock_gpt_wrapper_class.call_args
+        inference_wrapper_config = args[1]
+        self.assertEqual(inference_wrapper_config.padded_vocab_size, 1234)
+        self.assertEqual(inference_wrapper_config.hidden_size, 256)
+
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.nlp.inference.inference_base.calculate_padded_vocab_size")
+    @patch("nemo_deploy.nlp.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.nlp.inference.inference_base.TextGenerationController")
+    @patch("nemo_deploy.nlp.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.nlp.inference.inference_base.StaticInferenceContext")
+    @patch("nemo_deploy.nlp.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    def test_create_mcore_engine_megatron_without_mlm_args_uses_calculated_padded_vocab(
+        self,
+        mock_setup_meg,
+        mock_static_ctx,
+        mock_engine_class,
+        mock_tg_ctrl_class,
+        mock_gpt_wrapper_class,
+        mock_calc_pad_vocab,
+    ):
+        # Prepare model.config used by InferenceWrapperConfig and pad calculation
+        mock_model = MagicMock()
+        mock_model.config = MagicMock()
+        mock_model.config.hidden_size = 512
+        mock_model.config.vocab_size = 30000
+        mock_model.config.make_vocab_size_divisible_by = 128
+        mock_model.config.tensor_model_parallel_size = 2
+
+        mock_tokenizer = MagicMock()
+
+        mock_setup_meg.return_value = ([mock_model], mock_tokenizer, None)
+        mock_static_ctx.from_config.return_value = MagicMock()
+        mock_calc_pad_vocab.return_value = 24576
+
+        from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
+
+        create_mcore_engine(path=self.mock_path, model_format="megatron")
+
+        # Ensure padded vocab was computed with expected args
+        mock_calc_pad_vocab.assert_called_once_with(
+            mock_model.config.vocab_size,
+            mock_model.config.make_vocab_size_divisible_by,
+            mock_model.config.tensor_model_parallel_size,
+        )
+
+        # Validate padded_vocab_size flowed into GPTInferenceWrapper config
+        args, kwargs = mock_gpt_wrapper_class.call_args
+        inference_wrapper_config = args[1]
+        self.assertEqual(inference_wrapper_config.padded_vocab_size, 24576)
+        self.assertEqual(inference_wrapper_config.hidden_size, 512)
+
     @patch("nemo_deploy.nlp.inference.inference_base.check_is_distributed_checkpoint")
     @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_weights_subdir")
     @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_context_subdir")
