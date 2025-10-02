@@ -1,6 +1,8 @@
-# Deploy Automodel LLMs
+# Export and Deploy Automodel LLMs
 
-The NeMo Framework offers scripts and APIs to deploy both NeMo and Hugging Face LLMs to the NVIDIA Triton 
+Automodel LLMs are a family of large language models designed for efficient inference and deployment in production environments. This section provides an overview of how to export, deploy, and serve Automodel LLMs using NVIDIA's optimized workflows.
+
+You will find step-by-step guides for deploying Automodel LLMs with both Triton Inference Server and Ray Serve, as well as instructions for exporting models and integrating them into your own applications. Whether you are looking to serve models at scale or experiment with local deployments, the following pages will help you get started quickly.
 
 
 ```{toctree}
@@ -8,7 +10,7 @@ The NeMo Framework offers scripts and APIs to deploy both NeMo and Hugging Face 
 :titlesonly:
 :hidden:
 
-In-Framework via Triton  <automodel-in-framework.md>
-In-Framework via Ray Serve  <automodel-ray.md>
-TensorRT-LLM via Triton <automodel-trtllm.md>
+Deploy with Triton  <automodel-in-framework.md>
+Deploy with Ray Serve  <automodel-ray.md>
+Export and Deploy <optimized/index.md>
 ```

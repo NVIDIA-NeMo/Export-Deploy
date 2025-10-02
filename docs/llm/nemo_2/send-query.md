@@ -1,4 +1,4 @@
-# Send Queries to the NVIDIA Triton Server for NeMo LLMs
+# How to Send a Query
 
 After starting the service with the scripts supplied in the TensorRT-LLM, vLLM, and In-Framework sections, the service will be in standby mode, ready to receive incoming requests. There are multiple methods available for sending queries to this service.
 
@@ -14,7 +14,7 @@ Choose the appropriate query script based on your deployment type. Each deployme
 
 ### General TensorRT-LLM Models
 
-For the models deployed with TensorRT-LLM using the [deployment script described here](../nemo_models/optimized/tensorrt-llm.md):
+For the models deployed with TensorRT-LLM using the deployment script described here:
 
 ```shell
 python /opt/Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
@@ -33,7 +33,7 @@ python /opt/Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:80
 
 ### In-Framework PyTorch NeMo Models
 
-For NeMo models deployed with PyTorch in-framework using the [deployment script described here](../nemo_models/in-framework.md):
+For NeMo models deployed with PyTorch in-framework using the deployment script described here:
 
 ```shell
 python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
@@ -58,7 +58,7 @@ python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework_hf.py --url "http
 
 ### vLLM Deployments
 
-For models deployed with vLLM using the [deployment script described here](../nemo_models/optimized/vllm.md):
+For models deployed with vLLM using the deployment script described here:
 
 ```shell
 python /opt/Export-Deploy/scripts/deploy/nlp/query_vllm.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
@@ -76,7 +76,7 @@ python /opt/Export-Deploy/scripts/deploy/nlp/query_vllm.py --url "http://localho
 
 ### TensorRT-LLM API Deployments
 
-For models deployed using TensorRT-LLM API using the [deployment script described here](../nemo_models/optimized/tensorrt-llm.md):
+For models deployed using TensorRT-LLM API using the deployment script described here:
 
 ```shell
 python /opt/Export-Deploy/scripts/deploy/nlp/query_trtllm_api.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
