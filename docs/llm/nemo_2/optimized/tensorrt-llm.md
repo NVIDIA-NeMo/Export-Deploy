@@ -1,10 +1,10 @@
-# Deploy NeMo Models by Exporting TensorRT-LLM 
+#  NeMo 2.0: Deploy NeMo Models by Exporting TensorRT-LLM 
 
-This section shows how to use scripts and APIs to export a NeMo LLM (*.nemo*) or quantized LLM (*.qnemo*) to TensorRT-LLM and deploy it with the NVIDIA Triton Inference Server.
+This section shows how to use scripts and APIs to export a NeMo 2.0 model to TensorRT-LLM and deploy it with the NVIDIA Triton Inference Server.
 
 ## Quick Example
 
-1. Follow the steps in the [Deploy NeMo LLM main page](../../index.md) to generate a NeMo 2.0 Llama checkpoint.
+1. Follow the steps on the [Generate A NeMo 2.0 Checkpoint page](../gen_nemo2_ckpt.md) to generate a NeMo 2.0 Llama checkpoint.
 
 2. In a terminal, go to the folder where the ``hf_llama31_8B_nemo2.nemo`` file is located. Pull down and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
 
@@ -50,7 +50,9 @@ This section shows how to use scripts and APIs to export a NeMo LLM (*.nemo*) or
    python /opt/Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
    ```
    
-8. To export and deploy a different model such as Llama3, Mixtral, or Starcoder, change the ``model_type`` in the `deploy_triton.py <https://github.com/NVIDIA/NeMo/blob/main/scripts/deploy/nlp/deploy_triton.py>`_ script. Please check below to see the list of the model types. For quantized *qnemo* models, specifying ``model_type`` is not necessary as this information is included in the TensorRT-LLM checkpoint.
+## Supported LLMs
+
+NeMo 2.0 models are supported for export and deployment if they are listed as compatible in the [TensorRT-LLM support matrix](https://nvidia.github.io/TensorRT-LLM/reference/support-matrix.html).
 
 
 ## Use a Script to Deploy NeMo LLMs on a Triton Server
@@ -222,7 +224,7 @@ You can use the APIs in the export module to export a NeMo checkpoint to TensorR
    ```
 
 
-### Deploy a LLM Model to TensorRT-LLM
+### Export a LLM Model to TensorRT-LLM and Deploy with Triton
 
 You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Triton. The following code example assumes the ``hf_llama31_8B_nemo2.nemo`` checkpoint has already been downloaded and mounted to the ``/opt/checkpoints/`` path. Additionally, the ``/opt/checkpoints/tmp_trt_llm`` path is also assumed to exist.
 
@@ -267,3 +269,40 @@ The export settings for quantization can be adjusted via ``trt_llm_exporter.expo
 * ``fp8_kvcache: Optional[bool] = None``: enables/disables FP8 quantization for KV-cache
 
 By default, the quantization settings are auto-detected from the NeMo checkpoint.
+
+
+## How To Send a Query
+
+### Send a Query using the Script
+
+You can send queries to your deployed NeMo 2.0 LLM using the provided query script. This script allows you to interact with the model via HTTP requests, sending prompts and receiving generated responses directly from the Triton server.
+
+The example below demonstrates how to use the query script to send a prompt to your deployed model. You can customize the request with various parameters to control generation behavior, such as output length, sampling strategy, and more. For a full list of supported parameters, see below.
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
+```
+
+**Additional parameters:**
+- `--prompt_file`: Read prompt from file instead of command line
+- `--max_output_len`: Max output token length (default: 128)
+- `--top_k`: Top-k sampling (default: 1)
+- `--top_p`: Top-p sampling (default: 0.0)
+- `--temperature`: Sampling temperature (default: 1.0)
+- `--lora_task_uids`: LoRA task UIDs for LoRA-enabled models
+- `--stop_words_list`: List of stop words
+- `--bad_words_list`: List of words to avoid
+- `--no_repeat_ngram_size`: N-gram size for repetition penalty
+
+
+### Send a Query using the NeMo APIs
+
+Please see the below if you would like to use APIs to send a query.
+
+```python
+from nemo_deploy.nlp import NemoQueryLLM
+
+nq = NemoQueryLLM(url="localhost:8000", model_name="llama")
+output = nq.query_llm(prompts=["What is the capital of United States?"], max_output_len=10, top_k=1, top_p=0.0,temperature=1.0)
+print(output)
+```

@@ -94,18 +94,8 @@ After executing the script, it will export the model to vLLM and then initiate t
    
    **Note:** The parameters described here are generalized and should be compatible with any NeMo checkpoint. It is important, however, that you check the LLM model table in the main [Deploy NeMo LLM main page](../../index.md) for optimized inference model compatibility. We are actively working on extending support to other checkpoints.
 
-3. The script automatically detects the model type from the checkpoint. Please see the table below to learn more about which models are supported.
- 
-   |Model Name| Support Status   |
-   |:---------|------------------|
-   |Llama 2   | Supported        |
-   |Llama 3   | Supported        |
-   |Gemma     | Supported        |
-   |StarCoder2| Supported        |
-   |Mistral   | Supported        |
-   |Mixtral   | Supported        | 
-   
-4. Access the models with a Hugging Face token.
+
+3. Access the models with a Hugging Face token.
 
    If you want to run inference using the StarCoder1, StarCoder2, or LLama3 models, you'll need to generate a Hugging Face token that has access to these models. Visit `Hugging Face <https://huggingface.co/>`__ for more information. After you have the token, perform one of the following steps.
 
@@ -120,6 +110,10 @@ After executing the script, it will export the model to vLLM and then initiate t
    ```shell
    export HF_TOKEN=your_token_here
    ```
+
+## Supported LLMs
+
+NeMo 2.0 models are supported for export and deployment if they are listed as compatible in the [vLLM supported models list](https://docs.vllm.ai/en/v0.9.2/models/supported_models.html).
 
 ## Use NeMo Export and Deploy Module APIs to Run Inference
 

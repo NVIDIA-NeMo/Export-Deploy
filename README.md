@@ -437,7 +437,7 @@ output = nq.query(
 print(output)
 ```
 
-Note that each model groups such as LLMs and Multimodals have its own dedicated query class. For further details, please consult the [documentation](docs/llm/nemo_models/send-query.md).
+Note that each model groups such as LLMs and Multimodals have its own dedicated query class. For further details, please consult the documentation.
 
 ## 🤝 Contributing
 
