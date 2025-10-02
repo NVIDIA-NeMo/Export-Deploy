@@ -60,3 +60,11 @@ Please follow the steps below to generate a NeMo 2.0 checkpoint and use it for t
        )
    ```
 
+```{toctree}
+:maxdepth: 4
+:titlesonly:
+:hidden:
+
+NeMo LLMs  <nemo_models/index.md>
+Automodel LLMs <automodel/index.md>
+```

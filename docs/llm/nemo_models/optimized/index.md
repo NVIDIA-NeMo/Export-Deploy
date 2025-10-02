@@ -24,4 +24,11 @@ The following table shows the supported LLMs and their inference-optimized libra
 
 **Note:** As we transition support for deploying community models from NeMo 1.0 to NeMo 2.0, not all models are supported in NeMo 2.0 yet. The support matrix above shows which models are currently available. To use a model not yet supported in NeMo 2.0, please refer to the documentation for version 24.07, which uses NeMo 1.0 instead.
 
-You can find details about TensorRT-LLM and vLLM-based deployment options below.
+```{toctree}
+:maxdepth: 4
+:titlesonly:
+:hidden:
+
+TensorRT-LLM <tensorrt-llm.md>
+vLLM <vllm.md>
+```

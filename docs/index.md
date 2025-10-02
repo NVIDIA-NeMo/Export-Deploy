@@ -4,27 +4,31 @@
 ```
 
 ```{toctree}
-:caption: 🚀 NeMo Export and Deploy
+:caption: About NeMo Export-Deploy
 :hidden:
 :maxdepth: 4
 
 export-deploy-models.md
+```
+
+```{toctree}
+:caption: Large Language Models
+:hidden:
+:maxdepth: 4
+
 llm/index.md
-llm/nemo_models/nim.md
-llm/nemo_models/optimized/index.md
-llm/nemo_models/optimized/tensorrt-llm.md
-llm/nemo_models/optimized/vllm.md
-llm/nemo_models/in-framework.md
-llm/nemo_models/in-framework-ray.md
-llm/nemo_models/send-query.md
-llm/automodel/automodel-in-framework.md
-llm/automodel/automodel-trtllm.md
-llm/automodel/automodel-ray.md
+```
+
+```{toctree}
+:caption: Multimodal Models
+:hidden:
+:maxdepth: 1
+
 mm/index.md
 ```
 
 ```{toctree}
-:caption: 🛠️ Development
+:caption: Development
 :hidden:
 
 testing.md
