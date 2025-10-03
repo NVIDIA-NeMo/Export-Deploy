@@ -4,7 +4,7 @@
 
 ## NVIDIA NeMo-Export-Deploy 0.2.0
 * MegatronLM and Megatron-Bridge model deployment support with Triton Inference Server and Ray Serve
-* Multi-node multi-instance Ray Serve based deployment for NeMo 2 and Megatron-Bridge models. 
+* Multi-node multi-instance Ray Serve based deployment for NeMo 2, Megatron-Bridge, and Megatron-LM models. 
 * Update vLLM export to use NeMo->HF->vLLM export path
 * Multi-Modal deployment for NeMo 2 models with Triton Inference Server
 * NeMo Retriever Text Reranking ONNX and TensorRT export support
