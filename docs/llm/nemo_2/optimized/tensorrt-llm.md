@@ -1,4 +1,4 @@
-#  NeMo 2.0: Deploy NeMo Models by Exporting TensorRT-LLM 
+# Deploy NeMo 2.0 Models by Exporting TensorRT-LLM 
 
 This section shows how to use scripts and APIs to export a NeMo 2.0 model to TensorRT-LLM and deploy it with the NVIDIA Triton Inference Server.
 

@@ -1,4 +1,4 @@
-# Deploy NeMo Models by Exporting vLLM
+# Deploy NeMo 2.0 Models by Exporting vLLM
 
 This section shows how to use scripts and APIs to export a NeMo LLM to vLLM and deploy it with the NVIDIA Triton Inference Server.
 

@@ -1,10 +1,10 @@
 # Generate A NeMo 2.0 Checkpoint
 
-To run the code examples, you will need a NeMo 2.0 checkpoint. Follow the steps below to generate a NeMo 2.0 checkpoint, which you can then use to test the export and deployment workflows for NeMo models.
+To run the code examples, you will need a NeMo 2.0 checkpoint. Follow the steps below to generate a NeMo 2.0 checkpoint, which you can then use to test the export and deployment workflows for NeMo 2.0 models.
 
-1. To access the Llama models, please visit the [Llama 3.1 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.1-8B).
+1. Please visit the [Llama 3.1 8B Hugging Face page](https://huggingface.co/meta-llama/Llama-3.1-8B), in order to get access for the model
 
-2. Pull down and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
+2. Pull down and run [NeMo Framework](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/nemo) the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
 
    ```shell
    docker pull nvcr.io/nvidia/nemo:vr

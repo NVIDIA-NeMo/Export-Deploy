@@ -1,7 +1,8 @@
 
-# Deploy Hugging Face Models by Exporting to TensorRT-LLM
+# Deploy Automodel Models by Exporting TensorRT-LLM
 
-This section shows how to use scripts and APIs to export a Hugging Face model to TensorRT-LLM, and deploy it with the NVIDIA Triton Inference Server.
+This section shows how to use scripts and APIs to export a Automodel model (Hugging Face) model to TensorRT-LLM, and deploy it with the NVIDIA Triton Inference Server.
+
 
 
 ## Quick Example

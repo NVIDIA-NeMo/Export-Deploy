@@ -6,7 +6,7 @@ This section explains how to deploy NeMo 2.0 LLMs with the NVIDIA Triton Inferen
 
 1. Follow the steps on the [Generate A NeMo 2.0 Checkpoint page](gen_nemo2_ckpt.md) to generate a NeMo 2.0 Llama checkpoint.
 
-2. Pull and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
+2. In a terminal, go to the folder where the ``hf_llama31_8B_nemo2.nemo`` file is located. Pull and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
 
    ```shell
    docker pull nvcr.io/nvidia/nemo:vr
@@ -96,7 +96,7 @@ The example below demonstrates how to use the query script to send a prompt to y
 
 
 ```shell
-python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework.py -mn llama -p "What is the capital of United States?"
+python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework.py -mn llama -p "What is the capital of United States? "
 ```
 
 **All Parameters:**
@@ -121,13 +121,11 @@ from nemo_deploy.nlp import NemoQueryLLMPyTorch
 
 nq = NemoQueryLLMPyTorch(url="localhost:8000", model_name="llama")
 output = nq.query_llm(
-    prompts=["What is the capital of United States?"],
+    prompts=["What is the capital of United States? "],
     max_length=100,
     top_k=1,
     top_p=0.0,
     temperature=1.0,
-    use_greedy=True,
-    repetition_penalty=1.0
 )
 print(output)
 ```

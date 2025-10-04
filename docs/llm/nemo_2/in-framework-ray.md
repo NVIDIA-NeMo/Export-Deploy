@@ -1,6 +1,6 @@
 # Deploy NeMo 2.0 LLMs with Ray Serve
 
-This section demonstrates how to deploy NeMo LLM models using Ray Serve (referred to as 'Ray for NeMo Models'). Ray deployment support provides scalable and flexible deployment for NeMo models, offering features such as automatic scaling, load balancing, and multi-replica deployment with support for advanced parallelism strategies.
+This section demonstrates how to deploy NeMo LLM models using Ray Serve. Ray Serve deployment support provides scalable and flexible deployment for NeMo models, offering features such as automatic scaling, load balancing, and multi-replica deployment with support for advanced parallelism strategies.
 
 **Note:** Single-node examples are shown below. For multi-node clusters managed by SLURM, you can deploy across nodes using the `ray.sub` helper described in the section "Multi-node on SLURM using ray.sub".
 
@@ -8,7 +8,7 @@ This section demonstrates how to deploy NeMo LLM models using Ray Serve (referre
 
 1. Follow the steps on the [Generate A NeMo 2.0 Checkpoint page](gen_nemo2_ckpt.md) to generate a NeMo 2.0 Llama checkpoint.
 
-2. Pull and run the Docker container image. Replace ``:vr`` with your desired version:
+2. In a terminal, go to the folder where the ``hf_llama31_8B_nemo2.nemo`` file is located. Pull and run the Docker container image. Replace ``:vr`` with your desired version:
 
    ```shell
    docker pull nvcr.io/nvidia/nemo:vr
@@ -22,7 +22,7 @@ This section demonstrates how to deploy NeMo LLM models using Ray Serve (referre
        nvcr.io/nvidia/nemo:vr
    ``` 
 
-3. Deploy the NeMo model to Ray:
+3. Deploy the NeMo model with Ray Serve:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \

@@ -1,6 +1,6 @@
-# Deploy NeMo AutoModel LLM Models in the Framework
+# Deploy AutoModel LLMs with Triton Inference Server
 
-This section demonstrates how to deploy NeMo AutoModel LLM models within the framework (referred to as 'In-Framework for AutoModel LLM') using the NVIDIA Triton Inference Server. NeMo AutoModel workflows generate Hugging Face-compatible checkpoints that provide a simplified interface for working with pre-trained language models. These checkpoints maintain high performance during inference, while offering enhanced configurability through the Hugging Face ecosystem.
+This section demonstrates how to deploy NeMo AutoModel LLMs with the NVIDIA Triton Inference Server. NeMo AutoModel workflows generate Hugging Face-compatible checkpoints that provide a simplified interface for working with pre-trained language models. These checkpoints maintain high performance during inference, while offering enhanced configurability through the Hugging Face ecosystem.
 
 
 ## Quick Example
@@ -116,3 +116,44 @@ For multi-GPU inference:
 For more information:
    - Device mapping: [Hugging Face Loading Big Models docs](https://huggingface.co/docs/accelerate/main/concept_guides/big_model_inference).
    - Tensor parallelism: [Hugging Face Multi-GPU Inference docs](https://huggingface.co/docs/transformers/v4.47.0/en/perf_infer_gpu_multi).
+
+
+## How To Send a Query
+
+### Send a Query using the Script
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework_hf.py --model_name llama --prompt "What is the capital of United States?"
+```
+
+**Parameters:**
+- `--model_name`: Name of the Triton model to query (required)
+- `--prompt`: Prompt text to send to the model (required, mutually exclusive with --prompt_file)
+- `--prompt_file`: Path to a file containing the prompt (mutually exclusive with --prompt)
+- `--url`: URL for the Triton server (default: 0.0.0.0)
+- `--max_output_len`: Maximum number of output tokens to generate (default: 128)
+- `--top_k`: Top-k sampling (default: 1)
+- `--top_p`: Top-p (nucleus) sampling (default: 0.0)
+- `--temperature`: Sampling temperature (default: 1.0)
+- `--output_logits`: Return raw logits from the model output (flag)
+- `--output_scores`: Return token probability scores from the model output (flag)
+
+For HuggingFace models deployed with in-framework backend using the [deployment script described here](../automodel/automodel-in-framework.md):
+
+
+### Send a Query using the Export-Deploy APIs
+
+For HuggingFace model deployments:
+
+```python
+from nemo_deploy.nlp import NemoQueryLLMHF
+
+nq = NemoQueryLLMHF(url="localhost:8000", model_name="llama")
+output = nq.query_llm(
+    prompts=["What is the capital of United States?"],
+    max_length=100,
+    top_k=1,
+    top_p=0.0,
+    temperature=1.0
+)
+print(output)
