@@ -1,6 +1,6 @@
 # Export and Deploy NeMo 2.0 LLMs
 
-The NeMo 2.0 model and checkpoint format is the current standard for saving and deploying large language models (LLMs) trained with the NeMo Framework. 
+The [NeMo 2.0](https://github.com/NVIDIA-NeMo/NeMo) model and checkpoint format is the current standard for saving and deploying large language models (LLMs) trained with the NeMo Framework. 
 
 With the Export-Deploy library, you can seamlessly export and deploy the NeMo 2.0 models and checkpoints across a variety of production environments. The following export and deployment paths are supported for NeMo 2.0 models:
 
@@ -18,5 +18,4 @@ Generate a NeMo 2.0 Checkpoint <gen_nemo2_ckpt.md>
 Deploy with Triton <in-framework.md>
 Deploy with Ray Serve <in-framework-ray.md>
 Export and Deploy <optimized/index.md>
-Send a Query <send-query.md>
 ```

@@ -16,7 +16,7 @@ This section demonstrates how to deploy NeMo AutoModel LLMs with the NVIDIA Trit
        --shm-size=4g \
        -p 8000:8000 \
        -v ${PWD}/:/opt/checkpoints/ \
-       -w /opt/NeMo \
+       -w /opt/Export-Deploy \
        --name nemo-fw \
        nvcr.io/nvidia/nemo:vr
    ``` 
@@ -54,7 +54,7 @@ This section demonstrates how to deploy NeMo AutoModel LLMs with the NVIDIA Trit
 
 ## Detailed Deployment Guide
 
-### Deploy a NeMo AutoModel LLM Model
+### Deploy a NeMo AutoModel LLM
 
 Follow these steps to deploy your model on the Triton Inference Server:
 
@@ -70,17 +70,17 @@ Follow these steps to deploy your model on the Triton Inference Server:
 
    Available Parameters:
    
-   - ``--hf_model_id_path``: Path to a local Hugging Face model directory or model ID from the Hugging Face Hub.
-   - ``--task``: Task type for the Hugging Face model (currently only 'text-generation' is supported).
-   - ``--device_map``: Device mapping strategy for model placement (e.g., 'auto', 'sequential', etc.).
-   - ``--tp_plan``: Tensor parallelism plan for distributed inference. 'auto' is the only option supported.
-   - ``--trust_remote_code``: Allow loading remote code from the Hugging Face Hub.
-   - ``--triton_model_name``: Name for the model in Triton.
-   - ``--triton_model_version``: Version of the model. Default is 1.
-   - ``--triton_port``: Port for the Triton server to listen for requests. Default is 8000.
-   - ``--triton_http_address``: HTTP address for the Triton server. Default is 0.0.0.0.
-   - ``--max_batch_size``: Maximum inference batch size. Default is 8.
-   - ``--debug_mode``: Enables additional debug logging messages from the script.
+   - ``--hf_model_id_path``: Path to a local Hugging Face model directory or model ID from the Hugging Face Hub. (Required)
+   - ``--task``: Task type for the Hugging Face model (currently only 'text-generation' is supported). (Optional)
+   - ``--device_map``: Device mapping strategy for model placement (e.g., 'auto', 'sequential', etc.). (Optional, mutually exclusive with --tp_plan)
+   - ``--tp_plan``: Tensor parallelism plan for distributed inference. 'auto' is the only option supported. (Optional, mutually exclusive with --device_map)
+   - ``--trust_remote_code``: Allow loading remote code from the Hugging Face Hub. (Flag; set to enable)
+   - ``--triton_model_name``: Name for the model in Triton. (Required)
+   - ``--triton_model_version``: Version of the model in Triton. Default: 1
+   - ``--triton_port``: Port for the Triton server to listen for requests. Default: 8000
+   - ``--triton_http_address``: HTTP address for the Triton server. Default: 0.0.0.0
+   - ``--max_batch_size``: Maximum inference batch size. Default: 8
+   - ``--debug_mode``: Enables additional debug logging messages from the script. (Flag; set to enable)
 
 3. To use a different model, modify the ``--hf_model_id_path`` parameter. You can specify either a local path or a Hugging Face model ID.
 
@@ -127,16 +127,16 @@ python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework_hf.py --model_nam
 ```
 
 **Parameters:**
-- `--model_name`: Name of the Triton model to query (required)
-- `--prompt`: Prompt text to send to the model (required, mutually exclusive with --prompt_file)
-- `--prompt_file`: Path to a file containing the prompt (mutually exclusive with --prompt)
-- `--url`: URL for the Triton server (default: 0.0.0.0)
-- `--max_output_len`: Maximum number of output tokens to generate (default: 128)
-- `--top_k`: Top-k sampling (default: 1)
-- `--top_p`: Top-p (nucleus) sampling (default: 0.0)
-- `--temperature`: Sampling temperature (default: 1.0)
-- `--output_logits`: Return raw logits from the model output (flag)
-- `--output_scores`: Return token probability scores from the model output (flag)
+- `-mn`, `--model_name`: Name of the model as deployed on Triton server (required)
+- `-p`, `--prompt`: Text prompt to send to the model (mutually exclusive with --prompt_file; required if --prompt_file not given)
+- `-pf`, `--prompt_file`: Path to file containing the prompt text (mutually exclusive with --prompt; required if --prompt not given)
+- `-u`, `--url`: URL of the Triton Inference Server (default: 0.0.0.0)
+- `-mol`, `--max_output_len`: Maximum number of tokens to generate in the response (default: 128)
+- `-tk`, `--top_k`: Number of highest probability tokens to consider for sampling (default: 1)
+- `-tpp`, `--top_p`: Cumulative probability threshold for token sampling (default: 0.0)
+- `-t`, `--temperature`: Temperature for controlling randomness in sampling (default: 1.0)
+- `-ol`, `--output_logits`: Return raw logits from model output (flag; set to enable)
+- `-os`, `--output_scores`: Return token probability scores from model output (flag; set to enable)
 
 For HuggingFace models deployed with in-framework backend using the [deployment script described here](../automodel/automodel-in-framework.md):
 
@@ -150,10 +150,11 @@ from nemo_deploy.nlp import NemoQueryLLMHF
 
 nq = NemoQueryLLMHF(url="localhost:8000", model_name="llama")
 output = nq.query_llm(
-    prompts=["What is the capital of United States?"],
+    prompts=["What is the capital of United States? "],
     max_length=100,
     top_k=1,
     top_p=0.0,
     temperature=1.0
 )
 print(output)
+```

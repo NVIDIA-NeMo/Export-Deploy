@@ -1,6 +1,6 @@
-# Export and Deploy NeMo LLMs
+# Export and Deploy Megatron-LM LLMs
 
-The NeMo Framework offers scripts and APIs to deploy both NeMo and Hugging Face LLMs to the NVIDIA Triton 
+The NeMo Framework offers scripts and APIs to deploy Megatron-LM LLMs with Triton Inference Server and Ray Serve.
 
 ```{toctree}
 :maxdepth: 4

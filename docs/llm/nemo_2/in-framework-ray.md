@@ -1,6 +1,6 @@
 # Deploy NeMo 2.0 LLMs with Ray Serve
 
-This section demonstrates how to deploy NeMo LLM models using Ray Serve. Ray Serve deployment support provides scalable and flexible deployment for NeMo models, offering features such as automatic scaling, load balancing, and multi-replica deployment with support for advanced parallelism strategies.
+This section demonstrates how to deploy NeMo LLM models using Ray Serve. Ray Serve deployment support provides scalable and flexible deployment for NeMo 2.0 LLMs, offering features such as automatic scaling, load balancing, and multi-replica deployment with support for advanced parallelism strategies.
 
 **Note:** Single-node examples are shown below. For multi-node clusters managed by SLURM, you can deploy across nodes using the `ray.sub` helper described in the section "Multi-node on SLURM using ray.sub".
 
@@ -8,7 +8,7 @@ This section demonstrates how to deploy NeMo LLM models using Ray Serve. Ray Ser
 
 1. Follow the steps on the [Generate A NeMo 2.0 Checkpoint page](gen_nemo2_ckpt.md) to generate a NeMo 2.0 Llama checkpoint.
 
-2. In a terminal, go to the folder where the ``hf_llama31_8B_nemo2.nemo`` file is located. Pull and run the Docker container image. Replace ``:vr`` with your desired version:
+2. In a terminal, go to the folder where the ``hf_llama31_8B_nemo2.nemo`` is located. Pull and run the Docker container image. Replace ``:vr`` with your desired version:
 
    ```shell
    docker pull nvcr.io/nvidia/nemo:vr
@@ -22,7 +22,7 @@ This section demonstrates how to deploy NeMo LLM models using Ray Serve. Ray Ser
        nvcr.io/nvidia/nemo:vr
    ``` 
 
-3. Deploy the NeMo model with Ray Serve:
+3. Deploy the NeMo 2.0 LLM with Ray Serve:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
@@ -52,7 +52,7 @@ This section demonstrates how to deploy NeMo LLM models using Ray Serve. Ray Ser
 
 ## Detailed Deployment Guide
 
-### Deploy a NeMo LLM Model
+### Deploy a NeMo 2.0 LLM
 
 Follow these steps to deploy your NeMo model on Ray Serve:
 
@@ -251,37 +251,6 @@ For more advanced deployment scenarios:
       --tensor_model_parallel_size 2 \
       --cuda_visible_devices "0,1"
    ```
-
-### Deploy MegatronLM and MBridge Models
-
-You can deploy checkpoints saved in MegatronLM or MBridge formats by using the `--megatron_checkpoint` flag instead of `--nemo_checkpoint`.
-
-- MBridge example:
-
-```shell
-python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
-   --megatron_checkpoint /opt/checkpoints/llama3_145m-mbridge_saved-distckpt/ \
-   --model_id llama \
-   --tensor_model_parallel_size 2 \
-   --pipeline_model_parallel_size 2 \
-   --num_gpus 4
-```
-
-- MegatronLM example:
-
-```shell
-python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
-   --megatron_checkpoint /opt/checkpoints/checkpoints/llama3_145m-mlm_saved-distckpt/ \
-   --model_id llama \
-   --tensor_model_parallel_size 2 \
-   --pipeline_model_parallel_size 2 \
-   --num_gpus 4 \
-   --model_type gpt
-```
-
-Notes:
-- Use `--model_type gpt` for MegatronLM GPT-style checkpoints.
-- Parallelism settings must be compatible with available GPUs (see Configure Model Parallelism).
 
 ## API Endpoints
 

@@ -2,7 +2,7 @@
 
 To run the code examples, you will need a Megatron-Bridge checkpoint. Follow the steps below to generate a Megatron-Bridge checkpoint, which you can then use to test the export and deployment workflows for the models.
 
-1. To access the Llama models, please visit the [Llama 3.1 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.1-8B).
+1. To access the Llama models, please visit the [Llama 3.1 8B Hugging Face page](https://huggingface.co/meta-llama/Llama-3.1-8B).
 
 2. Pull down and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
 
@@ -23,12 +23,11 @@ To run the code examples, you will need a Megatron-Bridge checkpoint. Follow the
    ```python
    from megatron.bridge import AutoBridge
 
-    if __name__ == "__main__":
-        # Load Llama from Hugging Face Hub and convert to Megatron
-        AutoBridge.import_ckpt(
-            "meta-llama/meta-llama/Llama-3.1-8B",
-            "/opt/checkpoints/hf_llama31_8B_mbridge",        
-        )
+   if __name__ == "__main__":
+      AutoBridge.import_ckpt(
+         "meta-llama/Llama-3.1-8B",
+         "/opt/checkpoints/hf_llama31_8B_mbridge",        
+      )
    ```
 
 

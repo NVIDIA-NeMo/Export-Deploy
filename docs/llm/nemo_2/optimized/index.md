@@ -9,5 +9,5 @@ NeMo Export-Deploy library offers scripts and APIs to export models to two infer
 :hidden:
 
 Deploy TensorRT-LLM with Triton <tensorrt-llm.md>
-Deploy TensorRT-LLM with Ray Serve <vllm.md>
+Deploy vLLM with Triton <vllm.md>
 ```

@@ -1,6 +1,6 @@
 # Export and Deploy NeMo Automodel LLMs
 
-NeMo Export-Deploy library offers scripts and APIs to export models to two inference optimized libraries, TensorRT-LLM and vLLM, and to deploy the exported model with the NVIDIA Triton Inference Server and Ray Serve. 
+NeMo Export-Deploy library offers scripts and APIs to export models to two inference optimized libraries, TensorRT-LLM and vLLM, and to deploy the exported model with the NVIDIA Triton Inference Server. 
 
 ```{toctree}
 :maxdepth: 4
@@ -8,4 +8,5 @@ NeMo Export-Deploy library offers scripts and APIs to export models to two infer
 :hidden:
 
 Deploy TensorRT-LLM with Triton <automodel-trtllm.md>
+Deploy vLLM with Triton <automodel-vllm.md>
 ```

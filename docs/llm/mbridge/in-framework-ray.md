@@ -8,7 +8,7 @@ This section demonstrates how to deploy Megatron-Bridge LLM models using Ray Ser
 
 1. Follow the steps on the [Generate A Megatron-Bridge Checkpoint page](gen_mbridge_ckpt.md) to generate a Megatron-Bridge Llama checkpoint.
 
-2. Pull and run the Docker container image. Replace ``:vr`` with your desired version:
+2. In a terminal, go to the folder where the ``hf_llama31_8B_mbridge`` checkpoint is located. Pull and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
 
    ```shell
    docker pull nvcr.io/nvidia/nemo:vr
@@ -58,4 +58,4 @@ Deploying Megatron-Bridge models with Ray Serve closely follows the same process
 - Use the `--megatron_checkpoint` argument to specify your Megatron-Bridge checkpoint file.
 - Set `--model_format megatron` to indicate the model type.
 
-All other deployment steps, parameters, and Ray Serve features remain the same as for NeMo 2.0 models. For a comprehensive walkthrough of advanced options, scaling, and troubleshooting, refer to the [Deploy NeMo 2.0 LLMs with Ray Serve](../nemo_2/in-framework-ray.md) documentation.
+All other deployment steps, parameters, and Ray Serve features remain the same as for NeMo 2.0 LLMs. For a comprehensive walkthrough of advanced options, scaling, and troubleshooting, refer to the [Deploy NeMo 2.0 LLMs with Ray Serve](../nemo_2/in-framework-ray.md) documentation.

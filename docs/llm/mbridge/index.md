@@ -1,6 +1,6 @@
 # Export and Deploy Megatron-Bridge LLMs
 
-The Megatron-Bridge checkpoint format is the new standard for saving and deploying large language models (LLMs) trained with the Megatron-Bridge library. 
+The [Megatron-Bridge](https://github.com/NVIDIA-NeMo/Megatron-Bridge) checkpoint format is the new standard for saving and deploying large language models (LLMs) trained with the Megatron-Bridge library. 
 
 With the Export-Deploy library, you can seamlessly export and deploy Megatron-Bridge checkpoints across a variety of production environments. The following export and deployment paths are supported for Megatron-Bridge models:
 

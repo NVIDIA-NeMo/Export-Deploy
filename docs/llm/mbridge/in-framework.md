@@ -6,14 +6,14 @@ This section explains how to deploy Megatron-Bridge LLMs with the NVIDIA Triton 
 
 1. Follow the steps on the [Generate A Megatron-Bridge Checkpoint page](gen_mbridge_ckpt.md) to generate a Megatron-Bridge Llama checkpoint.
 
-2. Pull and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
+2. In a terminal, go to the folder where the ``hf_llama31_8B_mbridge`` checkpoint is located. Pull and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
 
    ```shell
    docker pull nvcr.io/nvidia/nemo:vr
 
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 \
        -v ${PWD}/:/opt/checkpoints/ \
-       -w /opt/NeMo \
+       -w /opt/Export-Deploy \
        --name nemo-fw \
        nvcr.io/nvidia/nemo:vr
    ```
@@ -44,7 +44,7 @@ You can deploy an LLM from a Megatron-Bridge checkpoint on Triton using the prov
 
 ### Deploy a Megatron-Bridge LLM Model
 
-The following instructions are very similar to those for deploying NeMo 2.0 models, with only a few key differences specific to Megatron-Bridge highlighted below.
+The following instructions are very similar to those for [deploying NeMo 2.0 models](../nemo_2/in-framework.md), with only a few key differences specific to Megatron-Bridge highlighted below.
 
 - Use the `--megatron_checkpoint` argument to specify your Megatron-Bridge checkpoint file.
 - Set `--model_format megatron` to indicate the model type.
