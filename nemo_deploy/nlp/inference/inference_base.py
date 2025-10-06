@@ -22,6 +22,7 @@ import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
 from megatron.bridge.training.model_load_save import build_and_load_model, load_model_config, load_tokenizer
 from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
+from megatron.bridge.utils.vocab_utils import calculate_padded_vocab_size
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
 from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
@@ -50,7 +51,6 @@ from .tron_utils import (
     _initialize_tp_communicators,
     _set_random_seed,
     get_model_from_config,
-    get_world_size_safe,
     initialize_distributed,
     torch_distributed_init,
 )
@@ -350,10 +350,6 @@ def setup_model_and_tokenizer_for_inference(
     torch_distributed_init(dist_config)
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
 
-    # Needed for model creation
-    if not model_config.vocab_size:
-        model_config.vocab_size = model_context.tokenizer.vocab_size
-
     # Enable flash attention
     if enable_flash_decode:
         model_config.flash_decode = True
@@ -372,11 +368,11 @@ def setup_model_and_tokenizer_for_inference(
         wrap_with_ddp=False,  # No need for DDP for inference
         tokenizer=model_context.tokenizer,
     )
-
+    tokenizer = model_context.tokenizer
     # Ensure model is configured
     for model_module in model:
         if hasattr(model_module, "configure_model") and callable(model_module.configure_model):
-            model_module.configure_model()
+            model_module.configure_model(tokenizer)
 
     # Load checkpoint weights
     load_nemo_checkpoint_to_tron_model(model, checkpoint_path, legacy_ckpt)
@@ -384,7 +380,6 @@ def setup_model_and_tokenizer_for_inference(
     # Get MCore model
     model = [peel(m) for m in model]
 
-    tokenizer = model_context.tokenizer
     tokenizer_wrapper = MCoreTokenizerWrappper(tokenizer)
 
     return model, tokenizer_wrapper
@@ -478,24 +473,6 @@ def create_mcore_engine(
     context_parallel_size = context_parallel_size if context_parallel_size is not None else 1
     expert_model_parallel_size = expert_model_parallel_size if expert_model_parallel_size is not None else 1
 
-    # Calculate total devices needed for the parallelism configuration
-    total_devices_needed = (
-        tensor_model_parallel_size * pipeline_model_parallel_size * context_parallel_size * expert_model_parallel_size
-    )
-    if num_devices is None:
-        total_devices_available = get_world_size_safe()
-    else:
-        total_devices_available = num_nodes * num_devices
-
-    if total_devices_needed > total_devices_available:
-        raise ValueError(
-            f"Insufficient devices for requested parallelism configuration. "
-            f"Need {total_devices_needed} devices "
-            f"(TP={tensor_model_parallel_size} × PP={pipeline_model_parallel_size} × CP={context_parallel_size} × EP={expert_model_parallel_size}), "
-            f"but only have {total_devices_available} devices "
-            f"({num_nodes} nodes × {num_devices} devices)."
-        )
-    mlm_args = None
     if model_format == "nemo":
         modelList, tokenizer = setup_model_and_tokenizer_for_inference(
             checkpoint_path=path,
@@ -509,6 +486,8 @@ def create_mcore_engine(
             legacy_ckpt=legacy_ckpt,
             **model_config_kwargs,
         )
+        model = modelList[0]
+        padded_vocab_size = model.vocab_size
     elif model_format == "megatron":
         modelList, tokenizer, mlm_args = setup_megatron_model_and_tokenizer_for_inference(
             checkpoint_path=path,
@@ -519,24 +498,22 @@ def create_mcore_engine(
             micro_batch_size=micro_batch_size,
             model_type=model_type,
         )
+        model = modelList[0]
+        if mlm_args is not None:
+            padded_vocab_size = getattr(mlm_args, "padded_vocab_size", None)
+        else:
+            padded_vocab_size = calculate_padded_vocab_size(
+                model.config.vocab_size,
+                model.config.make_vocab_size_divisible_by,
+                model.config.tensor_model_parallel_size,
+            )
     else:
         raise ValueError(f"Model format {model_format} not supported.")
-    model = modelList[0]
-    vocab_size = None
-    if mlm_args is not None:
-        vocab_size = getattr(mlm_args, "padded_vocab_size", None)
-    if vocab_size is None and hasattr(model.config, "vocab_size"):
-        vocab_size = model.config.vocab_size
-    if vocab_size is None and tokenizer is not None:
-        vocab_size = tokenizer.vocab_size
-    if vocab_size is None:
-        raise ValueError("Unable to find vocab size.")
-
     inference_wrapper_config = InferenceWrapperConfig(
         hidden_size=model.config.hidden_size,
         params_dtype=params_dtype,
         inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
-        padded_vocab_size=vocab_size,
+        padded_vocab_size=padded_vocab_size,
         inference_max_seq_length=inference_max_seq_length,
         inference_max_requests=max_batch_size,
     )

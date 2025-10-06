@@ -190,27 +190,6 @@ class TestDeployRay(unittest.TestCase):
         _, kwargs = mock_megatron.options.call_args
         assert kwargs["ray_actor_options"]["num_cpus"] == 4
 
-    @patch("nemo_deploy.deploy_ray.LOGGER")
-    def test_deploy_inframework_invalid_parallelism_exits(self, mock_logger):
-        deploy = DeployRay.__new__(DeployRay)  # Bypass __init__ to avoid ray.init
-        # Set required attributes used by deploy method
-        deploy.host = "0.0.0.0"
-        deploy.port = None
-
-        with self.assertRaises(SystemExit):
-            DeployRay.deploy_inframework_model(
-                deploy,
-                nemo_checkpoint="/path/to/model.nemo",
-                num_gpus=2,
-                tensor_model_parallel_size=2,
-                pipeline_model_parallel_size=2,
-                context_parallel_size=1,
-                num_replicas=1,
-                test_mode=True,
-            )
-        # Ensure we logged the validation error
-        assert mock_logger.error.call_count >= 1
-
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
     @patch("nemo_deploy.deploy_ray.TensorRTLLMRayDeployable")
