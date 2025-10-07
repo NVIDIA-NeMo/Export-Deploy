@@ -17,7 +17,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, model_validator
 from pydantic_settings import BaseSettings
 
-from nemo_deploy.nlp import NemoQueryLLMPyTorch
+from nemo_deploy.llm import NemoQueryLLMPyTorch
 
 try:
     from nemo.utils import logging
