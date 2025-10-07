@@ -20,6 +20,7 @@ Megatron LM <llm/megatron_lm/index.md>
 :hidden:
 :maxdepth: 4
 
+Export and Deploy MMs <mm/index.md>
 NeMo 2.0 <mm/nemo_2/index.md>
 ```
 
