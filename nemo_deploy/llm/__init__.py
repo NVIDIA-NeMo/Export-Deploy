@@ -21,15 +21,6 @@ warnings.warn(
     stacklevel=2,
 )
 
-# Re-export from nemo_deploy.llm for backward compatibility
-from nemo_deploy.llm.hf_deployable import HuggingFaceLLMDeploy
-from nemo_deploy.llm.hf_deployable_ray import HFRayDeployable
-from nemo_deploy.llm.megatronllm_deployable import (
-    MegatronLLMDeploy,
-    MegatronLLMDeployableNemo2,
-    dict_to_str,
-)
-from nemo_deploy.llm.megatronllm_deployable_ray import MegatronRayDeployable
 from nemo_deploy.llm.query_llm import (
     NemoQueryLLM,
     NemoQueryLLMHF,
@@ -37,19 +28,5 @@ from nemo_deploy.llm.query_llm import (
     NemoQueryTRTLLMAPI,
     NemoQueryvLLM,
 )
-from nemo_deploy.llm.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
-__all__ = [
-    "HuggingFaceLLMDeploy",
-    "HFRayDeployable",
-    "MegatronLLMDeploy",
-    "MegatronLLMDeployableNemo2",
-    "MegatronRayDeployable",
-    "NemoQueryLLM",
-    "NemoQueryLLMHF",
-    "NemoQueryLLMPyTorch",
-    "NemoQueryTRTLLMAPI",
-    "NemoQueryvLLM",
-    "TensorRTLLMAPIDeployable",
-    "dict_to_str",
-]
+__all__ = ["NemoQueryLLM", "NemoQueryLLMHF", "NemoQueryLLMPyTorch", "NemoQueryTRTLLMAPI", "NemoQueryvLLM"]
