@@ -18,7 +18,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import FastAPI, HTTPException
-
 from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
 
 

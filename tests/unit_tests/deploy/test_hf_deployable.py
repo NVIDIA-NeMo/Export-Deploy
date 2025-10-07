@@ -18,9 +18,8 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
 from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 @pytest.fixture

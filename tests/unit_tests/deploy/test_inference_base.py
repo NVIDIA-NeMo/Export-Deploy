@@ -25,7 +25,6 @@ from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper 
 from megatron.core.transformer.module import MegatronModule
 from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
-
 from nemo_deploy.nlp.inference.inference_base import (
     MCoreEngineWithCleanup,
     _load_dist_shards_into_model,
@@ -37,6 +36,7 @@ from nemo_deploy.nlp.inference.inference_base import (
     setup_model_and_tokenizer_for_inference,
 )
 from nemo_deploy.nlp.inference.tron_utils import DistributedInitConfig, RNGConfig
+
 from nemo_export_deploy_common.import_utils import UnavailableError
 
 

@@ -17,8 +17,8 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 from megatron.core.inference.common_inference_params import CommonInferenceParams
-
 from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeploy, MegatronLLMDeployableNemo2, dict_to_str
+
 from nemo_export_deploy_common.import_utils import UnavailableError
 
 

@@ -20,13 +20,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 import ray
 import requests
-from ray import serve
-
-from nemo_deploy.deploy_ray import DeployRay
 from nemo_deploy.nlp.megatronllm_deployable_ray import (
     MegatronRayDeployable,
     ModelWorker,
 )
+from ray import serve
+
+from nemo_deploy.deploy_ray import DeployRay
 
 # Fixtures for Ray cluster setup and model mocking
 

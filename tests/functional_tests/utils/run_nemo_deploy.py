@@ -20,7 +20,6 @@ import time
 from pathlib import Path
 
 import torch
-
 from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 
 run_export_tests = True
