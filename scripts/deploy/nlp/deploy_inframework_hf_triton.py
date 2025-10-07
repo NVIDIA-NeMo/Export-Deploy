@@ -22,7 +22,7 @@ import torch
 import torch.distributed as dist
 
 from nemo_deploy import DeployPyTriton
-from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from nemo_deploy.llm.hf_deployable import HuggingFaceLLMDeploy
 
 LOGGER = logging.getLogger("NeMo")
 
