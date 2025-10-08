@@ -408,6 +408,26 @@ nm.deploy()
 nm.serve()
 ```
 
+### Deploy NeMo Multimodal Models Directly with Triton Inference Server
+
+You can also deploy NeMo multimodal models directly using Triton Inference Server without exporting to TensorRT-LLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
+
+```python
+from nemo_deploy import DeployPyTriton
+from nemo_deploy.multimodal import NeMoMultimodalDeployable
+
+model = NeMoMultimodalDeployable(
+    nemo_checkpoint_filepath="/path/to/model.nemo",
+    tensor_parallel_size=1,
+    pipeline_parallel_size=1,
+)
+
+# Deploy to Triton
+nm = DeployPyTriton(model=model, triton_model_name="qwen", http_port=8000)
+nm.deploy()
+nm.serve()
+```
+
 ## 🔍 Query Deployed Models
 
 ### Query TensorRT-LLM Models
@@ -435,6 +455,38 @@ output = nq.query(
     max_output_len=30,
 )
 print(output)
+```
+
+### Query Directly Deployed NeMo Multimodal Models
+
+For multimodal models deployed directly with `NeMoMultimodalDeployable`, use the `NemoQueryMultimodalPytorch` class:
+
+```python
+from nemo_deploy.multimodal import NemoQueryMultimodalPytorch
+from PIL import Image
+
+nq = NemoQueryMultimodalPytorch(url="localhost:8000", model_name="qwen")
+output = nq.query_multimodal(
+    prompts=["What is in this image?"],
+    images=[Image.open("/path/to/image.jpg")],
+    max_length=100,
+    top_k=1,
+    top_p=0.0,
+    temperature=1.0,
+)
+print(output)
+```
+
+You can also use the command-line script for querying:
+
+```bash
+python scripts/deploy/multimodal/query_inframework.py \
+    --url localhost:8000 \
+    --model_name qwen \
+    --processor_name Qwen/Qwen2.5-VL-7B-Instruct \
+    --prompt "What is in this image?" \
+    --image /path/to/image.jpg \
+    --max_output_len 100
 ```
 
 Note that each model groups such as LLMs and Multimodals have its own dedicated query class. For further details, please consult the [documentation](docs/llm/nemo_models/send-query.md).
