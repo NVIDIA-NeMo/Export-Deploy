@@ -19,7 +19,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import FastAPI, HTTPException
 
-from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from nemo_deploy.llm.hf_deployable import HuggingFaceLLMDeploy
 
 
 # Create a mock of the HFRayDeployable class without decorators for testing
@@ -55,7 +55,7 @@ class MockHFRayDeployable:
 # Mock fixtures to simulate dependencies
 @pytest.fixture
 def mock_hf_model():
-    with patch("nemo_deploy.nlp.hf_deployable.HuggingFaceLLMDeploy") as mock:
+    with patch("nemo_deploy.llm.hf_deployable.HuggingFaceLLMDeploy") as mock:
         mock_instance = MagicMock(spec=HuggingFaceLLMDeploy)
         mock_instance.ray_infer_fn = MagicMock()
         mock_instance.ray_infer_fn.return_value = {
@@ -68,7 +68,7 @@ def mock_hf_model():
 
 @pytest.fixture
 def mock_ray():
-    with patch("nemo_deploy.nlp.hf_deployable_ray.serve") as mock_serve:
+    with patch("nemo_deploy.llm.hf_deployable_ray.serve") as mock_serve:
         # Mock Ray serve to expose the actual class
         mock_deployment = MagicMock()
         mock_deployment.return_value = lambda x: x  # Return the class itself
@@ -81,13 +81,13 @@ def mock_ray():
 @pytest.fixture
 def mock_hfray_class():
     # Use our custom mock class for testing
-    with patch("nemo_deploy.nlp.hf_deployable_ray.HFRayDeployable", MockHFRayDeployable):
+    with patch("nemo_deploy.llm.hf_deployable_ray.HFRayDeployable", MockHFRayDeployable):
         yield MockHFRayDeployable
 
 
 @pytest.fixture
 def mock_fastapi():
-    with patch("nemo_deploy.nlp.hf_deployable_ray.FastAPI") as mock:
+    with patch("nemo_deploy.llm.hf_deployable_ray.FastAPI") as mock:
         mock.return_value = MagicMock(spec=FastAPI)
         yield mock
 

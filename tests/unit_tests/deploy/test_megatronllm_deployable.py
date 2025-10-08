@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 
-from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeploy, MegatronLLMDeployableNemo2, dict_to_str
+from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeploy, MegatronLLMDeployableNemo2, dict_to_str
 from nemo_export_deploy_common.import_utils import UnavailableError
 
 
@@ -60,8 +60,8 @@ def deployable(mock_engine_and_tokenizer):
 @pytest.mark.run_only_on("GPU")
 def test_megatron_llm_deploy():
     """Test the MegatronLLMDeploy class also returns MegatronLLMDeployableNemo2 instance."""
-    with patch("nemo_deploy.nlp.megatronllm_deployable.nemo_checkpoint_version") as mock_version:
-        with patch("nemo_deploy.nlp.megatronllm_deployable.NEMO2", "nemo2"):
+    with patch("nemo_deploy.llm.megatronllm_deployable.nemo_checkpoint_version") as mock_version:
+        with patch("nemo_deploy.llm.megatronllm_deployable.NEMO2", "nemo2"):
             mock_version.return_value = "nemo2"
             with patch.object(MegatronLLMDeployableNemo2, "__init__", return_value=None) as mock_init:
                 deployable = MegatronLLMDeploy.get_deployable(
@@ -87,8 +87,8 @@ def test_megatron_llm_deploy():
 @pytest.mark.run_only_on("GPU")
 def test_megatron_llm_deploy_unsupported_version():
     """Test the MegatronLLMDeploy class with nemo1 checkpoint version."""
-    with patch("nemo_deploy.nlp.megatronllm_deployable.nemo_checkpoint_version") as mock_version:
-        with patch("nemo_deploy.nlp.megatronllm_deployable.NEMO2", "nemo2"):
+    with patch("nemo_deploy.llm.megatronllm_deployable.nemo_checkpoint_version") as mock_version:
+        with patch("nemo_deploy.llm.megatronllm_deployable.NEMO2", "nemo2"):
             mock_version.return_value = "nemo1"  # Different from NEMO2
             with pytest.raises(Exception, match="Only NeMo 2.0 checkpoint is supported"):
                 MegatronLLMDeploy.get_deployable(nemo_checkpoint_filepath="test.nemo")
@@ -133,7 +133,7 @@ def test_apply_chat_template_with_generation_prompt_false(deployable):
     template_mock = MagicMock()
     template_mock.render.return_value = "Rendered template without generation prompt"
 
-    with patch("nemo_deploy.nlp.megatronllm_deployable.Template", return_value=template_mock):
+    with patch("nemo_deploy.llm.megatronllm_deployable.Template", return_value=template_mock):
         template = deployable.apply_chat_template(messages, add_generation_prompt=False)
         assert template == "Rendered template without generation prompt"
 
@@ -191,7 +191,7 @@ def test_generate_other_ranks_continue_processing(deployable):
     with (
         patch("torch.distributed.broadcast") as mock_broadcast,
         patch("torch.empty") as mock_empty,
-        patch("nemo_deploy.nlp.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
+        patch("nemo_deploy.llm.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
         patch.object(deployable, "generate") as mock_generate,
     ):
         # Mock the message tensor to return 0 first (continue), then 1 (exit)
@@ -223,7 +223,7 @@ def test_triton_infer_fn_with_top_logprobs(deployable):
     with (
         patch.object(deployable, "generate") as mock_generate,
         patch.object(deployable, "remove_eos_token") as mock_remove_eos,
-        patch("nemo_deploy.nlp.megatronllm_deployable.dict_to_str") as mock_dict_to_str,
+        patch("nemo_deploy.llm.megatronllm_deployable.dict_to_str") as mock_dict_to_str,
     ):
         mock_result = MagicMock()
         mock_result.generated_text = "Generated text"
@@ -288,7 +288,7 @@ def test_infer_fn_with_echo_and_prompt_top_logprobs(deployable):
     with (
         patch.object(deployable, "generate") as mock_generate,
         patch.object(deployable, "remove_eos_token") as mock_remove_eos,
-        patch("nemo_deploy.nlp.megatronllm_deployable.dict_to_str") as mock_dict_to_str,
+        patch("nemo_deploy.llm.megatronllm_deployable.dict_to_str") as mock_dict_to_str,
     ):
         mock_result = MagicMock()
         mock_result.prompt = "Hello"
@@ -469,7 +469,7 @@ def test_apply_chat_template(deployable):
     template_mock = MagicMock()
     template_mock.render.return_value = "Rendered template with Hello"
 
-    with patch("nemo_deploy.nlp.megatronllm_deployable.Template", return_value=template_mock):
+    with patch("nemo_deploy.llm.megatronllm_deployable.Template", return_value=template_mock):
         template = deployable.apply_chat_template(messages)
         assert template == "Rendered template with Hello"
         template_mock.render.assert_called_once()
@@ -557,7 +557,7 @@ def test_str_to_dict(deployable):
 @pytest.mark.run_only_on("GPU")
 def test_init_triton_unavailable_raises():
     """Init should raise when Triton is unavailable (covers HAVE_TRITON guard)."""
-    with patch("nemo_deploy.nlp.megatronllm_deployable.HAVE_TRITON", False):
+    with patch("nemo_deploy.llm.megatronllm_deployable.HAVE_TRITON", False):
         with pytest.raises(UnavailableError):
             MegatronLLMDeployableNemo2(nemo_checkpoint_filepath="dummy.nemo")
 
@@ -566,8 +566,8 @@ def test_init_triton_unavailable_raises():
 def test_init_with_nemo_model_format_uses_nemo_path():
     """Init with model_format=='nemo' should use nemo checkpoint path."""
     with (
-        patch("nemo_deploy.nlp.megatronllm_deployable.HAVE_TRITON", True),
-        patch("nemo_deploy.nlp.megatronllm_deployable.create_mcore_engine") as mock_create,
+        patch("nemo_deploy.llm.megatronllm_deployable.HAVE_TRITON", True),
+        patch("nemo_deploy.llm.megatronllm_deployable.create_mcore_engine") as mock_create,
     ):
         mock_engine, mock_model, mock_tokenizer = MagicMock(), MagicMock(), MagicMock()
         mock_create.return_value = (mock_engine, mock_model, mock_tokenizer)
@@ -595,8 +595,8 @@ def test_init_with_nemo_model_format_uses_nemo_path():
 def test_init_with_megatron_model_format_valid_types(model_type):
     """Init with model_format=='megatron' should accept supported model types and use megatron path."""
     with (
-        patch("nemo_deploy.nlp.megatronllm_deployable.HAVE_TRITON", True),
-        patch("nemo_deploy.nlp.megatronllm_deployable.create_mcore_engine") as mock_create,
+        patch("nemo_deploy.llm.megatronllm_deployable.HAVE_TRITON", True),
+        patch("nemo_deploy.llm.megatronllm_deployable.create_mcore_engine") as mock_create,
     ):
         mock_engine, mock_model, mock_tokenizer = MagicMock(), MagicMock(), MagicMock()
         mock_create.return_value = (mock_engine, mock_model, mock_tokenizer)
@@ -616,7 +616,7 @@ def test_init_with_megatron_model_format_valid_types(model_type):
 @pytest.mark.run_only_on("GPU")
 def test_init_with_megatron_model_format_invalid_type_raises():
     """Init with model_format=='megatron' and unsupported model_type should raise ValueError."""
-    with patch("nemo_deploy.nlp.megatronllm_deployable.HAVE_TRITON", True):
+    with patch("nemo_deploy.llm.megatronllm_deployable.HAVE_TRITON", True):
         with pytest.raises(ValueError, match="Model type bert not supported for Megatron models."):
             MegatronLLMDeployableNemo2(
                 megatron_checkpoint_filepath="bar.ckpt",
@@ -628,7 +628,7 @@ def test_init_with_megatron_model_format_invalid_type_raises():
 @pytest.mark.run_only_on("GPU")
 def test_init_with_invalid_model_format_raises():
     """Init with unsupported model_format should raise ValueError."""
-    with patch("nemo_deploy.nlp.megatronllm_deployable.HAVE_TRITON", True):
+    with patch("nemo_deploy.llm.megatronllm_deployable.HAVE_TRITON", True):
         with pytest.raises(ValueError, match="Model format hf not supported."):
             MegatronLLMDeployableNemo2(
                 nemo_checkpoint_filepath="foo.nemo",
@@ -640,7 +640,7 @@ def test_init_with_invalid_model_format_raises():
 def test_triton_input_output(deployable):
     """Test Triton input and output tensor definitions."""
     # Mock the Tensor class from pytriton.model_config
-    with patch("nemo_deploy.nlp.megatronllm_deployable.Tensor") as mock_tensor:
+    with patch("nemo_deploy.llm.megatronllm_deployable.Tensor") as mock_tensor:
         # Set up mock to return itself for testing
         mock_tensor.side_effect = lambda name, shape, dtype, optional=False: MagicMock(
             name=name, shape=shape, dtype=dtype, optional=optional
@@ -815,7 +815,7 @@ def test_infer_fn_with_distributed(deployable):
         patch("torch.distributed.is_initialized", return_value=True),
         patch("torch.distributed.get_world_size", return_value=2),
         patch("torch.distributed.broadcast") as mock_broadcast,
-        patch("nemo_deploy.nlp.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
+        patch("nemo_deploy.llm.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
     ):
         # Set up mock results
         mock_result = MagicMock()
