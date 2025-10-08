@@ -151,27 +151,33 @@ class TestNeMoMultimodalDeployable:
         inference_params = CommonInferenceParams(temperature=0.7, top_k=10, top_p=0.9, num_tokens_to_generate=100)
 
         with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.generate") as mock_generate:
-            mock_generate.return_value = [MockResult("Generated text 1"), MockResult("Generated text 2")]
+            with patch.object(deployable, "apply_chat_template", side_effect=lambda x: x):
+                mock_generate.return_value = [MockResult("Generated text 1"), MockResult("Generated text 2")]
 
-            results = deployable.generate(
-                prompts=prompts, images=images, inference_params=inference_params, max_batch_size=2, random_seed=42
-            )
+                results = deployable.generate(
+                    prompts=prompts,
+                    images=images,
+                    inference_params=inference_params,
+                    max_batch_size=2,
+                    random_seed=42,
+                    apply_chat_template=True,
+                )
 
-            mock_generate.assert_called_once_with(
-                wrapped_model=deployable.inference_wrapped_model,
-                tokenizer=deployable.processor.tokenizer,
-                image_processor=deployable.processor.image_processor,
-                prompts=prompts,
-                images=images,
-                processor=deployable.processor,
-                max_batch_size=2,
-                random_seed=42,
-                inference_params=inference_params,
-            )
+                mock_generate.assert_called_once_with(
+                    wrapped_model=deployable.inference_wrapped_model,
+                    tokenizer=deployable.processor.tokenizer,
+                    image_processor=deployable.processor.image_processor,
+                    prompts=prompts,
+                    images=images,
+                    processor=deployable.processor,
+                    max_batch_size=2,
+                    random_seed=42,
+                    inference_params=inference_params,
+                )
 
-            assert len(results) == 2
-            assert results[0].generated_text == "Generated text 1"
-            assert results[1].generated_text == "Generated text 2"
+                assert len(results) == 2
+                assert results[0].generated_text == "Generated text 1"
+                assert results[1].generated_text == "Generated text 2"
 
     def test_generate_method_default_params(self, deployable, sample_image):
         """Test the generate method with default parameters."""
@@ -199,7 +205,7 @@ class TestNeMoMultimodalDeployable:
         """Test the get_triton_input property."""
         inputs = deployable.get_triton_input
 
-        assert len(inputs) == 8
+        assert len(inputs) == 9
 
         # Check prompts input
         assert inputs[0].name == "prompts"
@@ -365,6 +371,7 @@ class TestNeMoMultimodalDeployable:
             "max_length": np.array([100]),
             "random_seed": np.array([42]),
             "max_batch_size": np.array([2]),
+            "apply_chat_template": np.array([False]),
         }
 
         with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.str_ndarray2list") as mock_str2list:
@@ -398,6 +405,7 @@ class TestNeMoMultimodalDeployable:
                             num_tokens_to_generate=100,
                             random_seed=42,
                             max_batch_size=2,
+                            apply_chat_template=False,
                         )
 
                         # Verify output formatting

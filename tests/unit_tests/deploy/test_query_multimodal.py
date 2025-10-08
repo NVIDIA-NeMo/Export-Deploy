@@ -199,6 +199,7 @@ class TestNemoQueryMultimodalPytorch:
             top_p=0.9,
             temperature=0.8,
             random_seed=42,
+            apply_chat_template=True,
             init_timeout=120.0,
         )
 
