@@ -218,6 +218,7 @@ class NemoQueryMultimodalPytorch:
         top_p: Optional[float] = None,
         temperature: Optional[float] = None,
         random_seed: Optional[int] = None,
+        apply_chat_template: Optional[bool] = None,
         init_timeout: float = 60.0,
     ):
         """Query the Triton server synchronously for multimodal inference.
@@ -231,6 +232,7 @@ class NemoQueryMultimodalPytorch:
             top_p (Optional[float]): Limits to the top tokens within cumulative probability p.
             temperature (Optional[float]): Sampling temperature.
             random_seed (Optional[int]): Random seed for generation.
+            apply_chat_template (Optional[bool]): Whether to apply chat template.
             init_timeout (float): Timeout for the connection.
 
         Returns:
@@ -265,6 +267,9 @@ class NemoQueryMultimodalPytorch:
 
         if random_seed is not None:
             inputs["random_seed"] = np.full(prompts_np.shape, random_seed, dtype=np.int_)
+
+        if apply_chat_template is not None:
+            inputs["apply_chat_template"] = np.full(prompts_np.shape, apply_chat_template, dtype=np.bool_)
 
         with ModelClient(self.url, self.model_name, init_timeout_s=init_timeout) as client:
             result_dict = client.infer_batch(**inputs)

@@ -86,6 +86,12 @@ def get_args():
         type=float,
         help="init timeout for the triton server",
     )
+    parser.add_argument(
+        "-act",
+        "--apply_chat_template",
+        action="store_true",
+        help="Apply chat template to the prompt",
+    )
 
     args = parser.parse_args()
     return args
@@ -114,11 +120,12 @@ def query():
 
         image_inputs, video_inputs = process_vision_info(messages)
 
-        processor = AutoProcessor.from_pretrained(args.processor_name)
-        text = processor.apply_chat_template(messages, tokenizer=False, add_generation_prompt=True)
+        if not args.apply_chat_template:
+            processor = AutoProcessor.from_pretrained(args.processor_name)
+            text = processor.apply_chat_template(messages, tokenizer=False, add_generation_prompt=True)
+            args.prompt = text
 
         image = image_inputs
-        args.prompt = text
     else:
         raise ValueError(f"Model {args.processor_name} not supported")
 
@@ -134,6 +141,7 @@ def query():
         top_p=args.top_p,
         temperature=args.temperature,
         random_seed=args.random_seed,
+        apply_chat_template=args.apply_chat_template,
         init_timeout=args.init_timeout,
     )
     end_time = time.time()

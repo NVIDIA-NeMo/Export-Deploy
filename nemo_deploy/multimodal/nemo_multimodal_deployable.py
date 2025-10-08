@@ -110,6 +110,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
         inference_params: Optional[CommonInferenceParams] = None,
         max_batch_size: int = 4,
         random_seed: Optional[int] = None,
+        apply_chat_template: bool = False,
     ) -> dict:
         """Generates text based on the provided input prompts and images.
 
@@ -119,10 +120,13 @@ class NeMoMultimodalDeployable(ITritonDeployable):
             inference_params (Optional[CommonInferenceParams]): Parameters for controlling the inference process.
             max_batch_size (int): max batch size for inference. Defaults to 4.
             random_seed (Optional[int]): random seed for inference. Defaults to None.
+            apply_chat_template (bool): Whether to apply chat template. Defaults to False.
 
         Returns:
             dict: A dictionary containing the generated results.
         """
+        if apply_chat_template:
+            prompts = [self.apply_chat_template(prompt) for prompt in prompts]
 
         results = generate(
             wrapped_model=self.inference_wrapped_model,
@@ -138,6 +142,25 @@ class NeMoMultimodalDeployable(ITritonDeployable):
 
         return results
 
+    def apply_chat_template(self, prompt, add_generation_prompt=True):
+        """Apply the chat template using the processor.
+
+        Works when model's processor has chat template (typically chat models).
+        """
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "image": None},
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ]
+        text = self.processor.apply_chat_template(
+            messages, tokenizer=False, add_generation_prompt=add_generation_prompt
+        )
+        return text
+
     @property
     def get_triton_input(self):
         inputs = (
@@ -149,6 +172,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
             Tensor(name="top_p", shape=(-1,), dtype=np.single, optional=True),
             Tensor(name="temperature", shape=(-1,), dtype=np.single, optional=True),
             Tensor(name="random_seed", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="apply_chat_template", shape=(-1,), dtype=np.bool_, optional=True),
         )
         return inputs
 
@@ -164,6 +188,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
         "top_p",
         "temperature",
         "random_seed",
+        "apply_chat_template",
     )
     def triton_infer_fn(self, **inputs: np.ndarray):
         prompts = str_ndarray2list(inputs.pop("prompts"))
@@ -174,6 +199,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
         num_tokens_to_generate = inputs.pop("max_length", 50)
         random_seed = inputs.pop("random_seed", None)
         max_batch_size = inputs.pop("max_batch_size", 4)
+        apply_chat_template = inputs.pop("apply_chat_template", False)
 
         output_infer = self._infer_fn(
             prompts=prompts,
@@ -184,6 +210,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
             num_tokens_to_generate=num_tokens_to_generate,
             random_seed=random_seed,
             max_batch_size=max_batch_size,
+            apply_chat_template=apply_chat_template,
         )
 
         # Format output for triton
@@ -200,6 +227,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
         num_tokens_to_generate=256,
         random_seed=None,
         max_batch_size=4,
+        apply_chat_template=False,
     ):
         """Private helper function that handles the core inference logic shared between triton and ray inference.
 
@@ -212,6 +240,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
             num_tokens_to_generate (int): Maximum number of tokens to generate
             random_seed (Optional[int]): Random seed for inference
             max_batch_size (int): Maximum batch size for inference
+            apply_chat_template (bool): Whether to apply chat template
 
         Returns:
             dict: sentences.
@@ -224,7 +253,12 @@ class NeMoMultimodalDeployable(ITritonDeployable):
         )
 
         results = self.generate(
-            prompts, images, inference_params, max_batch_size=max_batch_size, random_seed=random_seed
+            prompts,
+            images,
+            inference_params,
+            max_batch_size=max_batch_size,
+            random_seed=random_seed,
+            apply_chat_template=apply_chat_template,
         )
 
         output_infer = {"sentences": [r.generated_text for r in results]}
