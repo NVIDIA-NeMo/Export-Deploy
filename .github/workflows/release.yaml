@@ -28,7 +28,7 @@ on:
       create-gh-release:
         description: Create a GitHub release
         required: true
-        default: true
+        default: false
         type: boolean
       version-bump-branch:
         description: Branch for version bump
@@ -50,7 +50,7 @@ jobs:
       library-name: NeMo-Export-Deploy
       dry-run: ${{ inputs.dry-run || false }}
       version-bump-branch: ${{ inputs.version-bump-branch || github.ref_name }}
-      create-gh-release: ${{ inputs.create-gh-release || true }}
+      create-gh-release: ${{ inputs.create-gh-release }}
       packaging: uv
       app-id: ${{ vars.BOT_ID }}
       skip-test-wheel: true
