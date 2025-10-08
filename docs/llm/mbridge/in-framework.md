@@ -1,6 +1,6 @@
 # Deploy Megatron-Bridge LLMs with Triton Inference Server
 
-This section explains how to deploy Megatron-Bridge LLMs with the NVIDIA Triton Inference Server.
+This section explains how to deploy [Megatron-Bridge](https://github.com/NVIDIA-NeMo/Megatron-Bridge) LLMs with the NVIDIA Triton Inference Server.
 
 ## Quick Example
 

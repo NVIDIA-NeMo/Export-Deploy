@@ -1,7 +1,7 @@
 
 # Deploy Automodel LLMs with TensorRT-LLM and Triton Inference Server
 
-This section shows how to use scripts and APIs to export a Automodel model (Hugging Face) model to TensorRT-LLM, and deploy it with the NVIDIA Triton Inference Server.
+This section shows how to use scripts and APIs to export a [NeMo AutoModel](https://docs.nvidia.com/nemo/automodel/latest/index.html) model (Hugging Face) model to TensorRT-LLM, and deploy it with the NVIDIA Triton Inference Server.
 
 
 ## Quick Example

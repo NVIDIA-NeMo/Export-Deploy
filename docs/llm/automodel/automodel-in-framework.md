@@ -1,6 +1,6 @@
 # Deploy AutoModel LLMs with Triton Inference Server
 
-This section demonstrates how to deploy NeMo AutoModel LLMs with the NVIDIA Triton Inference Server. NeMo AutoModel workflows generate Hugging Face-compatible checkpoints that provide a simplified interface for working with pre-trained language models. These checkpoints maintain high performance during inference, while offering enhanced configurability through the Hugging Face ecosystem.
+This section demonstrates how to deploy [NeMo AutoModel](https://docs.nvidia.com/nemo/automodel/latest/index.html) LLMs with the NVIDIA Triton Inference Server. NeMo AutoModel workflows generate Hugging Face-compatible checkpoints that provide a simplified interface for working with pre-trained language models. These checkpoints maintain high performance during inference, while offering enhanced configurability through the Hugging Face ecosystem.
 
 
 ## Quick Example

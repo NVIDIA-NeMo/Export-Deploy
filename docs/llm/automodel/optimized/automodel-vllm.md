@@ -1,6 +1,6 @@
 # Deploy Automodel LLMs with vLLM and Triton Inference Server
 
-This section shows how to use scripts and APIs to export a Automodel LLM to vLLM and deploy it with the NVIDIA Triton Inference Server.
+This section shows how to use scripts and APIs to export a [NeMo AutoModel](https://docs.nvidia.com/nemo/automodel/latest/index.html) LLM to vLLM and deploy it with the NVIDIA Triton Inference Server.
 
 ## Quick Example
 

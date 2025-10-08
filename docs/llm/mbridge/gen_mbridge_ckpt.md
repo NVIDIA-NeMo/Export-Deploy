@@ -1,6 +1,6 @@
 # Generate A Megatron-Bridge Checkpoint
 
-To run the code examples, you will need a Megatron-Bridge checkpoint. Follow the steps below to generate a Megatron-Bridge checkpoint, which you can then use to test the export and deployment workflows for the models.
+To run the code examples, you will need a [Megatron-Bridge](https://github.com/NVIDIA-NeMo/Megatron-Bridge) checkpoint. Follow the steps below to generate a Megatron-Bridge checkpoint, which you can then use to test the export and deployment workflows for the models.
 
 1. To access the Llama models, please visit the [Llama 3.1 8B Hugging Face page](https://huggingface.co/meta-llama/Llama-3.1-8B).
 

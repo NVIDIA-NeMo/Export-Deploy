@@ -1,6 +1,6 @@
 # Deploy Megatron-Bridge LLMs with Ray Serve
 
-This section demonstrates how to deploy Megatron-Bridge LLM models using Ray Serve. Ray deployment support provides scalable and flexible deployment for NeMo models, offering features such as automatic scaling, load balancing, and multi-replica deployment with support for advanced parallelism strategies.
+This section demonstrates how to deploy [Megatron-Bridge](https://github.com/NVIDIA-NeMo/Megatron-Bridge) LLM models using Ray Serve. Ray deployment support provides scalable and flexible deployment for NeMo models, offering features such as automatic scaling, load balancing, and multi-replica deployment with support for advanced parallelism strategies.
 
 **Note:** Single-node examples are shown below. For multi-node clusters managed by SLURM, you can deploy across nodes using the `ray.sub` helper described in the section "Multi-node on SLURM using ray.sub".
 

@@ -1,6 +1,6 @@
 # Export and Deploy Megatron-LM LLMs
 
-The NeMo Framework offers scripts and APIs to deploy Megatron-LM LLMs with Triton Inference Server and Ray Serve.
+The NeMo Framework offers scripts and APIs to deploy [Megatron-LM](https://github.com/NVIDIA/Megatron-LM) LLMs with Triton Inference Server and Ray Serve.
 
 ```{toctree}
 :maxdepth: 4

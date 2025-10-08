@@ -1,6 +1,6 @@
 # Deploy NeMo 2.0 LLMs with Triton Inference Server
 
-This section explains how to deploy NeMo 2.0 LLMs with the NVIDIA Triton Inference Server.
+This section explains how to deploy [NeMo 2.0](https://github.com/NVIDIA-NeMo/NeMo) LLMs with the NVIDIA Triton Inference Server.
 
 ## Quick Example
 

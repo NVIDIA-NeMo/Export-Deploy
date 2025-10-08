@@ -1,6 +1,6 @@
 # Deploy AutoModel LLMs using Ray Serve
 
-This section demonstrates how to deploy NeMo AutoModel LLM models using Ray Serve (referred to as 'Ray for AutoModel LLM'). To support single-node, multi-instance deployment, Ray is now offered as an alternative to Triton. Ray Serve provides a scalable and flexible platform for deploying machine learning models, offering features such as automatic scaling, load balancing, and multi-replica deployment.
+This section demonstrates how to deploy [NeMo AutoModel](https://docs.nvidia.com/nemo/automodel/latest/index.html) LLM models using Ray Serve (referred to as 'Ray for AutoModel LLM'). To support single-node, multi-instance deployment, Ray is now offered as an alternative to Triton. Ray Serve provides a scalable and flexible platform for deploying machine learning models, offering features such as automatic scaling, load balancing, and multi-replica deployment.
 
 ## Quick Example
 

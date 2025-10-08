@@ -1,6 +1,6 @@
 # Deploy Megatron-LM LLM using Ray Serve
 
-This section provides guidance on deploying Megatron-LM LLMs using the Ray Serve. The process closely mirrors the steps outlined in the [Megatron-Bridge documentation](../mbridge/in-framework.md), with only minor differences.
+This section provides guidance on deploying [Megatron-LM](https://github.com/NVIDIA/Megatron-LM) LLMs using the Ray Serve. The process closely mirrors the steps outlined in the [Megatron-Bridge documentation](../mbridge/in-framework.md), with only minor differences.
 
 ## Quick Example
 
