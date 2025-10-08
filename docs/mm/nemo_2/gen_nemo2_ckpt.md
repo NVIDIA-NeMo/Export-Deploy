@@ -21,16 +21,17 @@ To run the code examples, you will need a NeMo 2.0 checkpoint. Follow the steps 
    ```python
    from nemo.collections.llm import import_ckpt
    from nemo.collections import vlm
+   from pathlib import Path
 
    if __name__ == '__main__':
       # Specify the Hugging Face model ID
-      hf_model_id = "llava-hf/llava-1.5-7b-hf"
+      hf_model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
 
       # Import the model and convert to NeMo 2.0 format
       import_ckpt(
-          model=vlm.LlavaModel(vlm.Llava15Config7B()),  # Model configuration
-          source=f"hf://{hf_model_id}",  # Hugging Face model source
-          output_path=Path('/opt/checkpoints/hf_llava_7b_nemo')
+         model=vlm.MLlamaModel(vlm.MLlamaConfig11BInstruct()),
+         source=f"hf://{hf_model_id}",  # Hugging Face model source
+         output_path=Path('/opt/checkpoints/hf_mllama_11b_nemo')
       )
    ```
 

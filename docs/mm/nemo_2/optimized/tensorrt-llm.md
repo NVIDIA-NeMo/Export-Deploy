@@ -36,43 +36,43 @@ If you want to run inference using the LLama3 model, you'll need to generate a H
 
 This section provides an example of how to quickly and easily deploy a NeMo checkpoint to TensorRT. Neva will be used as an example model. Please consult the table above for a complete list of supported models.
 
-1. Run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
+
+1. Follow the steps on the [Generate A NeMo 2.0 Checkpoint page](../gen_nemo2_ckpt.md) to generate a NeMo 2.0 Llama Vision Instruct checkpoint.
+
+2. In a terminal, go to the folder where the ``hf_mllama_11b_nemo`` is located. Pull down and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
 
    ```shell
    docker pull nvcr.io/nvidia/nemo:vr
    
-   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v /path/to/nemo_neva.nemo:/opt/checkpoints/nemo_neva.nemo -w /opt/NeMo nvcr.io/nvidia/nemo:vr
+   docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v $(pwd)/hf_mllama_11b_nemo:/opt/checkpoints/hf_mllama_11b_nemo -w /opt/NeMo nvcr.io/nvidia/nemo:vr
    ```
 
-2. Run the following deployment script to verify that everything is working correctly. The script exports the downloaded NeMo checkpoint to TensorRT-LLM and subsequently serves it on the Triton server:
+3. Run the following deployment script to verify that everything is working correctly. The script exports the downloaded NeMo checkpoint to TensorRT-LLM and subsequently serves it on the Triton server:
 
-   .. code-block:: python
-
-      python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_neva.nemo --model_type neva --llm_model_type llama --triton_model_name neva --modality vision
-
-   If you only want to export the NeMo checkpoint to TensorRT, use the ``examples/multimodal/multimodal_llm/neva/neva_export.py``.
+   ```shell
+   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py \
+       --visual_checkpoint /opt/checkpoints/hf_mllama_11b_nemo \
+       --model_type mllama \
+       --llm_model_type llama \
+       --triton_model_name mllama \
+       --modality vision
+   ```
 
 3. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
 
-4. In a separate terminal, run the following command to get the container ID of the running container. Please find the ``nvcr.io/nvidia/nemo:24.vr`` image to get the container ID.
+4. In a separate terminal, access the running container as follows:
 
    ```shell
-   docker ps
+   docker exec -it nemo-fw bash
    ```
 
-5. Access the running container and replace ``container_id`` with the actual container ID as follows:
+5. To send a query to the Triton server, run the following script:
 
    ```shell
-   docker exec -it container_id bash
-   ``` 
-
-6. To send a query to the Triton server, run the following script:
-
-   ```shell
-   python /opt/Export-Deploy/scripts/deploy/multimodal/query.py -mn neva -mt=neva -int="What is in this image?" -im=/path/to/image.jpg
+   python /opt/Export-Deploy/scripts/deploy/multimodal/query.py -mn mllama -mt=mllama -int="What is in this image?" -im=/path/to/image.jpg
    ```
    
-7. To export and deploy a different model, such as Video Neva, change the *model_type* and *modality* in the *scripts/deploy/multimodal/deploy_triton.py* script.
+6. To export and deploy a different model, such as Video Neva, change the *model_type* and *modality* in the *scripts/deploy/multimodal/deploy_triton.py* script.
 
 
 ### Use a Script to Run Inference on a Triton Server
@@ -223,6 +223,3 @@ The NeMo Framework provides NemoQueryMultimodal APIs to send a query to the Trit
 
 2. Change the url and the ``model_name`` based on your server and the model name of your service. Please check the NemoQueryMultimodal docstrings for details.
 
-#### Other Examples
-
-For a comprehensive guide on exporting a speech language model like SALM (to obtain a perception model and merge LoRA weights), please refer to [this document](https://github.com/NVIDIA/NeMo/tree/main/examples/multimodal/speech_llm/export)
