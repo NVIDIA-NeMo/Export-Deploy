@@ -25,8 +25,8 @@ try:
     import ray
     from ray import serve
 
-    from nemo_deploy.nlp.hf_deployable_ray import HFRayDeployable
-    from nemo_deploy.nlp.megatronllm_deployable_ray import MegatronRayDeployable
+    from nemo_deploy.llm.hf_deployable_ray import HFRayDeployable
+    from nemo_deploy.llm.megatronllm_deployable_ray import MegatronRayDeployable
     from nemo_export.tensorrt_llm_deployable_ray import TensorRTLLMRayDeployable
 
     HAVE_RAY = True
