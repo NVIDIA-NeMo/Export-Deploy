@@ -39,7 +39,7 @@ class TestVLLMExportLlama:
                 "--parallel-mode",
                 "tests/functional_tests/utils/create_hf_model.py",
                 "--model_name_or_path",
-                "/home/TestData/nlp/megatron_llama/llama-ci-hf",
+                "/home/TestData/llm/megatron_llama/llama-ci-hf",
                 "--output_dir",
                 f"{cls.testdir}/llama_head64",
                 "--config_updates",

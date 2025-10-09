@@ -53,7 +53,7 @@ class TestDeployRayTRTLLM:
                     "--data-file=/workspace/.coverage",
                     "--source=/workspace/",
                     "--parallel-mode",
-                    "scripts/deploy/nlp/deploy_ray_trtllm.py",
+                    "scripts/deploy/llm/deploy_ray_trtllm.py",
                     "--nemo_checkpoint_path",
                     nemo_checkpoint_path,
                     "--model_type",

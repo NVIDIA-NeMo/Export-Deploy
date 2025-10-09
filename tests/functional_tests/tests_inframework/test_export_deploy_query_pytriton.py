@@ -18,7 +18,7 @@ import signal
 import subprocess
 import tempfile
 
-from scripts.deploy.nlp.query_inframework import query_llm
+from scripts.deploy.llm.query_inframework import query_llm
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class TestDeployPyTriton:
                 "--data-file=/workspace/.coverage",
                 "--source=/workspace/",
                 "--parallel-mode",
-                "scripts/deploy/nlp/deploy_inframework_triton.py",
+                "scripts/deploy/llm/deploy_inframework_triton.py",
                 "--nemo_checkpoint",
                 f"{self.testdir}/nemo2_ckpt",
                 "--triton_model_name",

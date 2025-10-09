@@ -50,7 +50,7 @@ class TestDeployRayHF:
                     "--data-file=/workspace/.coverage",
                     "--source=/workspace/",
                     "--parallel-mode",
-                    "scripts/deploy/nlp/deploy_ray_hf.py",
+                    "scripts/deploy/llm/deploy_ray_hf.py",
                     "--model_path",
                     hf_model_path,
                     "--task",
