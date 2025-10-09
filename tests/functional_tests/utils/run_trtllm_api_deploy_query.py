@@ -14,10 +14,9 @@
 
 import argparse
 
-from nemo_deploy.llm.trtllm_api_deployable import TensorRTLLMAPIDeployable
-
 from nemo_deploy import DeployPyTriton
 from nemo_deploy.llm import NemoQueryTRTLLMAPI
+from nemo_deploy.llm.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
 
 def get_args():
