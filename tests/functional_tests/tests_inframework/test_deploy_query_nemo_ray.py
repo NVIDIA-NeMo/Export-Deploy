@@ -50,7 +50,7 @@ class TestDeployRay:
                     "--data-file=/workspace/.coverage",
                     "--source=/workspace/",
                     "--parallel-mode",
-                    "scripts/deploy/llm/deploy_ray_inframework.py",
+                    "scripts/deploy/nlp/deploy_ray_inframework.py",
                     "--nemo_checkpoint",
                     nemo_checkpoint_path,
                     "--model_id",

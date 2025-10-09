@@ -50,7 +50,7 @@ class TestDeployRayMLM:
                     "--data-file=/workspace/.coverage",
                     "--source=/workspace/",
                     "--parallel-mode",
-                    "scripts/deploy/llm/deploy_ray_inframework.py",
+                    "scripts/deploy/nlp/deploy_ray_inframework.py",
                     "--megatron_checkpoint",
                     mlm_checkpoint_path,
                     "--model_id",
