@@ -25,7 +25,7 @@ from megatron.core.inference.common_inference_params import CommonInferenceParam
 from megatron.core.inference.inference_request import InferenceRequest
 
 from nemo_deploy import ITritonDeployable
-from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
+from nemo_deploy.llm.inference.inference_base import create_mcore_engine
 from nemo_deploy.utils import (
     NEMO2,
     broadcast_list,

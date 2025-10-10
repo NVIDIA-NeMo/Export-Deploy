@@ -33,7 +33,7 @@ def mock_llm():
 
 @pytest.fixture
 def mock_sampling_params():
-    with patch("nemo_deploy.nlp.trtllm_api_deployable.SamplingParams") as mock:
+    with patch("nemo_deploy.llm.trtllm_api_deployable.SamplingParams") as mock:
         yield mock
 
 
@@ -49,9 +49,9 @@ except ImportError:
 @pytest.mark.run_only_on("GPU")
 class TestTensorRTLLMAPIDeployable:
     def test_initialization_with_defaults(self):
-        from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
+        from nemo_deploy.llm.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
-        with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM") as mock_llm_class:
+        with patch("nemo_deploy.llm.trtllm_api_deployable.LLM") as mock_llm_class:
             mock_llm_instance = MagicMock()
             mock_llm_class.return_value = mock_llm_instance
 
@@ -61,9 +61,9 @@ class TestTensorRTLLMAPIDeployable:
             mock_llm_class.assert_called_once()
 
     def test_initialization_with_custom_params(self):
-        from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
+        from nemo_deploy.llm.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
-        with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM") as mock_llm_class:
+        with patch("nemo_deploy.llm.trtllm_api_deployable.LLM") as mock_llm_class:
             mock_llm_instance = MagicMock()
             mock_llm_class.return_value = mock_llm_instance
 
@@ -93,9 +93,9 @@ class TestTensorRTLLMAPIDeployable:
             assert call_args.kwargs["dtype"] == "float16"
 
     def test_generate_without_model(self):
-        from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
+        from nemo_deploy.llm.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
-        with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM"):
+        with patch("nemo_deploy.llm.trtllm_api_deployable.LLM"):
             deployer = TensorRTLLMAPIDeployable(hf_model_id_path="test/model")
             deployer.model = None
 
@@ -103,9 +103,9 @@ class TestTensorRTLLMAPIDeployable:
                 deployer.generate(prompts=["test prompt"])
 
     def test_generate_with_model(self, mock_llm, mock_sampling_params):
-        from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
+        from nemo_deploy.llm.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
-        with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM") as mock_llm_class:
+        with patch("nemo_deploy.llm.trtllm_api_deployable.LLM") as mock_llm_class:
             mock_llm_class.return_value = mock_llm
 
             deployer = TensorRTLLMAPIDeployable(hf_model_id_path="test/model")
@@ -116,9 +116,9 @@ class TestTensorRTLLMAPIDeployable:
             mock_sampling_params.assert_called_once()
 
     def test_generate_with_parameters(self, mock_llm, mock_sampling_params):
-        from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
+        from nemo_deploy.llm.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
-        with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM") as mock_llm_class:
+        with patch("nemo_deploy.llm.trtllm_api_deployable.LLM") as mock_llm_class:
             mock_llm_class.return_value = mock_llm
 
             deployer = TensorRTLLMAPIDeployable(hf_model_id_path="test/model")
@@ -129,9 +129,9 @@ class TestTensorRTLLMAPIDeployable:
             mock_sampling_params.assert_called_once_with(max_tokens=100, temperature=0.8, top_k=50, top_p=0.95)
 
     def test_triton_input_output_config(self):
-        from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
+        from nemo_deploy.llm.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
-        with patch("nemo_deploy.nlp.trtllm_api_deployable.LLM"):
+        with patch("nemo_deploy.llm.trtllm_api_deployable.LLM"):
             deployer = TensorRTLLMAPIDeployable(hf_model_id_path="test/model")
 
             inputs = deployer.get_triton_input
