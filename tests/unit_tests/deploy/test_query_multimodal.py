@@ -171,10 +171,13 @@ class TestNemoQueryMultimodalPytorch:
         result = query_multimodal_pytorch.query_multimodal(prompts=mock_prompts, images=mock_images)
 
         assert isinstance(result, dict)
-        assert "sentences" in result
-        assert len(result["sentences"]) == 2
-        assert result["sentences"][0] == "Generated text 1"
-        assert result["sentences"][1] == "Generated text 2"
+        assert "choices" in result
+        assert "id" in result
+        assert "object" in result
+        assert "created" in result
+        assert "model" in result
+        assert result["object"] == "text_completion"
+        assert result["model"] == "test_model"
 
     @patch("nemo_deploy.multimodal.query_multimodal.HAVE_TRITON", True)
     @patch("nemo_deploy.multimodal.query_multimodal.ModelClient")
@@ -204,8 +207,9 @@ class TestNemoQueryMultimodalPytorch:
         )
 
         assert isinstance(result, dict)
-        assert "sentences" in result
-        assert len(result["sentences"]) == 2
+        assert "choices" in result
+        assert "id" in result
+        assert "object" in result
 
     @patch("nemo_deploy.multimodal.query_multimodal.HAVE_TRITON", True)
     @patch("nemo_deploy.multimodal.query_multimodal.ModelClient")
@@ -306,9 +310,10 @@ class TestNemoQueryMultimodalPytorch:
         result = query_multimodal_pytorch.query_multimodal(prompts=["Single prompt"], images=[base64_image])
 
         assert isinstance(result, dict)
-        assert "sentences" in result
-        assert len(result["sentences"]) == 1
-        assert result["sentences"][0] == "Single response"
+        assert "choices" in result
+        assert "id" in result
+        assert "object" in result
+        assert result["object"] == "text_completion"
 
     @patch("nemo_deploy.multimodal.query_multimodal.HAVE_TRITON", True)
     @patch("nemo_deploy.multimodal.query_multimodal.ModelClient")
@@ -342,7 +347,7 @@ class TestNemoQueryMultimodalPytorch:
         mock_client_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
         mock_model_client.return_value.__enter__.return_value = mock_client_instance
 
-        query_multimodal_pytorch.query_multimodal(
+        result = query_multimodal_pytorch.query_multimodal(
             prompts=mock_prompts,
             images=mock_images,
             max_length=None,
@@ -364,3 +369,8 @@ class TestNemoQueryMultimodalPytorch:
         assert "top_p" not in call_args
         assert "temperature" not in call_args
         assert "random_seed" not in call_args
+
+        # Verify OpenAI format is returned
+        assert isinstance(result, dict)
+        assert "choices" in result
+        assert "id" in result
