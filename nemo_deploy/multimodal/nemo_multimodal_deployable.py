@@ -149,6 +149,9 @@ class NeMoMultimodalDeployable(ITritonDeployable):
 
         Works when model's processor has chat template (typically chat models).
         """
+        if isinstance(messages, str):
+            messages = json.loads(messages)
+
         text = self.processor.apply_chat_template(
             messages, tokenizer=False, add_generation_prompt=add_generation_prompt
         )

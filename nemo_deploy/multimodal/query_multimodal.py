@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 from io import BytesIO
 from typing import List, Optional
 
@@ -292,10 +293,16 @@ class NemoQueryMultimodalPytorch:
                 else:
                     return "Unknown output keyword: sentences not found"
 
-                # Prepare response
-                response = {"sentences": sentences}
+                # Prepare OpenAI-formatted response
+                openai_response = {
+                    "id": f"cmpl-{int(time.time())}",
+                    "object": "text_completion",
+                    "created": int(time.time()),
+                    "model": self.model_name,
+                    "choices": [{"text": sentences}],
+                }
 
-                return response
+                return openai_response
             else:
                 # Return raw output if not bytes
                 return result_dict
