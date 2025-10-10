@@ -13,15 +13,38 @@
 # limitations under the License.
 
 import argparse
+import base64
 import logging
 import time
 
-from qwen_vl_utils import process_vision_info
+import requests
 from transformers import AutoProcessor
 
 from nemo_deploy.multimodal.query_multimodal import NemoQueryMultimodalPytorch
 
 LOGGER = logging.getLogger("NeMo")
+
+
+def load_image_from_path(image_path: str) -> str:
+    """Load an image from a file path or URL.
+
+    Args:
+        image_path: Path to local image file or URL
+
+    Returns:
+        Base64-encoded image string
+    """
+    if image_path.startswith(("http://", "https://")):
+        LOGGER.info(f"Loading image from URL: {image_path}")
+        response = requests.get(image_path, timeout=30)
+        response.raise_for_status()
+        image_content = response.content
+    else:
+        LOGGER.info(f"Loading image from local path: {image_path}")
+        with open(image_path, "rb") as f:
+            image_content = f.read()
+
+    return base64.b64encode(image_content).decode("utf-8")
 
 
 def get_args():
@@ -86,12 +109,6 @@ def get_args():
         type=float,
         help="init timeout for the triton server",
     )
-    parser.add_argument(
-        "-act",
-        "--apply_chat_template",
-        action="store_true",
-        help="Apply chat template to the prompt",
-    )
 
     args = parser.parse_args()
     return args
@@ -104,7 +121,10 @@ def query():
         with open(args.prompt_file, "r") as f:
             args.prompt = f.read()
 
+    image_base64 = load_image_from_path(args.image)
+
     if "Qwen" in args.processor_name:
+        processor = AutoProcessor.from_pretrained(args.processor_name)
         messages = [
             {
                 "role": "user",
@@ -117,31 +137,22 @@ def query():
                 ],
             }
         ]
-
-        image_inputs, video_inputs = process_vision_info(messages)
-
-        if not args.apply_chat_template:
-            processor = AutoProcessor.from_pretrained(args.processor_name)
-            text = processor.apply_chat_template(messages, tokenizer=False, add_generation_prompt=True)
-            args.prompt = text
-
-        image = image_inputs
+        text = processor.apply_chat_template(messages, tokenizer=False, add_generation_prompt=True)
+        args.prompt = text
     else:
         raise ValueError(f"Model {args.processor_name} not supported")
 
-    # Direct query execution
     start_time = time.time()
     nemo_query = NemoQueryMultimodalPytorch(args.url, args.model_name)
     outputs = nemo_query.query_multimodal(
         prompts=[args.prompt],
-        images=[image],
+        images=[image_base64],
         max_length=args.max_output_len,
         max_batch_size=args.max_batch_size,
         top_k=args.top_k,
         top_p=args.top_p,
         temperature=args.temperature,
         random_seed=args.random_seed,
-        apply_chat_template=args.apply_chat_template,
         init_timeout=args.init_timeout,
     )
     end_time = time.time()

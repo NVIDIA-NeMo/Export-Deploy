@@ -190,12 +190,17 @@ class NemoQueryMultimodalPytorch:
 
     Example:
         from nemo_deploy.multimodal import NemoQueryMultimodalPytorch
+        import base64
 
         nq = NemoQueryMultimodalPytorch(url="localhost", model_name="qwen")
 
+        # Encode image to base64
+        with open("image.jpg", "rb") as f:
+            image_base64 = base64.b64encode(f.read()).decode('utf-8')
+
         output = nq.query_multimodal(
-            prompts=prompts,
-            images=images,
+            prompts=["Describe this image"],
+            images=[image_base64],
             max_length=100,
             top_k=1,
             top_p=0.0,
@@ -211,7 +216,7 @@ class NemoQueryMultimodalPytorch:
     def query_multimodal(
         self,
         prompts: List[str],
-        images: List[Image.Image],
+        images: List[str],
         max_length: Optional[int] = None,
         max_batch_size: Optional[int] = None,
         top_k: Optional[int] = None,
@@ -225,7 +230,7 @@ class NemoQueryMultimodalPytorch:
 
         Args:
             prompts (List[str]): List of input text prompts.
-            images (List[Image.Image]): List of input PIL Images.
+            images (List[str]): List of base64-encoded image strings.
             max_length (Optional[int]): Maximum number of tokens to generate.
             max_batch_size (Optional[int]): Maximum batch size for inference.
             top_k (Optional[int]): Limits to the top K tokens to consider at each step.
@@ -244,9 +249,12 @@ class NemoQueryMultimodalPytorch:
         # Convert prompts to numpy arrays
         prompts_np = str_list2numpy(prompts)
 
+        # Convert base64 images to numpy arrays
+        images_np = str_list2numpy(images)
+
         inputs = {
             "prompts": prompts_np,
-            "images": np.array(images),
+            "images": images_np,
         }
 
         # Add optional parameters if provided

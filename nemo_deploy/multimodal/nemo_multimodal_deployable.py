@@ -19,10 +19,10 @@ from typing import List, Optional
 import numpy as np
 import torch
 from megatron.core.inference.common_inference_params import CommonInferenceParams
-from PIL.Image import Image
+from PIL import Image
 
 from nemo_deploy import ITritonDeployable
-from nemo_deploy.utils import cast_output, ndarray2img, str_ndarray2list
+from nemo_deploy.utils import cast_output, str_ndarray2list
 from nemo_export_deploy_common.import_utils import (
     MISSING_NEMO_MSG,
     MISSING_TRITON_MSG,
@@ -32,6 +32,7 @@ from nemo_export_deploy_common.import_utils import (
 
 try:
     from nemo.collections.vlm.inference.base import generate, setup_model_and_tokenizer
+    from nemo.collections.vlm.inference.qwenvl_inference_wrapper import QwenVLInferenceWrapper
 
     HAVE_NEMO = True
 except (ImportError, ModuleNotFoundError):
@@ -40,6 +41,7 @@ except (ImportError, ModuleNotFoundError):
 
     generate = Any
     setup_model_and_tokenizer = Any
+    QwenVLInferenceWrapper = Any
 
 try:
     from pytriton.decorators import batch, first_value
@@ -142,30 +144,39 @@ class NeMoMultimodalDeployable(ITritonDeployable):
 
         return results
 
-    def apply_chat_template(self, prompt, add_generation_prompt=True):
+    def apply_chat_template(self, messages, add_generation_prompt=True):
         """Apply the chat template using the processor.
 
         Works when model's processor has chat template (typically chat models).
         """
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image", "image": None},
-                    {"type": "text", "text": prompt},
-                ],
-            }
-        ]
         text = self.processor.apply_chat_template(
             messages, tokenizer=False, add_generation_prompt=add_generation_prompt
         )
         return text
 
+    def base64_to_image(self, image_base64):
+        """Convert base64-encoded image to PIL Image."""
+        if isinstance(self.inference_wrapped_model, QwenVLInferenceWrapper):
+            from qwen_vl_utils import process_vision_info
+
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image", "image": f"data:image;base64,{image_base64}"},
+                    ],
+                }
+            ]
+            image_content, _ = process_vision_info(messages)
+            return image_content
+        else:
+            raise ValueError(f"Model {self.inference_wrapped_model} not supported")
+
     @property
     def get_triton_input(self):
         inputs = (
             Tensor(name="prompts", shape=(-1,), dtype=bytes),
-            Tensor(name="images", shape=(-1, -1, -1, 3), dtype=np.uint8),
+            Tensor(name="images", shape=(-1,), dtype=bytes),
             Tensor(name="max_length", shape=(-1,), dtype=np.int_, optional=True),
             Tensor(name="max_batch_size", shape=(-1,), dtype=np.int_, optional=True),
             Tensor(name="top_k", shape=(-1,), dtype=np.int_, optional=True),
@@ -192,7 +203,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
     )
     def triton_infer_fn(self, **inputs: np.ndarray):
         prompts = str_ndarray2list(inputs.pop("prompts"))
-        images = ndarray2img(inputs.pop("images"))
+        images = str_ndarray2list(inputs.pop("images"))
         temperature = inputs.pop("temperature", 1.0)
         top_k = inputs.pop("top_k", 1)
         top_p = inputs.pop("top_p", 0.0)
@@ -233,7 +244,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
 
         Args:
             prompts (List[str]): List of input prompts
-            images (List[Union[Image, List[Image]]]): List of input images
+            images (List[str]): List of input base64 encoded images
             temperature (float): Sampling temperature
             top_k (int): Top-k sampling parameter
             top_p (float): Top-p sampling parameter
@@ -252,6 +263,8 @@ class NeMoMultimodalDeployable(ITritonDeployable):
             num_tokens_to_generate=num_tokens_to_generate,
         )
 
+        images = [self.base64_to_image(img_b64) for img_b64 in images]
+
         results = self.generate(
             prompts,
             images,
@@ -264,3 +277,44 @@ class NeMoMultimodalDeployable(ITritonDeployable):
         output_infer = {"sentences": [r.generated_text for r in results]}
 
         return output_infer
+
+    def ray_infer_fn(self, inputs: dict):
+        """Ray-compatible inference function that takes a dictionary of inputs and returns a dictionary of outputs.
+
+        Args:
+            inputs (dict): Dictionary containing the following optional keys:
+                - prompts (List[str]): List of input prompts
+                - images (List[str]): List of input base64 encoded images
+                - temperature (float): Sampling temperature (default: 1.0)
+                - top_k (int): Top-k sampling parameter (default: 1)
+                - top_p (float): Top-p sampling parameter (default: 0.0)
+                - max_length (int): Maximum number of tokens to generate (default: 50)
+                - random_seed (Optional[int]): Random seed for reproducibility (default: None)
+                - max_batch_size (int): Maximum batch size for inference (default: 4)
+                - apply_chat_template (bool): Whether to apply chat template (default: False)
+
+        Returns:
+            dict: Dictionary containing:
+                - sentences (List[str]): List of generated texts
+        """
+        prompts = inputs.get("prompts", [])
+        images = inputs.get("images", [])
+        temperature = inputs.get("temperature", 1.0)
+        top_k = inputs.get("top_k", 1)
+        top_p = inputs.get("top_p", 0.0)
+        num_tokens_to_generate = inputs.get("max_length", 50)
+        random_seed = inputs.get("random_seed", None)
+        max_batch_size = inputs.get("max_batch_size", 4)
+        apply_chat_template = inputs.get("apply_chat_template", False)
+
+        return self._infer_fn(
+            prompts=prompts,
+            images=images,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+            num_tokens_to_generate=num_tokens_to_generate,
+            random_seed=random_seed,
+            max_batch_size=max_batch_size,
+            apply_chat_template=apply_chat_template,
+        )

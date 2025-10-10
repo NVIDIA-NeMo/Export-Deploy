@@ -74,17 +74,21 @@ def mock_triton_imports():
 @pytest.fixture
 def mock_utils():
     with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.str_ndarray2list") as mock_str2list:
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.ndarray2img") as mock_ndarray2img:
-            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.cast_output") as mock_cast:
-                mock_str2list.return_value = ["test prompt 1", "test prompt 2"]
-                mock_ndarray2img.return_value = [Image.new("RGB", (224, 224)), Image.new("RGB", (224, 224))]
-                mock_cast.return_value = np.array([b"Generated text 1", b"Generated text 2"])
-                yield mock_str2list, mock_ndarray2img, mock_cast
+        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.cast_output") as mock_cast:
+            mock_str2list.return_value = ["test prompt 1", "test prompt 2"]
+            mock_cast.return_value = np.array([b"Generated text 1", b"Generated text 2"])
+            yield mock_str2list, mock_cast
 
 
 @pytest.fixture
 def sample_image():
     return Image.new("RGB", (224, 224))
+
+
+@pytest.fixture
+def sample_image_base64():
+    """Return a mock base64-encoded image string."""
+    return "mock_base64_image_string_123"
 
 
 @pytest.fixture
@@ -212,9 +216,9 @@ class TestNeMoMultimodalDeployable:
         assert inputs[0].shape == (-1,)
         assert inputs[0].dtype is not None  # Just check that dtype is set
 
-        # Check images input
+        # Check images input (now base64 strings)
         assert inputs[1].name == "images"
-        assert inputs[1].shape == (-1, -1, -1, 3)
+        assert inputs[1].shape == (-1,)
         assert inputs[1].dtype is not None  # Just check that dtype is set
 
         # Check optional inputs
@@ -245,72 +249,86 @@ class TestNeMoMultimodalDeployable:
         assert outputs[0].shape == (-1,)
         assert outputs[0].dtype is not None  # Just check that dtype is set
 
-    def test_infer_fn(self, deployable, sample_image):
+    def test_infer_fn(self, deployable, sample_image_base64, sample_image):
         """Test the _infer_fn method."""
         prompts = ["Test prompt 1", "Test prompt 2"]
-        images = [sample_image, sample_image]
+        images = [sample_image_base64, sample_image_base64]
 
-        with patch.object(deployable, "generate") as mock_generate:
-            mock_generate.return_value = [MockResult("Generated text 1"), MockResult("Generated text 2")]
+        with patch.object(deployable, "base64_to_image") as mock_base64_to_image:
+            with patch.object(deployable, "generate") as mock_generate:
+                # Mock base64_to_image to return PIL Images
+                mock_base64_to_image.return_value = sample_image
+                mock_generate.return_value = [MockResult("Generated text 1"), MockResult("Generated text 2")]
 
-            result = deployable._infer_fn(
-                prompts=prompts,
-                images=images,
-                temperature=0.8,
-                top_k=20,
-                top_p=0.95,
-                num_tokens_to_generate=150,
-                random_seed=123,
-                max_batch_size=3,
-            )
+                result = deployable._infer_fn(
+                    prompts=prompts,
+                    images=images,
+                    temperature=0.8,
+                    top_k=20,
+                    top_p=0.95,
+                    num_tokens_to_generate=150,
+                    random_seed=123,
+                    max_batch_size=3,
+                )
 
-            # Check that generate was called with the right parameters
-            assert mock_generate.call_count == 1
-            call_args = mock_generate.call_args
-            # Check positional arguments: prompts, images, inference_params
-            assert call_args[0][0] == prompts
-            assert call_args[0][1] == images
-            # Check that inference_params is a CommonInferenceParams object (3rd positional arg)
-            assert isinstance(call_args[0][2], CommonInferenceParams)
-            assert call_args[0][2].temperature == 0.8
-            assert call_args[0][2].top_k == 20
-            assert call_args[0][2].top_p == 0.95
-            assert call_args[0][2].num_tokens_to_generate == 150
-            # Check keyword arguments
-            assert call_args[1]["max_batch_size"] == 3
-            assert call_args[1]["random_seed"] == 123
+                # Check that base64_to_image was called for each image
+                assert mock_base64_to_image.call_count == 2
 
-            assert "sentences" in result
-            assert len(result["sentences"]) == 2
-            assert result["sentences"] == ["Generated text 1", "Generated text 2"]
+                # Check that generate was called with the right parameters
+                assert mock_generate.call_count == 1
+                call_args = mock_generate.call_args
+                # Check positional arguments: prompts, images, inference_params
+                assert call_args[0][0] == prompts
+                # Images should be converted from base64
+                assert len(call_args[0][1]) == 2
+                # Check that inference_params is a CommonInferenceParams object (3rd positional arg)
+                assert isinstance(call_args[0][2], CommonInferenceParams)
+                assert call_args[0][2].temperature == 0.8
+                assert call_args[0][2].top_k == 20
+                assert call_args[0][2].top_p == 0.95
+                assert call_args[0][2].num_tokens_to_generate == 150
+                # Check keyword arguments
+                assert call_args[1]["max_batch_size"] == 3
+                assert call_args[1]["random_seed"] == 123
 
-    def test_infer_fn_default_params(self, deployable, sample_image):
+                assert "sentences" in result
+                assert len(result["sentences"]) == 2
+                assert result["sentences"] == ["Generated text 1", "Generated text 2"]
+
+    def test_infer_fn_default_params(self, deployable, sample_image_base64, sample_image):
         """Test the _infer_fn method with default parameters."""
         prompts = ["Test prompt"]
-        images = [sample_image]
+        images = [sample_image_base64]
 
-        with patch.object(deployable, "generate") as mock_generate:
-            mock_generate.return_value = [MockResult("Generated text 1")]
+        with patch.object(deployable, "base64_to_image") as mock_base64_to_image:
+            with patch.object(deployable, "generate") as mock_generate:
+                # Mock base64_to_image to return PIL Images
+                mock_base64_to_image.return_value = sample_image
+                mock_generate.return_value = [MockResult("Generated text 1")]
 
-            result = deployable._infer_fn(prompts=prompts, images=images)
+                result = deployable._infer_fn(prompts=prompts, images=images)
 
-            # Check that generate was called with the right parameters
-            assert mock_generate.call_count == 1
-            call_args = mock_generate.call_args
-            # Check positional arguments: prompts, images, inference_params
-            assert call_args[0][0] == prompts
-            assert call_args[0][1] == images
-            # Check that inference_params is a CommonInferenceParams object (3rd positional arg)
-            assert isinstance(call_args[0][2], CommonInferenceParams)
-            assert call_args[0][2].temperature == 1.0
-            assert call_args[0][2].top_k == 1
-            assert call_args[0][2].top_p == 0.0
-            assert call_args[0][2].num_tokens_to_generate == 256
-            # Check keyword arguments
-            assert call_args[1]["max_batch_size"] == 4
-            assert call_args[1]["random_seed"] is None
+                # Check that base64_to_image was called
+                assert mock_base64_to_image.call_count == 1
 
-            assert result["sentences"] == ["Generated text 1"]
+                # Check that generate was called with the right parameters
+                assert mock_generate.call_count == 1
+                call_args = mock_generate.call_args
+                # Check positional arguments: prompts, images, inference_params
+                assert call_args[0][0] == prompts
+                # Images should be converted from base64
+                assert len(call_args[0][1]) == 1
+                # Check that inference_params is a CommonInferenceParams object (3rd positional arg)
+                assert isinstance(call_args[0][2], CommonInferenceParams)
+                assert call_args[0][2].temperature == 1.0
+                assert call_args[0][2].top_k == 1
+                assert call_args[0][2].top_p == 0.0
+                assert call_args[0][2].num_tokens_to_generate == 256
+                # Check keyword arguments
+                assert call_args[1]["max_batch_size"] == 4
+                assert call_args[1]["random_seed"] is None
+
+                assert result["sentences"] == ["Generated text 1"]
 
     def test_dict_to_str_function(self):
         """Test the dict_to_str utility function."""
@@ -359,12 +377,12 @@ class TestNeMoMultimodalDeployable:
             result = deployable.generate(prompts=prompts, images=images)
             assert len(result) == 2
 
-    def test_triton_infer_fn_without_decorators(self, deployable, sample_image):
+    def test_triton_infer_fn_without_decorators(self, deployable, sample_image_base64):
         """Test triton_infer_fn using __wrapped__ to bypass decorators."""
         # Create sample inputs that would normally be processed by decorators
         inputs = {
             "prompts": np.array([b"test prompt 1", b"test prompt 2"]),
-            "images": np.array([np.array(sample_image), np.array(sample_image)]),
+            "images": np.array([b"mock_base64_1", b"mock_base64_2"]),
             "temperature": np.array([0.7]),
             "top_k": np.array([10]),
             "top_p": np.array([0.9]),
@@ -375,45 +393,46 @@ class TestNeMoMultimodalDeployable:
         }
 
         with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.str_ndarray2list") as mock_str2list:
-            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.ndarray2img") as mock_ndarray2img:
-                with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.cast_output") as mock_cast:
-                    with patch.object(deployable, "_infer_fn") as mock_infer:
-                        # Setup mocks
-                        mock_str2list.return_value = ["test prompt 1", "test prompt 2"]
-                        mock_ndarray2img.return_value = [sample_image, sample_image]
-                        mock_cast.return_value = np.array([b"Generated text 1", b"Generated text 2"])
-                        mock_infer.return_value = {"sentences": ["Generated text 1", "Generated text 2"]}
+            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.cast_output") as mock_cast:
+                with patch.object(deployable, "_infer_fn") as mock_infer:
+                    # Setup mocks
+                    mock_str2list.side_effect = [["test prompt 1", "test prompt 2"], ["mock_base64_1", "mock_base64_2"]]
+                    mock_cast.return_value = np.array([b"Generated text 1", b"Generated text 2"])
+                    mock_infer.return_value = {"sentences": ["Generated text 1", "Generated text 2"]}
 
-                        # Use __wrapped__ twice to access the original function without both decorators
-                        # First decorator: @first_value, Second decorator: @batch
-                        original_function = deployable.triton_infer_fn.__wrapped__.__wrapped__
+                    # Use __wrapped__ twice to access the original function without both decorators
+                    # First decorator: @first_value, Second decorator: @batch
+                    original_function = deployable.triton_infer_fn.__wrapped__.__wrapped__
 
-                        # Call the original function directly
-                        result = original_function(**inputs)
+                    # Call the original function directly
+                    result = original_function(**inputs)
 
-                        # Verify the function was called with correct parameters
-                        mock_str2list.assert_called_once_with(inputs["prompts"])
-                        mock_ndarray2img.assert_called_once_with(inputs["images"])
+                    # Verify the function was called with correct parameters
+                    assert mock_str2list.call_count == 2
+                    # Check the calls were made with prompts and images
+                    call_args_list = [call[0][0] for call in mock_str2list.call_args_list]
+                    np.testing.assert_array_equal(call_args_list[0], inputs["prompts"])
+                    np.testing.assert_array_equal(call_args_list[1], inputs["images"])
 
-                        # Verify _infer_fn was called with correct parameters
-                        mock_infer.assert_called_once_with(
-                            prompts=["test prompt 1", "test prompt 2"],
-                            images=[sample_image, sample_image],
-                            temperature=0.7,
-                            top_k=10,
-                            top_p=0.9,
-                            num_tokens_to_generate=100,
-                            random_seed=42,
-                            max_batch_size=2,
-                            apply_chat_template=False,
-                        )
+                    # Verify _infer_fn was called with correct parameters
+                    mock_infer.assert_called_once_with(
+                        prompts=["test prompt 1", "test prompt 2"],
+                        images=["mock_base64_1", "mock_base64_2"],
+                        temperature=0.7,
+                        top_k=10,
+                        top_p=0.9,
+                        num_tokens_to_generate=100,
+                        random_seed=42,
+                        max_batch_size=2,
+                        apply_chat_template=False,
+                    )
 
-                        # Verify output formatting
-                        mock_cast.assert_called_once_with(["Generated text 1", "Generated text 2"], np.bytes_)
+                    # Verify output formatting
+                    mock_cast.assert_called_once_with(["Generated text 1", "Generated text 2"], np.bytes_)
 
-                        # Verify final result
-                        assert "sentences" in result
-                        assert len(result["sentences"]) == 2
-                        np.testing.assert_array_equal(
-                            result["sentences"], np.array([b"Generated text 1", b"Generated text 2"])
-                        )
+                    # Verify final result
+                    assert "sentences" in result
+                    assert len(result["sentences"]) == 2
+                    np.testing.assert_array_equal(
+                        result["sentences"], np.array([b"Generated text 1", b"Generated text 2"])
+                    )
