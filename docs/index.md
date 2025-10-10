@@ -4,27 +4,28 @@
 ```
 
 ```{toctree}
-:caption: 🚀 NeMo Export and Deploy
+:caption: Large Language Models (LLMs)
 :hidden:
-:maxdepth: 4
+:maxdepth: 5
 
-export-deploy-models.md
-llm/index.md
-llm/nemo_models/nim.md
-llm/nemo_models/optimized/index.md
-llm/nemo_models/optimized/tensorrt-llm.md
-llm/nemo_models/optimized/vllm.md
-llm/nemo_models/in-framework.md
-llm/nemo_models/in-framework-ray.md
-llm/nemo_models/send-query.md
-llm/automodel/automodel-in-framework.md
-llm/automodel/automodel-trtllm.md
-llm/automodel/automodel-ray.md
-mm/index.md
+Export and Deploy LLMs <llm/index.md>
+NeMo 2.0 <llm/nemo_2/index.md>
+Megatron Bridge <llm/mbridge/index.md>
+Automodel (Hugging Face) <llm/automodel/index.md>
+Megatron LM <llm/megatron_lm/index.md>
 ```
 
 ```{toctree}
-:caption: 🛠️ Development
+:caption: Multimodal Models (MMs)
+:hidden:
+:maxdepth: 4
+
+Export and Deploy MMs <mm/index.md>
+NeMo 2.0 <mm/nemo_2/index.md>
+```
+
+```{toctree}
+:caption: Development
 :hidden:
 
 testing.md

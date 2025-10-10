@@ -1,19 +1,19 @@
-# Deploy NeMo Models by Exporting TensorRT-LLM 
+# Deploy NeMo 2.0 LLMs with TensorRT-LLM and Triton Inference Server
 
-This section shows how to use scripts and APIs to export a NeMo LLM (*.nemo*) or quantized LLM (*.qnemo*) to TensorRT-LLM and deploy it with the NVIDIA Triton Inference Server.
+This section shows how to use scripts and APIs to export a NeMo 2.0 LLM to TensorRT-LLM and deploy it with the NVIDIA Triton Inference Server.
 
 ## Quick Example
 
-1. Follow the steps in the [Deploy NeMo LLM main page](../../index.md) to generate a NeMo 2.0 Llama checkpoint.
+1. Follow the steps on the [Generate A NeMo 2.0 Checkpoint page](../gen_nemo2_ckpt.md) to generate a NeMo 2.0 Llama checkpoint.
 
-2. In a terminal, go to the folder where the ``hf_llama31_8B_nemo2.nemo`` file is located. Pull down and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
+2. In a terminal, go to the folder where the ``hf_llama31_8B_nemo2.nemo`` is located. Pull down and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
 
    ```shell
    docker pull nvcr.io/nvidia/nemo:vr
 
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 \
        -v ${PWD}/hf_llama31_8B_nemo2.nemo:/opt/checkpoints/hf_llama31_8B_nemo2.nemo \
-       -w /opt/NeMo \
+       -w /opt/Export-Deploy \
        --name nemo-fw \
        nvcr.io/nvidia/nemo:vr
    ```
@@ -50,20 +50,22 @@ This section shows how to use scripts and APIs to export a NeMo LLM (*.nemo*) or
    python /opt/Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
    ```
    
-8. To export and deploy a different model such as Llama3, Mixtral, or Starcoder, change the ``model_type`` in the `deploy_triton.py <https://github.com/NVIDIA/NeMo/blob/main/scripts/deploy/nlp/deploy_triton.py>`_ script. Please check below to see the list of the model types. For quantized *qnemo* models, specifying ``model_type`` is not necessary as this information is included in the TensorRT-LLM checkpoint.
+## Supported LLMs
+
+NeMo 2.0 models are supported for export and deployment if they are listed as compatible in the [TensorRT-LLM support matrix](https://nvidia.github.io/TensorRT-LLM/reference/support-matrix.html).
 
 
-## Use a Script to Deploy NeMo LLMs on a Triton Server
+## Use a Script to Deploy NeMo LLMs on a Triton Inference Server
 
-You can deploy a LLM from a NeMo checkpoint on Triton using the provided script.
+You can deploy a NeMo 2.0 LLM from a checkpoint on Triton using the provided script.
 
-### Export and Deploy a LLM Model 
+### Export and Deploy a NeMo 2.0 LLM Model 
 
 After executing the script, it will export the model to TensorRT-LLM and then initiate the service on Triton.
 
 1. Start the container using the steps described in the **Quick Example** section.
 
-2. To begin serving the [downloaded model](../../index.md) or a [quantized](https://docs.nvidia.com/nemo-framework/user-guide/latest/model-optimization/quantization/quantization.html) model, run the following script:
+2. To begin serving a NeMo 2.0 model or a [quantized](https://docs.nvidia.com/nemo-framework/user-guide/latest/model-optimization/quantization/quantization.html) model, run the following script:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
@@ -75,33 +77,31 @@ After executing the script, it will export the model to TensorRT-LLM and then in
 
    The following parameters are defined in the ``deploy_triton.py`` script:
 
-   - ``--nemo_checkpoint``: path of the .nemo or .qnemo checkpoint file.
-   - ``--model_type``: type of the model. choices=["gptnext", "gpt", "llama", "falcon", "starcoder", "mixtral", "gemma"].
-   - ``--triton_model_name``: name of the model on Triton.
-   - ``--triton_model_version``: version of the model. Default is 1.
-   - ``--triton_port``: port for the Triton server to listen for requests. Default is 8000.
-   - ``--triton_http_address``: HTTP address for the Triton server. Default is 0.0.0.0.
-   - ``--triton_model_repository``: TensorRT temp folder. Default is ``/tmp/trt_llm_model_dir/``.
-   - ``--tensor_parallelism_size``: number of GPUs to split the tensors for tensor parallelism. Default is 1.
-   - ``--pipeline_parallelism_size``: number of GPUs to split the model for pipeline parallelism. Default is 1.
-   - ``--dtype``: data type of the model on TensorRT-LLM. Default is "bfloat16". Currently, only "bfloat16" is supported.
-   - ``--max_input_len``: maximum input length of the model. Default is 256. 
-   - ``--max_output_len``: maximum output length of the model. Default is 256. 
-   - ``--max_batch_size``: maximum batch size of the model. Default is 8. 
-   - ``--max_num_tokens``: maximum number of tokens. Default is None.
-   - ``--opt_num_tokens``: optimum number of tokens. Default is None.
-   - ``--lora_ckpt``: a checkpoint list of LoRA weights.
-   - ``--use_lora_plugin``: activates the LoRA plugin which enables embedding sharing.
-   - ``--lora_target_modules``: adds LoRA to specified modules, but only activates when the ``--use_lora_plugin`` is enabled.
-   - ``--max_lora_rank``: maximum LoRA rank for different LoRA modules. It is used to compute the workspace size of the LoRA plugin.
-   - ``--no_paged_kv_cache``: disables the paged kv cache in the TensorRT-LLM.
-   - ``--disable_remove_input_padding``: disables the remove input padding option of TensorRT-LLM.
-   - ``--use_parallel_embedding``: enables the parallel embedding feature of TensorRT-LLM.
-   - ``--export_fp8_quantized``: manually overrides the FP8 quantization settings.
-   - ``--use_fp8_kv_cache``: manually overrides the FP8 KV-cache quantization settings.
+   - ``--nemo_checkpoint``: Path to the .nemo or .qnemo checkpoint.
+   - ``--model_type``: Type of the model. Choices: ["gptnext", "gpt", "llama", "falcon", "starcoder", "mixtral", "gemma"]. (Required if using a checkpoint.)
+   - ``--triton_model_name``: Name for the model/service on Triton. (Required)
+   - ``--triton_model_version``: Version for the model/service. Default: 1
+   - ``--triton_port``: Port for the Triton server to listen for requests. Default: 8000
+   - ``--triton_http_address``: HTTP address for the Triton server. Default: 0.0.0.0
+   - ``--triton_model_repository``: Folder for the TensorRT-LLM model files. Default: ``/tmp/trt_llm_model_dir/``
+   - ``--tensor_parallelism_size``: Number of GPUs for tensor parallelism. Default: 1
+   - ``--pipeline_parallelism_size``: Number of GPUs for pipeline parallelism. Default: 1
+   - ``--dtype``: Data type for the model on TensorRT-LLM. Choices: ["bfloat16", "float16", "fp8", "int8"]. Default: "bfloat16"
+   - ``--max_input_len``: Maximum input length for the model. Default: 256
+   - ``--max_output_len``: Maximum output length for the model. Default: 256
+   - ``--max_batch_size``: Maximum batch size for the model. Default: 8
+   - ``--max_num_tokens``: Maximum number of tokens. Default: None
+   - ``--opt_num_tokens``: Optimum number of tokens. Default: None
+   - ``--lora_ckpt``: List of LoRA checkpoint files. (Optional)
+   - ``--use_lora_plugin``: Activates the LoRA plugin (enables embedding sharing). Choices: ["float16", "float32", "bfloat16"]
+   - ``--lora_target_modules``: List of modules to apply LoRA to. Only active if ``--use_lora_plugin`` is set.
+   - ``--max_lora_rank``: Maximum LoRA rank for different modules. Default: 64
+   - ``--no_paged_kv_cache``: If set, disables paged KV cache in TensorRT-LLM.
+   - ``--disable_remove_input_padding``: If set, disables the remove input padding option in TensorRT-LLM.
+   - ``--use_parallel_embedding``: If set, enables the parallel embedding feature of TensorRT-LLM.
+   - ``--export_fp8_quantized``: Enables exporting to a FP8-quantized TensorRT-LLM checkpoint. Choices: ["auto", "true", "false"]
+   - ``--use_fp8_kv_cache``: Enables exporting with FP8-quantized KV-cache. Choices: ["auto", "true", "false"]
 
-
-   **Note:** The parameters described here are generalized and should be compatible with any NeMo checkpoint. It is important, however, that you check the LLM model table in the main :ref:`Deploy NeMo LLM page <deploy-nemo-framework-models-llm>` for optimized inference model compatibility. We are actively working on extending support to other checkpoints.
 
 3. To export and deploy a different model such as Llama3, Mixtral, or Starcoder, change the *model_type* in `deploy_triton.py <https://github.com/NVIDIA/NeMo/blob/main/scripts/deploy/nlp/deploy_triton.py>`_ script. Please see the table below to learn more about which *model_type* is used for a LLM model (not required for *.qnemo* models).
 
@@ -162,28 +162,14 @@ After executing the script, it will export the model to TensorRT-LLM and then in
    export HF_TOKEN=your_token_here
    ```
 
-### Export and Deploy a LLM Model with TensorRT-LLM API
 
-Alternatively, if the **deploy_triton** script is unable to export your model to TensorRT-LLM, you can leverage the new [TensorRT-LLM LLM API](https://nvidia.github.io/TensorRT-LLM/latest/quick-start-guide.html#run-offline-inference-with-llm-api). This API provides a streamlined way to export and deploy models. See the example below:
-
-```shell
-python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
-   --nemo_checkpoint /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
-   --model_type llama \
-   --triton_model_name llama \
-   --tensor_parallelism_size 1
-```
-
-After starting the Triton server, you can query the deployed model using the **/opt/Export-Deploy/scripts/deploy/nlp/query.py** script, as demonstrated in the previous steps.
-
-
-## Use NeMo Export and Deploy Module APIs to Run Inference
+## Use APIs to Export
 
 Up until now, we have used scripts for exporting and deploying LLM models. However, NeMo’s deploy and export modules offer straightforward APIs for deploying models to Triton and exporting NeMo checkpoints to TensorRT-LLM.
 
-### Export a LLM Model to TensorRT-LLM
+### Export a NeMo 2.0 LLM to TensorRT-LLM
 
-You can use the APIs in the export module to export a NeMo checkpoint to TensorRT-LLM. The following code example assumes the ``hf_llama31_8B_nemo2.nemo`` checkpoint has already been downloaded and mounted to the ``/opt/checkpoints/`` path. Additionally, the ``/opt/checkpoints/tmp_trt_llm`` path is also assumed to exist.
+You can use the APIs in the export module to export a NeMo 2.0 LLM checkpoint to TensorRT-LLM. The following code example assumes the ``hf_llama31_8B_nemo2.nemo`` checkpoint has already been downloaded and mounted to the ``/opt/checkpoints/`` path. Additionally, the ``/opt/checkpoints/tmp_trt_llm`` path is also assumed to exist.
 
 1. Run the following command:
 
@@ -222,7 +208,7 @@ You can use the APIs in the export module to export a NeMo checkpoint to TensorR
    ```
 
 
-### Deploy a LLM Model to TensorRT-LLM
+### Export a NeMo 2.0 LLM to TensorRT-LLM and Deploy with Triton
 
 You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Triton. The following code example assumes the ``hf_llama31_8B_nemo2.nemo`` checkpoint has already been downloaded and mounted to the ``/opt/checkpoints/`` path. Additionally, the ``/opt/checkpoints/tmp_trt_llm`` path is also assumed to exist.
 
@@ -248,7 +234,7 @@ You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Trit
 
 ### Direct TensorRT-LLM Export for FP8-trained Models
 
-If you have a FP8-trained checkpoint, produced during pre-training or fine-tuning with NVIDIA Transformer Engine, you can convert it to a FP8 TensorRT-LLM engine directly using ``nemo.export``. The entry point is the same as with regular *.nemo* and *.qnemo* checkpoints:
+If you have a FP8-trained checkpoint, produced during pre-training or fine-tuning with NVIDIA Transformer Engine, you can convert it to a FP8 TensorRT-LLM engine directly using ``nemo.export``:
 
 ```python
 from nemo_export.tensorrt_llm import TensorRTLLM
@@ -267,3 +253,46 @@ The export settings for quantization can be adjusted via ``trt_llm_exporter.expo
 * ``fp8_kvcache: Optional[bool] = None``: enables/disables FP8 quantization for KV-cache
 
 By default, the quantization settings are auto-detected from the NeMo checkpoint.
+
+
+## How To Send a Query
+
+### Send a Query using the Script
+
+You can send queries to your deployed NeMo 2.0 LLM using the provided query script. This script allows you to interact with the model via HTTP requests, sending prompts and receiving generated responses directly from the Triton server.
+
+The example below demonstrates how to use the query script to send a prompt to your deployed model. You can customize the request with various parameters to control generation behavior, such as output length, sampling strategy, and more. For a full list of supported parameters, see below.
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:8000" --model_name llama --prompt "What is the capital of United States?"
+```
+
+**Additional parameters:**
+- `--prompt_file`: Read prompt from a file instead of the command line
+- `--max_output_len`: Maximum output token length (default: 128)
+- `--top_k`: Top-k sampling (default: 1)
+- `--top_p`: Top-p sampling (default: 0.0)
+- `--temperature`: Sampling temperature (default: 1.0)
+- `--lora_task_uids`: List of LoRA task UIDs for LoRA-enabled models (use -1 to disable)
+- `--stop_words_list`: Stop words list
+- `--bad_words_list`: Bad words list (words to avoid)
+- `--no_repeat_ngram_size`: No repeat n-gram size (for repetition penalty)
+
+
+### Send a Query using the NeMo APIs
+
+Please see the below if you would like to use APIs to send a query.
+
+```python
+from nemo_deploy.nlp import NemoQueryLLM
+
+nq = NemoQueryLLM(url="localhost:8000", model_name="llama")
+output = nq.query_llm(
+    prompts=["What is the capital of United States? "],
+    max_output_len=10,
+    top_k=1,
+    top_p=0.0,
+    temperature=1.0,
+)
+print(output)
+```

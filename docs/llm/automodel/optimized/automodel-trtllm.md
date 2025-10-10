@@ -1,7 +1,7 @@
 
-# Deploy Hugging Face Models by Exporting to TensorRT-LLM
+# Deploy Automodel LLMs with TensorRT-LLM and Triton Inference Server
 
-This section shows how to use scripts and APIs to export a Hugging Face model to TensorRT-LLM, and deploy it with the NVIDIA Triton Inference Server.
+This section shows how to use scripts and APIs to export a [NeMo AutoModel](https://docs.nvidia.com/nemo/automodel/latest/index.html) model (Hugging Face) model to TensorRT-LLM, and deploy it with the NVIDIA Triton Inference Server.
 
 
 ## Quick Example
@@ -12,7 +12,7 @@ This section shows how to use scripts and APIs to export a Hugging Face model to
    docker pull nvcr.io/nvidia/nemo:vr
 
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 \
-      -w /opt/NeMo \
+      -w /opt/Export-Deploy \
       --name nemo-fw \
       nvcr.io/nvidia/nemo:vr
    ```
@@ -21,7 +21,7 @@ This section shows how to use scripts and APIs to export a Hugging Face model to
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
-      --hf_model_id_path meta-llama/Meta-Llama-3-8B-Instruct \
+      --hf_model_id_path meta-llama/Llama-3.2-1B \
       --model_type LlamaForCausalLM \
       --triton_model_name llama \
       --tensor_parallelism_size 1
@@ -204,7 +204,7 @@ After executing the script, it will export the model to TensorRT-LLM and then in
 
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 \
        -v ${PWD}:/opt/checkpoints/ \
-       -w /opt/NeMo \
+       -w /opt/Export-Deploy \
        nvcr.io/nvidia/nemo:vr
 
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
@@ -225,6 +225,20 @@ After executing the script, it will export the model to TensorRT-LLM and then in
        --triton_model_repository /opt/checkpoints/tmp_triton_model_repository \
        --model_type LlamaForCausalLM
    ```
+
+## Export and Deploy a LLM Model with TensorRT-LLM API
+
+Alternatively, if the **deploy_triton** script is unable to export your model to TensorRT-LLM, you can leverage the new [TensorRT-LLM LLM API](https://nvidia.github.io/TensorRT-LLM/latest/quick-start-guide.html#run-offline-inference-with-llm-api). This API provides a streamlined way to export and deploy models. See the example below:
+
+```shell
+python /opt/Export-Deploy/scripts/deploy/nlp/deploy_trtllm_api_triton.py \
+   --hf_model_id_path /opt/checkpoints/hf_llama31_8B_nemo2.nemo \
+   --triton_model_name llama \
+   --tensor_parallel_size 1
+```
+
+After starting the Triton server, you can query the deployed model using the **/opt/Export-Deploy/scripts/deploy/nlp/query.py** script, as demonstrated in the previous steps.
+
 
 ## Use NeMo Export and Deploy Module APIs to Run Inference
 
@@ -265,7 +279,7 @@ You can use the APIs in the export module to export a Hugging Face model to Tens
 
 2. Be sure to check the TensorRTLLM class docstrings for details.
 
-### Deploy a Hugging Face Model to TensorRT-LLM
+### Deploy a NeMo Automodel LLM to TensorRT-LLM with APIs
 
 You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Triton. The following code example assumes the ``/opt/checkpoints/tmp_trt_llm`` path exists.
 
