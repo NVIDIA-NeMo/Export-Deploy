@@ -18,7 +18,7 @@ import signal
 import subprocess
 import tempfile
 
-from scripts.deploy.llm.query_inframework import query_llm
+from scripts.deploy.nlp.query_inframework import query_llm
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
