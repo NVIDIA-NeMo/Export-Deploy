@@ -341,6 +341,8 @@ class MegatronRayDeployable:
             if request.get("echo", False):
                 # output format requires empty logprobs for the 1st token if echo is True
                 output["choices"][0]["logprobs"]["token_logprobs"].insert(0, None)
+            # Comment out the below line to check the output in case if invalid accuracy score or output.
+            #LOGGER.warning(f"Output: {output}")
             return output
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")
