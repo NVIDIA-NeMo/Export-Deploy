@@ -15,7 +15,7 @@
 """Tests for OpenAI API format compatibility in MegatronLLM Ray deployment."""
 
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -84,21 +84,19 @@ async def test_completions_output_format_basic(mock_ray_deployment):
 
         # Test 2: Verify 'logprobs' is a dictionary
         assert "logprobs" in choice
-        assert isinstance(
-            choice["logprobs"], dict
-        ), f"Expected 'logprobs' to be dict, got {type(choice['logprobs'])}"
+        assert isinstance(choice["logprobs"], dict), f"Expected 'logprobs' to be dict, got {type(choice['logprobs'])}"
 
         # Test 3: Verify 'token_logprobs' is a list
         assert "token_logprobs" in choice["logprobs"]
-        assert isinstance(
-            choice["logprobs"]["token_logprobs"], list
-        ), f"Expected 'token_logprobs' to be list, got {type(choice['logprobs']['token_logprobs'])}"
+        assert isinstance(choice["logprobs"]["token_logprobs"], list), (
+            f"Expected 'token_logprobs' to be list, got {type(choice['logprobs']['token_logprobs'])}"
+        )
 
         # Test 4: Verify 'top_logprobs' is a list of dictionaries
         assert "top_logprobs" in choice["logprobs"]
-        assert isinstance(
-            choice["logprobs"]["top_logprobs"], list
-        ), f"Expected 'top_logprobs' to be list, got {type(choice['logprobs']['top_logprobs'])}"
+        assert isinstance(choice["logprobs"]["top_logprobs"], list), (
+            f"Expected 'top_logprobs' to be list, got {type(choice['logprobs']['top_logprobs'])}"
+        )
 
         # Verify each element in top_logprobs is a dictionary
         for i, item in enumerate(choice["logprobs"]["top_logprobs"]):
@@ -531,4 +529,3 @@ async def test_completions_usage_token_counts(mock_ray_deployment):
         assert usage["prompt_tokens"] > 0
         assert usage["completion_tokens"] > 0
         assert usage["total_tokens"] > 0
-
