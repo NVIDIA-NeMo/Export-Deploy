@@ -539,7 +539,7 @@ class TensorRTLLM(ITritonDeployable):
                 lora_ckpt_list=self.lora_ckpt_list,
                 load_model=False,
                 use_python_runtime=self.use_python_runtime,
-                enable_chunked_context=self.enable_chunked_context,
+                enable_chunked_context=self.enable_chunked_context if self.enable_chunked_context else None,
                 max_tokens_in_paged_kv_cache=self.max_tokens_in_paged_kv_cache,
                 multi_block_mode=self.multi_block_mode,
             )
@@ -573,7 +573,7 @@ class TensorRTLLM(ITritonDeployable):
                 paged_kv_cache=paged_kv_cache,
                 multiple_profiles=multiple_profiles,
                 reduce_fusion=reduce_fusion,
-                model_type=model_type,
+                model_type=None,
                 delete_existing_files=delete_existing_files,
             )
 
