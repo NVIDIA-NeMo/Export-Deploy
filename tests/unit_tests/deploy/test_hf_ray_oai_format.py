@@ -589,6 +589,7 @@ class TestRayInferFnLogprobProcessing:
 
                 # Mock model
                 mock_model = MagicMock()
+
                 # Mock forward pass for prompt logits
                 mock_output = MagicMock()
                 mock_output.logits = torch.randn(1, 4, 50000)  # [batch, seq_len, vocab]
@@ -661,6 +662,7 @@ class TestRayInferFnLogprobProcessing:
         # Should include log_probs and top_logprobs
         assert "log_probs" in result
         assert "top_logprobs" in result
+
         # Log probs should include both prompt and generated tokens
         assert len(result["log_probs"][0]) > 2  # More than just generated tokens
 
@@ -703,4 +705,3 @@ class TestRayInferFnLogprobProcessing:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-
