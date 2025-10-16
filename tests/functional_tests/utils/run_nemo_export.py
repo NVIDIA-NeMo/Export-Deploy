@@ -28,7 +28,7 @@ LOGGER = logging.getLogger("NeMo")
 triton_supported = True
 try:
     from nemo_deploy import DeployPyTriton
-    from nemo_deploy.nlp import NemoQueryLLM, NemoQueryvLLM
+    from nemo_deploy.llm import NemoQueryLLM, NemoQueryvLLM
 except Exception as e:
     LOGGER.warning(f"Cannot import Triton, deployment will not be available. {type(e).__name__}: {e}")
     triton_supported = False
@@ -37,8 +37,8 @@ in_framework_supported = True
 try:
     from megatron.core.inference.common_inference_params import CommonInferenceParams
 
-    from nemo_deploy.nlp import NemoQueryLLMPyTorch
-    from nemo_deploy.nlp.megatronllm_deployable import (
+    from nemo_deploy.llm import NemoQueryLLMPyTorch
+    from nemo_deploy.llm.megatronllm_deployable import (
         MegatronLLMDeploy,
         MegatronLLMDeployableNemo2,
     )
@@ -52,6 +52,7 @@ except Exception as e:
 trt_llm_supported = True
 try:
     from nemo_export.tensorrt_llm import TensorRTLLM
+    from nemo_export.tensorrt_llm_hf import TensorRTLLMHF
 except Exception as e:
     LOGGER.warning(f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}")
     trt_llm_supported = False
@@ -229,6 +230,7 @@ def run_inference(
     model_dir,
     use_vllm,
     use_huggingface,
+    force_hf_export=False,
     max_batch_size=8,
     max_input_len=128,
     max_output_len=128,
@@ -320,8 +322,8 @@ def run_inference(
                 temperature=temperature,
             )
         else:
-            exporter = TensorRTLLM(model_dir, lora_ckpt_list, load_model=False)
             if use_huggingface:
+                exporter = TensorRTLLMHF(model_dir, lora_ckpt_list, load_model=False)
                 exporter.export_hf_model(
                     hf_model_path=checkpoint_path,
                     max_batch_size=max_batch_size,
@@ -331,22 +333,38 @@ def run_inference(
                     model_type=model_type,
                 )
             else:
-                exporter.export(
-                    nemo_checkpoint_path=checkpoint_path,
-                    model_type=model_type,
-                    tensor_parallelism_size=tp_size,
-                    pipeline_parallelism_size=pp_size,
-                    max_input_len=max_input_len,
-                    max_seq_len=(max_input_len + max_output_len),
-                    max_batch_size=max_batch_size,
-                    use_parallel_embedding=use_parallel_embedding,
-                    use_lora_plugin=use_lora_plugin,
-                    lora_target_modules=lora_target_modules,
-                    max_num_tokens=max_num_tokens,
-                    fp8_quantized=fp8_quantized,
-                    fp8_kvcache=fp8_kvcache,
-                    **trt_llm_export_kwargs,
-                )
+                exporter = TensorRTLLM(model_dir, lora_ckpt_list, load_model=False)
+                if force_hf_export:
+                    # Use direct HF export path for NeMo checkpoint
+                    exporter.export_with_hf(
+                        nemo_checkpoint_path=checkpoint_path,
+                        model_type=model_type,
+                        tensor_parallelism_size=tp_size,
+                        max_input_len=max_input_len,
+                        max_output_len=max_output_len,
+                        max_batch_size=max_batch_size,
+                        max_num_tokens=max_num_tokens,
+                        max_seq_len=(max_input_len + max_output_len) if max_output_len else None,
+                        **trt_llm_export_kwargs,
+                    )
+                else:
+                    # Use standard export with automatic HF fallback
+                    exporter.export(
+                        nemo_checkpoint_path=checkpoint_path,
+                        model_type=model_type,
+                        tensor_parallelism_size=tp_size,
+                        pipeline_parallelism_size=pp_size,
+                        max_input_len=max_input_len,
+                        max_seq_len=(max_input_len + max_output_len),
+                        max_batch_size=max_batch_size,
+                        use_parallel_embedding=use_parallel_embedding,
+                        use_lora_plugin=use_lora_plugin,
+                        lora_target_modules=lora_target_modules,
+                        max_num_tokens=max_num_tokens,
+                        fp8_quantized=fp8_quantized,
+                        fp8_kvcache=fp8_kvcache,
+                        **trt_llm_export_kwargs,
+                    )
 
             if use_vllm and top_p == 0.0:
                 top_p = 0.01
@@ -677,6 +695,12 @@ def get_args():
         default="False",
     )
     parser.add_argument(
+        "--force_hf_export",
+        type=str,
+        default="False",
+        help="Force using HF export path (export_with_hf) for NeMo checkpoints",
+    )
+    parser.add_argument(
         "--enable_flash_decode",
         type=str,
         default="False",
@@ -744,6 +768,7 @@ def get_args():
     args.run_accuracy = str_to_bool("run_accuracy", args.run_accuracy)
     args.use_vllm = str_to_bool("use_vllm", args.use_vllm)
     args.use_huggingface = str_to_bool("use_huggingface", args.use_huggingface)
+    args.force_hf_export = str_to_bool("force_hf_export", args.force_hf_export)
     args.enable_flash_decode = str_to_bool("enable_flash_decode", args.enable_flash_decode)
     args.lora = str_to_bool("lora", args.lora)
     args.use_parallel_embedding = str_to_bool("use_parallel_embedding", args.use_parallel_embedding)
@@ -769,6 +794,12 @@ def run_inference_tests(args):
 
     if args.run_accuracy and args.test_data_path is None:
         raise UsageError("Accuracy testing requires the --test_data_path argument.")
+
+    if args.force_hf_export and (args.use_vllm or args.use_huggingface):
+        raise UsageError(
+            "--force_hf_export cannot be used with --use_vllm or --use_huggingface. "
+            "It is only for forcing HF export path for NeMo checkpoints."
+        )
 
     if args.max_tps is None:
         args.max_tps = args.min_tps
@@ -817,6 +848,7 @@ def run_inference_tests(args):
                 model_dir=args.model_dir,
                 use_vllm=args.use_vllm,
                 use_huggingface=args.use_huggingface,
+                force_hf_export=args.force_hf_export,
                 tp_size=tps,
                 pp_size=args.pps,
                 max_batch_size=args.max_batch_size,

@@ -489,7 +489,7 @@ python scripts/deploy/multimodal/query_inframework.py \
     --max_output_len 100
 ```
 
-Note that each model groups such as LLMs and Multimodals have its own dedicated query class. For further details, please consult the [documentation](docs/llm/nemo_models/send-query.md).
+Note that each model groups such as LLMs and Multimodals have its own dedicated query class. For further details, please consult the documentation.
 
 ## 🤝 Contributing
 

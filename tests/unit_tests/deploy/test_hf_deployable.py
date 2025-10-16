@@ -20,7 +20,7 @@ import pytest
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
+from nemo_deploy.llm.hf_deployable import HuggingFaceLLMDeploy
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def mock_tokenizer():
 
 @pytest.fixture
 def mock_peft_model():
-    with patch("nemo_deploy.nlp.hf_deployable.PeftModel") as mock:
+    with patch("nemo_deploy.llm.hf_deployable.PeftModel") as mock:
         mock.from_pretrained.return_value = MagicMock()
         yield mock
 

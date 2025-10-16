@@ -16,7 +16,7 @@ import argparse
 import logging
 
 from nemo_deploy import DeployPyTriton
-from nemo_deploy.nlp.trtllm_api_deployable import TensorRTLLMAPIDeployable
+from nemo_deploy.llm.trtllm_api_deployable import TensorRTLLMAPIDeployable
 
 LOGGER = logging.getLogger("NeMo")
 

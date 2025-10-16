@@ -21,7 +21,7 @@ warnings.warn(
     stacklevel=2,
 )
 
-from nemo_deploy.nlp.query_llm import (
+from nemo_deploy.llm.query_llm import (
     NemoQueryLLM,
     NemoQueryLLMHF,
     NemoQueryLLMPyTorch,
