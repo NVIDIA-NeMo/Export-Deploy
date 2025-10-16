@@ -581,7 +581,7 @@ class TestHFRayDeployable:
             "echo": False,
         }
 
-        results = mock_model.ray_infer_fn(inference_inputs)
+        _ = mock_model.ray_infer_fn(inference_inputs)
 
         result = {
             "id": "cmpl-123",
