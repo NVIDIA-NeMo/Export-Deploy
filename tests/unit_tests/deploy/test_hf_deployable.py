@@ -431,9 +431,7 @@ class TestHFDeployableEchoAndLogprobs:
                 result = {"sequences": sequences}
                 if output_scores:
                     # Create realistic scores (logits) for each generated token
-                    result["scores"] = [
-                        torch.randn(batch_size, 50000) for _ in range(max_new_tokens)
-                    ]
+                    result["scores"] = [torch.randn(batch_size, 50000) for _ in range(max_new_tokens)]
                 return result
             else:
                 return sequences
@@ -524,7 +522,6 @@ class TestHFDeployableEchoAndLogprobs:
 
     def test_ray_infer_fn_with_compute_logprob(self, hf_deployable):
         """Test ray_infer_fn computes logprobs when requested."""
-        import json
 
         inputs = {
             "prompts": ["Test prompt"],

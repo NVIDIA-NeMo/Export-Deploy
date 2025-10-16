@@ -38,7 +38,7 @@ def run_coroutine(coro):
 
 class TestOAIFormatCompliance:
     """Test suite to verify OpenAI API format compliance.
-    
+
     These tests verify the completions endpoint logic without requiring Ray Serve.
     """
 
@@ -46,41 +46,43 @@ class TestOAIFormatCompliance:
     def mock_model(self):
         """Create a mock model with ray_infer_fn."""
         mock_model = MagicMock()
-        
+
         # Mock ray_infer_fn to return realistic results
         def mock_ray_infer_fn(inputs):
             sentences = ["Generated text for testing"]
             result = {"sentences": sentences}
-            
+
             if inputs.get("compute_logprob") or inputs.get("n_top_logprobs", 0) > 0:
                 result["log_probs"] = [[-0.1, -0.2, -0.3, -0.4]]
-                
+
             if inputs.get("n_top_logprobs", 0) > 0:
                 result["top_logprobs"] = [
-                    json.dumps([
-                        {" Generated": -0.1, " Other": -2.5},
-                        {" text": -0.2, " word": -3.0},
-                        {" for": -0.3, " to": -2.8},
-                        {" testing": -0.4, " example": -3.2},
-                    ])
+                    json.dumps(
+                        [
+                            {" Generated": -0.1, " Other": -2.5},
+                            {" text": -0.2, " word": -3.0},
+                            {" for": -0.3, " to": -2.8},
+                            {" testing": -0.4, " example": -3.2},
+                        ]
+                    )
                 ]
-            
+
             return result
-        
+
         mock_model.ray_infer_fn = mock_ray_infer_fn
         return mock_model
-    
+
     def simulate_completions_endpoint(self, mock_model, request, model_id="test-model"):
         """Simulate the completions endpoint logic from hf_deployable_ray.py."""
         # Preprocessing
         if "prompt" in request:
             request["prompts"] = [request["prompt"]]
-        
+
         temperature = request.get("temperature", 0.0)
         top_p = request.get("top_p", 0.0)
         if temperature == 0.0 and top_p == 0.0:
             request["top_k"] = 1
-        
+
         # Build inference inputs
         inference_inputs = {
             "prompts": request.get("prompts", []),
@@ -88,27 +90,29 @@ class TestOAIFormatCompliance:
             "temperature": request.get("temperature", 0.0),
             "top_k": request.get("top_k", 0),
             "top_p": request.get("top_p", 0),
-            "compute_logprob": True if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0) else False,
+            "compute_logprob": True
+            if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0)
+            else False,
             "n_top_logprobs": request.get("logprobs", 0),
             "echo": request.get("echo", False),
         }
-        
+
         # Call model
         results = mock_model.ray_infer_fn(inference_inputs)
         generated_texts = results.get("sentences", [])
-        
+
         # Calculate tokens
         prompt_tokens = sum(len(p.split()) for p in request.get("prompts", []))
         completion_tokens = sum(len(r.split()) for r in generated_texts)
         total_tokens = prompt_tokens + completion_tokens
-        
+
         # Process logprobs
         log_probs_data = results.get("log_probs", None)
         if log_probs_data is not None:
             if isinstance(log_probs_data, list) and len(log_probs_data) > 0:
                 if isinstance(log_probs_data[0], list):
                     log_probs_data = log_probs_data[0]
-        
+
         top_log_probs_data = results.get("top_logprobs", None)
         if top_log_probs_data is not None:
             if isinstance(top_log_probs_data, list) and len(top_log_probs_data) > 0:
@@ -116,7 +120,7 @@ class TestOAIFormatCompliance:
                     top_log_probs_data = json.loads(top_log_probs_data[0])
                 elif isinstance(top_log_probs_data[0], list):
                     top_log_probs_data = top_log_probs_data[0]
-        
+
         # Build response
         output = {
             "id": f"cmpl-{int(time.time())}",
@@ -270,13 +274,13 @@ class TestOAIFormatCompliance:
         """Test echo parameter behavior."""
         # Mock to return echo response
         original_ray_infer_fn = mock_model.ray_infer_fn
-        
+
         def mock_echo_ray_infer_fn(inputs):
             if inputs.get("echo"):
                 return {"sentences": ["Test prompt Generated text"]}
             else:
                 return {"sentences": ["Generated text"]}
-        
+
         mock_model.ray_infer_fn = mock_echo_ray_infer_fn
 
         # Test with echo=True
@@ -337,11 +341,11 @@ class TestOAIFormatCompliance:
         """Test support for multiple prompts (prompts parameter)."""
         # Mock to return multiple responses
         original_ray_infer_fn = mock_model.ray_infer_fn
-        
+
         def mock_multi_ray_infer_fn(inputs):
             num_prompts = len(inputs.get("prompts", []))
             return {"sentences": [f"Response {i}" for i in range(num_prompts)]}
-        
+
         mock_model.ray_infer_fn = mock_multi_ray_infer_fn
 
         request = {
@@ -374,12 +378,12 @@ class TestOAIFormatCompliance:
         """Test finish_reason is 'length' when max_tokens is reached."""
         # Mock to return long response
         original_ray_infer_fn = mock_model.ray_infer_fn
-        
+
         def mock_long_ray_infer_fn(inputs):
             # Return a response that's longer than max_tokens
             max_tokens = inputs.get("max_tokens", 256)
             return {"sentences": [" ".join(["word"] * (max_tokens + 10))]}
-        
+
         mock_model.ray_infer_fn = mock_long_ray_infer_fn
 
         request = {
@@ -478,9 +482,9 @@ class TestHFDeployableGenerateMethod:
     def hf_deployable(self, mock_model_and_tokenizer):
         """Create HuggingFaceLLMDeploy instance for testing."""
         from nemo_deploy.llm.hf_deployable import HuggingFaceLLMDeploy
-        
+
         mock_model, mock_tokenizer = mock_model_and_tokenizer
-        
+
         with patch("torch.cuda.device_count", return_value=1):
             instance = HuggingFaceLLMDeploy(
                 hf_model_id_path="test/model",
@@ -567,7 +571,7 @@ class TestRayInferFnLogprobProcessing:
     def mock_hf_deployable_for_logprobs(self):
         """Create a mock HuggingFaceLLMDeploy with realistic logprob processing."""
         from nemo_deploy.llm.hf_deployable import HuggingFaceLLMDeploy
-        
+
         with patch("transformers.AutoModelForCausalLM") as mock_model_class:
             with patch("transformers.AutoTokenizer") as mock_tokenizer_class:
                 # Mock tokenizer
@@ -576,19 +580,21 @@ class TestRayInferFnLogprobProcessing:
                     "input_ids": torch.tensor([[1, 2, 3, 4]]),
                     "attention_mask": torch.tensor([[1, 1, 1, 1]]),
                 }
-                mock_tokenizer.decode.side_effect = lambda ids: f"token_{ids[0] if isinstance(ids, list) and len(ids) > 0 else 'unknown'}"
+                mock_tokenizer.decode.side_effect = (
+                    lambda ids: f"token_{ids[0] if isinstance(ids, list) and len(ids) > 0 else 'unknown'}"
+                )
                 mock_tokenizer.eos_token = "</s>"
                 mock_tokenizer.pad_token = "</s>"
                 mock_tokenizer_class.from_pretrained.return_value = mock_tokenizer
 
                 # Mock model
                 mock_model = MagicMock()
-                
+
                 # Mock forward pass for prompt logits
                 mock_output = MagicMock()
                 mock_output.logits = torch.randn(1, 4, 50000)  # [batch, seq_len, vocab]
                 mock_model.return_value = mock_output
-                
+
                 # Mock generate
                 mock_model.generate.return_value = {
                     "sequences": torch.tensor([[1, 2, 3, 4, 5, 6]]),
@@ -656,7 +662,7 @@ class TestRayInferFnLogprobProcessing:
         # Should include log_probs and top_logprobs
         assert "log_probs" in result
         assert "top_logprobs" in result
-        
+
         # Log probs should include both prompt and generated tokens
         assert len(result["log_probs"][0]) > 2  # More than just generated tokens
 
@@ -691,7 +697,7 @@ class TestRayInferFnLogprobProcessing:
         assert isinstance(result["top_logprobs"], list)
         assert len(result["top_logprobs"]) > 0
         assert isinstance(result["top_logprobs"][0], str)
-        
+
         # Should be valid JSON
         parsed = json.loads(result["top_logprobs"][0])
         assert isinstance(parsed, list)
@@ -699,4 +705,3 @@ class TestRayInferFnLogprobProcessing:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

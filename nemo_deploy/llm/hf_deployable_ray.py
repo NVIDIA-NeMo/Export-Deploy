@@ -13,10 +13,10 @@
 # limitations under the License.
 
 
+import json
 import logging
 import time
 from typing import Any, Dict, Optional
-import json
 
 import numpy as np
 import torch
@@ -178,7 +178,9 @@ class HFRayDeployable:
                 "temperature": request.get("temperature", 0.0),
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0),
-                "compute_logprob": True if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0) else False,
+                "compute_logprob": True
+                if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0)
+                else False,
                 "n_top_logprobs": request.get("logprobs", 0),
                 "echo": request.get("echo", False),
             }

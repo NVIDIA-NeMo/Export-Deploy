@@ -405,7 +405,6 @@ class TestHFRayDeployable:
     def test_completions_with_logprobs(self):
         """Test completions endpoint with logprobs parameter - using direct logic test."""
         import json
-        import numpy as np
 
         # Mock model that returns logprobs
         mock_model = MagicMock()
@@ -433,7 +432,9 @@ class TestHFRayDeployable:
             "temperature": request.get("temperature", 0.0),
             "top_k": request.get("top_k", 0),
             "top_p": request.get("top_p", 0),
-            "compute_logprob": True if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0) else False,
+            "compute_logprob": True
+            if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0)
+            else False,
             "n_top_logprobs": request.get("logprobs", 0),
             "echo": request.get("echo", False),
         }
@@ -459,15 +460,19 @@ class TestHFRayDeployable:
             "object": "text_completion",
             "created": int(time.time()),
             "model": "test-model",
-            "choices": [{
-                "text": " ".join(generated_texts),
-                "index": 0,
-                "logprobs": {
-                    "token_logprobs": log_probs_data,
-                    "top_logprobs": top_log_probs_data,
-                } if log_probs_data is not None else None,
-                "finish_reason": "stop",
-            }],
+            "choices": [
+                {
+                    "text": " ".join(generated_texts),
+                    "index": 0,
+                    "logprobs": {
+                        "token_logprobs": log_probs_data,
+                        "top_logprobs": top_log_probs_data,
+                    }
+                    if log_probs_data is not None
+                    else None,
+                    "finish_reason": "stop",
+                }
+            ],
             "usage": {
                 "prompt_tokens": 2,
                 "completion_tokens": 2,
@@ -522,12 +527,14 @@ class TestHFRayDeployable:
             "object": "text_completion",
             "created": int(time.time()),
             "model": "test-model",
-            "choices": [{
-                "text": " ".join(generated_texts),
-                "index": 0,
-                "logprobs": None,
-                "finish_reason": "stop",
-            }],
+            "choices": [
+                {
+                    "text": " ".join(generated_texts),
+                    "index": 0,
+                    "logprobs": None,
+                    "finish_reason": "stop",
+                }
+            ],
             "usage": {
                 "prompt_tokens": 2,
                 "completion_tokens": 2,
@@ -581,12 +588,14 @@ class TestHFRayDeployable:
             "object": "text_completion",
             "created": int(time.time()),
             "model": "test-model",
-            "choices": [{
-                "text": "Test response",
-                "index": 0,
-                "logprobs": None,
-                "finish_reason": "stop",
-            }],
+            "choices": [
+                {
+                    "text": "Test response",
+                    "index": 0,
+                    "logprobs": None,
+                    "finish_reason": "stop",
+                }
+            ],
             "usage": {
                 "prompt_tokens": 2,
                 "completion_tokens": 2,

@@ -268,7 +268,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
                 self.generate(
                     text_inputs=prompts,
-                    do_sample=False, # do_sample=False for greedy decoding
+                    do_sample=False,  # do_sample=False for greedy decoding
                     top_k=top_k,
                     top_p=top_p,
                     temperature=temperature,
@@ -338,7 +338,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
             output = self.generate(
                 text_inputs=prompts,
-                do_sample=False, # do_sample=False for greedy decoding
+                do_sample=False,  # do_sample=False for greedy decoding
                 top_k=top_k,
                 top_p=top_p,
                 temperature=temperature,
@@ -346,6 +346,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 output_logits=output_logits,
                 output_scores=output_scores,
                 return_dict_in_generate=return_dict_in_generate,
+                echo=False,
             )
 
             if isinstance(output, dict):
@@ -449,7 +450,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
                     # Get the generated sequence for this sample
                     sequences = output_infer["sequences"][sample_idx]
-                    
+
                     # For echo, compute prompt token logprobs by running forward pass
                     if echo and prompt_token_ids is not None:
                         prompt_len = len(prompt_token_ids[sample_idx])
@@ -459,7 +460,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                         with torch.no_grad():
                             # Create input for this specific sample
                             sample_prompt_input = {
-                                key: val[sample_idx:sample_idx+1] for key, val in prompt_inputs.items()
+                                key: val[sample_idx : sample_idx + 1] for key, val in prompt_inputs.items()
                             }
                             prompt_outputs = self.model(**sample_prompt_input)
                             prompt_logits = prompt_outputs.logits[0]  # Shape: [seq_len, vocab_size] [39, 128k]
@@ -489,11 +490,15 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                     for token_idx, score_tensor in enumerate(output_infer["scores"]):
                         # Get the chosen token ID from the sequence
                         # Scores start after the prompt, so we need to offset
-                        input_len = output_infer.get("input_lengths", [0])[sample_idx] if "input_lengths" in output_infer else 0
+                        input_len = (
+                            output_infer.get("input_lengths", [0])[sample_idx] if "input_lengths" in output_infer else 0
+                        )
                         seq_idx = input_len + token_idx
 
                         if seq_idx < len(sequences):
-                            chosen_token_id = sequences[seq_idx].item() if hasattr(sequences[seq_idx], 'item') else sequences[seq_idx]
+                            chosen_token_id = (
+                                sequences[seq_idx].item() if hasattr(sequences[seq_idx], "item") else sequences[seq_idx]
+                            )
 
                             # Calculate log probabilities
                             log_probs = torch.nn.functional.log_softmax(score_tensor[sample_idx], dim=-1)
@@ -525,7 +530,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 output_infer.pop("scores", None)
                 output_infer.pop("sequences", None)
                 output_infer.pop("input_lengths", None)
-            
+
             return output_infer
         except Exception as error:
             err_msg = "An error occurred: {0}".format(str(error))
@@ -588,7 +593,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
         output = self.generate(
             text_inputs=prompts,
-            do_sample=False, # do_sample=False for greedy decoding
+            do_sample=False,  # do_sample=False for greedy decoding
             top_k=top_k,
             top_p=top_p,
             temperature=temperature,
@@ -604,4 +609,3 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
         else:
             return {"sentences": output}
-
