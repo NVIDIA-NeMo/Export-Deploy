@@ -376,3 +376,256 @@ class TestHuggingFaceLLMDeploy:
         inputs = {"prompts": ["test prompt"], "max_tokens": 10000}
         output = deployer.ray_infer_fn(inputs)
         assert "sentences" in output
+
+
+class TestHFDeployableEchoAndLogprobs:
+    """Tests for echo parameter and logprobs functionality added to HuggingFaceLLMDeploy."""
+
+    @pytest.fixture
+    def mock_model_and_tokenizer(self):
+        """Create realistic mocks for model and tokenizer."""
+        # Mock tokenizer
+        mock_tokenizer = MagicMock()
+
+        # Mock tokenizer __call__ to return input tensors
+        def tokenizer_call(texts, **kwargs):
+            # Simulate tokenization - each token is represented by an ID
+            if isinstance(texts, str):
+                texts = [texts]
+            # Simple simulation: 1 token per word
+            input_ids = [[i + 1 for i in range(len(text.split()))] for text in texts]
+            return {
+                "input_ids": torch.tensor(input_ids),
+                "attention_mask": torch.tensor([[1] * len(ids) for ids in input_ids]),
+            }
+
+        mock_tokenizer.side_effect = tokenizer_call
+
+        # Mock decode method
+        def decode(token_ids, **kwargs):
+            # Simulate decoding
+            if isinstance(token_ids, torch.Tensor):
+                token_ids = token_ids.tolist()
+            return f" decoded_token_{len(token_ids)}"
+
+        mock_tokenizer.decode = MagicMock(side_effect=decode)
+        mock_tokenizer.eos_token = "</s>"
+        mock_tokenizer.pad_token = "</s>"
+
+        # Mock model
+        mock_model = MagicMock()
+
+        # Mock model.generate to return sequences and scores
+        def generate(**kwargs):
+            batch_size = kwargs.get("input_ids").shape[0]
+            input_len = kwargs.get("input_ids").shape[1]
+            max_new_tokens = kwargs.get("max_new_tokens", 5)
+            return_dict = kwargs.get("return_dict_in_generate", False)
+            output_scores = kwargs.get("output_scores", False)
+
+            # Generate output sequence (input + generated tokens)
+            output_len = input_len + max_new_tokens
+            sequences = torch.tensor([[i for i in range(output_len)] for _ in range(batch_size)])
+
+            if return_dict:
+                result = {"sequences": sequences}
+                if output_scores:
+                    # Create realistic scores (logits) for each generated token
+                    result["scores"] = [
+                        torch.randn(batch_size, 50000) for _ in range(max_new_tokens)
+                    ]
+                return result
+            else:
+                return sequences
+
+        mock_model.generate = MagicMock(side_effect=generate)
+
+        # Mock model forward pass for prompt logits
+        def forward(**kwargs):
+            batch_size = kwargs.get("input_ids").shape[0]
+            seq_len = kwargs.get("input_ids").shape[1]
+            vocab_size = 50000
+
+            output = MagicMock()
+            output.logits = torch.randn(batch_size, seq_len, vocab_size)
+            return output
+
+        mock_model.side_effect = forward
+        mock_model.cuda = MagicMock(return_value=mock_model)
+
+        return mock_model, mock_tokenizer
+
+    @pytest.fixture
+    def hf_deployable(self, mock_model_and_tokenizer):
+        """Create HuggingFaceLLMDeploy instance with mocked model and tokenizer."""
+        mock_model, mock_tokenizer = mock_model_and_tokenizer
+
+        # Create instance without actually loading the model
+        with patch("torch.cuda.device_count", return_value=1):
+            with patch("transformers.AutoModelForCausalLM.from_pretrained", return_value=mock_model):
+                with patch("transformers.AutoTokenizer.from_pretrained", return_value=mock_tokenizer):
+                    instance = HuggingFaceLLMDeploy(
+                        hf_model_id_path="test/model",
+                        task="text-generation",
+                    )
+                    # Manually set the mocks
+                    instance.model = mock_model
+                    instance.tokenizer = mock_tokenizer
+                    yield instance
+
+    def test_generate_with_echo_false_returns_only_generated_text(self, hf_deployable):
+        """Test that generate with echo=False returns only generated text."""
+        result = hf_deployable.generate(
+            text_inputs=["Test prompt"],
+            max_new_tokens=3,
+            echo=False,
+            return_dict_in_generate=True,
+            output_scores=True,
+        )
+
+        # Should be a dict
+        assert isinstance(result, dict)
+        # Should have sentences
+        assert "sentences" in result
+        assert isinstance(result["sentences"], list)
+        assert len(result["sentences"]) == 1
+        # Should have input_lengths
+        assert "input_lengths" in result
+
+    def test_generate_with_echo_true_returns_full_text(self, hf_deployable):
+        """Test that generate with echo=True returns prompt + generated text."""
+        result = hf_deployable.generate(
+            text_inputs=["Test prompt"],
+            max_new_tokens=3,
+            echo=True,
+            return_dict_in_generate=True,
+            output_scores=True,
+        )
+
+        # Should be a dict
+        assert isinstance(result, dict)
+        # Should have sentences
+        assert "sentences" in result
+        assert isinstance(result["sentences"], list)
+        assert len(result["sentences"]) == 1
+
+    def test_generate_returns_scores_when_requested(self, hf_deployable):
+        """Test that generate returns scores when output_scores=True."""
+        result = hf_deployable.generate(
+            text_inputs=["Test prompt"],
+            max_new_tokens=3,
+            return_dict_in_generate=True,
+            output_scores=True,
+        )
+
+        # Should include scores
+        assert "scores" in result
+        assert isinstance(result["scores"], list)
+
+    def test_ray_infer_fn_with_compute_logprob(self, hf_deployable):
+        """Test ray_infer_fn computes logprobs when requested."""
+        import json
+
+        inputs = {
+            "prompts": ["Test prompt"],
+            "max_tokens": 3,
+            "compute_logprob": True,
+            "n_top_logprobs": 0,
+        }
+
+        result = hf_deployable.ray_infer_fn(inputs)
+
+        # Should include log_probs
+        assert "log_probs" in result
+        assert isinstance(result["log_probs"], list)
+        assert len(result["log_probs"]) > 0
+        # Should have logprobs for generated tokens
+        assert len(result["log_probs"][0]) > 0
+
+    def test_ray_infer_fn_with_top_logprobs(self, hf_deployable):
+        """Test ray_infer_fn computes top_logprobs when requested."""
+        import json
+
+        inputs = {
+            "prompts": ["Test prompt"],
+            "max_tokens": 3,
+            "compute_logprob": True,
+            "n_top_logprobs": 2,  # Request top 2
+        }
+
+        result = hf_deployable.ray_infer_fn(inputs)
+
+        # Should include top_logprobs
+        assert "top_logprobs" in result
+        assert isinstance(result["top_logprobs"], list)
+        assert len(result["top_logprobs"]) > 0
+
+        # Should be JSON strings
+        assert isinstance(result["top_logprobs"][0], str)
+
+        # Should be valid JSON that decodes to list of dicts
+        parsed = json.loads(result["top_logprobs"][0])
+        assert isinstance(parsed, list)
+        assert all(isinstance(item, dict) for item in parsed)
+
+    def test_ray_infer_fn_with_echo_includes_prompt_logprobs(self, hf_deployable):
+        """Test ray_infer_fn includes prompt logprobs when echo=True."""
+        inputs = {
+            "prompts": ["Test prompt"],
+            "max_tokens": 2,
+            "compute_logprob": True,
+            "n_top_logprobs": 1,
+            "echo": True,
+        }
+
+        result = hf_deployable.ray_infer_fn(inputs)
+
+        # Should include log_probs
+        assert "log_probs" in result
+        # Should have more tokens than just generated (includes prompt tokens)
+        # Prompt "Test prompt" = 2 words = 2 tokens (minus BOS) + 2 generated = at least 3
+        assert len(result["log_probs"][0]) >= 3
+
+    def test_ray_infer_fn_removes_intermediate_outputs(self, hf_deployable):
+        """Test ray_infer_fn removes intermediate outputs from final result."""
+        inputs = {
+            "prompts": ["Test prompt"],
+            "max_tokens": 2,
+            "compute_logprob": True,
+            "n_top_logprobs": 1,
+        }
+
+        result = hf_deployable.ray_infer_fn(inputs)
+
+        # Should NOT include intermediate outputs
+        assert "scores" not in result
+        assert "sequences" not in result
+        assert "input_lengths" not in result
+
+    def test_ray_infer_fn_without_logprobs(self, hf_deployable):
+        """Test ray_infer_fn without logprobs doesn't compute them."""
+        inputs = {
+            "prompts": ["Test prompt"],
+            "max_tokens": 3,
+            "compute_logprob": False,
+            "n_top_logprobs": 0,
+        }
+
+        result = hf_deployable.ray_infer_fn(inputs)
+
+        # Should not include log_probs or top_logprobs
+        assert "log_probs" not in result
+        assert "top_logprobs" not in result
+
+    def test_ray_infer_fn_multiple_prompts(self, hf_deployable):
+        """Test inference with multiple prompts."""
+        inputs = {
+            "prompts": ["First prompt", "Second prompt"],
+            "max_tokens": 3,
+        }
+
+        result = hf_deployable.ray_infer_fn(inputs)
+
+        # Should return results for both prompts
+        assert "sentences" in result
+        assert len(result["sentences"]) == 2
