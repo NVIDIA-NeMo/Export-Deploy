@@ -543,6 +543,7 @@ class TestHFDeployableEchoAndLogprobs:
         # Should have logprobs for generated tokens
         assert len(result["log_probs"][0]) > 0
 
+
     @pytest.mark.run_only_on("GPU")
     def test_ray_infer_fn_with_top_logprobs(self, hf_deployable):
         """Test ray_infer_fn computes top_logprobs when requested."""
