@@ -264,7 +264,6 @@ class MegatronRayDeployable:
     async def completions(self, request: Dict[Any, Any]):
         """Handle text completion requests."""
         try:
-            print("request", request)
             if "prompt" in request:
                 request["prompts"] = [request["prompt"]]
             temperature = request.get("temperature", 0.0)
@@ -290,7 +289,6 @@ class MegatronRayDeployable:
 
             # Run tokenization and model inference in the thread pool
             results = ray.get(self.primary_worker.infer.remote(inference_inputs))
-            print("results", results)
             # Extract generated texts from results
             generated_texts = results.get("sentences", [])
 
@@ -340,7 +338,6 @@ class MegatronRayDeployable:
             if request.get("echo", False):
                 # output format requires empty logprobs for the 1st token if echo is True
                 output["choices"][0]["logprobs"]["token_logprobs"][0].insert(0, None)
-            print("output", output)
             return output
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")

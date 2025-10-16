@@ -101,6 +101,10 @@ def query(argv):
         with open(args.prompt_file, "r") as f:
             args.prompt = f.read()
 
+    assert not (args.top_k is not None and args.top_p is not None and args.top_k > 0 and args.top_p > 0.0), (
+        "Cannot have top_p and top_k both greater than zero. Set top_k as 0 in order to set top_p > 0.0."
+    )
+
     outputs = query_llm(
         url=args.url,
         model_name=args.model_name,

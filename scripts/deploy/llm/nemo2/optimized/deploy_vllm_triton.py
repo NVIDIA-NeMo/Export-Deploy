@@ -38,11 +38,11 @@ def get_args(argv):
         description="Export NeMo models to vLLM and deploy them on Triton",
     )
     parser.add_argument(
-        "-mpi",
-        "--model_path_id",
+        "-nc",
+        "--nemo-checkpoint",
         required=True,
         type=str,
-        help="Path of a NeMo checkpoint, or Hugging Face model ID or path.",
+        help="Path of a NeMo 2.0 checkpoint",
     )
     parser.add_argument(
         "-t",
@@ -53,7 +53,7 @@ def get_args(argv):
     )
     parser.add_argument(
         "-lc",
-        "--lora_ckpt",
+        "--lora-ckpt",
         default=[],
         type=str,
         nargs="+",
@@ -61,7 +61,7 @@ def get_args(argv):
     )
     parser.add_argument(
         "-tps",
-        "--tensor_parallelism_size",
+        "--tensor-parallelism-size",
         default=1,
         type=int,
         help="Tensor parallelism size",
@@ -90,77 +90,77 @@ def get_args(argv):
     )
     parser.add_argument(
         "-gmu",
-        "--gpu_memory_utilization",
+        "--gpu-memory-utilization",
         default=0.9,
         type=float,
         help="GPU memory utilization percentage for vLLM.",
     )
     parser.add_argument(
         "-sp",
-        "--swap_space",
+        "--swap-space",
         default=4,
         type=float,
         help="The size (GiB) of CPU memory per GPU to use as swap space.",
     )
     parser.add_argument(
         "-cog",
-        "--cpu_offload_gb",
+        "--cpu-offload-gb",
         default=0,
         type=float,
         help="The size (GiB) of CPU memory to use for offloading the model weights.",
     )
     parser.add_argument(
         "-ee",
-        "--enforce_eager",
+        "--enforce-eager",
         default=False,
         action="store_true",
         help="Whether to enforce eager execution.",
     )
     parser.add_argument(
         "-mslc",
-        "--max_seq_len_to_capture",
+        "--max-seq-len-to-capture",
         default=8192,
         type=int,
         help="Maximum sequence len covered by CUDA graphs.",
     )
     parser.add_argument(
         "-tmn",
-        "--triton_model_name",
+        "--triton-model-name",
         required=True,
         type=str,
         help="Name for the service",
     )
     parser.add_argument(
         "-tmv",
-        "--triton_model_version",
+        "--triton-model-version",
         default=1,
         type=int,
         help="Version for the service",
     )
     parser.add_argument(
         "-trp",
-        "--triton_port",
+        "--triton-port",
         default=8000,
         type=int,
         help="Port for the Triton server to listen for requests",
     )
     parser.add_argument(
         "-tha",
-        "--triton_http_address",
+        "--triton-http-address",
         default="0.0.0.0",
         type=str,
         help="HTTP address for the Triton server",
     )
     parser.add_argument(
         "-mbs",
-        "--max_batch_size",
+        "--max-batch-size",
         default=8,
         type=int,
         help="Max batch size of the model",
     )
     parser.add_argument(
         "-dm",
-        "--debug_mode",
+        "--debug-mode",
         default=False,
         action="store_true",
         help="Enable debug mode",
@@ -185,7 +185,7 @@ def nemo_deploy(argv):
     try:
         exporter = vLLMExporter()
         exporter.export(
-            model_path_id=args.model_path_id,
+            model_path_id=args.nemo_checkpoint,
             tokenizer=args.tokenizer,
             trust_remote_code=True,
             enable_lora=True if len(args.lora_ckpt) else False,

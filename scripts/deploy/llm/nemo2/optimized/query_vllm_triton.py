@@ -27,40 +27,40 @@ def get_args(argv):
         description="Sends a single query to an LLM hosted on a Triton server.",
     )
     parser.add_argument("-u", "--url", default="0.0.0.0", type=str, help="url for the triton server")
-    parser.add_argument("-mn", "--model_name", required=True, type=str, help="Name of the triton model")
+    parser.add_argument("-mn", "--model-name", required=True, type=str, help="Name of the triton model")
     prompt_group = parser.add_mutually_exclusive_group(required=True)
     prompt_group.add_argument("-p", "--prompt", required=False, type=str, help="Prompt")
     prompt_group.add_argument(
         "-pf",
-        "--prompt_file",
+        "--prompt-file",
         required=False,
         type=str,
         help="File to read the prompt from",
     )
     parser.add_argument(
         "-mat",
-        "--max_tokens",
+        "--max-tokens",
         default=16,
         type=int,
         help="Max output token length",
     )
     parser.add_argument(
         "-mit",
-        "--min_tokens",
+        "--min-tokens",
         default=0,
         type=int,
         help="Min output token length",
     )
     parser.add_argument(
         "-nlp",
-        "--n_log_probs",
+        "--n-log-probs",
         default=None,
         type=int,
         help="Number of log probabilities to return per output token.",
     )
     parser.add_argument(
         "-nplp",
-        "--n_prompt_log_probs",
+        "--n-prompt-log-probs",
         default=None,
         type=int,
         help="Number of log probabilities to return per prompt token.",
@@ -77,7 +77,7 @@ def get_args(argv):
     parser.add_argument("-t", "--temperature", default=1.0, type=float, help="temperature")
     parser.add_argument(
         "-lt",
-        "--lora_task_uids",
+        "--lora-task-uids",
         default=None,
         type=str,
         nargs="+",
@@ -85,7 +85,7 @@ def get_args(argv):
     )
     parser.add_argument(
         "-it",
-        "--init_timeout",
+        "--init-timeout",
         default=60.0,
         type=float,
         help="init timeout for the triton server",

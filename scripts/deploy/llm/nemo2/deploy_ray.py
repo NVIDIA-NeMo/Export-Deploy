@@ -30,71 +30,71 @@ def parse_args():
     """Parse command-line arguments for the Ray deployment script."""
     parser = argparse.ArgumentParser(description="Deploy a Megatron model using Ray")
     parser.add_argument(
-        "--nemo_checkpoint",
+        "--nemo-checkpoint",
         type=str,
         default=None,
         help="Path to the .nemo checkpoint file",
     )
     parser.add_argument(
-        "--num_gpus",
+        "--num-gpus",
         type=int,
         default=1,
         help="Number of GPUs to use per node",
     )
     parser.add_argument(
-        "--tensor_model_parallel_size",
+        "--tensor-model-parallel-size",
         type=int,
         default=1,
         help="Size of the tensor model parallelism",
     )
     parser.add_argument(
-        "--pipeline_model_parallel_size",
+        "--pipeline-model-parallel-size",
         type=int,
         default=1,
         help="Size of the pipeline model parallelism",
     )
     parser.add_argument(
         "-nlfps",
-        "--num_layers_in_first_pipeline_stage",
+        "--num-layers-in-first-pipeline-stage",
         default=None,
         type=int,
         help="Number of layers in the first pipeline stage",
     )
     parser.add_argument(
         "-nllps",
-        "--num_layers_in_last_pipeline_stage",
+        "--num-layers-in-last-pipeline-stage",
         default=None,
         type=int,
         help="Number of layers in the last pipeline stage",
     )
     parser.add_argument(
-        "--expert_model_parallel_size",
+        "--expert-model-parallel-size",
         type=int,
         default=1,
         help="Size of the expert model parallelism",
     )
     parser.add_argument(
-        "--context_parallel_size",
+        "--context-parallel-size",
         type=int,
         default=1,
         help="Size of the context parallelism",
     )
     parser.add_argument(
         "-eps",
-        "--account_for_embedding_in_pipeline_split",
+        "--account-for-embedding-in-pipeline-split",
         default=False,
         action="store_true",
         help="Account for embedding in the pipeline split",
     )
     parser.add_argument(
         "-lps",
-        "--account_for_loss_in_pipeline_split",
+        "--account-for-loss-in-pipeline-split",
         default=False,
         action="store_true",
         help="Account for loss in the pipeline split",
     )
     parser.add_argument(
-        "--model_id",
+        "--model-id",
         type=str,
         default="nemo-model",
         help="Identifier for the model in the API responses",
@@ -112,63 +112,63 @@ def parse_args():
         help="Port number to use for the Ray Serve server",
     )
     parser.add_argument(
-        "--num_cpus",
+        "--num-cpus",
         type=int,
         default=None,
         help="Number of CPUs to allocate for the Ray cluster. If None, will use all available CPUs.",
     )
     parser.add_argument(
-        "--num_cpus_per_replica",
+        "--num-cpus-per-replica",
         type=float,
         default=8,
         help="Number of CPUs per model replica",
     )
     parser.add_argument(
-        "--include_dashboard",
+        "--include-dashboard",
         action="store_true",
         help="Whether to include the Ray dashboard",
     )
     parser.add_argument(
-        "--cuda_visible_devices",
+        "--cuda-visible-devices",
         type=str,
         default=None,
         help="Comma-separated list of CUDA visible devices",
     )
     parser.add_argument(
-        "--enable_cuda_graphs",
+        "--enable-cuda-graphs",
         action="store_true",
         help="Whether to enable CUDA graphs for faster inference",
     )
     parser.add_argument(
-        "--enable_flash_decode",
+        "--enable-flash-decode",
         action="store_true",
         help="Whether to enable Flash Attention decode",
     )
     parser.add_argument(
-        "--num_replicas",
+        "--num-replicas",
         type=int,
         default=1,
         help="Number of replicas for the deployment",
     )
     parser.add_argument(
-        "--legacy_ckpt",
+        "--legacy-ckpt",
         action="store_true",
         help="Whether to use legacy checkpoint format",
     )
     parser.add_argument(
-        "--max_batch_size",
+        "--max-batch-size",
         type=int,
         default=32,
         help="Maximum batch size for inference",
     )
     parser.add_argument(
-        "--random_seed",
+        "--random-seed",
         type=int,
         default=None,
         help="Random seed for reproducible inference",
     )
     parser.add_argument(
-        "--micro_batch_size",
+        "--micro-batch-size",
         type=int,
         default=None,
         help="Micro batch size for model execution",
@@ -195,7 +195,7 @@ def main():
         runtime_env=runtime_env,
     )
     if not args.nemo_checkpoint:
-        raise ValueError("--nemo_checkpoint must be provided")
+        raise ValueError("--nemo-checkpoint must be provided")
 
     model_config_kwargs = {
         "account_for_embedding_in_pipeline_split": args.account_for_embedding_in_pipeline_split,
