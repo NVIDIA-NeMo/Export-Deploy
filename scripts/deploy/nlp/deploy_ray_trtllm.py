@@ -22,6 +22,7 @@ from pathlib import Path
 
 from nemo_deploy.deploy_ray import DeployRay
 from nemo_export.tensorrt_llm import TensorRTLLM
+from nemo_export.tensorrt_llm_hf import TensorRTLLMHF
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -260,7 +261,11 @@ def main():
                 trtllm_kwargs["enable_chunked_context"] = args.enable_chunked_context
                 trtllm_kwargs["max_tokens_in_paged_kv_cache"] = args.max_tokens_in_paged_kv_cache
 
-            trtllmConverter = TensorRTLLM(**trtllm_kwargs)
+            # Use TensorRTLLMHF for HuggingFace models, TensorRTLLM for NeMo models
+            if args.hf_model_path:
+                trtllmConverter = TensorRTLLMHF(**trtllm_kwargs)
+            else:
+                trtllmConverter = TensorRTLLM(**trtllm_kwargs)
 
             if args.nemo_checkpoint_path:
                 LOGGER.info("Exporting Nemo checkpoint to TensorRT-LLM")
