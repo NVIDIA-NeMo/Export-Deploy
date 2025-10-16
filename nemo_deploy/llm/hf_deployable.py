@@ -443,9 +443,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 # logits only for generated tokens.
                 with torch.no_grad():
                     # Create input for this specific sample
-                    sample_prompt_input = {
-                        key: val[sample_idx : sample_idx + 1] for key, val in prompt_inputs.items()
-                    }
+                    sample_prompt_input = {key: val[sample_idx : sample_idx + 1] for key, val in prompt_inputs.items()}
                     prompt_outputs = self.model(**sample_prompt_input)
                     prompt_logits = prompt_outputs.logits[0]  # Shape: [seq_len, vocab_size]
 
@@ -474,9 +472,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             for token_idx, score_tensor in enumerate(output_infer["scores"]):
                 # Get the chosen token ID from the sequence
                 # Scores start after the prompt, so we need to offset
-                input_len = (
-                    output_infer.get("input_lengths", [0])[sample_idx] if "input_lengths" in output_infer else 0
-                )
+                input_len = output_infer.get("input_lengths", [0])[sample_idx] if "input_lengths" in output_infer else 0
                 seq_idx = input_len + token_idx
 
                 if seq_idx < len(sequences):
