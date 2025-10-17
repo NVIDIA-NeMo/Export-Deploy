@@ -80,9 +80,18 @@ def get_args(argv):
         "--device_map",
         nargs="?",
         choices=["auto", "balanced", "balanced_low_0", "sequential"],
-        default=None,
+        default="auto",
         type=str,
         help="Device mapping strategy for model placement (e.g. 'auto', 'sequential', etc)",
+    )
+    parser.add_argument(
+        "-td",
+        "--torch_dtype",
+        nargs="?",
+        choices=["auto", "bfloat16", "float16", "float32"],
+        default="auto",
+        type=str,
+        help="Torch dtype for the model",
     )
     parser.add_argument(
         "-tpp",
@@ -196,6 +205,7 @@ def hf_deploy(argv):
         task=args.task,
         trust_remote_code=args.trust_remote_code,
         device_map=args.device_map,
+        torch_dtype=args.torch_dtype,
         tp_plan=args.tp_plan,
     )
 

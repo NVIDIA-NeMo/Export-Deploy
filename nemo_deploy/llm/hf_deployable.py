@@ -78,6 +78,8 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         tokenizer_truncation=True,
         tokenizer_padding_side="left",
         task: Optional[str] = "text-generation",
+        torch_dtype: Optional[torch.dtype] = "auto",
+        device_map: Optional[str] = "auto",
         **hf_kwargs,
     ):
         if not HAVE_TRITON:
@@ -107,14 +109,21 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             self.tokenizer_id_path = tokenizer_id_path
 
         if model is None:
-            self._load(**hf_kwargs)
+            self._load(torch_dtype=torch_dtype, device_map=device_map, **hf_kwargs)
 
-    def _load(self, **hf_kwargs) -> None:
+    def _load(
+        self, torch_dtype: Optional[torch.dtype] = "auto", device_map: Optional[str] = "auto", **hf_kwargs
+    ) -> None:
         """Load the HuggingFace pipeline with the specified model and task.
 
         This method initializes the HuggingFace AutoModel classes using the provided model
         configuration and task type. It handles the model and tokenizer loading
         process.
+
+        Args:
+            torch_dtype (torch.dtype): Data type for the model. Defaults to "auto".
+            device_map (str): Device map for the model. Defaults to "auto".
+            **hf_kwargs: Additional keyword arguments to pass to the HuggingFace model loading.
 
         Raises:
             AssertionError: If task is not specified.
@@ -122,7 +131,9 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         assert self.task is not None, "A task has to be given for the generation task."
 
         if self.task == "text-generation":
-            self.model = AutoModelForCausalLM.from_pretrained(self.hf_model_id_path, **hf_kwargs)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.hf_model_id_path, torch_dtype=torch_dtype, device_map=device_map, **hf_kwargs
+            )
 
             if self.hf_peft_model_id_path is not None:
                 self.model = PeftModel.from_pretrained(self.model, self.hf_peft_model_id_path)
@@ -131,7 +142,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         num_gpus = torch.cuda.device_count()
         # If there is only one GPU, move the model to GPU. If you are using device_map as "auto" or "balanced",
         # the model will be moved to GPU automatically.
-        if num_gpus == 1:
+        if device_map == None and num_gpus >= 1 and self.model.device.type != "cuda":
             self.model.cuda()
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.tokenizer_id_path,
