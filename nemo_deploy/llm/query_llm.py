@@ -101,6 +101,11 @@ class NemoQueryLLMPyTorch(NemoQueryLLMBase):
             apply_chat_template (bool): applies chat template if its a chat model. Default: False
             init_timeout (flat): timeout for the connection.
         """
+        if top_k is not None and top_p is not None and top_k > 0 and top_p > 0.0:
+            raise ValueError(
+                "Cannot have top_p and top_k both greater than zero. Set top_k as zero in order to set top_p > 0.0."
+            )
+
         prompts = str_list2numpy(prompts)
         inputs = {
             "prompts": prompts,
