@@ -22,7 +22,7 @@ from PIL.Image import Image
 
 try:
     from megatron.core.inference.common_inference_params import CommonInferenceParams
-    
+
     HAVE_MEGATRON = True
 except (ImportError, ModuleNotFoundError) as e:
     HAVE_MEGATRON = False

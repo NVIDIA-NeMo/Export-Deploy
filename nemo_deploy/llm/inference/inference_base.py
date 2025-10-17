@@ -44,7 +44,7 @@ try:
     )
     from megatron.core.transformer.enums import AttnBackend
     from megatron.core.transformer.module import MegatronModule
-    
+
     HAVE_MEGATRON = True
 except (ImportError, ModuleNotFoundError) as e:
     HAVE_MEGATRON = False
@@ -490,7 +490,7 @@ def create_mcore_engine(
     """
     if not HAVE_NEMO:
         raise UnavailableError(MISSING_NEMO_MSG)
-    
+
     if not HAVE_MEGATRON:
         raise UnavailableError(
             f"Megatron-Core is required for create_mcore_engine but failed to import: {MEGATRON_IMPORT_ERROR}"

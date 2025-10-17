@@ -25,7 +25,7 @@ from jinja2 import Template
 try:
     from megatron.core.inference.common_inference_params import CommonInferenceParams
     from megatron.core.inference.inference_request import InferenceRequest
-    
+
     HAVE_MEGATRON = True
 except (ImportError, ModuleNotFoundError) as e:
     HAVE_MEGATRON = False
@@ -37,12 +37,13 @@ from nemo_deploy import ITritonDeployable
 
 try:
     from nemo_deploy.llm.inference.inference_base import create_mcore_engine
-    
+
     HAVE_INFERENCE_BASE = True
 except (ImportError, ModuleNotFoundError) as e:
     HAVE_INFERENCE_BASE = False
     INFERENCE_BASE_IMPORT_ERROR = str(e)
     create_mcore_engine = None
+
 from nemo_deploy.utils import (
     NEMO2,
     broadcast_list,
@@ -184,12 +185,12 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
     ):
         if not HAVE_TRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
-        
+
         if not HAVE_MEGATRON:
             raise UnavailableError(
                 f"Megatron-Core is required for MegatronLLMDeployableNemo2 but failed to import: {MEGATRON_IMPORT_ERROR}"
             )
-        
+
         if not HAVE_INFERENCE_BASE:
             raise UnavailableError(
                 f"Inference base module is required but failed to import: {INFERENCE_BASE_IMPORT_ERROR}"
