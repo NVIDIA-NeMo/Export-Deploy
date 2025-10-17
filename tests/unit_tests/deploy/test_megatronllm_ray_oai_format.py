@@ -14,6 +14,7 @@
 
 """Tests for OpenAI API format compatibility in MegatronLLM Ray deployment."""
 
+import asyncio
 import json
 from unittest.mock import MagicMock, patch
 
@@ -24,19 +25,28 @@ import pytest
 @pytest.fixture
 def mock_ray_deployment():
     """Fixture to create a mock Ray deployment instance."""
-    from nemo_deploy.llm.megatronllm_deployable_ray import MegatronLLMDeployRay
+    # Create a mock deployment that mimics MegatronRayDeployable's interface
+    deployment = MagicMock()
+    deployment.model_id = "nemo-model"
+    deployment.workers = [MagicMock()]
+    deployment.primary_worker = deployment.workers[0]
 
-    with patch.object(MegatronLLMDeployRay, "__init__", return_value=None):
-        deployment = MegatronLLMDeployRay()
-        deployment.model_id = "nemo-model"
-        deployment.workers = [MagicMock()]
-        deployment.primary_worker = deployment.workers[0]
-        yield deployment
+    # Mock the completions method to behave like the actual implementation
+    async def mock_completions(request):
+        # Import here to get access to the actual completions logic we want to test
+        from nemo_deploy.llm.megatronllm_deployable_ray import MegatronRayDeployable
+
+        # Get the actual class from the deployment decorator
+        actual_class = MegatronRayDeployable.func_or_class
+        # Call the actual completions method with self=deployment
+        return await actual_class.completions(deployment, request)
+
+    deployment.completions = mock_completions
+    yield deployment
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_output_format_basic(mock_ray_deployment):
+def test_completions_output_format_basic(mock_ray_deployment):
     """Test that the completions endpoint returns OpenAI API compatible format."""
     request = {
         "prompt": "Question: An astronomer observes",
@@ -62,7 +72,7 @@ async def test_completions_output_format_basic(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         # Verify top-level structure
         assert isinstance(output, dict)
@@ -104,8 +114,7 @@ async def test_completions_output_format_basic(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_text_field_is_string(mock_ray_deployment):
+def test_completions_text_field_is_string(mock_ray_deployment):
     """Test that choices[0]['text'] is always a string."""
     request = {
         "prompt": "Hello world",
@@ -118,7 +127,7 @@ async def test_completions_text_field_is_string(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         text = output["choices"][0]["text"]
         assert isinstance(text, str), f"Expected string, got {type(text)}"
@@ -127,8 +136,7 @@ async def test_completions_text_field_is_string(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_logprobs_structure(mock_ray_deployment):
+def test_completions_logprobs_structure(mock_ray_deployment):
     """Test detailed structure of logprobs field."""
     request = {
         "prompt": "Test",
@@ -143,7 +151,7 @@ async def test_completions_logprobs_structure(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         logprobs = output["choices"][0]["logprobs"]
 
@@ -173,8 +181,7 @@ async def test_completions_logprobs_structure(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_with_echo_adds_none_to_token_logprobs(mock_ray_deployment):
+def test_completions_with_echo_adds_none_to_token_logprobs(mock_ray_deployment):
     """Test that when echo=True, the first element in token_logprobs is None."""
     request = {
         "prompt": "Test",
@@ -190,7 +197,7 @@ async def test_completions_with_echo_adds_none_to_token_logprobs(mock_ray_deploy
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         token_logprobs = output["choices"][0]["logprobs"]["token_logprobs"]
 
@@ -201,8 +208,7 @@ async def test_completions_with_echo_adds_none_to_token_logprobs(mock_ray_deploy
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_without_logprobs_request(mock_ray_deployment):
+def test_completions_without_logprobs_request(mock_ray_deployment):
     """Test completions when logprobs are not requested."""
     request = {
         "prompt": "Test",
@@ -215,7 +221,7 @@ async def test_completions_without_logprobs_request(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         logprobs = output["choices"][0]["logprobs"]
 
@@ -227,8 +233,7 @@ async def test_completions_without_logprobs_request(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_complete_output_structure(mock_ray_deployment):
+def test_completions_complete_output_structure(mock_ray_deployment):
     """Test complete output structure matches OpenAI API format exactly."""
     request = {
         "prompt": "Question: An astronomer observes",
@@ -254,7 +259,7 @@ async def test_completions_complete_output_structure(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         # Verify complete structure
         assert "id" in output and isinstance(output["id"], str)
@@ -284,8 +289,7 @@ async def test_completions_complete_output_structure(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_token_logprobs_types(mock_ray_deployment):
+def test_completions_token_logprobs_types(mock_ray_deployment):
     """Test that token_logprobs contains correct types (floats or None)."""
     request = {
         "prompt": "Test",
@@ -300,7 +304,7 @@ async def test_completions_token_logprobs_types(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         token_logprobs = output["choices"][0]["logprobs"]["token_logprobs"]
 
@@ -310,8 +314,7 @@ async def test_completions_token_logprobs_types(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_top_logprobs_dict_values(mock_ray_deployment):
+def test_completions_top_logprobs_dict_values(mock_ray_deployment):
     """Test that each dictionary in top_logprobs has string keys and numeric values."""
     request = {
         "prompt": "Test",
@@ -326,7 +329,7 @@ async def test_completions_top_logprobs_dict_values(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         top_logprobs = output["choices"][0]["logprobs"]["top_logprobs"]
 
@@ -340,8 +343,7 @@ async def test_completions_top_logprobs_dict_values(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_finish_reason_values(mock_ray_deployment):
+def test_completions_finish_reason_values(mock_ray_deployment):
     """Test that finish_reason is either 'stop' or 'length'."""
     # Test with length finish reason
     request_length = {
@@ -354,15 +356,14 @@ async def test_completions_finish_reason_values(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results_length):
-        output = await mock_ray_deployment.completions(request_length)
+        output = asyncio.run(mock_ray_deployment.completions(request_length))
         # The logic checks if generated_texts[0] length >= max_tokens
         finish_reason = output["choices"][0]["finish_reason"]
         assert finish_reason in ["stop", "length"]
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_empty_sentences(mock_ray_deployment):
+def test_completions_empty_sentences(mock_ray_deployment):
     """Test handling of empty sentences in results."""
     request = {
         "prompt": "Test",
@@ -374,7 +375,7 @@ async def test_completions_empty_sentences(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         # text should be empty string when no sentences
         assert output["choices"][0]["text"] == ""
@@ -383,8 +384,7 @@ async def test_completions_empty_sentences(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_with_real_example_format(mock_ray_deployment):
+def test_completions_with_real_example_format(mock_ray_deployment):
     """Test with a real-world example matching the user's provided output format."""
     request = {
         "prompt": "Question: An astronomer observes that a planet rotates faster after a meteorite impact. "
@@ -412,7 +412,7 @@ async def test_completions_with_real_example_format(mock_ray_deployment):
                     -0.0010070496937260032,
                 ]
             ]
-        )[0],
+        ),
         "top_logprobs": [
             json.dumps(
                 [
@@ -427,7 +427,7 @@ async def test_completions_with_real_example_format(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         # Verify it matches the expected format
         assert isinstance(output["choices"][0]["text"], str)
@@ -449,8 +449,7 @@ async def test_completions_with_real_example_format(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_numpy_array_conversion(mock_ray_deployment):
+def test_completions_numpy_array_conversion(mock_ray_deployment):
     """Test that numpy arrays are properly converted to Python lists."""
     request = {
         "prompt": "Test",
@@ -466,7 +465,7 @@ async def test_completions_numpy_array_conversion(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         token_logprobs = output["choices"][0]["logprobs"]["token_logprobs"]
 
@@ -477,8 +476,7 @@ async def test_completions_numpy_array_conversion(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_id_format(mock_ray_deployment):
+def test_completions_id_format(mock_ray_deployment):
     """Test that the ID field follows OpenAI format."""
     request = {
         "prompt": "Test",
@@ -490,7 +488,7 @@ async def test_completions_id_format(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         # ID should start with "cmpl-" prefix
         assert output["id"].startswith("cmpl-")
@@ -500,8 +498,7 @@ async def test_completions_id_format(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
-@pytest.mark.asyncio
-async def test_completions_usage_token_counts(mock_ray_deployment):
+def test_completions_usage_token_counts(mock_ray_deployment):
     """Test that usage token counts are calculated correctly."""
     request = {
         "prompts": ["Hello world", "Test prompt"],
@@ -513,7 +510,7 @@ async def test_completions_usage_token_counts(mock_ray_deployment):
     }
 
     with patch("ray.get", return_value=mock_results):
-        output = await mock_ray_deployment.completions(request)
+        output = asyncio.run(mock_ray_deployment.completions(request))
 
         usage = output["usage"]
 
