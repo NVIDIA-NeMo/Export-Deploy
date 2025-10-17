@@ -533,6 +533,8 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             top_k = int(inputs.pop("top_k", 1))
             top_p = inputs.pop("top_p", 0.0)
             num_tokens_to_generate = inputs.pop("max_tokens", 256)
+            output_logits = inputs.pop("output_logits", False)
+            output_scores = inputs.pop("output_scores", False)
             compute_logprob = inputs.pop("compute_logprob", False)
             n_top_logprobs = inputs.pop("n_top_logprobs", 0)
             echo = inputs.pop("echo", False)
@@ -543,6 +545,8 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 top_k=top_k,
                 top_p=top_p,
                 num_tokens_to_generate=num_tokens_to_generate,
+                output_logits=output_logits,
+                output_scores=output_scores,
                 compute_logprob=compute_logprob,
                 n_top_logprobs=n_top_logprobs,
                 echo=echo,
