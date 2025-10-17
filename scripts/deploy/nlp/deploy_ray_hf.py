@@ -43,8 +43,14 @@ def parse_args():
     parser.add_argument(
         "--device_map",
         type=str,
-        default=None,
+        default="auto",
         help="Device mapping strategy for model placement",
+    )
+    parser.add_argument(
+        "--torch_dtype",
+        type=str,
+        default="auto",
+        help="Torch dtype for the model",
     )
     parser.add_argument(
         "--max_memory",
