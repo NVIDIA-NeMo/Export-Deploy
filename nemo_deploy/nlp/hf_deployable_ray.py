@@ -62,9 +62,11 @@ class HFRayDeployable:
         task: str = "text-generation",
         trust_remote_code: bool = True,
         model_id: str = "nemo-model",
-        device_map: Optional[str] = None,
+        device_map: Optional[str] = "auto",
+        torch_dtype: Optional[torch.dtype] = "auto",
         max_memory: Optional[str] = None,
         use_vllm_backend: bool = False,
+        **kwargs,
     ):
         """Initialize the HuggingFace model deployment.
 
@@ -73,11 +75,12 @@ class HFRayDeployable:
             task (str): HuggingFace task type. Defaults to "text-generation".
             trust_remote_code (bool): Whether to trust remote code. Defaults to True.
             device_map (str): Device mapping strategy. Defaults to "auto".
+            torch_dtype (torch.dtype): Torch dtype for the model. Defaults to "auto".
             model_id (str): Model identifier. Defaults to "nemo-model".
             max_memory (str): Maximum memory allocation when using balanced device map.
             use_vllm_backend (bool, optional): Whether to use vLLM backend for deployment. If True, exports the HF ckpt
             to vLLM format and uses vLLM backend for inference. Defaults to False.
-
+            **kwargs: Additional keyword arguments to pass to HuggingFace model loading or vLLM exporter.
         Raises:
             ImportError: If Ray is not installed.
             Exception: If model initialization fails.
@@ -96,7 +99,7 @@ class HFRayDeployable:
                 from nemo_export.vllm_exporter import vLLMExporter
 
                 vllm_exporter = vLLMExporter()
-                vllm_exporter.export(model_path_id=hf_model_id_path)
+                vllm_exporter.export(model_path_id=hf_model_id_path, **kwargs)
                 self.model = vllm_exporter
             else:
                 self.model = HuggingFaceLLMDeploy(
@@ -104,7 +107,9 @@ class HFRayDeployable:
                     task=task,
                     trust_remote_code=trust_remote_code,
                     device_map=device_map,
+                    torch_dtype=torch_dtype,
                     max_memory=max_memory_dict,
+                    **kwargs,
                 )
             self.model_id = model_id
 
