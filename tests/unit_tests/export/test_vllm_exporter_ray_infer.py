@@ -354,3 +354,421 @@ def test_ray_infer_fn_with_numpy_arrays(exporter, mock_llm):
         n_log_probs=5,
         n_prompt_log_probs=3,
     )
+
+
+# Tests for post_process_logprobs_to_OAI method and ray_infer_fn with logprobs processing
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_post_process_logprobs_to_OAI_basic(exporter, mock_llm):
+    """Test post_process_logprobs_to_OAI with basic log probabilities."""
+    import json
+
+    exporter.model = MagicMock()
+    mock_tokenizer = MagicMock()
+    mock_tokenizer.decode.side_effect = lambda x: f"token_{x[0]}"
+    exporter.model.get_tokenizer.return_value = mock_tokenizer
+
+    output_dict = {
+        "sentences": ["Generated text"],
+        "token_ids": [[1, 2, 3]],
+        "log_probs": np.array(
+            [
+                [
+                    json.dumps({"token_1": -0.1, " alt1": -2.5}),
+                    json.dumps({"token_2": -0.2, " alt2": -3.0}),
+                    json.dumps({"token_3": -0.3, " alt3": -2.8}),
+                ]
+            ]
+        ),
+    }
+
+    result = exporter.post_process_logprobs_to_OAI(output_dict, echo=False, n_top_logprobs=0)
+
+    assert "log_probs" in result
+    assert result["log_probs"] == [[-0.1, -0.2, -0.3]]
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_post_process_logprobs_to_OAI_with_top_logprobs(exporter, mock_llm):
+    """Test post_process_logprobs_to_OAI with top_logprobs processing."""
+    import json
+
+    exporter.model = MagicMock()
+    mock_tokenizer = MagicMock()
+    mock_tokenizer.decode.side_effect = lambda x: f"token_{x[0]}"
+    exporter.model.get_tokenizer.return_value = mock_tokenizer
+
+    output_dict = {
+        "sentences": ["Generated text"],
+        "token_ids": [[1, 2]],
+        "log_probs": np.array(
+            [
+                [
+                    json.dumps({"token_1": -0.1, " alt1": -2.5, " alt2": -3.0}),
+                    json.dumps({"token_2": -0.2, " alt3": -2.8, " alt4": -3.2}),
+                ]
+            ]
+        ),
+    }
+
+    result = exporter.post_process_logprobs_to_OAI(output_dict, echo=False, n_top_logprobs=2)
+
+    assert "log_probs" in result
+    assert result["log_probs"] == [[-0.1, -0.2]]
+    assert "top_logprobs" in result
+    assert len(result["top_logprobs"]) == 1
+    assert len(result["top_logprobs"][0]) == 2
+    # Check that top 2 are selected and sorted by value
+    assert result["top_logprobs"][0][0] == {"token_1": -0.1, " alt1": -2.5}
+    assert result["top_logprobs"][0][1] == {"token_2": -0.2, " alt3": -2.8}
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_post_process_logprobs_to_OAI_with_echo(exporter, mock_llm):
+    """Test post_process_logprobs_to_OAI with echo mode enabled."""
+    import json
+
+    exporter.model = MagicMock()
+    mock_tokenizer = MagicMock()
+    mock_tokenizer.decode.side_effect = lambda x: f"token_{x[0]}"
+    exporter.model.get_tokenizer.return_value = mock_tokenizer
+
+    output_dict = {
+        "sentences": ["Prompt text generated text"],
+        "token_ids": [[3, 4]],  # Generated tokens
+        "prompt_token_ids": [[1, 2]],  # Prompt tokens
+        "log_probs": np.array(
+            [
+                [
+                    json.dumps({"token_3": -0.3, " alt1": -2.5}),
+                    json.dumps({"token_4": -0.4, " alt2": -3.0}),
+                ]
+            ]
+        ),
+        "prompt_log_probs": np.array(
+            [
+                [
+                    json.dumps({"token_1": -0.1, " alt3": -2.8}),
+                    json.dumps({"token_2": -0.2, " alt4": -3.2}),
+                ]
+            ]
+        ),
+    }
+
+    result = exporter.post_process_logprobs_to_OAI(output_dict, echo=True, n_top_logprobs=0)
+
+    assert "log_probs" in result
+    # Should have prompt logprobs first, then generated logprobs
+    assert result["log_probs"] == [[-0.1, -0.2, -0.3, -0.4]]
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_post_process_logprobs_to_OAI_with_echo_and_top_logprobs(exporter, mock_llm):
+    """Test post_process_logprobs_to_OAI with both echo and top_logprobs."""
+    import json
+
+    exporter.model = MagicMock()
+    mock_tokenizer = MagicMock()
+    mock_tokenizer.decode.side_effect = lambda x: f"token_{x[0]}"
+    exporter.model.get_tokenizer.return_value = mock_tokenizer
+
+    output_dict = {
+        "sentences": ["Prompt text generated text"],
+        "token_ids": [[3]],  # Generated tokens
+        "prompt_token_ids": [[1, 2]],  # Prompt tokens
+        "log_probs": np.array([[json.dumps({"token_3": -0.3, " alt1": -2.5, " alt2": -3.0})]]),
+        "prompt_log_probs": np.array(
+            [
+                [
+                    json.dumps({"token_1": -0.1, " alt3": -2.8, " alt4": -3.2}),
+                    json.dumps({"token_2": -0.2, " alt5": -2.9, " alt6": -3.1}),
+                ]
+            ]
+        ),
+    }
+
+    result = exporter.post_process_logprobs_to_OAI(output_dict, echo=True, n_top_logprobs=2)
+
+    assert "log_probs" in result
+    assert result["log_probs"] == [[-0.1, -0.2, -0.3]]
+    assert "top_logprobs" in result
+    assert len(result["top_logprobs"]) == 1
+    # Should have 3 dicts: 2 prompt + 1 generated
+    assert len(result["top_logprobs"][0]) == 3
+    assert result["top_logprobs"][0][0] == {"token_1": -0.1, " alt3": -2.8}
+    assert result["top_logprobs"][0][1] == {"token_2": -0.2, " alt5": -2.9}
+    assert result["top_logprobs"][0][2] == {"token_3": -0.3, " alt1": -2.5}
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_post_process_logprobs_to_OAI_with_empty_decoded_token(exporter, mock_llm):
+    """Test post_process_logprobs_to_OAI when tokenizer.decode returns empty string (edge case for special tokens)."""
+    import json
+
+    exporter.model = MagicMock()
+    mock_tokenizer = MagicMock()
+    # Simulate <|end_of_text|> token (128001) decoding to empty string
+    mock_tokenizer.decode.side_effect = lambda x: "" if x[0] == 128001 else f"token_{x[0]}"
+    exporter.model.get_tokenizer.return_value = mock_tokenizer
+
+    output_dict = {
+        "sentences": ["Generated text"],
+        "token_ids": [[1, 128001]],  # Second token is end-of-text
+        "log_probs": np.array(
+            [
+                [
+                    json.dumps({"token_1": -0.1, " alt1": -2.5}),
+                    json.dumps({"": -0.5, " alt2": -3.0}),  # Empty string key for special token
+                ]
+            ]
+        ),
+    }
+
+    result = exporter.post_process_logprobs_to_OAI(output_dict, echo=False, n_top_logprobs=0)
+
+    # Should handle the empty decoded token by taking first entry
+    assert "log_probs" in result
+    assert result["log_probs"] == [[-0.1, -0.5]]  # Should use "" key's value
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_post_process_logprobs_to_OAI_no_token_match_fallback(exporter, mock_llm):
+    """Test post_process_logprobs_to_OAI when decoded token doesn't match any key (fallback to first entry)."""
+    import json
+
+    exporter.model = MagicMock()
+    mock_tokenizer = MagicMock()
+    mock_tokenizer.decode.side_effect = lambda x: "decoded_token"  # Returns a token that won't match
+    exporter.model.get_tokenizer.return_value = mock_tokenizer
+
+    output_dict = {
+        "sentences": ["Generated text"],
+        "token_ids": [[123]],
+        "log_probs": np.array(
+            [
+                [json.dumps({"different_token": -0.5, " alt": -2.0})]  # No exact match
+            ]
+        ),
+    }
+
+    result = exporter.post_process_logprobs_to_OAI(output_dict, echo=False, n_top_logprobs=0)
+
+    # Should fall back to first entry
+    assert "log_probs" in result
+    assert result["log_probs"] == [[-0.5]]  # Should use first entry's value
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_post_process_logprobs_to_OAI_missing_token_ids(exporter, mock_llm):
+    """Test post_process_logprobs_to_OAI when token_ids are missing."""
+    exporter.model = MagicMock()
+
+    output_dict = {
+        "sentences": ["Generated text"],
+        "log_probs": np.array([[{"token": -0.1}]]),
+        # No token_ids
+    }
+
+    result = exporter.post_process_logprobs_to_OAI(output_dict, echo=False, n_top_logprobs=0)
+
+    # Should return unchanged
+    assert result == output_dict
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_ray_infer_fn_with_compute_logprob_and_n_top_logprobs(exporter, mock_llm):
+    """Test ray_infer_fn with compute_logprob and n_top_logprobs parameters."""
+    import json
+
+    exporter.model = MagicMock()
+    mock_tokenizer = MagicMock()
+    mock_tokenizer.decode.side_effect = lambda x: f"token_{x[0]}"
+    exporter.model.get_tokenizer.return_value = mock_tokenizer
+
+    # Mock forward to return raw output
+    exporter.forward = MagicMock(
+        return_value={
+            "sentences": ["Generated text"],
+            "token_ids": [[1, 2]],
+            "log_probs": np.array(
+                [
+                    [
+                        json.dumps({"token_1": -0.1, " alt1": -2.5}),
+                        json.dumps({"token_2": -0.2, " alt2": -3.0}),
+                    ]
+                ]
+            ),
+        }
+    )
+
+    inputs = {
+        "prompts": ["Test prompt"],
+        "max_tokens": 10,
+        "compute_logprob": True,
+        "n_top_logprobs": 2,
+        "echo": False,
+    }
+
+    result = exporter.ray_infer_fn(inputs)
+
+    assert result["sentences"] == ["Generated text"]
+    assert "log_probs" in result
+    assert result["log_probs"] == [[-0.1, -0.2]]
+    assert "top_logprobs" in result
+    assert len(result["top_logprobs"]) == 1
+    assert len(result["top_logprobs"][0]) == 2
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_ray_infer_fn_with_echo_mode(exporter, mock_llm):
+    """Test ray_infer_fn with echo mode enabled."""
+    import json
+
+    exporter.model = MagicMock()
+    mock_tokenizer = MagicMock()
+    mock_tokenizer.decode.side_effect = lambda x: f"token_{x[0]}"
+    exporter.model.get_tokenizer.return_value = mock_tokenizer
+
+    # Mock forward to return output with prompt logprobs
+    exporter.forward = MagicMock(
+        return_value={
+            "sentences": ["Prompt text generated"],
+            "token_ids": [[3]],
+            "prompt_token_ids": [[1, 2]],
+            "log_probs": np.array([[json.dumps({"token_3": -0.3, " alt": -2.5})]]),
+            "prompt_log_probs": np.array(
+                [
+                    [
+                        json.dumps({"token_1": -0.1, " alt": -2.8}),
+                        json.dumps({"token_2": -0.2, " alt": -3.0}),
+                    ]
+                ]
+            ),
+        }
+    )
+
+    inputs = {
+        "prompts": ["Test prompt"],
+        "max_tokens": 10,
+        "compute_logprob": True,
+        "n_top_logprobs": 1,
+        "echo": True,
+    }
+
+    result = exporter.ray_infer_fn(inputs)
+
+    assert result["sentences"] == ["Prompt text generated"]
+    assert "log_probs" in result
+    # Should include prompt logprobs + generated logprobs
+    assert result["log_probs"] == [[-0.1, -0.2, -0.3]]
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_ray_infer_fn_handles_post_processing_error(exporter, mock_llm):
+    """Test ray_infer_fn handles errors from post_process_logprobs_to_OAI gracefully."""
+    exporter.model = MagicMock()
+
+    # Mock forward to raise an exception
+    exporter.forward = MagicMock(side_effect=Exception("Post-processing error"))
+
+    inputs = {
+        "prompts": ["Test prompt"],
+        "max_tokens": 10,
+        "compute_logprob": True,
+        "n_top_logprobs": 1,
+    }
+
+    result = exporter.ray_infer_fn(inputs)
+
+    assert "error" in result
+    assert "Post-processing error" in result["error"]
+    assert result["sentences"] == ["An error occurred: Post-processing error"]
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_ray_infer_fn_maps_hf_style_parameters_to_vllm(exporter, mock_llm):
+    """Test ray_infer_fn correctly maps HF-style parameters (compute_logprob, n_top_logprobs, echo) to vLLM parameters."""
+    import json
+
+    exporter.model = MagicMock()
+    mock_tokenizer = MagicMock()
+    mock_tokenizer.decode.side_effect = lambda x: f"token_{x[0]}"
+    exporter.model.get_tokenizer.return_value = mock_tokenizer
+
+    # Track what parameters are passed to forward
+    captured_forward_params = {}
+
+    def mock_forward(**kwargs):
+        captured_forward_params.update(kwargs)
+        return {
+            "sentences": ["Generated"],
+            "token_ids": [[1]],
+            "prompt_token_ids": [[2]],
+            "log_probs": np.array([[json.dumps({"token_1": -0.1})]]),
+            "prompt_log_probs": np.array([[json.dumps({"token_2": -0.2})]]),
+        }
+
+    exporter.forward = mock_forward
+
+    inputs = {
+        "prompts": ["Test"],
+        "compute_logprob": True,
+        "n_top_logprobs": 3,
+        "echo": True,
+    }
+
+    result = exporter.ray_infer_fn(inputs)
+
+    # Verify vLLM parameters were set correctly
+    assert captured_forward_params["n_log_probs"] == 3
+    assert captured_forward_params["n_prompt_log_probs"] == 3
+
+    # Verify output is processed
+    assert "log_probs" in result
+    assert result["log_probs"] == [[-0.2, -0.1]]  # Prompt first, then generated
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_post_process_logprobs_to_OAI_multiple_samples(exporter, mock_llm):
+    """Test post_process_logprobs_to_OAI with multiple samples (batch processing)."""
+    import json
+
+    exporter.model = MagicMock()
+    mock_tokenizer = MagicMock()
+    mock_tokenizer.decode.side_effect = lambda x: f"token_{x[0]}"
+    exporter.model.get_tokenizer.return_value = mock_tokenizer
+
+    output_dict = {
+        "sentences": ["Generated text 1", "Generated text 2"],
+        "token_ids": [[1, 2], [3, 4]],
+        "log_probs": np.array(
+            [
+                [
+                    json.dumps({"token_1": -0.1, " alt": -2.5}),
+                    json.dumps({"token_2": -0.2, " alt": -3.0}),
+                ],
+                [
+                    json.dumps({"token_3": -0.3, " alt": -2.8}),
+                    json.dumps({"token_4": -0.4, " alt": -3.2}),
+                ],
+            ]
+        ),
+    }
+
+    result = exporter.post_process_logprobs_to_OAI(output_dict, echo=False, n_top_logprobs=0)
+
+    assert "log_probs" in result
+    assert len(result["log_probs"]) == 2
+    assert result["log_probs"][0] == [-0.1, -0.2]
+    assert result["log_probs"][1] == [-0.3, -0.4]
