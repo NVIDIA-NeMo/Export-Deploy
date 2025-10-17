@@ -46,6 +46,7 @@ dependencies = [
     "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
     "nvidia-resiliency-ext>=0.4.0a0,<0.5.0; sys_platform != 'darwin'",
     "transformer-engine[pytorch]>=2.6.0a0,<2.7.0; sys_platform != 'darwin'",
+    "transformers>=4.57.0",
     "accelerate",
     "fastapi",
     "pydantic-settings",
