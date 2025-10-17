@@ -33,11 +33,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Configuration file is setup with filters for domains
-          # owner:repo must point to current repo
-          # fromTag: Auto resolved from historical tag order (previous tag compared to current tag)
-          # toTag: Current tag reference
-          configuration: ".github/workflows/config/changelog-config.json"
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           ignorePreReleases: "false"
