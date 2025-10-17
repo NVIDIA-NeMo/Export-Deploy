@@ -171,6 +171,9 @@ class HFRayDeployable:
             if temperature == 0.0 and top_p == 0.0:
                 LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
                 request["top_k"] = 1
+                # Required for vllm's top_p should be in (0,1] error. Not required for HF in-fw.
+                # TODO: athitten check if this can be removed with some setting in vllm.
+                request["top_p"] = 0.1
 
             inference_inputs = {
                 "prompts": request.get("prompts", []),
@@ -189,7 +192,6 @@ class HFRayDeployable:
             results = self.model.ray_infer_fn(inference_inputs)
             # Extract generated texts from results
             generated_texts = results.get("sentences", [])
-
             # Calculate token counts asynchronously
             prompt_tokens = sum(len(p.split()) for p in request.get("prompts", []))
             completion_tokens = sum(len(r.split()) for r in generated_texts)
@@ -244,7 +246,7 @@ class HFRayDeployable:
                     "total_tokens": total_tokens,
                 },
             }
-            # Comment the belo line to view the output
+            # Uncomment the below line to view the output
             # LOGGER.warning(f"Output: {output}")
             return output
         except Exception as e:

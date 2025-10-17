@@ -325,6 +325,149 @@ class vLLMExporter(ITritonDeployable):
             err_msg = "An error occurred: the output format is expected to be a dict."
             return {"sentences": [err_msg]}
 
+    def post_process_logprobs_to_OAI(
+        self, output_dict: Dict[str, Any], echo: bool = False, n_top_logprobs: int = 0
+    ) -> Dict[str, Any]:
+        """
+        Post-process log probabilities (log-probs and prompt-log-probs from vllm's generate output) to OAI API format.
+
+        This method:
+        1. Extracts log probability values for actual tokens (not full dicts)
+        2. Creates top_logprobs containing n_top_logprobs number of top logprobs
+        3. Excludes the actual/chosen token if it's extra (not in top N)
+        4. If echo is True, merges prompt token logprobs with generated token logprobs
+
+        Args:
+            output_dict (Dict[str, Any]): Output dictionary from forward() containing:
+                - log_probs: Raw log probabilities (JSON strings in numpy array)
+                - prompt_log_probs: Raw prompt log probabilities (if echo is True)
+                - token_ids: Generated token IDs
+                - prompt_token_ids: Prompt token IDs (if echo is True)
+                - sentences: Generated text
+            echo (bool): Whether to include prompt token logprobs
+            n_top_logprobs (int): Number of top logprobs to return per token
+
+        Returns:
+            Dict[str, Any]: Modified output_dict with processed log_probs and top_logprobs:
+                - log_probs: List of lists of float values for actual tokens
+                - top_logprobs: List of lists of dicts with top N tokens and their logprobs
+        """
+        if "log_probs" not in output_dict or "token_ids" not in output_dict:
+            return output_dict
+
+        import json
+
+        # Store original arrays before processing
+        original_log_probs = (
+            output_dict["log_probs"].copy()
+            if isinstance(output_dict["log_probs"], np.ndarray)
+            else output_dict["log_probs"]
+        )
+        original_prompt_log_probs = output_dict.get("prompt_log_probs", None)
+        if original_prompt_log_probs is not None:
+            original_prompt_log_probs = (
+                original_prompt_log_probs.copy()
+                if isinstance(original_prompt_log_probs, np.ndarray)
+                else original_prompt_log_probs
+            )
+
+        # Get tokenizer to decode token IDs
+        tokenizer = self.model.get_tokenizer()
+
+        processed_log_probs = []
+        processed_top_logprobs = []
+
+        for sample_idx in range(len(output_dict["sentences"])):
+            sample_log_probs = []
+            sample_top_logprobs = []
+
+            # If echo is True and prompt_log_probs exist, add prompt token logprobs first
+            if echo and original_prompt_log_probs is not None and "prompt_token_ids" in output_dict:
+                if sample_idx < len(output_dict["prompt_token_ids"]):
+                    prompt_token_ids = output_dict["prompt_token_ids"][sample_idx]
+
+                    # Iterate through prompt tokens
+                    for token_idx, token_id in enumerate(prompt_token_ids):
+                        if sample_idx < len(original_prompt_log_probs):
+                            # Get the logprobs dict for this position
+                            if token_idx < len(original_prompt_log_probs[sample_idx]):
+                                logprobs_str = original_prompt_log_probs[sample_idx][token_idx]
+                                if logprobs_str and logprobs_str != 0:  # Skip padding
+                                    logprobs_dict = json.loads(logprobs_str)
+
+                                    # Decode the actual token_id to match with logprobs_dict keys
+                                    actual_token_str = tokenizer.decode([token_id])
+
+                                    # Find the logprob for the actual token
+                                    if actual_token_str in logprobs_dict:
+                                        sample_log_probs.append(logprobs_dict[actual_token_str])
+                                    else:
+                                        # If exact match not found, the logprobs_dict should have the token
+                                        # Try to find by taking the first (highest prob) entry
+                                        # TODO: athitten check if this is the case for <|end_of_text|> (128001)
+                                        if logprobs_dict:
+                                            # Take the first entry (should be the actual token)
+                                            first_token_logprob = next(iter(logprobs_dict.values()))
+                                            sample_log_probs.append(first_token_logprob)
+                                        else:
+                                            LOGGER.warning(
+                                                f"No logprob found for prompt token_id {token_id} (decoded: '{actual_token_str}')"
+                                            )
+
+                                    # For top_logprobs, sort by value and take top n
+                                    if n_top_logprobs > 0:
+                                        sorted_items = sorted(logprobs_dict.items(), key=lambda x: x[1], reverse=True)
+                                        top_n_items = dict(sorted_items[:n_top_logprobs])
+                                        sample_top_logprobs.append(top_n_items)
+
+            # Add generated token logprobs
+            if sample_idx < len(output_dict["token_ids"]):
+                token_ids = output_dict["token_ids"][sample_idx]
+
+                if sample_idx < len(original_log_probs):
+                    # Iterate through generated tokens
+                    for token_idx, token_id in enumerate(token_ids):
+                        if token_idx < len(original_log_probs[sample_idx]):
+                            logprobs_str = original_log_probs[sample_idx][token_idx]
+                            if logprobs_str and logprobs_str != 0:  # Skip padding
+                                logprobs_dict = json.loads(logprobs_str)
+
+                                # Decode the actual token_id to match with logprobs_dict keys
+                                actual_token_str = tokenizer.decode([token_id])
+
+                                # Find the logprob for the actual token
+                                if actual_token_str in logprobs_dict:
+                                    sample_log_probs.append(logprobs_dict[actual_token_str])
+                                else:
+                                    # If exact match not found, the logprobs_dict should have the token
+                                    # Try to find by taking the first (highest prob) entry
+                                    if logprobs_dict:
+                                        # TODO: athitten check if this is the case for <|end_of_text|> (128001)
+                                        # Take the first entry (should be the actual token)
+                                        first_token_logprob = next(iter(logprobs_dict.values()))
+                                        sample_log_probs.append(first_token_logprob)
+                                    else:
+                                        LOGGER.warning(
+                                            f"No logprob found for generated token_id {token_id} (decoded: '{actual_token_str}')"
+                                        )
+
+                                # For top_logprobs, sort by value and take top n
+                                if n_top_logprobs > 0:
+                                    sorted_items = sorted(logprobs_dict.items(), key=lambda x: x[1], reverse=True)
+                                    top_n_items = dict(sorted_items[:n_top_logprobs])
+                                    sample_top_logprobs.append(top_n_items)
+
+            processed_log_probs.append(sample_log_probs)
+            if n_top_logprobs > 0:
+                processed_top_logprobs.append(sample_top_logprobs)
+
+        # Replace with processed data
+        output_dict["log_probs"] = processed_log_probs
+        if n_top_logprobs > 0 and len(processed_top_logprobs) > 0:
+            output_dict["top_logprobs"] = processed_top_logprobs
+
+        return output_dict
+
     def ray_infer_fn(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Ray inference function that processes input dictionary and returns output without byte casting.
 
@@ -337,15 +480,23 @@ class vLLMExporter(ITritonDeployable):
                 - top_p: Top-p sampling parameter (optional)
                 - temperature: Sampling temperature (optional)
                 - seed: Random seed for generation (optional)
-                - n_log_probs: Number of log probabilities to return for generated tokens (optional)
-                - n_prompt_log_probs: Number of log probabilities to return for prompt tokens (optional)
                 - lora_model_name: Name of the LoRA model to use for generation (optional)
+                - compute_logprob: Whether to compute log probabilities (optional)
+                - n_top_logprobs: Number of top log probabilities to return (optional)
+                - echo: Whether to include prompt token log probabilities (optional)
 
         Returns:
             Dict[str, Any]: Output dictionary containing:
                 - sentences: List of generated text outputs
-                - log_probs: Log probabilities for generated tokens (if requested)
-                - prompt_log_probs: Log probabilities for prompt tokens (if requested)
+                - log_probs: List of lists of float values, containing log probability values for the actual tokens.
+                  If echo is True, includes prompt token logprobs first, then generated token logprobs.
+                  Otherwise, only generated token logprobs.
+                - top_logprobs: List of lists of dictionaries, where each dict contains the top n_top_logprobs
+                  token strings and their logprob values at each position. If echo is True, includes prompt
+                  token top_logprobs first, then generated token top_logprobs. Otherwise, only generated
+                  token top_logprobs. Format: [[{" token1": -0.1, " token2": -2.5}, ...], ...]
+                - token_ids: Token IDs for generated tokens
+                - prompt_token_ids: Token IDs for prompt tokens (if echo is True)
         """
         output_dict = {}
 
@@ -354,8 +505,23 @@ class vLLMExporter(ITritonDeployable):
         if isinstance(prompts, str):
             prompts = [prompts]
 
+        # Extract HuggingFace-style parameters for OAI compatibility
+        compute_logprob = inputs.pop("compute_logprob", False)
+        n_top_logprobs = inputs.pop("n_top_logprobs", 0)
+        echo = inputs.pop("echo", False)
+
+        # Map HF-style parameters to vLLM parameters
+        if compute_logprob and n_top_logprobs > 0:
+            inputs["n_log_probs"] = n_top_logprobs
+            if echo:
+                inputs["n_prompt_log_probs"] = n_top_logprobs
+
         try:
             output_dict = self._infer_fn(prompts, inputs)
+            LOGGER.warning(f"Output_dict output of _infer_fn: {output_dict}")
+
+            # Post-process log probabilities from _infer_fn to OpenAI API format
+            output_dict = self.post_process_logprobs_to_OAI(output_dict, echo=echo, n_top_logprobs=n_top_logprobs)
 
         except Exception as error:
             err_msg = f"An error occurred: {str(error)}"
@@ -400,7 +566,12 @@ class vLLMExporter(ITritonDeployable):
             lora_model_name (str, optional): Name of the LoRA model to use for generation. Defaults to None.
 
         Returns:
-            dict or list: Generated text completions and optionally log probabilities, depending on the input arguments.
+            dict: A dictionary containing:
+                - sentences (List[str]): Generated text completions.
+                - token_ids (List[List[int]]): Token IDs for the generated tokens.
+                - log_probs (np.ndarray, optional): Top log probabilities for generated tokens if n_log_probs > 0.
+                - prompt_log_probs (np.ndarray, optional): Top log probabilities for prompt tokens if n_prompt_log_probs > 0.
+                - prompt_token_ids (List[List[int]], optional): Token IDs for prompt tokens at positions where prompt_logprobs is not None.
         """
         assert self.model is not None, "Model is not initialized."
 
@@ -427,8 +598,15 @@ class vLLMExporter(ITritonDeployable):
         output = []
         top_logprobs = []
         top_prompt_logprobs = []
+        ## TODO : might have to update tests for this
+        token_ids_list = []
+        prompt_token_ids_list = []
+
         for o in request_output:
             output.append(o.outputs[0].text)
+
+            # Collect generated token IDs
+            token_ids_list.append(o.outputs[0].token_ids)
 
             if n_log_probs is not None and n_log_probs > 0:
                 lpbs = []
@@ -443,7 +621,8 @@ class vLLMExporter(ITritonDeployable):
 
             if n_prompt_log_probs is not None and n_prompt_log_probs > 0:
                 lpbs = []
-                for lp in o.prompt_logprobs:
+                prompt_token_ids = []
+                for idx, lp in enumerate(o.prompt_logprobs):
                     if lp is not None and isinstance(lp, dict):
                         lg_items = {}
                         values = lp.values()
@@ -452,16 +631,26 @@ class vLLMExporter(ITritonDeployable):
                             lg_items[str(v.decoded_token)] = v.logprob
 
                         lpbs.append(self._dict_to_str(lg_items))
+                        # Add prompt token ID at this position (where logprobs is not None)
+                        if hasattr(o, "prompt_token_ids") and idx < len(o.prompt_token_ids):
+                            prompt_token_ids.append(o.prompt_token_ids[idx])
 
                 top_prompt_logprobs.append(lpbs)
+                if len(prompt_token_ids) > 0:
+                    prompt_token_ids_list.append(prompt_token_ids)
 
-        # TODO athitten: extract only the generated text if output contains input prompt + generated text.
         output = {"sentences": output}
+
+        # Add generated token IDs
+        if len(token_ids_list) > 0:
+            output["token_ids"] = token_ids_list
+
         if len(top_logprobs) > 0:
             max_len = max(len(arr) for arr in top_logprobs)
             # Pad each array to the maximum length. Pads 0.
             top_logprobs = np.array([np.pad(arr, (0, max_len - len(arr)), constant_values=0) for arr in top_logprobs])
             output["log_probs"] = top_logprobs
+
         if len(top_prompt_logprobs) > 0:
             max_len = max(len(arr) for arr in top_prompt_logprobs)
             # Pad each array to the maximum length. Pads 0.
@@ -469,5 +658,9 @@ class vLLMExporter(ITritonDeployable):
                 [np.pad(arr, (0, max_len - len(arr)), constant_values=0) for arr in top_prompt_logprobs]
             )
             output["prompt_log_probs"] = top_prompt_logprobs
+
+        # Add prompt token IDs (only at positions where prompt_logprobs is not None)
+        if len(prompt_token_ids_list) > 0:
+            output["prompt_token_ids"] = prompt_token_ids_list
 
         return output
