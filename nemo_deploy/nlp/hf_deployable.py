@@ -109,7 +109,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             self.tokenizer_id_path = tokenizer_id_path
 
         if model is None:
-            self._load(torch_dtype=torch_dtype, device_ma=device_map, **hf_kwargs)
+            self._load(torch_dtype=torch_dtype, device_map=device_map, **hf_kwargs)
 
     def _load(
         self, torch_dtype: Optional[torch.dtype] = "auto", device_map: Optional[str] = "auto", **hf_kwargs
