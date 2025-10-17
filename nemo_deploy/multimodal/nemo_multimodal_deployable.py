@@ -18,8 +18,16 @@ from typing import List, Optional
 
 import numpy as np
 import torch
-from megatron.core.inference.common_inference_params import CommonInferenceParams
 from PIL.Image import Image
+
+try:
+    from megatron.core.inference.common_inference_params import CommonInferenceParams
+    
+    HAVE_MEGATRON = True
+except (ImportError, ModuleNotFoundError) as e:
+    HAVE_MEGATRON = False
+    MEGATRON_IMPORT_ERROR = str(e)
+    CommonInferenceParams = None
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, ndarray2img, str_ndarray2list
@@ -88,6 +96,10 @@ class NeMoMultimodalDeployable(ITritonDeployable):
             raise UnavailableError(MISSING_TRITON_MSG)
         if not HAVE_NEMO:
             raise UnavailableError(MISSING_NEMO_MSG)
+        if not HAVE_MEGATRON:
+            raise UnavailableError(
+                f"Megatron-Core is required for NeMoMultimodalDeployable but failed to import: {MEGATRON_IMPORT_ERROR}"
+            )
 
         self.nemo_checkpoint_filepath = nemo_checkpoint_filepath
         self.tensor_parallel_size = tensor_parallel_size

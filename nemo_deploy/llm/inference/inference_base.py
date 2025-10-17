@@ -18,30 +18,54 @@ import logging
 from pathlib import Path
 from typing import Any, List, Optional, Tuple, Union
 
-import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
-from megatron.bridge.training.model_load_save import build_and_load_model, load_model_config, load_tokenizer
-from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
-from megatron.bridge.utils.vocab_utils import calculate_padded_vocab_size
-from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
-from megatron.core.dist_checkpointing.serialization import (
-    get_default_load_sharded_strategy,
-)
-from megatron.core.dist_checkpointing.validation import StrictHandling
-from megatron.core.inference.contexts import StaticInferenceContext
-from megatron.core.inference.engines.mcore_engine import MCoreEngine
-from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
-    GPTInferenceWrapper,
-)
-from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
-    InferenceWrapperConfig,
-)
-from megatron.core.inference.text_generation_controllers.text_generation_controller import (
-    TextGenerationController,
-)
-from megatron.core.transformer.enums import AttnBackend
-from megatron.core.transformer.module import MegatronModule
 from packaging import version
+
+try:
+    import megatron.core.dist_checkpointing.serialization as dist_ckpt
+    from megatron.bridge.training.model_load_save import build_and_load_model, load_model_config, load_tokenizer
+    from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
+    from megatron.bridge.utils.vocab_utils import calculate_padded_vocab_size
+    from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
+    from megatron.core.dist_checkpointing.serialization import (
+        get_default_load_sharded_strategy,
+    )
+    from megatron.core.dist_checkpointing.validation import StrictHandling
+    from megatron.core.inference.contexts import StaticInferenceContext
+    from megatron.core.inference.engines.mcore_engine import MCoreEngine
+    from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
+        GPTInferenceWrapper,
+    )
+    from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
+        InferenceWrapperConfig,
+    )
+    from megatron.core.inference.text_generation_controllers.text_generation_controller import (
+        TextGenerationController,
+    )
+    from megatron.core.transformer.enums import AttnBackend
+    from megatron.core.transformer.module import MegatronModule
+    
+    HAVE_MEGATRON = True
+except (ImportError, ModuleNotFoundError) as e:
+    HAVE_MEGATRON = False
+    MEGATRON_IMPORT_ERROR = str(e)
+    # Define placeholder types for type hints
+    dist_ckpt = None
+    build_and_load_model = None
+    load_model_config = None
+    load_tokenizer = None
+    MegatronTokenizer = None
+    calculate_padded_vocab_size = None
+    check_is_distributed_checkpoint = None
+    get_default_load_sharded_strategy = None
+    StrictHandling = None
+    StaticInferenceContext = None
+    MCoreEngine = None
+    GPTInferenceWrapper = None
+    InferenceWrapperConfig = None
+    TextGenerationController = None
+    AttnBackend = None
+    MegatronModule = None
 
 from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
 
@@ -466,6 +490,11 @@ def create_mcore_engine(
     """
     if not HAVE_NEMO:
         raise UnavailableError(MISSING_NEMO_MSG)
+    
+    if not HAVE_MEGATRON:
+        raise UnavailableError(
+            f"Megatron-Core is required for create_mcore_engine but failed to import: {MEGATRON_IMPORT_ERROR}"
+        )
 
     # Default to 1 for any parallelism dimension that's None
     tensor_model_parallel_size = tensor_model_parallel_size if tensor_model_parallel_size is not None else 1

@@ -12,17 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from nemo_deploy.llm.inference.inference_base import (
-    create_mcore_engine,
-    setup_megatron_model_and_tokenizer_for_inference,
-    setup_model_and_tokenizer_for_inference,
-)
-from nemo_deploy.llm.inference.tron_utils import DistributedInitConfig, RNGConfig
-
-__all__ = [
-    "create_mcore_engine",
-    "setup_model_and_tokenizer_for_inference",
-    "setup_megatron_model_and_tokenizer_for_inference",
-    "DistributedInitConfig",
-    "RNGConfig",
-]
+try:
+    from nemo_deploy.llm.inference.inference_base import (
+        create_mcore_engine,
+        setup_megatron_model_and_tokenizer_for_inference,
+        setup_model_and_tokenizer_for_inference,
+    )
+    from nemo_deploy.llm.inference.tron_utils import DistributedInitConfig, RNGConfig
+    
+    __all__ = [
+        "create_mcore_engine",
+        "setup_model_and_tokenizer_for_inference",
+        "setup_megatron_model_and_tokenizer_for_inference",
+        "DistributedInitConfig",
+        "RNGConfig",
+    ]
+except (ImportError, ModuleNotFoundError):
+    # If imports fail, export empty list
+    __all__ = []
