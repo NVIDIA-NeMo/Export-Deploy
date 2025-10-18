@@ -15,7 +15,7 @@
 import argparse
 import sys
 
-from nemo_deploy.llm import NemoQueryLLMHF
+from nemo_deploy.nlp import NemoQueryLLMHF
 
 
 def get_args(argv):

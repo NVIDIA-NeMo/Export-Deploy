@@ -18,7 +18,7 @@ import typing
 
 import numpy as np
 
-from nemo_deploy.llm import NemoQueryvLLM
+from nemo_deploy.nlp import NemoQueryvLLM
 
 
 def get_args(argv):
