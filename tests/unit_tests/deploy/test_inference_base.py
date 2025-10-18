@@ -26,7 +26,7 @@ from megatron.core.transformer.module import MegatronModule
 from nemo.collections.llm.gpt.model.base import GPTConfig
 from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
 
-from nemo_deploy.llm.inference.inference_base import (
+from nemo_deploy.nlp.inference.inference_base import (
     MCoreEngineWithCleanup,
     _load_dist_shards_into_model,
     cleanup_distributed,
@@ -36,7 +36,7 @@ from nemo_deploy.llm.inference.inference_base import (
     peel,
     setup_model_and_tokenizer_for_inference,
 )
-from nemo_deploy.llm.inference.tron_utils import DistributedInitConfig, RNGConfig
+from nemo_deploy.nlp.inference.tron_utils import DistributedInitConfig, RNGConfig
 from nemo_export_deploy_common.import_utils import UnavailableError
 
 
@@ -72,8 +72,8 @@ class TestInferenceBase(unittest.TestCase):
         self.dist_config = DistributedInitConfig(distributed_backend="nccl")
         self.rng_config = RNGConfig(inference_rng_tracker=True)
 
-    @patch("nemo_deploy.llm.inference.inference_base.dist_ckpt.load")
-    @patch("nemo_deploy.llm.inference.inference_base.get_default_load_sharded_strategy")
+    @patch("nemo_deploy.nlp.inference.inference_base.dist_ckpt.load")
+    @patch("nemo_deploy.nlp.inference.inference_base.get_default_load_sharded_strategy")
     @patch("megatron.core.transformer.module.MegatronModule.sharded_state_dict")
     def test_load_dist_shards_into_model_single_model(self, mock_sharded_state_dict, mock_get_strategy, mock_load):
         # Setup mocks
@@ -89,8 +89,8 @@ class TestInferenceBase(unittest.TestCase):
         mock_load.assert_called_once()
         self.mock_model.load_state_dict.assert_called_once()
 
-    @patch("nemo_deploy.llm.inference.inference_base.dist_ckpt.load")
-    @patch("nemo_deploy.llm.inference.inference_base.get_default_load_sharded_strategy")
+    @patch("nemo_deploy.nlp.inference.inference_base.dist_ckpt.load")
+    @patch("nemo_deploy.nlp.inference.inference_base.get_default_load_sharded_strategy")
     @patch("megatron.core.transformer.module.MegatronModule.sharded_state_dict")
     def test_load_dist_shards_into_model_multiple_models(self, mock_sharded_state_dict, mock_get_strategy, mock_load):
         # Setup multiple models
@@ -138,9 +138,9 @@ class TestInferenceBase(unittest.TestCase):
         mock_is_initialized.assert_called_once()
         mock_destroy.assert_not_called()
 
-    @patch("nemo_deploy.llm.inference.inference_base.initialize_distributed")
-    @patch("nemo_deploy.llm.inference.inference_base._set_random_seed")
-    @patch("nemo_deploy.llm.inference.inference_base._initialize_tp_communicators")
+    @patch("nemo_deploy.nlp.inference.inference_base.initialize_distributed")
+    @patch("nemo_deploy.nlp.inference.inference_base._set_random_seed")
+    @patch("nemo_deploy.nlp.inference.inference_base._initialize_tp_communicators")
     def test_initialize_megatron_for_inference(self, mock_tp_comm, mock_seed, mock_init_dist):
         # Setup mocks
         self.model_config.tp_comm_overlap = True
@@ -178,8 +178,8 @@ class TestInferenceBase(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, inner_module)
 
-    @patch("nemo_deploy.llm.inference.inference_base._load_dist_shards_into_model")
-    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_weights_subdir")
+    @patch("nemo_deploy.nlp.inference.inference_base._load_dist_shards_into_model")
+    @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_weights_subdir")
     def test_load_nemo_checkpoint_to_tron_model(self, mock_ckpt_to_weights, mock_load_shards):
         # Setup mocks
         mock_ckpt_to_weights.return_value = self.mock_weights_dir
@@ -191,18 +191,18 @@ class TestInferenceBase(unittest.TestCase):
         mock_ckpt_to_weights.assert_called_once_with(self.mock_path, is_saving=False)
         mock_load_shards.assert_called_once_with(self.mock_model_list, self.mock_weights_dir, False)
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
-    @patch("nemo_deploy.llm.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
-    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
-    @patch("nemo_deploy.llm.inference.inference_base.io.load_context")
-    @patch("nemo_deploy.llm.inference.inference_base.check_is_distributed_checkpoint")
-    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_weights_subdir")
-    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_context_subdir")
-    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
-    @patch("nemo_deploy.llm.inference.inference_base.get_model_from_config")
-    @patch("nemo_deploy.llm.inference.inference_base.load_nemo_checkpoint_to_tron_model")
-    @patch("nemo_deploy.llm.inference.inference_base.peel")
-    @patch("nemo_deploy.llm.inference.inference_base.MCoreTokenizerWrappper")
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.nlp.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
+    @patch("nemo_deploy.nlp.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
+    @patch("nemo_deploy.nlp.inference.inference_base.check_is_distributed_checkpoint")
+    @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_weights_subdir")
+    @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_context_subdir")
+    @patch("nemo_deploy.nlp.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.nlp.inference.inference_base.get_model_from_config")
+    @patch("nemo_deploy.nlp.inference.inference_base.load_nemo_checkpoint_to_tron_model")
+    @patch("nemo_deploy.nlp.inference.inference_base.peel")
+    @patch("nemo_deploy.nlp.inference.inference_base.MCoreTokenizerWrappper")
     def test_setup_model_and_tokenizer_for_inference(
         self,
         mock_tokenizer_wrapper,
@@ -248,16 +248,16 @@ class TestInferenceBase(unittest.TestCase):
         mock_torch_dist_init.assert_called_once()
         mock_set_modelopt.assert_called_once()
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
-    @patch("nemo_deploy.llm.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
-    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
-    @patch("nemo_deploy.llm.inference.inference_base.io.load_context")
-    @patch("nemo_deploy.llm.inference.inference_base.check_is_distributed_checkpoint")
-    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_weights_subdir")
-    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_context_subdir")
-    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
-    @patch("nemo_deploy.llm.inference.inference_base.get_model_from_config")
-    @patch("nemo_deploy.llm.inference.inference_base.load_nemo_checkpoint_to_tron_model")
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.nlp.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
+    @patch("nemo_deploy.nlp.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
+    @patch("nemo_deploy.nlp.inference.inference_base.check_is_distributed_checkpoint")
+    @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_weights_subdir")
+    @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_context_subdir")
+    @patch("nemo_deploy.nlp.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.nlp.inference.inference_base.get_model_from_config")
+    @patch("nemo_deploy.nlp.inference.inference_base.load_nemo_checkpoint_to_tron_model")
     def test_setup_model_calls_configure_model(
         self,
         mock_load_ckpt,
@@ -283,20 +283,20 @@ class TestInferenceBase(unittest.TestCase):
         mock_get_model.return_value = self.mock_model_list
 
         # Call the function under test
-        from nemo_deploy.llm.inference.inference_base import setup_model_and_tokenizer_for_inference
+        from nemo_deploy.nlp.inference.inference_base import setup_model_and_tokenizer_for_inference
 
         setup_model_and_tokenizer_for_inference(checkpoint_path=self.mock_path)
 
         # Verify that configure_model(tokenizer) was invoked
         self.mock_model.configure_model.assert_called_once_with(self.mock_tokenizer)
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
-    @patch("nemo_deploy.llm.inference.inference_base.calculate_padded_vocab_size")
-    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
-    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
-    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
-    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
-    @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.nlp.inference.inference_base.calculate_padded_vocab_size")
+    @patch("nemo_deploy.nlp.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.nlp.inference.inference_base.TextGenerationController")
+    @patch("nemo_deploy.nlp.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.nlp.inference.inference_base.StaticInferenceContext")
+    @patch("nemo_deploy.nlp.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
     def test_create_mcore_engine_megatron_with_mlm_args(
         self,
         mock_setup_meg,
@@ -323,7 +323,7 @@ class TestInferenceBase(unittest.TestCase):
         mock_setup_meg.return_value = ([mock_model], mock_tokenizer, mlm_args)
         mock_static_ctx.from_config.return_value = MagicMock()
 
-        from nemo_deploy.llm.inference.inference_base import create_mcore_engine
+        from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
 
         create_mcore_engine(path=self.mock_path, model_format="megatron")
 
@@ -336,13 +336,13 @@ class TestInferenceBase(unittest.TestCase):
         self.assertEqual(inference_wrapper_config.padded_vocab_size, 1234)
         self.assertEqual(inference_wrapper_config.hidden_size, 256)
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
-    @patch("nemo_deploy.llm.inference.inference_base.calculate_padded_vocab_size")
-    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
-    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
-    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
-    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
-    @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.nlp.inference.inference_base.calculate_padded_vocab_size")
+    @patch("nemo_deploy.nlp.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.nlp.inference.inference_base.TextGenerationController")
+    @patch("nemo_deploy.nlp.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.nlp.inference.inference_base.StaticInferenceContext")
+    @patch("nemo_deploy.nlp.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
     def test_create_mcore_engine_megatron_without_mlm_args_uses_calculated_padded_vocab(
         self,
         mock_setup_meg,
@@ -366,7 +366,7 @@ class TestInferenceBase(unittest.TestCase):
         mock_static_ctx.from_config.return_value = MagicMock()
         mock_calc_pad_vocab.return_value = 24576
 
-        from nemo_deploy.llm.inference.inference_base import create_mcore_engine
+        from nemo_deploy.nlp.inference.inference_base import create_mcore_engine
 
         create_mcore_engine(path=self.mock_path, model_format="megatron")
 
@@ -383,10 +383,10 @@ class TestInferenceBase(unittest.TestCase):
         self.assertEqual(inference_wrapper_config.padded_vocab_size, 24576)
         self.assertEqual(inference_wrapper_config.hidden_size, 512)
 
-    @patch("nemo_deploy.llm.inference.inference_base.check_is_distributed_checkpoint")
-    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_weights_subdir")
-    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_context_subdir")
-    @patch("nemo_deploy.llm.inference.inference_base.io.load_context")
+    @patch("nemo_deploy.nlp.inference.inference_base.check_is_distributed_checkpoint")
+    @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_weights_subdir")
+    @patch("nemo_deploy.nlp.inference.inference_base.ckpt_to_context_subdir")
+    @patch("nemo_deploy.nlp.inference.inference_base.io.load_context")
     def test_setup_model_and_tokenizer_not_dist_ckpt(
         self,
         mock_load_context,
@@ -436,7 +436,7 @@ class TestInferenceBase(unittest.TestCase):
         self.assertEqual(result, "method_result")
         mock_engine.some_method.assert_called_once()
 
-    @patch("nemo_deploy.llm.inference.inference_base.cleanup_distributed")
+    @patch("nemo_deploy.nlp.inference.inference_base.cleanup_distributed")
     def test_mcore_engine_with_cleanup_del(self, mock_cleanup):
         # Create mocks
         mock_engine = MagicMock(spec=MCoreEngine)
@@ -451,12 +451,12 @@ class TestInferenceBase(unittest.TestCase):
         # Verify cleanup was called
         mock_cleanup.assert_called_once()
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", True)
     def test_create_mcore_engine_unknown_format_raises(self):
         with self.assertRaises(ValueError):
             create_mcore_engine(path=self.mock_path, model_format="unknown")
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", False)
+    @patch("nemo_deploy.nlp.inference.inference_base.HAVE_NEMO", False)
     def test_create_mcore_engine_unavailable_nemo_raises(self):
         with self.assertRaises(UnavailableError):
             create_mcore_engine(path=self.mock_path)

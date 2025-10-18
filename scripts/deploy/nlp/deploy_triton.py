@@ -33,7 +33,7 @@ class UsageError(Exception):
 
 megatron_llm_supported = True
 try:
-    from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
+    from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployable
 except Exception as e:
     LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False
