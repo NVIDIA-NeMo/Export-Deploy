@@ -14,7 +14,7 @@
 
 import argparse
 
-from nemo_deploy.llm import NemoQueryTRTLLMAPI
+from nemo_deploy.nlp import NemoQueryTRTLLMAPI
 
 
 def get_args():

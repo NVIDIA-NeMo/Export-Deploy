@@ -179,6 +179,7 @@ select = [
     "F401", # imported but unused
     "E741", # ambiguous variable name
     "F821", # undefined name
+    "E266", # too many leading '#' for block comment
     "I",    # isort
     "D101", # docstring
     "D103",
@@ -194,7 +195,7 @@ ignore = [
 convention = "google"
 
 # Section to exclude errors for different file types
-[tool.ruff.lint.per-file-ignores]
+[tool.ruff.per-file-ignores]
 # Ignore all directories named `tests`.
 "tests/**" = ["D"]
 # Ignore all files that end in `_test.py`.
