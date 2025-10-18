@@ -156,6 +156,7 @@ def main():
         task=args.task,
         trust_remote_code=args.trust_remote_code,
         device_map=args.device_map,
+        torch_dtype=args.torch_dtype,
         max_memory=args.max_memory,
         model_id=args.model_id,
         num_replicas=args.num_replicas,
