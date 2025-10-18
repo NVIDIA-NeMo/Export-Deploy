@@ -131,10 +131,11 @@ main() {
         # Create virtual environment and install dependencies
         uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
 
-        # Install dependencies (temporarily without --locked for torch 2.8.0 upgrade)
-        uv sync --only-group build ${UV_ARGS[@]}
+        # Install dependencies
+        uv sync --locked --only-group build ${UV_ARGS[@]}
         uv sync \
             --link-mode copy \
+            --locked \
             --all-groups ${UV_ARGS[@]}
         # Install the package
         uv pip install --no-deps -e .
