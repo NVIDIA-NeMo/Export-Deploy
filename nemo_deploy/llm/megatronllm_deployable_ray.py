@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import logging
 import os
 import random
@@ -265,6 +264,7 @@ class MegatronRayDeployable:
     async def completions(self, request: Dict[Any, Any]):
         """Handle text completion requests."""
         try:
+            print("request", request)
             if "prompt" in request:
                 request["prompts"] = [request["prompt"]]
             temperature = request.get("temperature", 0.0)
@@ -290,6 +290,7 @@ class MegatronRayDeployable:
 
             # Run tokenization and model inference in the thread pool
             results = ray.get(self.primary_worker.infer.remote(inference_inputs))
+            print("results", results)
             # Extract generated texts from results
             generated_texts = results.get("sentences", [])
 
@@ -301,14 +302,12 @@ class MegatronRayDeployable:
             # Convert numpy arrays to Python lists for JSON serialization
             log_probs_data = results.get("log_probs", None)
             if log_probs_data is not None and isinstance(log_probs_data, np.ndarray):
-                # log_probs_data is present as list of numpy array, just take the first element to convert to list
-                log_probs_data = log_probs_data.tolist()[0]
+                log_probs_data = log_probs_data.tolist()
 
+                # Convert numpy arrays to Python lists for JSON serialization
             top_log_probs_data = results.get("top_logprobs", None)
-            if top_log_probs_data is not None:
-                # top_log_probs_data[0] is a string, parse it as JSON. top_log_probs_data is list of string, so
-                # just take the first element to convert to json
-                top_log_probs_data = json.loads(top_log_probs_data[0])
+            if top_log_probs_data is not None and isinstance(top_log_probs_data, np.ndarray):
+                top_log_probs_data = top_log_probs_data.tolist()
 
             output = {
                 "id": f"cmpl-{int(time.time())}",
@@ -340,9 +339,8 @@ class MegatronRayDeployable:
             }
             if request.get("echo", False):
                 # output format requires empty logprobs for the 1st token if echo is True
-                output["choices"][0]["logprobs"]["token_logprobs"].insert(0, None)
-            # Comment out the below line to check the output in case if invalid accuracy score or output.
-            # LOGGER.warning(f"Output: {output}")
+                output["choices"][0]["logprobs"]["token_logprobs"][0].insert(0, None)
+            print("output", output)
             return output
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")
