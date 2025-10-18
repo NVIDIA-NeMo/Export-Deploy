@@ -31,7 +31,7 @@ from megatron.core.export.model_type import ModelType
 from megatron.core.export.trtllm.model_to_trllm_mapping.default_conversion_dict import (
     DEFAULT_CONVERSION_DICT,
 )
-from transformers import PreTrainedTokenizerBase
+from transformers import AutoConfig, PreTrainedTokenizerBase
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
@@ -50,7 +50,6 @@ from nemo_export.trt_llm.tensorrt_llm_run import (
 )
 from nemo_export.trt_llm.utils import determine_quantization_settings, is_rank
 from nemo_export.utils import (
-    is_nemo2_checkpoint,
     prepare_directory_for_export,
 )
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
@@ -76,18 +75,56 @@ except (ImportError, ModuleNotFoundError):
 
 try:
     import tensorrt_llm
+    from tensorrt_llm._common import check_max_num_tokens
+    from tensorrt_llm.builder import BuildConfig
+    from tensorrt_llm.commands.build import build as build_trtllm
     from tensorrt_llm.layers import MoeConfig
+    from tensorrt_llm.mapping import Mapping
+    from tensorrt_llm.models import (
+        BaichuanForCausalLM,
+        BertForQuestionAnswering,
+        BertForSequenceClassification,
+        BertModel,
+        BloomForCausalLM,
+        ChatGLMForCausalLM,
+        CogVLMForCausalLM,
+        CohereForCausalLM,
+        DbrxForCausalLM,
+        DeciLMForCausalLM,
+        DecoderModel,
+        DeepseekForCausalLM,
+        DeepseekV2ForCausalLM,
+        DiT,
+        EagleForCausalLM,
+        EncoderModel,
+        FalconForCausalLM,
+        GemmaForCausalLM,
+        GPTForCausalLM,
+        GPTJForCausalLM,
+        GPTNeoXForCausalLM,
+        GrokForCausalLM,
+        LLaMAForCausalLM,
+        MambaForCausalLM,
+        MedusaForCausalLm,
+        MLLaMAForCausalLM,
+        MPTForCausalLM,
+        OPTForCausalLM,
+        Phi3ForCausalLM,
+        PhiForCausalLM,
+        QWenForCausalLM,
+        RecurrentGemmaForCausalLM,
+        ReDrafterForLLaMALM,
+        ReDrafterForQWenLM,
+        RobertaForQuestionAnswering,
+        RobertaForSequenceClassification,
+        RobertaModel,
+        WhisperEncoder,
+    )
+    from tensorrt_llm.plugin import PluginConfig
 
     HAVE_TENSORRT_LLM = True
 except (ImportError, ModuleNotFoundError):
     HAVE_TENSORRT_LLM = False
-
-try:
-    from nemo.collections.llm.api import export_ckpt
-
-    HAVE_NEMO_EXPORT = True
-except (ImportError, ModuleNotFoundError):
-    HAVE_NEMO_EXPORT = False
 
 if HAVE_TENSORRT_LLM:
     from megatron.core.export.trtllm.trtllm_helper import TRTLLMHelper
@@ -97,17 +134,11 @@ LOGGER = logging.getLogger("NeMo")
 
 # pylint: disable=line-too-long
 class TensorRTLLM(ITritonDeployable):
-    """Exports NeMo checkpoints to TensorRT-LLM and run fast inference.
+    """Exports nemo and huggingface checkpoints to TensorRT-LLM and run fast inference.
 
-    This class provides functionality to export NeMo models to TensorRT-LLM
+    This class provides functionality to export NeMo and HuggingFace models to TensorRT-LLM
     format and run inference using the exported models. It supports various model architectures
     and provides options for model parallelism, quantization, and inference parameters.
-
-    Note: For HuggingFace model export, use the TensorRTLLMHF class instead.
-
-    Two export methods are available:
-    - export(): Standard NeMo export pipeline
-    - export_with_hf_fallback(): Tries standard export first, falls back to HF conversion if it fails
 
     Example:
         from nemo_export.tensorrt_llm import TensorRTLLM
@@ -121,14 +152,6 @@ class TensorRTLLM(ITritonDeployable):
 
         output = trt_llm_exporter.forward(["Hi, how are you?", "I am good, thanks, how about you?"])
         print("output: ", output)
-
-    Example with fallback:
-        trt_llm_exporter = TensorRTLLM(model_dir="/path/for/model/files")
-        trt_llm_exporter.export_with_hf_fallback(
-            nemo_checkpoint_path="/path/for/nemo/checkpoint",
-            model_type="llama",
-            tensor_parallelism_size=1,
-        )
     """
 
     def __init__(
@@ -179,7 +202,7 @@ class TensorRTLLM(ITritonDeployable):
         if load_model:
             self._load()
 
-    def _export_nemo_checkpoint(
+    def export(
         self,
         nemo_checkpoint_path: str,
         model_type: Optional[str] = None,
@@ -465,279 +488,215 @@ class TensorRTLLM(ITritonDeployable):
         if is_export_rank and load_model:
             self._load()
 
-    def export_with_hf(
+    def export_hf_model(
         self,
-        nemo_checkpoint_path: str,
-        model_type: Optional[str] = None,
-        delete_existing_files: bool = True,
+        hf_model_path: str,
+        max_batch_size: int = 8,
         tensor_parallelism_size: int = 1,
         max_input_len: int = 256,
-        max_output_len: Optional[int] = None,
-        max_batch_size: int = 8,
-        paged_kv_cache: bool = True,
-        remove_input_padding: bool = True,
-        use_paged_context_fmha: bool = True,
-        dtype: Optional[str] = None,
+        max_output_len: int = 256,
         max_num_tokens: Optional[int] = None,
         opt_num_tokens: Optional[int] = None,
+        dtype: Optional[str] = None,
         max_seq_len: Optional[int] = 512,
-        multiple_profiles: bool = False,
         gemm_plugin: str = "auto",
+        remove_input_padding: bool = True,
+        use_paged_context_fmha: bool = True,
+        paged_kv_cache: bool = True,
+        tokens_per_block: int = 128,
+        multiple_profiles: bool = False,
         reduce_fusion: bool = False,
-    ):
-        """Internal method to export via HuggingFace conversion fallback.
-
-        This method converts a NeMo2 checkpoint to HuggingFace format, then exports
-        to TensorRT-LLM using the HF export pipeline.
-
-        Args:
-            nemo_checkpoint_path (str): Path to the NeMo checkpoint.
-            model_type (Optional[str], optional): Type of the model. Defaults to None.
-            delete_existing_files (bool, optional): Delete existing files in model_dir. Defaults to True.
-            tensor_parallelism_size (int, optional): Size of tensor parallelism. Defaults to 1.
-            max_input_len (int, optional): Maximum input sequence length. Defaults to 256.
-            max_output_len (Optional[int], optional): Maximum output sequence length. Defaults to None.
-            max_batch_size (int, optional): Maximum batch size. Defaults to 8.
-            paged_kv_cache (bool, optional): Use paged KV cache. Defaults to True.
-            remove_input_padding (bool, optional): Remove input padding. Defaults to True.
-            use_paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to True.
-            dtype (Optional[str], optional): Data type for model weights. Defaults to None.
-            max_num_tokens (Optional[int], optional): Maximum number of tokens. Defaults to None.
-            opt_num_tokens (Optional[int], optional): Optimal number of tokens. Defaults to None.
-            max_seq_len (Optional[int], optional): Maximum sequence length. Defaults to 512.
-            multiple_profiles (bool, optional): Use multiple profiles. Defaults to False.
-            gemm_plugin (str, optional): GEMM plugin type. Defaults to "auto".
-            reduce_fusion (bool, optional): Enable reduce fusion. Defaults to False.
-
-        Raises:
-            Exception: If HF conversion or export fails.
-        """
-        # Convert NeMo checkpoint to HF format
-        tmp_hf_export_dir = tempfile.TemporaryDirectory()
-        hf_model_path = tmp_hf_export_dir.name
-
-        try:
-            LOGGER.info(f"Converting NeMo checkpoint to HF format at {hf_model_path}...")
-            export_ckpt(
-                path=nemo_checkpoint_path,
-                target="hf",
-                output_path=hf_model_path,
-                overwrite=True,
-            )
-
-            if not any(Path(hf_model_path).iterdir()):
-                raise Exception("HF conversion produced empty directory")
-
-            LOGGER.info("NeMo to HF conversion succeeded. Now exporting HF model to TensorRT-LLM...")
-
-            # Import and use HF export functionality
-            from nemo_export.tensorrt_llm_hf import TensorRTLLMHF
-
-            # Create a temporary HF exporter to handle the export
-            hf_exporter = TensorRTLLMHF(
-                model_dir=self.model_dir,
-                lora_ckpt_list=self.lora_ckpt_list,
-                load_model=False,
-                use_python_runtime=self.use_python_runtime,
-                enable_chunked_context=self.enable_chunked_context if self.enable_chunked_context else None,
-                max_tokens_in_paged_kv_cache=self.max_tokens_in_paged_kv_cache,
-                multi_block_mode=self.multi_block_mode,
-            )
-
-            # Handle max_output_len deprecation
-            if max_output_len is not None:
-                warnings.warn(
-                    "Parameter max_output_len is deprecated and will be removed.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                if max_seq_len is None:
-                    max_seq_len = max_input_len + max_output_len
-
-            max_seq_len = max_seq_len if max_seq_len is not None else 512
-
-            # Export using HF pipeline
-            hf_exporter.export_hf_model(
-                hf_model_path=hf_model_path,
-                max_batch_size=max_batch_size,
-                tensor_parallelism_size=tensor_parallelism_size,
-                max_input_len=max_input_len,
-                max_output_len=max_output_len if max_output_len is not None else 256,
-                max_num_tokens=max_num_tokens,
-                opt_num_tokens=opt_num_tokens,
-                dtype=dtype,
-                max_seq_len=max_seq_len,
-                gemm_plugin=gemm_plugin,
-                remove_input_padding=remove_input_padding,
-                use_paged_context_fmha=use_paged_context_fmha,
-                paged_kv_cache=paged_kv_cache,
-                multiple_profiles=multiple_profiles,
-                reduce_fusion=reduce_fusion,
-                model_type=None,
-                delete_existing_files=delete_existing_files,
-            )
-
-            # Load the TensorRT-LLM engine that was built by the HF exporter
-            # Both TensorRTLLM and TensorRTLLMHF share the same model_dir and engine_dir
-            self._load()
-
-            LOGGER.info("HuggingFace fallback export succeeded!")
-
-        finally:
-            # Always clean up temporary directory
-            tmp_hf_export_dir.cleanup()
-
-    def export(
-        self,
-        nemo_checkpoint_path: str,
+        max_beam_width: int = 1,
+        use_refit: bool = False,
         model_type: Optional[str] = None,
         delete_existing_files: bool = True,
-        tensor_parallelism_size: int = 1,
-        pipeline_parallelism_size: int = 1,
-        max_input_len: int = 256,
-        max_output_len: Optional[int] = None,
-        max_batch_size: int = 8,
-        use_parallel_embedding: bool = False,
-        paged_kv_cache: bool = True,
-        remove_input_padding: bool = True,
-        use_paged_context_fmha: bool = True,
-        dtype: Optional[str] = None,
-        load_model: bool = True,
-        use_lora_plugin: str = None,
-        lora_target_modules: List[str] = None,
-        max_lora_rank: int = 64,
-        max_num_tokens: Optional[int] = None,
-        opt_num_tokens: Optional[int] = None,
-        max_seq_len: Optional[int] = 512,
-        multiple_profiles: bool = False,
-        gpt_attention_plugin: str = "auto",
-        gemm_plugin: str = "auto",
-        reduce_fusion: bool = True,
-        fp8_quantized: Optional[bool] = None,
-        fp8_kvcache: Optional[bool] = None,
-        build_rank: Optional[int] = 0,
     ):
-        """Export nemo checkpoints to TensorRT-LLM with fallback to HF export.
+        """Export a Hugging Face model to TensorRT-LLM format.
 
-        This method first attempts to export using the standard NeMo export pipeline.
-        If that fails, it will convert the NeMo checkpoint to HuggingFace format first,
-        then export to TensorRT-LLM using the HF export pipeline.
+        This method exports a Hugging Face model to TensorRT-LLM format with various configuration
+        options for model parallelism, quantization, and inference parameters.
 
         Args:
-            nemo_checkpoint_path (str): Path to the NeMo checkpoint.
-            model_type (Optional[str], optional): Type of the model. Defaults to None.
-            delete_existing_files (bool, optional): Delete existing files in model_dir. Defaults to True.
-            tensor_parallelism_size (int, optional): Size of tensor parallelism. Defaults to 1.
-            pipeline_parallelism_size (int, optional): Size of pipeline parallelism. Defaults to 1.
-            max_input_len (int, optional): Maximum input sequence length. Defaults to 256.
-            max_output_len (Optional[int], optional): Maximum output sequence length. Defaults to None.
+            hf_model_path (str): Path to the Hugging Face model directory.
             max_batch_size (int, optional): Maximum batch size. Defaults to 8.
-            use_parallel_embedding (bool, optional): Use parallel embedding. Defaults to False.
-            paged_kv_cache (bool, optional): Use paged KV cache. Defaults to True.
-            remove_input_padding (bool, optional): Remove input padding. Defaults to True.
-            use_paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to True.
-            dtype (Optional[str], optional): Data type for model weights. Defaults to None.
-            load_model (bool, optional): Load model after export. Defaults to True.
-            use_lora_plugin (str, optional): Use LoRA plugin. Defaults to None.
-            lora_target_modules (List[str], optional): Target modules for LoRA. Defaults to None.
-            max_lora_rank (int, optional): Maximum LoRA rank. Defaults to 64.
+            tensor_parallelism_size (int, optional): Size of tensor parallelism. Defaults to 1.
+            max_input_len (int, optional): Maximum input sequence length. Defaults to 256.
+            max_output_len (int, optional): Maximum output sequence length. Defaults to 256.
             max_num_tokens (Optional[int], optional): Maximum number of tokens. Defaults to None.
             opt_num_tokens (Optional[int], optional): Optimal number of tokens. Defaults to None.
+            dtype (Optional[str], optional): Data type for model weights. Defaults to None.
             max_seq_len (Optional[int], optional): Maximum sequence length. Defaults to 512.
-            multiple_profiles (bool, optional): Use multiple profiles. Defaults to False.
-            gpt_attention_plugin (str, optional): GPT attention plugin type. Defaults to "auto".
             gemm_plugin (str, optional): GEMM plugin type. Defaults to "auto".
-            reduce_fusion (bool, optional): Enable reduce fusion. Defaults to True.
-            fp8_quantized (Optional[bool], optional): Enable FP8 quantization. Defaults to None.
-            fp8_kvcache (Optional[bool], optional): Enable FP8 KV cache. Defaults to None.
-            build_rank (Optional[int], optional): Rank to build on. Defaults to 0.
+            remove_input_padding (bool, optional): Remove input padding. Defaults to True.
+            use_paged_context_fmha (bool, optional): Use paged context FMHA. Defaults to True.
+            paged_kv_cache (bool, optional): Use paged KV cache. Defaults to True.
+            tokens_per_block (int, optional): Tokens per block. Defaults to 128.
+            multiple_profiles (bool, optional): Use multiple profiles. Defaults to False.
+            reduce_fusion (bool, optional): Enable reduce fusion. Defaults to False.
+            max_beam_width (int, optional): Maximum beam width. Defaults to 1.
+            use_refit (bool, optional): Use refit. Defaults to False.
+            model_type (Optional[str], optional): Type of the model. Defaults to None.
+            delete_existing_files (bool, optional): Delete existing files. Defaults to True.
 
         Raises:
             ValueError: If model_type is not supported or dtype cannot be determined.
-            Exception: If both NeMo and HF export methods fail.
+            FileNotFoundError: If config file is not found.
+            RuntimeError: If there are errors reading the config file.
         """
-        LOGGER.info("Starting export with HF fallback...")
+        LOGGER.info("Starting HF export to TRT-LLM")
+        if model_type is None:
+            model_type = self.get_hf_model_type(hf_model_path)
 
-        # First try the standard NeMo export
-        try:
-            LOGGER.info("Attempting standard NeMo export...")
-            self._export_nemo_checkpoint(
-                nemo_checkpoint_path=nemo_checkpoint_path,
-                model_type=model_type,
-                delete_existing_files=delete_existing_files,
-                tensor_parallelism_size=tensor_parallelism_size,
-                pipeline_parallelism_size=pipeline_parallelism_size,
-                max_input_len=max_input_len,
-                max_output_len=max_output_len,
-                max_batch_size=max_batch_size,
-                use_parallel_embedding=use_parallel_embedding,
-                paged_kv_cache=paged_kv_cache,
-                remove_input_padding=remove_input_padding,
-                use_paged_context_fmha=use_paged_context_fmha,
-                dtype=dtype,
-                load_model=load_model,
-                use_lora_plugin=use_lora_plugin,
-                lora_target_modules=lora_target_modules,
-                max_lora_rank=max_lora_rank,
-                max_num_tokens=max_num_tokens,
-                opt_num_tokens=opt_num_tokens,
-                max_seq_len=max_seq_len,
-                multiple_profiles=multiple_profiles,
-                gpt_attention_plugin=gpt_attention_plugin,
-                gemm_plugin=gemm_plugin,
-                reduce_fusion=reduce_fusion,
-                fp8_quantized=fp8_quantized,
-                fp8_kvcache=fp8_kvcache,
-                build_rank=build_rank,
+        if model_type not in self.get_supported_hf_model_mapping:
+            raise ValueError(
+                f"Model {model_type} is not currently a supported model type. "
+                f"Supported model types are: {self.get_supported_hf_model_mapping.keys()}."
             )
-            LOGGER.info("Standard NeMo export succeeded!")
-            return
-        except Exception as nemo_export_error:
-            LOGGER.warning(f"Standard NeMo export failed: {str(nemo_export_error)}")
-            LOGGER.info("Attempting HuggingFace fallback export...")
 
-            # Check if we can do HF export
-            if not HAVE_NEMO_EXPORT:
-                raise Exception(
-                    f"Standard NeMo export failed and NeMo export_ckpt is not available for HF fallback. "
-                    f"Original error: {str(nemo_export_error)}"
-                )
+        if dtype is None:
+            dtype = self.get_hf_model_dtype(hf_model_path)
+            if dtype is None:
+                raise ValueError("No dtype found in hf model config. Please specify a dtype.")
 
-            # Check if it's a NeMo2 checkpoint
-            if not (Path(nemo_checkpoint_path).exists() and is_nemo2_checkpoint(nemo_checkpoint_path)):
-                raise Exception(
-                    f"Standard NeMo export failed and checkpoint is not a NeMo2 checkpoint. "
-                    f"HF fallback only works with NeMo2 checkpoints. "
-                    f"Original error: {str(nemo_export_error)}"
-                )
+        prepare_directory_for_export(
+            self.model_dir,
+            delete_existing_files=delete_existing_files,
+            subdir=TRTLLM_ENGINE_DIR,
+        )
 
-            # Try HF export fallback
-            try:
-                self.export_with_hf(
-                    nemo_checkpoint_path=nemo_checkpoint_path,
-                    model_type=model_type,
-                    delete_existing_files=delete_existing_files,
-                    tensor_parallelism_size=tensor_parallelism_size,
-                    max_input_len=max_input_len,
-                    max_output_len=max_output_len,
-                    max_batch_size=max_batch_size,
-                    paged_kv_cache=paged_kv_cache,
-                    remove_input_padding=remove_input_padding,
-                    use_paged_context_fmha=use_paged_context_fmha,
-                    dtype=dtype,
-                    max_num_tokens=max_num_tokens,
-                    opt_num_tokens=opt_num_tokens,
-                    max_seq_len=max_seq_len,
-                    multiple_profiles=multiple_profiles,
-                    gemm_plugin=gemm_plugin,
-                    reduce_fusion=reduce_fusion,
-                )
-            except Exception as hf_export_error:
-                raise Exception(
-                    f"Both NeMo export and HF fallback export failed.\n"
-                    f"NeMo export error: {str(nemo_export_error)}\n"
-                    f"HF fallback error: {str(hf_export_error)}"
-                )
+        if max_batch_size < 4:
+            print("TensorRT-LLM may hit runtime issue with batch size is smaller than 4. Force set to 4")
+            max_batch_size = 4
+
+        plugin_config = PluginConfig()
+        plugin_config.gemm_plugin = gemm_plugin
+        if paged_kv_cache:
+            plugin_config.enable_paged_kv_cache(tokens_per_block=tokens_per_block)
+        else:
+            plugin_config.paged_kv_cache = False
+        plugin_config.remove_input_padding = remove_input_padding
+        plugin_config.use_paged_context_fmha = use_paged_context_fmha
+        plugin_config.multiple_profiles = multiple_profiles
+        plugin_config.reduce_fusion = reduce_fusion
+        max_seq_len = max_input_len + max_output_len
+        max_num_tokens, opt_num_tokens = check_max_num_tokens(
+            max_num_tokens=max_num_tokens,
+            opt_num_tokens=opt_num_tokens,
+            max_seq_len=max_seq_len,
+            max_batch_size=max_batch_size,
+            max_input_len=max_input_len,
+            max_beam_width=max_beam_width,
+            remove_input_padding=remove_input_padding,
+            enable_context_fmha=plugin_config.context_fmha,
+            tokens_per_block=tokens_per_block,
+            multiple_profiles=multiple_profiles,
+        )
+        build_dict = {
+            "max_input_len": max_input_len,
+            "max_output_len": max_output_len,
+            "max_batch_size": max_batch_size,
+            "max_beam_width": max_beam_width,
+            "max_seq_len": max_seq_len,
+            "max_num_tokens": max_num_tokens,
+            "opt_num_tokens": opt_num_tokens,
+            "strongly_typed": False,
+            "builder_opt": None,
+            "multiple_profiles": multiple_profiles,
+            "use_refit": use_refit,
+        }
+        build_config = BuildConfig.from_dict(build_dict, plugin_config=plugin_config)
+        for rank in range(tensor_parallelism_size):
+            LOGGER.info(f"Iterating over rank:{rank}")
+            mapping = Mapping(
+                world_size=tensor_parallelism_size,
+                rank=rank,
+                tp_size=tensor_parallelism_size,
+            )
+            trtllm_model_class = self.get_supported_hf_model_mapping[model_type]
+            model = trtllm_model_class.from_hugging_face(
+                hf_model_path,
+                dtype,
+                mapping=mapping,
+            )
+            engine = build_trtllm(model, build_config)
+            engine.save(self.engine_dir)
+        # Copy HF tokenizer files to root model directory
+        for path in glob(os.path.join(hf_model_path, "*.json")):
+            shutil.copy(path, self.model_dir)
+        # Copy sentencepiece model to model directory
+        for path in glob(os.path.join(hf_model_path, "*.model")):
+            shutil.copy(path, self.model_dir)
+        LOGGER.info(f"Generarated TRT-LLM checkpoint at dir:{self.model_dir}")
+        LOGGER.info(f"Loading the TRT-LLM checkpoint:{self.model_dir}")
+        self._load()
+
+    def get_hf_model_type(self, model_dir: str) -> str:
+        """Get the model type from a Hugging Face model directory.
+
+        This method infers the model type from the 'architectures' field in the model's config.json file.
+
+        Args:
+            model_dir (str): Path to the Hugging Face model directory or model ID at Hugging Face Hub.
+
+        Returns:
+            str: The inferred model type (e.g., "LlamaForCausalLM").
+
+        Raises:
+            ValueError: If the architecture choice is ambiguous.
+        """
+        config = AutoConfig.from_pretrained(model_dir)
+
+        if len(config.architectures) != 1:
+            raise ValueError(
+                f"Ambiguous architecture choice: {config.architectures}, please specify model_type explicitly."
+            )
+
+        return config.architectures[0]
+
+    def get_hf_model_dtype(self, model_dir: str) -> Optional[str]:
+        """Get the data type from a Hugging Face model directory.
+
+        This method reads the config file from a Hugging Face model directory and identifies
+        the model's data type from various possible locations in the config.
+
+        Args:
+            model_dir (str): Path to the Hugging Face model directory.
+
+        Returns:
+            Optional[str]: The model's data type if found in config, None otherwise.
+
+        Raises:
+            FileNotFoundError: If the config file is not found.
+            ValueError: If the config file contains invalid JSON.
+            RuntimeError: If there are errors reading the config file.
+        """
+        config_path = Path(model_dir) / "config.json"
+
+        if not config_path.exists():
+            raise FileNotFoundError(f"Config file not found at {config_path}")
+
+        try:
+            with open(config_path, "r") as f:
+                config = json.load(f)
+                # Check for dtype in different possible locations in the config
+                if "torch_dtype" in config:
+                    return config["torch_dtype"]
+                elif "dtype" in config:
+                    return config["dtype"]
+                elif "pretrained_config" in config and "dtype" in config["pretrained_config"]:
+                    return config["pretrained_config"]["dtype"]
+
+                # If no explicit dtype found, check for other indicators
+                if "fp16" in config and config["fp16"]:
+                    return "float16"
+                elif "bf16" in config and config["bf16"]:
+                    return "bfloat16"
+
+            return None
+        except json.JSONDecodeError:
+            raise ValueError(f"Invalid JSON in config file at {config_path}")
+        except Exception as e:
+            raise RuntimeError(f"Error reading config file: {str(e)}")
 
     def _export_to_nim_format(self, model_config: Dict[str, Any], model_type: str):
         """Exports the model configuration to a specific format required by NIM.
@@ -879,6 +838,86 @@ class TensorRTLLM(ITritonDeployable):
         """Supported model list."""
         # gpt and gptnext are the same. Keeping the gptnext due to backward compatibility.
         return ["gpt", "gptnext", "llama", "falcon", "starcoder", "mixtral", "gemma"]
+
+    @property
+    def get_supported_hf_model_mapping(self):
+        """Supported HF Model Mapping."""
+        HF_MODEL_CLASS_MAP = {
+            "GPT2LMHeadModel": GPTForCausalLM,
+            "GPT2LMHeadCustomModel": GPTForCausalLM,
+            "GPTBigCodeForCausalLM": GPTForCausalLM,
+            "Starcoder2ForCausalLM": GPTForCausalLM,
+            "JAISLMHeadModel": GPTForCausalLM,
+            "GPTForCausalLM": GPTForCausalLM,
+            "NemotronForCausalLM": GPTForCausalLM,
+            "OPTForCausalLM": OPTForCausalLM,
+            "BloomForCausalLM": BloomForCausalLM,
+            "RWForCausalLM": FalconForCausalLM,
+            "FalconForCausalLM": FalconForCausalLM,
+            "PhiForCausalLM": PhiForCausalLM,
+            "Phi3ForCausalLM": Phi3ForCausalLM,
+            "Phi3VForCausalLM": Phi3ForCausalLM,
+            "Phi3SmallForCausalLM": Phi3ForCausalLM,
+            "PhiMoEForCausalLM": Phi3ForCausalLM,
+            "MambaForCausalLM": MambaForCausalLM,
+            "GPTNeoXForCausalLM": GPTNeoXForCausalLM,
+            "GPTJForCausalLM": GPTJForCausalLM,
+            "MptForCausalLM": MPTForCausalLM,
+            "MPTForCausalLM": MPTForCausalLM,
+            "GLMModel": ChatGLMForCausalLM,
+            "ChatGLMModel": ChatGLMForCausalLM,
+            "ChatGLMForCausalLM": ChatGLMForCausalLM,
+            "ChatGLMForConditionalGeneration": ChatGLMForCausalLM,
+            "LlamaForCausalLM": LLaMAForCausalLM,
+            "LlavaLlamaModel": LLaMAForCausalLM,
+            "ExaoneForCausalLM": LLaMAForCausalLM,
+            "MistralForCausalLM": LLaMAForCausalLM,
+            "MixtralForCausalLM": LLaMAForCausalLM,
+            "ArcticForCausalLM": LLaMAForCausalLM,
+            "Grok1ModelForCausalLM": GrokForCausalLM,
+            "InternLMForCausalLM": LLaMAForCausalLM,
+            "InternLM2ForCausalLM": LLaMAForCausalLM,
+            "InternLMXComposer2ForCausalLM": LLaMAForCausalLM,
+            "GraniteForCausalLM": LLaMAForCausalLM,
+            "GraniteMoeForCausalLM": LLaMAForCausalLM,
+            "MedusaForCausalLM": MedusaForCausalLm,
+            "MedusaLlamaForCausalLM": MedusaForCausalLm,
+            "ReDrafterForLLaMALM": ReDrafterForLLaMALM,
+            "ReDrafterForQWenLM": ReDrafterForQWenLM,
+            "BaichuanForCausalLM": BaichuanForCausalLM,
+            "BaiChuanForCausalLM": BaichuanForCausalLM,
+            "SkyworkForCausalLM": LLaMAForCausalLM,
+            "GEMMA": GemmaForCausalLM,
+            "GEMMA2": GemmaForCausalLM,
+            "QWenLMHeadModel": QWenForCausalLM,
+            "QWenForCausalLM": QWenForCausalLM,
+            "Qwen2ForCausalLM": QWenForCausalLM,
+            "Qwen2MoeForCausalLM": QWenForCausalLM,
+            "Qwen2ForSequenceClassification": QWenForCausalLM,
+            "Qwen2VLForConditionalGeneration": QWenForCausalLM,
+            "Qwen2VLModel": QWenForCausalLM,
+            "WhisperEncoder": WhisperEncoder,
+            "EncoderModel": EncoderModel,
+            "DecoderModel": DecoderModel,
+            "DbrxForCausalLM": DbrxForCausalLM,
+            "RecurrentGemmaForCausalLM": RecurrentGemmaForCausalLM,
+            "CogVLMForCausalLM": CogVLMForCausalLM,
+            "DiT": DiT,
+            "DeepseekForCausalLM": DeepseekForCausalLM,
+            "DeciLMForCausalLM": DeciLMForCausalLM,
+            "DeepseekV2ForCausalLM": DeepseekV2ForCausalLM,
+            "EagleForCausalLM": EagleForCausalLM,
+            "CohereForCausalLM": CohereForCausalLM,
+            "MLLaMAModel": MLLaMAForCausalLM,
+            "MllamaForConditionalGeneration": MLLaMAForCausalLM,
+            "BertForQuestionAnswering": BertForQuestionAnswering,
+            "BertForSequenceClassification": BertForSequenceClassification,
+            "BertModel": BertModel,
+            "RobertaModel": RobertaModel,
+            "RobertaForQuestionAnswering": RobertaForQuestionAnswering,
+            "RobertaForSequenceClassification": RobertaForSequenceClassification,
+        }
+        return HF_MODEL_CLASS_MAP
 
     @property
     def get_hidden_size(self):

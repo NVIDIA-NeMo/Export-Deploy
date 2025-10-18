@@ -26,13 +26,3 @@ __all__ = ["__version__", "__package_name__"]
 
 if HAVE_IO:
     __all__ += ["io"]
-
-# Optional convenience imports for TensorRT-LLM classes
-try:
-    from nemo_export.tensorrt_llm import TensorRTLLM
-    from nemo_export.tensorrt_llm_hf import TensorRTLLMHF
-
-    __all__ += ["TensorRTLLM", "TensorRTLLMHF"]
-except (ImportError, ModuleNotFoundError):
-    # TensorRT-LLM may not be available
-    pass
