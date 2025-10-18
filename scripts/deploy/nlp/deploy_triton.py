@@ -33,7 +33,7 @@ class UsageError(Exception):
 
 megatron_llm_supported = True
 try:
-    from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
+    from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployable
 except Exception as e:
     LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False
@@ -41,7 +41,6 @@ except Exception as e:
 trt_llm_supported = True
 try:
     from nemo_export.tensorrt_llm import TensorRTLLM
-    from nemo_export.tensorrt_llm_hf import TensorRTLLMHF
 except Exception as e:
     LOGGER.warning(f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}")
     trt_llm_supported = False
@@ -417,23 +416,13 @@ def get_trtllm_deployable(args):
     if not checkpoint_missing and args.model_type is None:
         raise ValueError("Model type is required to be defined if a nemo checkpoint is provided.")
 
-    # Use TensorRTLLMHF for HuggingFace models, TensorRTLLM for NeMo models
-    if args.hf_model_id_path is not None:
-        trt_llm_exporter = TensorRTLLMHF(
-            model_dir=trt_llm_path,
-            lora_ckpt_list=args.lora_ckpt,
-            load_model=(args.nemo_checkpoint is None and args.hf_model_id_path is None),
-            use_python_runtime=(not args.use_cpp_runtime),
-            multi_block_mode=args.multi_block_mode,
-        )
-    else:
-        trt_llm_exporter = TensorRTLLM(
-            model_dir=trt_llm_path,
-            lora_ckpt_list=args.lora_ckpt,
-            load_model=(args.nemo_checkpoint is None and args.hf_model_id_path is None),
-            use_python_runtime=(not args.use_cpp_runtime),
-            multi_block_mode=args.multi_block_mode,
-        )
+    trt_llm_exporter = TensorRTLLM(
+        model_dir=trt_llm_path,
+        lora_ckpt_list=args.lora_ckpt,
+        load_model=(args.nemo_checkpoint is None and args.hf_model_id_path is None),
+        use_python_runtime=(not args.use_cpp_runtime),
+        multi_block_mode=args.multi_block_mode,
+    )
 
     if args.nemo_checkpoint is not None:
         try:

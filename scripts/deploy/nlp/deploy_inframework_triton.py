@@ -31,7 +31,7 @@ if not LOGGER.hasHandlers():
 
 megatron_llm_supported = True
 try:
-    from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployableNemo2
+    from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
 except Exception as e:
     LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False
