@@ -23,7 +23,7 @@ import requests
 from ray import serve
 
 from nemo_deploy.deploy_ray import DeployRay
-from nemo_deploy.llm.megatronllm_deployable_ray import (
+from nemo_deploy.nlp.megatronllm_deployable_ray import (
     MegatronRayDeployable,
     ModelWorker,
 )
@@ -88,7 +88,7 @@ def mock_nemo_checkpoint():
 @pytest.fixture
 def mock_megatron_model():
     """Mock the MegatronLLMDeployableNemo2 model to avoid loading real models."""
-    with patch("nemo_deploy.llm.megatronllm_deployable_ray.MegatronLLMDeployableNemo2") as mock:
+    with patch("nemo_deploy.nlp.megatronllm_deployable_ray.MegatronLLMDeployableNemo2") as mock:
         mock_instance = MagicMock()
 
         # Mock the ray_infer_fn method
@@ -160,7 +160,7 @@ def mock_model_worker(mock_megatron_model):
                 }
 
     # Patch the original ModelWorker with our mock
-    with patch("nemo_deploy.llm.megatronllm_deployable_ray.ModelWorker", MockModelWorker):
+    with patch("nemo_deploy.nlp.megatronllm_deployable_ray.ModelWorker", MockModelWorker):
         yield MockModelWorker
 
 

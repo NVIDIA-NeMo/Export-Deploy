@@ -22,7 +22,7 @@ import torch
 from fastapi import FastAPI, HTTPException
 from ray import serve
 
-from nemo_deploy.llm.hf_deployable import HuggingFaceLLMDeploy
+from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
 from nemo_deploy.ray_utils import find_available_port
 
 LOGGER = logging.getLogger("NeMo")
