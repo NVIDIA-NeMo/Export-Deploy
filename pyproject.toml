@@ -45,7 +45,7 @@ dependencies = [
     "megatron-bridge>=0.1.0a0,<0.2.0",
     "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
     "nvidia-resiliency-ext>=0.4.0a0,<0.5.0; sys_platform != 'darwin'",
-    "transformer-engine[pytorch]>=2.6.0a0,<2.8.0; sys_platform != 'darwin'",
+    "transformer-engine[pytorch]>=2.6.0a0,<2.9.0; sys_platform != 'darwin'",
     "transformers",
     "accelerate",
     "fastapi",
@@ -62,7 +62,7 @@ dependencies = [
     "lightning",
     "omegaconf>=2.3.0",
     "peft",
-    "torch==2.7.1",
+    "torch==2.8.0",
     "torchvision",
     "torchmetrics>=0.11.0",
     "wandb",
@@ -82,12 +82,12 @@ dependencies = [
 [project.optional-dependencies]
 inframework = []
 vllm = ["vllm~=0.10.0", "pandas", "timm"]
-trtllm = ["tensorrt-llm>=1.0.0a0,<1.1.0,>=1.0.0rc6", "cuda-python~=12.8.0"]
+trtllm = ["tensorrt-llm>=1.0.0", "cuda-python~=12.8.0"]
 trt-onnx = ["tensorrt==10.11.0.33", "onnx==1.18.0", "transformers==4.51.3"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch==2.7.1", "pybind11", "Cython>=3.0.0", "ninja"]
+build = ["setuptools", "torch==2.8.0", "pybind11", "Cython>=3.0.0", "ninja"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
@@ -111,7 +111,7 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 # megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "ecf05926b4765aada82c8eabab4a374e8e83a9c5" }
-transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "fedd9ddc739a4f28b2ee705df5577d20d33400ec" } # on release_v2.7 branch, torch 2.7.1 compatible
+transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "40c69e751a47ec87786283e125c5eb264101270f" } # release_v2.8 for torch 2.8 compatibility
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
