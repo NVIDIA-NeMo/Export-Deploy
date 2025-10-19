@@ -50,8 +50,11 @@ jobs:
           export PATH=$PATH:$CUDA_HOME/bin
           export CUDACXX=/usr/local/cuda/bin/nvcc
 
-      - name: Install build dependencies globally
+      - name: Install pip and build dependencies globally
         run: |
+          # Install pip first
+          apt-get update
+          apt-get install -y python3-pip
           # Install build dependencies in the system Python so uv lock can find them
           python3 -m pip install --break-system-packages setuptools torch==2.7.1 pybind11 'Cython>=3.0.0' ninja nvidia-cuda-runtime-cu12
 
