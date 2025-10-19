@@ -110,7 +110,7 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 # megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "ecf05926b4765aada82c8eabab4a374e8e83a9c5" }
-transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "3fc1e4b" } # commit before the problematic 0289e76 - compatible with torch 2.7.1
+transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "6ba98d4" } # Much older commit from release_v2.7 - should avoid build bugs
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
