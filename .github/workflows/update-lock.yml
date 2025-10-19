@@ -50,6 +50,18 @@ jobs:
           export PATH=$PATH:$CUDA_HOME/bin
           export CUDACXX=/usr/local/cuda/bin/nvcc
 
+      - name: Install build dependencies
+        run: |
+          export CUDA_HOME=/usr/local/cuda
+          export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+          export PATH=$HOME/.local/bin:$PATH:$CUDA_HOME/bin
+          export CUDACXX=/usr/local/cuda/bin/nvcc
+          export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+          export UV_PROJECT_ENVIRONMENT=/tmp/venv
+          # Create a temporary venv and install build dependencies
+          uv venv $UV_PROJECT_ENVIRONMENT
+          uv pip install --no-build-isolation setuptools torch==2.7.1 pybind11 'Cython>=3.0.0' ninja nvidia-cuda-runtime-cu12
+
       - name: Generate uv.lock
         run: |
           export CUDA_HOME=/usr/local/cuda
