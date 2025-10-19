@@ -45,7 +45,7 @@ dependencies = [
     "megatron-bridge>=0.1.0a0,<0.2.0",
     "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
     "nvidia-resiliency-ext>=0.4.0a0,<0.5.0; sys_platform != 'darwin'",
-    "transformer-engine[pytorch]>=2.6.0a0,<2.7.0; sys_platform != 'darwin'",
+    "transformer-engine[pytorch]>=2.8.0,<2.9.0; sys_platform != 'darwin'",
     "accelerate",
     "fastapi",
     "pydantic-settings",
@@ -61,7 +61,7 @@ dependencies = [
     "lightning",
     "omegaconf>=2.3.0",
     "peft",
-    "torch==2.7.1",
+    "torch==2.8.0",
     "torchvision",
     "torchmetrics>=0.11.0",
     "wandb",
@@ -86,7 +86,7 @@ trt-onnx = ["tensorrt==10.11.0.33", "onnx==1.18.0", "transformers==4.51.3"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch==2.7.1", "pybind11", "Cython>=3.0.0", "ninja"]
+build = ["setuptools", "torch==2.8.0", "pybind11", "Cython>=3.0.0", "ninja"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
@@ -110,12 +110,14 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 # megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "ecf05926b4765aada82c8eabab4a374e8e83a9c5" }
-transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "fedd9ddc739a4f28b2ee705df5577d20d33400ec" } # torch 2.7.1 compatibility fix
+transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", branch = "release_v2.8" } # torch 2.8 compatibility - using latest release branch
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
 no-build-isolation-package = ["transformer-engine", "transformer-engine-torch"]
+# Provide build dependencies for packages that don't declare them properly
+extra-build-dependencies.transformer-engine = ["setuptools", "torch", "pybind11", "packaging"]
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
 # and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
 # avoid including these in the default dependency set, but for now it's required.

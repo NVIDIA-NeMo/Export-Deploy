@@ -4070,10 +4070,10 @@ requires-dist = [
     { name = "tensorstore" },
     { name = "tiktoken" },
     { name = "timm", marker = "extra == 'vllm'" },
-    { name = "torch", specifier = "==2.7.1", index = "https://download.pytorch.org/whl/cu128" },
+    { name = "torch", specifier = "==2.8.0", index = "https://download.pytorch.org/whl/cu128" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
     { name = "torchvision" },
-    { name = "transformer-engine", extras = ["pytorch"], marker = "sys_platform != 'darwin'", git = "https://github.com/NVIDIA/TransformerEngine.git?rev=fedd9ddc739a4f28b2ee705df5577d20d33400ec" },
+    { name = "transformer-engine", extras = ["pytorch"], marker = "sys_platform != 'darwin'", git = "https://github.com/NVIDIA/TransformerEngine.git?branch=release_v2.8" },
     { name = "transformers", marker = "extra == 'trt-onnx'", specifier = "==4.51.3" },
     { name = "uvicorn" },
     { name = "vllm", marker = "platform_machine == 'aarch64' and extra == 'vllm'", specifier = "~=0.10.0", index = "https://pypi.org/simple" },
@@ -4091,7 +4091,7 @@ build = [
     { name = "ninja" },
     { name = "pybind11" },
     { name = "setuptools" },
-    { name = "torch", specifier = "==2.7.1", index = "https://download.pytorch.org/whl/cu128" },
+    { name = "torch", specifier = "==2.8.0", index = "https://download.pytorch.org/whl/cu128" },
 ]
 docs = [
     { name = "myst-parser" },
@@ -8623,8 +8623,8 @@ wheels = [
 
 [[package]]
 name = "transformer-engine"
-version = "2.7.0+fedd9dd"
-source = { git = "https://github.com/NVIDIA/TransformerEngine.git?rev=fedd9ddc739a4f28b2ee705df5577d20d33400ec#fedd9ddc739a4f28b2ee705df5577d20d33400ec" }
+version = "2.8.0"
+source = { git = "https://github.com/NVIDIA/TransformerEngine.git?branch=release_v2.8" }
 dependencies = [
     { name = "einops" },
     { name = "importlib-metadata" },
