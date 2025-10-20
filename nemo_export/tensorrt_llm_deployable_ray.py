@@ -123,7 +123,7 @@ class TensorRTLLMRayDeployable:
             # Prepare inference inputs with proper parameter mapping
             inference_inputs = {
                 "prompts": request.get("prompts", []),
-                "max_length": request.get("max_tokens", 256),
+                "max_output_len": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0.0),
