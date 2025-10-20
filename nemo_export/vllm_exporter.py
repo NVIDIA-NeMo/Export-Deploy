@@ -598,7 +598,6 @@ class vLLMExporter(ITritonDeployable):
         output = []
         top_logprobs = []
         top_prompt_logprobs = []
-        ## TODO : might have to update tests for this
         token_ids_list = []
         prompt_token_ids_list = []
 
