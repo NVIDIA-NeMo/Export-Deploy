@@ -86,7 +86,7 @@ trt-onnx = ["tensorrt==10.11.0.33", "onnx==1.18.0", "transformers==4.51.3"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch==2.7.1", "pybind11", "Cython>=3.0.0", "ninja", "nvidia-cuda-runtime-cu12"]
+build = ["setuptools", "torch==2.7.1", "pybind11", "Cython>=3.0.0", "ninja"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
@@ -201,5 +201,3 @@ convention = "google"
 "*_test.py" = ["D"]
 # Ignore F401 (import but unused) in __init__.py
 "__init__.py" = ["F401"]
-
-# Trigger workflow to generate uv.lock with artifact upload
