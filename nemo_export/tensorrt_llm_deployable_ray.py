@@ -205,7 +205,6 @@ class TensorRTLLMRayDeployable:
                 "apply_chat_template": request.get("apply_chat_template", True),
             }
 
-            print(f"---------- inference_inputs 2: {inference_inputs} ----------")
             # Run model inference in the thread pool
             results = self.model.ray_infer_fn(inference_inputs)
 
