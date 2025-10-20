@@ -51,24 +51,25 @@ def mock_setup_model_and_tokenizer():
 @pytest.fixture
 def mock_triton_imports():
     with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.HAVE_TRITON", True):
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.batch") as mock_batch:
-            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.first_value") as mock_first_value:
-                with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.Tensor") as mock_tensor:
-                    mock_batch.return_value = lambda x: x
-                    mock_first_value.return_value = lambda x: x
+        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.HAVE_NEMO", True):
+            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.batch") as mock_batch:
+                with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.first_value") as mock_first_value:
+                    with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.Tensor") as mock_tensor:
+                        mock_batch.return_value = lambda x: x
+                        mock_first_value.return_value = lambda x: x
 
-                    # Create a proper mock Tensor class that can be instantiated with parameters
-                    def create_tensor(**kwargs):
-                        tensor_mock = MagicMock()
-                        tensor_mock.name = kwargs.get("name")
-                        tensor_mock.shape = kwargs.get("shape")
-                        tensor_mock.dtype = kwargs.get("dtype")
-                        tensor_mock.optional = kwargs.get("optional", False)
+                        # Create a proper mock Tensor class that can be instantiated with parameters
+                        def create_tensor(**kwargs):
+                            tensor_mock = MagicMock()
+                            tensor_mock.name = kwargs.get("name")
+                            tensor_mock.shape = kwargs.get("shape")
+                            tensor_mock.dtype = kwargs.get("dtype")
+                            tensor_mock.optional = kwargs.get("optional", False)
 
-                        return tensor_mock
+                            return tensor_mock
 
-                    mock_tensor.side_effect = create_tensor
-                    yield mock_batch, mock_first_value, mock_tensor
+                        mock_tensor.side_effect = create_tensor
+                        yield mock_batch, mock_first_value, mock_tensor
 
 
 @pytest.fixture
