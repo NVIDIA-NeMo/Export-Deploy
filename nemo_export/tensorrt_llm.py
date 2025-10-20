@@ -939,8 +939,8 @@ class TensorRTLLM(ITritonDeployable):
         infer_input = {"input_texts": prompts}
 
         # Process common parameters
-        if "max_output_len" in inputs:
-            infer_input["max_output_len"] = inputs["max_output_len"]
+        if "max_output_length" in inputs:
+            infer_input["max_output_len"] = inputs["max_output_length"]
         if "top_k" in inputs:
             infer_input["top_k"] = inputs["top_k"]
         if "top_p" in inputs:

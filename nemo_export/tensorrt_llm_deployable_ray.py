@@ -123,7 +123,7 @@ class TensorRTLLMRayDeployable:
             # Prepare inference inputs with proper parameter mapping
             inference_inputs = {
                 "prompts": request.get("prompts", []),
-                "max_length": request.get("max_tokens", 256),
+                "max_output_length": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0.0),
@@ -197,7 +197,7 @@ class TensorRTLLMRayDeployable:
 
             inference_inputs = {
                 "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
-                "max_length": request.get("max_tokens", 256),
+                "max_output_length": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0.0),
@@ -205,6 +205,7 @@ class TensorRTLLMRayDeployable:
                 "apply_chat_template": request.get("apply_chat_template", True),
             }
 
+            print(f"---------- inference_inputs 2: {inference_inputs} ----------")
             # Run model inference in the thread pool
             results = self.model.ray_infer_fn(inference_inputs)
 
@@ -248,7 +249,7 @@ class TensorRTLLMRayDeployable:
                         ),
                         "finish_reason": (
                             "length"
-                            if generated_texts and len(str(generated_texts[0])) >= inference_inputs["max_length"]
+                            if generated_texts and len(str(generated_texts[0])) >= inference_inputs["max_output_length"]
                             else "stop"
                         ),
                     }
