@@ -471,6 +471,7 @@ class TestHFDeployableEchoAndLogprobs:
                     instance.tokenizer = mock_tokenizer
                     yield instance
 
+    @pytest.mark.run_only_on("GPU")
     def test_generate_with_echo_false_returns_only_generated_text(self, hf_deployable):
         """Test that generate with echo=False returns only generated text."""
         result = hf_deployable.generate(
@@ -490,6 +491,7 @@ class TestHFDeployableEchoAndLogprobs:
         # Should have input_lengths
         assert "input_lengths" in result
 
+    @pytest.mark.run_only_on("GPU")
     def test_generate_with_echo_true_returns_full_text(self, hf_deployable):
         """Test that generate with echo=True returns prompt + generated text."""
         result = hf_deployable.generate(
@@ -507,6 +509,7 @@ class TestHFDeployableEchoAndLogprobs:
         assert isinstance(result["sentences"], list)
         assert len(result["sentences"]) == 1
 
+    @pytest.mark.run_only_on("GPU")
     def test_generate_returns_scores_when_requested(self, hf_deployable):
         """Test that generate returns scores when output_scores=True."""
         result = hf_deployable.generate(
@@ -520,6 +523,7 @@ class TestHFDeployableEchoAndLogprobs:
         assert "scores" in result
         assert isinstance(result["scores"], list)
 
+    @pytest.mark.run_only_on("GPU")
     def test_ray_infer_fn_with_compute_logprob(self, hf_deployable):
         """Test ray_infer_fn computes logprobs when requested."""
 
@@ -539,6 +543,7 @@ class TestHFDeployableEchoAndLogprobs:
         # Should have logprobs for generated tokens
         assert len(result["log_probs"][0]) > 0
 
+    @pytest.mark.run_only_on("GPU")
     def test_ray_infer_fn_with_top_logprobs(self, hf_deployable):
         """Test ray_infer_fn computes top_logprobs when requested."""
         import json
@@ -565,6 +570,7 @@ class TestHFDeployableEchoAndLogprobs:
         assert isinstance(parsed, list)
         assert all(isinstance(item, dict) for item in parsed)
 
+    @pytest.mark.run_only_on("GPU")
     def test_ray_infer_fn_with_echo_includes_prompt_logprobs(self, hf_deployable):
         """Test ray_infer_fn includes prompt logprobs when echo=True."""
         inputs = {
@@ -583,6 +589,7 @@ class TestHFDeployableEchoAndLogprobs:
         # Prompt "Test prompt" = 2 words = 2 tokens (minus BOS) + 2 generated = at least 3
         assert len(result["log_probs"][0]) >= 3
 
+    @pytest.mark.run_only_on("GPU")
     def test_ray_infer_fn_removes_intermediate_outputs(self, hf_deployable):
         """Test ray_infer_fn removes intermediate outputs from final result."""
         inputs = {
@@ -599,6 +606,7 @@ class TestHFDeployableEchoAndLogprobs:
         assert "sequences" not in result
         assert "input_lengths" not in result
 
+    @pytest.mark.run_only_on("GPU")
     def test_ray_infer_fn_without_logprobs(self, hf_deployable):
         """Test ray_infer_fn without logprobs doesn't compute them."""
         inputs = {
@@ -614,6 +622,7 @@ class TestHFDeployableEchoAndLogprobs:
         assert "log_probs" not in result
         assert "top_logprobs" not in result
 
+    @pytest.mark.run_only_on("GPU")
     def test_ray_infer_fn_multiple_prompts(self, hf_deployable):
         """Test inference with multiple prompts."""
         inputs = {
