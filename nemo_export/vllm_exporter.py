@@ -272,6 +272,11 @@ class vLLMExporter(ITritonDeployable):
 
             output_infer = self._infer_fn(prompts, processed_inputs)
 
+            # Remove token_ids and prompt_token_ids as they're not part of Triton output schema and are not required..
+            # These fields are only used by Ray ray_infer_fn to post-process log probabilities for OAI API compatibility
+            output_infer.pop("token_ids", None)
+            output_infer.pop("prompt_token_ids", None)
+
             # Format output for triton
             output_infer["sentences"] = cast_output(output_infer["sentences"], np.bytes_)
             if "log_probs" in output_infer.keys():
