@@ -596,6 +596,14 @@ class TestHFRayDeployable:
                     "finish_reason": "stop",
                 }
             ],
+            "choices": [
+                {
+                    "text": "Test response",
+                    "index": 0,
+                    "logprobs": None,
+                    "finish_reason": "stop",
+                }
+            ],
             "usage": {
                 "prompt_tokens": 2,
                 "completion_tokens": 2,
