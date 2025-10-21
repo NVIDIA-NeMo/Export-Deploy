@@ -437,3 +437,185 @@ class TestNeMoMultimodalDeployable:
                     np.testing.assert_array_equal(
                         result["sentences"], np.array([b"Generated text 1", b"Generated text 2"])
                     )
+
+    def test_apply_chat_template_with_dict(self, deployable):
+        """Test apply_chat_template with dict input."""
+        messages = [{"role": "user", "content": "Hello"}]
+        expected_text = "User: Hello\n"
+
+        # Mock the processor's apply_chat_template method
+        deployable.processor.apply_chat_template = MagicMock(return_value=expected_text)
+
+        result = deployable.apply_chat_template(messages)
+
+        deployable.processor.apply_chat_template.assert_called_once_with(
+            messages, tokenizer=False, add_generation_prompt=True
+        )
+        assert result == expected_text
+
+    def test_apply_chat_template_with_json_string(self, deployable):
+        """Test apply_chat_template with JSON string input."""
+        messages_dict = [{"role": "user", "content": "Hello"}]
+        messages_json = json.dumps(messages_dict)
+        expected_text = "User: Hello\n"
+
+        # Mock the processor's apply_chat_template method
+        deployable.processor.apply_chat_template = MagicMock(return_value=expected_text)
+
+        result = deployable.apply_chat_template(messages_json)
+
+        deployable.processor.apply_chat_template.assert_called_once_with(
+            messages_dict, tokenizer=False, add_generation_prompt=True
+        )
+        assert result == expected_text
+
+    def test_apply_chat_template_without_generation_prompt(self, deployable):
+        """Test apply_chat_template with add_generation_prompt=False."""
+        messages = [{"role": "user", "content": "Hello"}]
+        expected_text = "User: Hello"
+
+        # Mock the processor's apply_chat_template method
+        deployable.processor.apply_chat_template = MagicMock(return_value=expected_text)
+
+        result = deployable.apply_chat_template(messages, add_generation_prompt=False)
+
+        deployable.processor.apply_chat_template.assert_called_once_with(
+            messages, tokenizer=False, add_generation_prompt=False
+        )
+        assert result == expected_text
+
+    def test_base64_to_image_with_qwenvl_wrapper(self, deployable):
+        """Test base64_to_image with QwenVLInferenceWrapper."""
+        # Create a mock QwenVLInferenceWrapper class
+        mock_qwenvl_class = MagicMock()
+
+        # Make deployable.inference_wrapped_model an instance of the mock class
+        # Use isinstance check to return True for QwenVLInferenceWrapper
+        deployable.inference_wrapped_model = MagicMock()
+
+        image_base64 = (
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        )
+        expected_image = Image.new("RGB", (100, 100))
+
+        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
+            # Make isinstance return True for our mock
+            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.isinstance") as mock_isinstance:
+                mock_isinstance.return_value = True
+
+                with patch("qwen_vl_utils.process_vision_info") as mock_process:
+                    mock_process.return_value = (expected_image, None)
+
+                    result = deployable.base64_to_image(image_base64)
+
+                    # Verify isinstance was called to check the model type
+                    mock_isinstance.assert_called_once_with(deployable.inference_wrapped_model, mock_qwenvl_class)
+
+                    # Verify process_vision_info was called with correct format
+                    call_args = mock_process.call_args[0][0]
+                    assert len(call_args) == 1
+                    assert call_args[0]["role"] == "user"
+                    assert call_args[0]["content"][0]["type"] == "image"
+                    assert call_args[0]["content"][0]["image"] == f"data:image;base64,{image_base64}"
+
+                    assert result == expected_image
+
+    def test_base64_to_image_with_unsupported_model(self, deployable):
+        """Test base64_to_image with unsupported model raises ValueError."""
+        # Create a mock QwenVLInferenceWrapper class
+        mock_qwenvl_class = MagicMock()
+
+        # Make sure the wrapped model is NOT a QwenVLInferenceWrapper
+        deployable.inference_wrapped_model = MagicMock()
+
+        image_base64 = "test_base64_string"
+
+        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
+            # Make isinstance return False for our mock (not a QwenVLInferenceWrapper)
+            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.isinstance") as mock_isinstance:
+                mock_isinstance.return_value = False
+
+                with pytest.raises(ValueError, match="not supported"):
+                    deployable.base64_to_image(image_base64)
+
+    def test_ray_infer_fn(self, deployable):
+        """Test ray_infer_fn method."""
+        inputs = {
+            "prompts": ["test prompt 1", "test prompt 2"],
+            "images": ["base64_image_1", "base64_image_2"],
+            "temperature": 0.8,
+            "top_k": 15,
+            "top_p": 0.95,
+            "max_length": 200,
+            "random_seed": 999,
+            "max_batch_size": 2,
+            "apply_chat_template": True,
+        }
+
+        with patch.object(deployable, "_infer_fn") as mock_infer:
+            mock_infer.return_value = {"sentences": ["Generated 1", "Generated 2"]}
+
+            result = deployable.ray_infer_fn(inputs)
+
+            mock_infer.assert_called_once_with(
+                prompts=["test prompt 1", "test prompt 2"],
+                images=["base64_image_1", "base64_image_2"],
+                temperature=0.8,
+                top_k=15,
+                top_p=0.95,
+                num_tokens_to_generate=200,
+                random_seed=999,
+                max_batch_size=2,
+                apply_chat_template=True,
+            )
+
+            assert result == {"sentences": ["Generated 1", "Generated 2"]}
+
+    def test_ray_infer_fn_with_default_params(self, deployable):
+        """Test ray_infer_fn with default parameters."""
+        inputs = {
+            "prompts": ["test prompt"],
+            "images": ["base64_image"],
+        }
+
+        with patch.object(deployable, "_infer_fn") as mock_infer:
+            mock_infer.return_value = {"sentences": ["Generated text"]}
+
+            result = deployable.ray_infer_fn(inputs)
+
+            mock_infer.assert_called_once_with(
+                prompts=["test prompt"],
+                images=["base64_image"],
+                temperature=1.0,
+                top_k=1,
+                top_p=0.0,
+                num_tokens_to_generate=50,
+                random_seed=None,
+                max_batch_size=4,
+                apply_chat_template=False,
+            )
+
+            assert result == {"sentences": ["Generated text"]}
+
+    def test_ray_infer_fn_with_empty_inputs(self, deployable):
+        """Test ray_infer_fn with empty inputs dict."""
+        inputs = {}
+
+        with patch.object(deployable, "_infer_fn") as mock_infer:
+            mock_infer.return_value = {"sentences": []}
+
+            result = deployable.ray_infer_fn(inputs)
+
+            mock_infer.assert_called_once_with(
+                prompts=[],
+                images=[],
+                temperature=1.0,
+                top_k=1,
+                top_p=0.0,
+                num_tokens_to_generate=50,
+                random_seed=None,
+                max_batch_size=4,
+                apply_chat_template=False,
+            )
+
+            assert result == {"sentences": []}
