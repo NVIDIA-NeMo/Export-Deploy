@@ -551,7 +551,6 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 n_top_logprobs=n_top_logprobs,
                 echo=echo,
             )
-
             # Code to get logprobs (required in OAI API format for eval) from the scores in output_infer.
             if (compute_logprob or n_top_logprobs > 0) and "scores" in output_infer and output_infer["scores"]:
                 log_probs_list, top_logprobs_list = self._compute_logprobs(
@@ -573,7 +572,6 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 output_infer.pop("scores", None)
                 output_infer.pop("sequences", None)
                 output_infer.pop("input_lengths", None)
-
             return output_infer
         except Exception as error:
             err_msg = "An error occurred: {0}".format(str(error))
