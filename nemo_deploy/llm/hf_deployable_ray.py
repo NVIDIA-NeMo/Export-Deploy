@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import json
 import logging
 import time
 from typing import Any, Dict, Optional
@@ -151,6 +152,8 @@ class HFRayDeployable:
                 - temperature: Sampling temperature (optional)
                 - top_k: Top-k sampling parameter (optional)
                 - top_p: Top-p sampling parameter (optional)
+                - logprobs: Number of log probabilities to return (optional)
+                - echo: Whether to echo the prompt (optional)
                 - model: Model identifier (optional)
 
         Returns:
@@ -159,7 +162,7 @@ class HFRayDeployable:
                 - object: Response type ("text_completion")
                 - created: Timestamp
                 - model: Model identifier
-                - choices: List of completion choices
+                - choices: List of completion choices with logprobs
                 - usage: Token usage statistics
 
         Raises:
@@ -172,7 +175,10 @@ class HFRayDeployable:
             top_p = request.get("top_p", 0.0)
             if temperature == 0.0 and top_p == 0.0:
                 LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
-                request["top_k"] = 1.0
+                request["top_k"] = 1
+                # Required for vllm's top_p should be in (0,1] error. Not required for HF in-fw.
+                # TODO: athitten check if this can be removed with some setting in vllm.
+                request["top_p"] = 0.1
 
             inference_inputs = {
                 "prompts": request.get("prompts", []),
@@ -180,28 +186,40 @@ class HFRayDeployable:
                 "temperature": request.get("temperature", 0.0),
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 0),
-                "output_logits": request.get("output_logits", False),
-                "output_scores": request.get("output_scores", False),
+                "compute_logprob": True
+                if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0)
+                else False,
+                "n_top_logprobs": request.get("logprobs", 0),
+                "echo": request.get("echo", False),
             }
 
             # Run tokenization and model inference in the thread pool
             results = self.model.ray_infer_fn(inference_inputs)
             # Extract generated texts from results
             generated_texts = results.get("sentences", [])
-
             # Calculate token counts asynchronously
             prompt_tokens = sum(len(p.split()) for p in request.get("prompts", []))
             completion_tokens = sum(len(r.split()) for r in generated_texts)
             total_tokens = prompt_tokens + completion_tokens
 
             # Convert numpy arrays to Python lists for JSON serialization
-            scores = results.get("scores", None)
-            if scores is not None and isinstance(scores, np.ndarray):
-                scores = scores.tolist()
+            log_probs_data = results.get("log_probs", None)
+            if log_probs_data is not None:
+                # If it's a nested list, take the first element
+                if isinstance(log_probs_data, list) and len(log_probs_data) > 0:
+                    if isinstance(log_probs_data[0], list):
+                        log_probs_data = log_probs_data[0]
 
-            logits = results.get("logits", None)
-            if logits is not None and isinstance(logits, np.ndarray):
-                logits = logits.tolist()
+            top_log_probs_data = results.get("top_logprobs", None)
+            if top_log_probs_data is not None:
+                # If it's a list of strings (JSON encoded), parse the first one
+                if isinstance(top_log_probs_data, list) and len(top_log_probs_data) > 0:
+                    if isinstance(top_log_probs_data[0], str):
+                        # Parse JSON string
+                        top_log_probs_data = json.loads(top_log_probs_data[0])
+                    elif isinstance(top_log_probs_data[0], list):
+                        # If it's a nested list, take the first element
+                        top_log_probs_data = top_log_probs_data[0]
 
             output = {
                 "id": f"cmpl-{int(time.time())}",
@@ -214,15 +232,11 @@ class HFRayDeployable:
                         "index": 0,
                         "logprobs": (
                             {
-                                "scores": scores,
+                                "token_logprobs": log_probs_data,
+                                "top_logprobs": top_log_probs_data,
                             }
-                            if scores is not None
-                            else None,
-                            {
-                                "logits": logits,
-                            }
-                            if logits is not None
-                            else None,
+                            if log_probs_data is not None
+                            else None
                         ),
                         "finish_reason": (
                             "length"
@@ -237,6 +251,8 @@ class HFRayDeployable:
                     "total_tokens": total_tokens,
                 },
             }
+            # Uncomment the below line to view the output
+            # LOGGER.warning(f"Output: {output}")
             return output
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")

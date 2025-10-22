@@ -172,7 +172,8 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 - temperature: Sampling temperature
                 - top_k: Number of highest probability tokens to consider
                 - top_p: Cumulative probability threshold for token sampling
-                - do_sample: Whether to use sampling
+                - do_sample: Whether to use sampling, default is False for greedy decoding
+                - echo: Whether to return prompt + generated text (True) or just generated text (False)
                 - return_full_text: Whether to return full text or only generated part
 
         Returns:
@@ -183,6 +184,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 - sentences: List of generated texts
                 - logits: List of logits
                 - scores: List of scores
+                - input_lengths: List of input token lengths (for echo processing)
 
         Raises:
             RuntimeError: If the pipeline is not initialized.
@@ -200,8 +202,11 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         # Store input lengths to extract only generated tokens later
         input_lengths = [len(input_ids) for input_ids in inputs["input_ids"]]
 
+        # Get echo parameter (default False - only return generated text)
+        echo = kwargs.pop("echo", False)
+        kwargs.pop("text_inputs")  # Remove text_inputs as it's already been tokenized
+
         kwargs = {**inputs, **kwargs}
-        kwargs.pop("text_inputs")
         for key, val in kwargs.items():
             if torch.is_tensor(val):
                 kwargs[key] = val.cuda()
@@ -212,16 +217,23 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         if return_dict_in_generate:
             # Handle dict output (when logits/scores are requested)
             sequences = generated_ids["sequences"]
-            output = {"sentences": []}
+            output = {"sentences": [], "input_lengths": input_lengths, "sequences": sequences}
 
-            # Extract only the generated tokens (skip input tokens) as the default behavior.
-            # This is required as HF model's generate returns the input/prompt tokens as well by default and there is
-            # no generic flag/arg to disable it. (return_full_text is specific to some models)
-            for i, seq in enumerate(sequences):
-                input_len = input_lengths[i] if i < len(input_lengths) else 0
-                generated_tokens = seq[input_len:]  # Skip input tokens
-                generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
-                output["sentences"].append(generated_text)
+            if echo:
+                # Return full text (prompt + generated).
+                # HF model's generate returns the input/prompt tokens as well by default.
+                for i, seq in enumerate(sequences):
+                    full_text = self.tokenizer.decode(seq, skip_special_tokens=True)
+                    output["sentences"].append(full_text)
+            else:
+                # Extract only the generated tokens (skip input tokens).
+                # This is required as HF model's generate returns the input/prompt tokens as well by default and there is
+                # no generic flag/arg to disable it. (return_full_text is specific to some models)
+                for i, seq in enumerate(sequences):
+                    input_len = input_lengths[i] if i < len(input_lengths) else 0
+                    generated_tokens = seq[input_len:]  # Skip input tokens
+                    generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+                    output["sentences"].append(generated_text)
 
             if kwargs.get("output_logits", False):
                 output["logits"] = generated_ids["logits"]
@@ -230,12 +242,18 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         else:
             # Handle list output (normal case)
             output = []
-            # Extract only the generated tokens (skip input tokens) as the default behavior.
-            for i, seq in enumerate(generated_ids):
-                input_len = input_lengths[i] if i < len(input_lengths) else 0
-                generated_tokens = seq[input_len:]  # Skip input tokens
-                generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
-                output.append(generated_text)
+            if echo:
+                # Return full text (prompt + generated), which is the default in case of HF model generate.
+                for i, seq in enumerate(generated_ids):
+                    full_text = self.tokenizer.decode(seq, skip_special_tokens=True)
+                    output.append(full_text)
+            else:
+                # Extract only the generated tokens (skip input tokens) as the default behavior returns the input/prompt tokens as well.
+                for i, seq in enumerate(generated_ids):
+                    input_len = input_lengths[i] if i < len(input_lengths) else 0
+                    generated_tokens = seq[input_len:]  # Skip input tokens
+                    generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+                    output.append(generated_text)
 
         return output
 
@@ -261,7 +279,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
                 self.generate(
                     text_inputs=prompts,
-                    do_sample=True,
+                    do_sample=False,  # do_sample=False for greedy decoding
                     top_k=top_k,
                     top_p=top_p,
                     temperature=temperature,
@@ -331,7 +349,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
             output = self.generate(
                 text_inputs=prompts,
-                do_sample=True,
+                do_sample=False,  # do_sample=False for greedy decoding
                 top_k=top_k,
                 top_p=top_p,
                 temperature=temperature,
@@ -339,6 +357,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 output_logits=output_logits,
                 output_scores=output_scores,
                 return_dict_in_generate=return_dict_in_generate,
+                echo=False,
             )
 
             if isinstance(output, dict):
@@ -372,6 +391,131 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
         return output_infer
 
+    def _compute_logprobs(
+        self,
+        prompts: List[str],
+        output_infer: Dict[str, Any],
+        compute_logprob: bool,
+        n_top_logprobs: int,
+        echo: bool,
+    ):
+        """Compute log probabilities and top log probabilities from model scores.
+        Used by ray_infer_fn to provide OAI API compatible output for evaluations.
+
+        This method processes the raw scores from model generation to compute:
+        - Log probabilities for chosen tokens
+        - Top-k log probabilities for each position (if requested)
+        - Handles both prompt tokens (when echo=True) and generated tokens
+
+        Args:
+            prompts: List of input prompts
+            output_infer: Dictionary containing model outputs including scores, sequences, and input_lengths
+            compute_logprob: Whether to compute log probabilities
+            n_top_logprobs: Number of top log probabilities to return (0 to disable)
+            echo: Whether to include prompt token log probabilities
+
+        Returns:
+            Tuple[Optional[List], Optional[List]]:
+                - log_probs_list: List of log probabilities for each sample (None if not computed)
+                - top_logprobs_list: List of top-k log probabilities for each sample (None if not computed)
+        """
+        # Tokenize the prompts to get prompt token IDs (needed for echo)
+        prompt_token_ids = None
+        prompt_inputs = None
+        if echo:
+            prompt_inputs = self.tokenizer(
+                prompts,
+                return_tensors="pt",
+                padding=self.tokenizer_padding,
+                truncation=self.tokenizer_truncation,
+            )
+            prompt_token_ids = prompt_inputs["input_ids"]
+            # Move to same device as model
+            for key, val in prompt_inputs.items():
+                if torch.is_tensor(val):
+                    prompt_inputs[key] = val.cuda()
+
+        # Process each sample
+        log_probs_list = []
+        top_logprobs_list = []
+
+        for sample_idx in range(len(prompts)):
+            sample_log_probs = []
+            sample_top_logprobs = []
+
+            # Get the generated sequence for this sample
+            sequences = output_infer["sequences"][sample_idx]
+
+            # For echo, compute prompt token logprobs by running forward pass
+            if echo and prompt_token_ids is not None:
+                prompt_len = len(prompt_token_ids[sample_idx])
+
+                # Run forward pass on prompt to get logits for prompt tokens as scores in output_infer contains
+                # logits only for generated tokens.
+                with torch.no_grad():
+                    # Create input for this specific sample
+                    sample_prompt_input = {key: val[sample_idx : sample_idx + 1] for key, val in prompt_inputs.items()}
+                    prompt_outputs = self.model(**sample_prompt_input)
+                    prompt_logits = prompt_outputs.logits[0]  # Shape: [seq_len, vocab_size]
+
+                # Calculate log probs for each prompt token (except the first BOS token)
+                for token_pos in range(1, prompt_len):  # Start from 1 to skip BOS
+                    # The logit at position i-1 predicts token at position i
+                    logit_for_current_token = prompt_logits[token_pos - 1]
+                    current_token_id = prompt_token_ids[sample_idx][token_pos].item()
+
+                    # Calculate log probabilities
+                    log_probs = torch.nn.functional.log_softmax(logit_for_current_token, dim=-1)
+                    chosen_log_prob = log_probs[current_token_id].item()
+                    sample_log_probs.append(chosen_log_prob)
+
+                    # Calculate top log probabilities if requested
+                    if n_top_logprobs > 0:
+                        top_log_probs_dict = {}
+                        top_k_values, top_k_indices = torch.topk(log_probs, min(n_top_logprobs, len(log_probs)))
+                        for k_idx in range(len(top_k_indices)):
+                            token_id = top_k_indices[k_idx].item()
+                            token_str = self.tokenizer.decode([token_id])
+                            top_log_probs_dict[token_str] = top_k_values[k_idx].item()
+                        sample_top_logprobs.append(top_log_probs_dict)
+
+            # Process the scores for generated tokens
+            for token_idx, score_tensor in enumerate(output_infer["scores"]):
+                # Get the chosen token ID from the sequence
+                # Scores start after the prompt, so we need to offset
+                input_len = output_infer.get("input_lengths", [0])[sample_idx] if "input_lengths" in output_infer else 0
+                seq_idx = input_len + token_idx
+
+                if seq_idx < len(sequences):
+                    chosen_token_id = (
+                        sequences[seq_idx].item() if hasattr(sequences[seq_idx], "item") else sequences[seq_idx]
+                    )
+
+                    # Calculate log probabilities
+                    log_probs = torch.nn.functional.log_softmax(score_tensor[sample_idx], dim=-1)
+                    chosen_log_prob = log_probs[chosen_token_id].item()
+                    sample_log_probs.append(chosen_log_prob)
+
+                    # Calculate top log probabilities if requested
+                    if n_top_logprobs > 0:
+                        top_log_probs_dict = {}
+                        top_k_values, top_k_indices = torch.topk(log_probs, min(n_top_logprobs, len(log_probs)))
+                        for k_idx in range(len(top_k_indices)):
+                            token_id = top_k_indices[k_idx].item()
+                            token_str = self.tokenizer.decode([token_id])
+                            top_log_probs_dict[token_str] = top_k_values[k_idx].item()
+                        sample_top_logprobs.append(top_log_probs_dict)
+
+            log_probs_list.append(sample_log_probs)
+            if n_top_logprobs > 0:
+                top_logprobs_list.append(sample_top_logprobs)
+
+        # Return log probs and top logprobs
+        return_log_probs = log_probs_list if compute_logprob else None
+        return_top_logprobs = top_logprobs_list if n_top_logprobs > 0 else None
+
+        return return_log_probs, return_top_logprobs
+
     def ray_infer_fn(self, inputs: Dict[Any, Any]):
         """Perform inference using Ray with dictionary inputs and outputs.
 
@@ -381,16 +525,19 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 - temperature: Sampling temperature (optional)
                 - top_k: Number of highest probability tokens to consider (optional)
                 - top_p: Cumulative probability threshold for token sampling (optional)
-                - max_length: Maximum number of tokens to generate (optional)
-                - output_logits: Whether to output logits (optional)
-                - output_scores: Whether to output scores (optional)
+                - max_tokens: Maximum number of tokens to generate (optional)
+                - compute_logprob: Whether to compute log probabilities (optional)
+                - n_top_logprobs: Number of top log probabilities to return (optional)
+                - echo: Whether to echo the prompt in output (optional)
 
         Returns:
             Dict[str, Any]: Dictionary containing:
                 - sentences: List of generated texts
-                - scores: Optional array of scores if output_scores is True
-                - logits: Optional array of logits if output_logits is True
+                - log_probs: Optional list of log probabilities if compute_logprob is True
+                - top_logprobs: Optional list of top log probabilities if n_top_logprobs > 0
         """
+        import json
+
         try:
             prompts = inputs.pop("prompts")
             temperature = inputs.pop("temperature", 1.0)
@@ -399,7 +546,11 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             num_tokens_to_generate = inputs.pop("max_tokens", 256)
             output_logits = inputs.pop("output_logits", False)
             output_scores = inputs.pop("output_scores", False)
-            return self._infer_fn_common(
+            compute_logprob = inputs.pop("compute_logprob", False)
+            n_top_logprobs = inputs.pop("n_top_logprobs", 0)
+            echo = inputs.pop("echo", False)
+
+            output_infer = self._infer_fn_ray(
                 prompts=prompts,
                 temperature=temperature,
                 top_k=top_k,
@@ -407,12 +558,37 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 num_tokens_to_generate=num_tokens_to_generate,
                 output_logits=output_logits,
                 output_scores=output_scores,
+                compute_logprob=compute_logprob,
+                n_top_logprobs=n_top_logprobs,
+                echo=echo,
             )
+            # Code to get logprobs (required in OAI API format for eval) from the scores in output_infer.
+            if (compute_logprob or n_top_logprobs > 0) and "scores" in output_infer and output_infer["scores"]:
+                log_probs_list, top_logprobs_list = self._compute_logprobs(
+                    prompts=prompts,
+                    output_infer=output_infer,
+                    compute_logprob=compute_logprob,
+                    n_top_logprobs=n_top_logprobs,
+                    echo=echo,
+                )
+
+                # Add to output
+                if log_probs_list is not None:
+                    output_infer["log_probs"] = log_probs_list
+                if top_logprobs_list is not None:
+                    # Convert to JSON strings for compatibility
+                    output_infer["top_logprobs"] = [json.dumps(top_logprobs) for top_logprobs in top_logprobs_list]
+
+                # Remove raw outputs that are not needed in the final response
+                output_infer.pop("scores", None)
+                output_infer.pop("sequences", None)
+                output_infer.pop("input_lengths", None)
+            return output_infer
         except Exception as error:
             err_msg = "An error occurred: {0}".format(str(error))
             return {"sentences": [err_msg]}
 
-    def _infer_fn_common(
+    def _infer_fn_ray(
         self,
         prompts,
         temperature=1.0,
@@ -421,6 +597,9 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         num_tokens_to_generate=256,
         output_logits=False,
         output_scores=False,
+        compute_logprob=False,
+        n_top_logprobs=0,
+        echo=False,
         cast_output_func=None,
     ):
         """Common internal function for inference operations.
@@ -433,13 +612,20 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             num_tokens_to_generate: Maximum number of tokens to generate
             output_logits: Whether to output logits
             output_scores: Whether to output scores
+            compute_logprob: Whether to compute log probabilities
+            n_top_logprobs: Number of top log probabilities to return
+            echo: Whether to echo the prompt in output
             cast_output_func: Optional function to cast output values
 
         Returns:
-            Dict containing inference results
+            Dict containing inference results with raw outputs
         """
-        output_infer = {}
-        return_dict_in_generate = output_logits or output_scores
+        # Enable return_dict if we need scores for logprobs or if output_logits/scores are requested
+        return_dict_in_generate = output_logits or output_scores or compute_logprob or n_top_logprobs > 0
+        # Enable output_scores if we need to compute logprobs. scores and logits from generate are both identical in
+        # case of greedy decoding. Hence setting output_scores to True when compute_logprob or n_top_logprobs > 0.
+        if compute_logprob or n_top_logprobs > 0:
+            output_scores = True
 
         if torch.distributed.is_initialized():
             if torch.distributed.get_world_size() > 1:
@@ -459,7 +645,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
 
         output = self.generate(
             text_inputs=prompts,
-            do_sample=True,
+            do_sample=False,  # do_sample=False for greedy decoding
             top_k=top_k,
             top_p=top_p,
             temperature=temperature,
@@ -467,36 +653,11 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             output_logits=output_logits,
             output_scores=output_scores,
             return_dict_in_generate=return_dict_in_generate,
+            echo=echo,
         )
 
         if isinstance(output, dict):
-            output_infer = {"sentences": output["sentences"]}
-            if cast_output_func:
-                output_infer["sentences"] = cast_output_func(output["sentences"], np.bytes_)
+            return output
 
-            if "scores" in output.keys():
-                output_scores = []
-                for r in output["scores"]:
-                    lp = torch.tensor(r).cpu().detach().numpy()
-                    if len(lp) == 0:
-                        output_scores.append([0])
-                    else:
-                        output_scores.append(lp)
-                output_infer["scores"] = np.array(output_scores).transpose(1, 0, 2)
-
-            if "logits" in output.keys():
-                output_logits = []
-                for r in output["logits"]:
-                    lp = torch.tensor(r).cpu().detach().numpy()
-                    if len(lp) == 0:
-                        output_logits.append([0])
-                    else:
-                        output_logits.append(lp)
-                output_infer["logits"] = np.array(output_logits).transpose(1, 0, 2)
         else:
-            # Handle case where output is a list of strings (when return_dict_in_generate=False)
-            output_infer = {"sentences": output}
-            if cast_output_func:
-                output_infer["sentences"] = cast_output_func(output, np.bytes_)
-
-        return output_infer
+            return {"sentences": output}
