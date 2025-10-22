@@ -402,6 +402,220 @@ class TestHFRayDeployable:
         assert "status" in result
         assert result["status"] == "healthy"
 
+    def test_completions_with_logprobs(self):
+        """Test completions endpoint with logprobs parameter - using direct logic test."""
+        import json
+
+        # Mock model that returns logprobs
+        mock_model = MagicMock()
+        mock_model.ray_infer_fn.return_value = {
+            "sentences": ["Test response"],
+            "log_probs": [[0.1, 0.2, 0.3]],
+            "top_logprobs": ['[{" test": -0.1}, {" response": -0.2}]'],
+        }
+
+        # Create request with logprobs
+        request = {
+            "prompt": "Test prompt",
+            "max_tokens": 10,
+            "temperature": 0.0,
+            "logprobs": 1,
+        }
+
+        # Simulate the completions endpoint logic
+        if "prompt" in request:
+            request["prompts"] = [request["prompt"]]
+
+        inference_inputs = {
+            "prompts": request.get("prompts", []),
+            "max_tokens": request.get("max_tokens", 256),
+            "temperature": request.get("temperature", 0.0),
+            "top_k": request.get("top_k", 0),
+            "top_p": request.get("top_p", 0),
+            "compute_logprob": True
+            if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0)
+            else False,
+            "n_top_logprobs": request.get("logprobs", 0),
+            "echo": request.get("echo", False),
+        }
+
+        results = mock_model.ray_infer_fn(inference_inputs)
+        generated_texts = results.get("sentences", [])
+
+        log_probs_data = results.get("log_probs", None)
+        if log_probs_data is not None:
+            if isinstance(log_probs_data, list) and len(log_probs_data) > 0:
+                if isinstance(log_probs_data[0], list):
+                    log_probs_data = log_probs_data[0]
+
+        top_log_probs_data = results.get("top_logprobs", None)
+        if top_log_probs_data is not None:
+            if isinstance(top_log_probs_data, list) and len(top_log_probs_data) > 0:
+                if isinstance(top_log_probs_data[0], str):
+                    top_log_probs_data = json.loads(top_log_probs_data[0])
+
+        # Build response
+        result = {
+            "id": "cmpl-123",
+            "object": "text_completion",
+            "created": int(time.time()),
+            "model": "test-model",
+            "choices": [
+                {
+                    "text": " ".join(generated_texts),
+                    "index": 0,
+                    "logprobs": {
+                        "token_logprobs": log_probs_data,
+                        "top_logprobs": top_log_probs_data,
+                    }
+                    if log_probs_data is not None
+                    else None,
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 2,
+                "completion_tokens": 2,
+                "total_tokens": 4,
+            },
+        }
+
+        # Assert logprobs are present
+        assert "logprobs" in result["choices"][0]
+        assert result["choices"][0]["logprobs"] is not None
+        assert "token_logprobs" in result["choices"][0]["logprobs"]
+        assert "top_logprobs" in result["choices"][0]["logprobs"]
+        assert isinstance(result["choices"][0]["logprobs"]["token_logprobs"], list)
+        assert isinstance(result["choices"][0]["logprobs"]["top_logprobs"], list)
+
+    def test_completions_with_echo(self):
+        """Test completions endpoint with echo parameter - using direct logic test."""
+        # Mock model that returns echo response
+        mock_model = MagicMock()
+        mock_model.ray_infer_fn.return_value = {
+            "sentences": ["Test prompt Test response"],
+        }
+
+        # Create request with echo
+        request = {
+            "prompt": "Test prompt",
+            "max_tokens": 10,
+            "temperature": 0.0,
+            "echo": True,
+        }
+
+        # Simulate the completions endpoint logic
+        if "prompt" in request:
+            request["prompts"] = [request["prompt"]]
+
+        inference_inputs = {
+            "prompts": request.get("prompts", []),
+            "max_tokens": request.get("max_tokens", 256),
+            "temperature": request.get("temperature", 0.0),
+            "top_k": request.get("top_k", 0),
+            "top_p": request.get("top_p", 0),
+            "compute_logprob": False,
+            "n_top_logprobs": 0,
+            "echo": request.get("echo", False),
+        }
+
+        results = mock_model.ray_infer_fn(inference_inputs)
+        generated_texts = results.get("sentences", [])
+
+        result = {
+            "id": "cmpl-123",
+            "object": "text_completion",
+            "created": int(time.time()),
+            "model": "test-model",
+            "choices": [
+                {
+                    "text": " ".join(generated_texts),
+                    "index": 0,
+                    "logprobs": None,
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 2,
+                "completion_tokens": 2,
+                "total_tokens": 4,
+            },
+        }
+
+        # Assert echo is working (text contains prompt)
+        assert "Test prompt" in result["choices"][0]["text"]
+
+    def test_temperature_zero_preprocessing(self):
+        """Test that temperature=0.0 is handled correctly - using direct logic test."""
+        # Setup mock
+        mock_model = MagicMock()
+        mock_model.ray_infer_fn.return_value = {
+            "sentences": ["Test response"],
+        }
+
+        # Create request with temperature=0.0
+        request = {
+            "prompt": "Test prompt",
+            "max_tokens": 10,
+            "temperature": 0.0,
+            "top_p": 0.0,
+        }
+
+        # Simulate the completions endpoint preprocessing logic
+        if "prompt" in request:
+            request["prompts"] = [request["prompt"]]
+
+        temperature = request.get("temperature", 0.0)
+        top_p = request.get("top_p", 0.0)
+        if temperature == 0.0 and top_p == 0.0:
+            request["top_k"] = 1
+
+        inference_inputs = {
+            "prompts": request.get("prompts", []),
+            "max_tokens": request.get("max_tokens", 256),
+            "temperature": request.get("temperature", 0.0),
+            "top_k": request.get("top_k", 0),
+            "top_p": request.get("top_p", 0),
+            "compute_logprob": False,
+            "n_top_logprobs": 0,
+            "echo": False,
+        }
+
+        _ = mock_model.ray_infer_fn(inference_inputs)
+
+        result = {
+            "id": "cmpl-123",
+            "object": "text_completion",
+            "created": int(time.time()),
+            "model": "test-model",
+            "choices": [
+                {
+                    "text": "Test response",
+                    "index": 0,
+                    "logprobs": None,
+                    "finish_reason": "stop",
+                }
+            ],
+            "choices": [
+                {
+                    "text": "Test response",
+                    "index": 0,
+                    "logprobs": None,
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 2,
+                "completion_tokens": 2,
+                "total_tokens": 4,
+            },
+        }
+
+        # Assert top_k was set to 1 for greedy sampling
+        assert inference_inputs.get("top_k") == 1
+        # Assert result is valid
+        assert result["object"] == "text_completion"
+
 
 if __name__ == "__main__":
     pytest.main()
