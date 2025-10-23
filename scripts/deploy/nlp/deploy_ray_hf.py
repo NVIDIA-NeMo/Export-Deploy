@@ -41,10 +41,20 @@ def parse_args():
         help="Whether to trust remote code when loading the model",
     )
     parser.add_argument(
-        "--device_map",
+        "--torch_dtype",
+        nargs="?",
+        choices=["auto", "bfloat16", "float16", "float32"],
+        default="auto",
         type=str,
-        default=None,
-        help="Device mapping strategy for model placement",
+        help="Torch dtype for the model",
+    )
+    parser.add_argument(
+        "--device_map",
+        nargs="?",
+        choices=["auto", "balanced", "balanced_low_0", "sequential"],
+        default="auto",
+        type=str,
+        help="Device mapping strategy for model placement (e.g. 'auto', 'sequential', etc)",
     )
     parser.add_argument(
         "--max_memory",
@@ -149,6 +159,7 @@ def main():
         hf_model_id_path=args.model_path,
         task=args.task,
         trust_remote_code=args.trust_remote_code,
+        torch_dtype=args.torch_dtype,
         device_map=args.device_map,
         max_memory=args.max_memory,
         model_id=args.model_id,
