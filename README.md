@@ -97,6 +97,7 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
   nvcr.io/nvidia/nemo:${TAG}
 ```
 
+<a id="install-tensorrt-llm-vllm-or-trt-onnx-backend"></a>
 #### Install TensorRT-LLM, vLLM, or TRT-ONNX backend
 
 Starting with version 25.07, the NeMo FW container no longer includes TensorRT-LLM and vLLM pre-installed. Please run the following command inside the container:
