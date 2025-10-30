@@ -203,6 +203,12 @@ def get_args(argv):
         default=None,
         help="Micro batch size for model execution",
     )
+    parser.add_argument(
+        "--random-seed",
+        type=int,
+        default=None,
+        help="Random seed for reproducible inference",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -249,6 +255,7 @@ def nemo_deploy(argv):
         enable_cuda_graphs=args.enable_cuda_graphs,
         legacy_ckpt=args.legacy_ckpt,
         micro_batch_size=args.micro_batch_size,
+        random_seed=args.random_seed,
         **model_config_kwargs,
     )
 
