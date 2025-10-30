@@ -140,6 +140,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         model_type (str): type of model to load. Defaults to "gpt".(Only for Megatron models)
         model_format (str): format of model to load. Defaults to "nemo".
         micro_batch_size (Optional[int]): micro batch size for model execution. Defaults to None.(Only for Megatron models)
+        tokenizer_path (Optional[str]): path to the tokenizer model file. If provided, overrides checkpoint tokenizer. Defaults to None.
     """
 
     def __init__(
@@ -163,6 +164,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         model_type: str = "gpt",
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
+        tokenizer_path: Optional[str] = None,
         **model_config_kwargs,
     ):
         if not HAVE_TRITON:
@@ -196,6 +198,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             model_type=model_type,
             model_format=model_format,
             micro_batch_size=micro_batch_size,
+            tokenizer_path=tokenizer_path,
             **model_config_kwargs,
         )
         self.enable_cuda_graphs = enable_cuda_graphs

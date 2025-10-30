@@ -34,6 +34,7 @@ from nemo_deploy.llm.inference.inference_base import (
     initialize_megatron_for_inference,
     load_nemo_checkpoint_to_tron_model,
     peel,
+    setup_megatron_model_and_tokenizer_for_inference,
     setup_model_and_tokenizer_for_inference,
 )
 from nemo_deploy.llm.inference.tron_utils import DistributedInitConfig, RNGConfig
@@ -460,6 +461,127 @@ class TestInferenceBase(unittest.TestCase):
     def test_create_mcore_engine_unavailable_nemo_raises(self):
         with self.assertRaises(UnavailableError):
             create_mcore_engine(path=self.mock_path)
+
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    def test_setup_megatron_tokenizer_path_provided(
+        self,
+        mock_torch_dist_init,
+        mock_load_config,
+        mock_init_megatron,
+        mock_build_model,
+        mock_load_tokenizer,
+    ):
+        """Test that when tokenizer_path is provided, it overrides checkpoint tokenizer."""
+        # Setup mocks
+        mock_mlm_args = MagicMock()
+        mock_mlm_args.tokenizer_model = "/checkpoint/tokenizer.model"
+        mock_model_config = self.model_config
+        mock_load_config.return_value = (mock_model_config, mock_mlm_args)
+        mock_build_model.return_value = self.mock_model_list
+        mock_load_tokenizer.return_value = self.mock_tokenizer
+
+        # Custom tokenizer path
+        custom_tokenizer_path = "/custom/path/tokenizer.model"
+
+        # Call the function with tokenizer_path
+        result = setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tokenizer_path=custom_tokenizer_path,
+        )
+
+        # Verify that mlm_args.tokenizer_model was updated to custom path
+        self.assertEqual(mock_mlm_args.tokenizer_model, custom_tokenizer_path)
+
+        # Verify load_tokenizer was called with the custom tokenizer path
+        mock_load_tokenizer.assert_called_once_with(self.mock_path, tokenizer_model=custom_tokenizer_path)
+
+        # Verify result contains model list and tokenizer
+        self.assertEqual(result[0], self.mock_model_list)
+        self.assertEqual(result[1], self.mock_tokenizer)
+        self.assertEqual(result[2], mock_mlm_args)
+
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("pathlib.Path.exists")
+    def test_setup_megatron_tokenizer_path_none_checkpoint_exists(
+        self,
+        mock_path_exists,
+        mock_torch_dist_init,
+        mock_load_config,
+        mock_init_megatron,
+        mock_build_model,
+        mock_load_tokenizer,
+    ):
+        """Test that when tokenizer_path is None and checkpoint tokenizer exists, it uses checkpoint tokenizer."""
+        # Setup mocks
+        mock_mlm_args = MagicMock()
+        mock_mlm_args.tokenizer_model = "/checkpoint/tokenizer.model"
+        mock_model_config = self.model_config
+        mock_load_config.return_value = (mock_model_config, mock_mlm_args)
+        mock_build_model.return_value = self.mock_model_list
+        mock_load_tokenizer.return_value = self.mock_tokenizer
+        mock_path_exists.return_value = True  # Tokenizer exists
+
+        # Call the function without tokenizer_path
+        result = setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tokenizer_path=None,
+        )
+
+        # Verify that mlm_args.tokenizer_model was NOT changed
+        self.assertEqual(mock_mlm_args.tokenizer_model, "/checkpoint/tokenizer.model")
+
+        # Verify load_tokenizer was called without custom tokenizer path
+        mock_load_tokenizer.assert_called_once_with(self.mock_path)
+
+        # Verify result contains model list and tokenizer
+        self.assertEqual(result[0], self.mock_model_list)
+        self.assertEqual(result[1], self.mock_tokenizer)
+        self.assertEqual(result[2], mock_mlm_args)
+
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    def test_setup_megatron_tokenizer_path_no_tokenizer_in_mlm_args(
+        self,
+        mock_torch_dist_init,
+        mock_load_config,
+        mock_init_megatron,
+        mock_build_model,
+        mock_load_tokenizer,
+    ):
+        """Test that when mlm_args has no tokenizer_model attribute and custom path is provided."""
+        # Setup mocks - mlm_args without tokenizer_model attribute
+        mock_mlm_args = MagicMock(spec=[])  # Empty spec means no attributes
+        mock_model_config = self.model_config
+        mock_load_config.return_value = (mock_model_config, mock_mlm_args)
+        mock_build_model.return_value = self.mock_model_list
+        mock_load_tokenizer.return_value = self.mock_tokenizer
+
+        # Custom tokenizer path
+        custom_tokenizer_path = "/custom/path/tokenizer.model"
+
+        # Call the function with tokenizer_path
+        result = setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tokenizer_path=custom_tokenizer_path,
+        )
+
+        # Verify load_tokenizer was called with the custom tokenizer path
+        mock_load_tokenizer.assert_called_once_with(self.mock_path, tokenizer_model=custom_tokenizer_path)
+
+        # Verify result contains model list and tokenizer
+        self.assertEqual(result[0], self.mock_model_list)
+        self.assertEqual(result[1], self.mock_tokenizer)
 
 
 if __name__ == "__main__":

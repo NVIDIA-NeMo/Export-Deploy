@@ -217,6 +217,7 @@ def setup_megatron_model_and_tokenizer_for_inference(
     expert_model_parallel_size: Optional[int] = None,
     micro_batch_size: Optional[int] = None,
     model_type: str = "gpt",
+    tokenizer_path: Optional[str] = None,
 ) -> Tuple[List[MegatronModule], MegatronTokenizer]:
     """Initialize a Megatron model and tokenizer for inference from a Megatron-LM/MBridge checkpoint.
 
@@ -236,6 +237,7 @@ def setup_megatron_model_and_tokenizer_for_inference(
             to the checkpoint value when not provided.
         micro_batch_size (Optional[int]): Micro-batch size to use during runtime initialization.
         model_type (str): Model family to build (for example, "gpt").
+        tokenizer_path (Optional[str]): Path to the tokenizer model file. If provided, overrides checkpoint tokenizer.
 
     Returns:
         Tuple[List[MegatronModule], MegatronTokenizer, Any]:
@@ -245,7 +247,28 @@ def setup_megatron_model_and_tokenizer_for_inference(
     """
     dist_config = DistributedInitConfig(distributed_backend="nccl")
     torch_distributed_init(dist_config)
+
     model_config, mlm_args = load_model_config(checkpoint_path)
+
+    # Use the provided tokenizer_path if available, otherwise use checkpoint tokenizer
+    new_tokenizer_path = None
+    if tokenizer_path:
+        # User explicitly provided a tokenizer path, use it
+        new_tokenizer_path = tokenizer_path
+        if hasattr(mlm_args, "tokenizer_model"):
+            mlm_args.tokenizer_model = tokenizer_path
+    elif hasattr(mlm_args, "tokenizer_model") and mlm_args.tokenizer_model:
+        tokenizer_model_path = Path(mlm_args.tokenizer_model)
+        if not tokenizer_model_path.exists():
+            # Attempt to reconstruct tokenizer path from checkpoint_path
+            checkpoint_dir = Path(checkpoint_path)
+            if checkpoint_dir.is_file():
+                checkpoint_dir = checkpoint_dir.parent
+            # Use the filename of the original tokenizer_model (if possible)
+            tokenizer_filename = tokenizer_model_path.name
+            new_tokenizer_path = checkpoint_dir / tokenizer_filename
+            mlm_args.tokenizer_model = str(new_tokenizer_path)
+
     if tensor_model_parallel_size is not None:
         model_config.tensor_model_parallel_size = tensor_model_parallel_size
     if pipeline_model_parallel_size is not None:
@@ -254,6 +277,7 @@ def setup_megatron_model_and_tokenizer_for_inference(
         model_config.context_parallel_size = context_parallel_size
     if expert_model_parallel_size is not None:
         model_config.expert_model_parallel_size = expert_model_parallel_size
+
     # Initialize Megatron for inference
     rng_config = RNGConfig(inference_rng_tracker=True)
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
@@ -264,7 +288,10 @@ def setup_megatron_model_and_tokenizer_for_inference(
         megatron_args=mlm_args,
         use_cpu_init=False,
     )
-    tokenizer = load_tokenizer(checkpoint_path)
+    if new_tokenizer_path:
+        tokenizer = load_tokenizer(checkpoint_path, tokenizer_model=str(new_tokenizer_path))
+    else:
+        tokenizer = load_tokenizer(checkpoint_path)
     return model, tokenizer, mlm_args
 
 
@@ -437,6 +464,7 @@ def create_mcore_engine(
     model_type: str = "gpt",
     model_format: str = "nemo",
     micro_batch_size: Optional[int] = None,
+    tokenizer_path: Optional[str] = None,
     **model_config_kwargs,
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MCoreEngine for inference.
@@ -458,6 +486,7 @@ def create_mcore_engine(
         model_type (str): Type of model to load (default: "gpt")
         model_format (str): Format of model to load (default: "nemo")
         micro_batch_size (Optional[int]): Micro batch size for model execution
+        tokenizer_path (Optional[str]): Path to the tokenizer model file. If provided, overrides checkpoint tokenizer
     Returns:
         Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]: Tuple containing:
             - MCoreEngineWithCleanup: Engine for text generation with proper cleanup
@@ -497,6 +526,7 @@ def create_mcore_engine(
             expert_model_parallel_size=expert_model_parallel_size,
             micro_batch_size=micro_batch_size,
             model_type=model_type,
+            tokenizer_path=tokenizer_path,
         )
         model = modelList[0]
         if mlm_args is not None:
