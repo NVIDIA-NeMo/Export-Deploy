@@ -7,13 +7,9 @@ This section shows how to use scripts and APIs to export a NeMo 2.0 MM to Tensor
 
 The following table shows the supported models.
 
-| Model Name   | NeMo Precision | TensorRT Precision |
-| :----------  | -------------- |--------------------|
-| Neva         | bfloat16       | bfloat16           |
-| Video Neva   | bfloat16       | bfloat16           |
-| LITA/VITA    | bfloat16       | bfloat16           |
-| VILA         | bfloat16       | bfloat16           |
-| SALM         | bfloat16       | bfloat16           |
+| Model Name       | NeMo Precision | TensorRT Precision |
+| :--------------- | -------------- |--------------------|
+| Llama 3.2-Vision | bfloat16       | bfloat16           |
 
 
 ### Access the Models with a Hugging Face Token
@@ -34,7 +30,7 @@ If you want to run inference using the LLama3 model, you'll need to generate a H
 
 ### Export and Deploy a NeMo Multimodal Checkpoint to TensorRT-LLM
 
-This section provides an example of how to quickly and easily deploy a NeMo checkpoint to TensorRT. Neva will be used as an example model. Please consult the table above for a complete list of supported models.
+This section provides an example of how to quickly and easily deploy a NeMo checkpoint to TensorRT. Llama 3.2-Vision will be used as an example model. Please consult the table above for a complete list of supported models.
 
 
 1. Follow the steps on the [Generate A NeMo 2.0 Checkpoint page](../gen_nemo2_ckpt.md) to generate a NeMo 2.0 Llama Vision Instruct checkpoint.
@@ -71,8 +67,6 @@ This section provides an example of how to quickly and easily deploy a NeMo chec
    ```shell
    python /opt/Export-Deploy/scripts/deploy/multimodal/query.py -mn mllama -mt=mllama -int="What is in this image?" -im=/path/to/image.jpg
    ```
-   
-6. To export and deploy a different model, such as Video Neva, change the *model_type* and *modality* in the *scripts/deploy/multimodal/deploy_triton.py* script.
 
 
 ### Use a Script to Run Inference on a Triton Server
@@ -89,7 +83,7 @@ After executing the script, it will export the model to TensorRT and then initia
 2. To begin serving the model, run the following script:
 
    ```shell
-   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_neva.nemo --model_type neva --llm_model_type llama --triton_model_name neva
+   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_mllama.nemo --model_type mllama --triton_model_name mllama
    ```
    
    The following parameters are defined in the ``deploy_triton.py`` script:
@@ -118,14 +112,9 @@ After executing the script, it will export the model to TensorRT and then initia
 
 3. To export and deploy a different model, such as Video Neva, change the *model_type* and *modality* in the *scripts/deploy/multimodal/deploy_triton.py* script. Please see the table below to learn more about which *model_type* and *modality* is used for a multimodal model.
  
-   | Model Name  | model_type   | modality   |
-   | :---------- | ------------ |------------|
-   | Neva        |  neva        | vision     |  
-   | Video Neva  |  video-neva  | vision     |
-   | LITA        |  lita        | vision     |
-   | VILA        |  vila        | vision     |
-   | VITA        |  vita        | vision     |
-   | SALM        |  salm        | audio      |
+   | Model Name        | model_type   | modality   |
+   | :---------------- | ------------ |------------|
+   | Llama 3.2-Vision  |  mllama      | vision     |
    
 
 4. Stop the running container and then run the following command to specify an empty directory:
@@ -135,7 +124,7 @@ After executing the script, it will export the model to TensorRT and then initia
 
    docker run --gpus all -it --rm --shm-size=4g -p 8000:8000 -v ${PWD}:/opt/checkpoints/ -w /opt/NeMo nvcr.io/nvidia/nemo:vr
 
-   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_neva.nemo --model_type neva --llm_model_type llama --triton_model_name neva --triton_model_repository /opt/checkpoints/tmp_triton_model_repository --modality vision
+   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --visual_checkpoint /opt/checkpoints/nemo_mllama.nemo --model_type mllama --triton_model_name mllama --triton_model_repository /opt/checkpoints/tmp_triton_model_repository --modality vision
    ```
    
    The checkpoint will be exported to the specified folder after executing the script mentioned above.
@@ -143,7 +132,7 @@ After executing the script, it will export the model to TensorRT and then initia
 5. To load the exported model directly, run the following script within the container:
 
    ```shell
-   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --triton_model_name neva --triton_model_repository /opt/checkpoints/tmp_triton_model_repository --model_type neva --llm_model_type llama --modality vision
+   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_triton.py --triton_model_name mllama --triton_model_repository /opt/checkpoints/tmp_triton_model_repository --model_type mllama --modality vision
    ```
    
 #### Send a Query
@@ -160,7 +149,7 @@ The following example shows how to execute the query script within the currently
 1. To use a query script, run the following command. For VILA/LITA/VITA models, the input_text should add ``<image>\n`` before the actual text, such as ``<image>\n What is in this image?``:
 
    ```shell
-   python /opt/Export-Deploy/scripts/deploy/multimodal/query.py --url "http://localhost:8000" --model_name neva --model_type neva --input_text "What is in this image?" --input_media /path/to/image.jpg
+   python /opt/Export-Deploy/scripts/deploy/multimodal/query.py --url "http://localhost:8000" --model_name mllama --model_type mllama --input_text "What is in this image?" --input_media /path/to/image.jpg
    ```
    
 2. Change the url and the ``model_name`` based on your server and the model name of your service. The code in the script can be used as a basis for your client code as well. ``input_media`` is the path to the image or audio file you want to use as input. 
@@ -173,7 +162,7 @@ Up until now, we have used scripts for exporting and deploying Multimodal models
 
 #### Export a Multimodal Model to TensorRT
 
-You can use the APIs in the export module to export a NeMo checkpoint to TensorRT-LLM. The following code example assumes the ``nemo_neva.nemo`` checkpoint has already mounted to the ``/opt/checkpoints/`` path. Additionally, the ``/opt/data/image.jpg`` is also assumed to exist.
+You can use the APIs in the export module to export a NeMo checkpoint to TensorRT-LLM. The following code example assumes the ``nemo_mllama.nemo`` checkpoint has already mounted to the ``/opt/checkpoints/`` path. Additionally, the ``/opt/data/image.jpg`` is also assumed to exist.
 
 1. Run the following command:
 
@@ -181,7 +170,7 @@ You can use the APIs in the export module to export a NeMo checkpoint to TensorR
    from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
 
    exporter = TensorRTMMExporter(model_dir="/opt/checkpoints/tmp_triton_model_repository/", modality="vision")
-   exporter.export(visual_checkpoint_path="/opt/checkpoints/nemo_neva.nemo", model_type="neva", llm_model_type="llama", tensor_parallel_size=1)
+   exporter.export(visual_checkpoint_path="/opt/checkpoints/nemo_mllama.nemo", model_type="mllama" tensor_parallel_size=1)
    output = exporter.forward("What is in this image?", "/opt/data/image.jpg", max_output_token=30, top_k=1, top_p=0.0, temperature=1.0)
    print("output: ", output)
    ```
@@ -191,7 +180,7 @@ You can use the APIs in the export module to export a NeMo checkpoint to TensorR
 
 #### Deploy a Multimodal Model to TensorRT
 
-You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Triton. The following code example assumes the ``nemo_neva.nemo`` checkpoint has already mounted to the ``/opt/checkpoints/`` path.
+You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Triton. The following code example assumes the ``nemo_mllama.nemo`` checkpoint has already mounted to the ``/opt/checkpoints/`` path.
 
 1. Run the following command:
 
@@ -200,9 +189,9 @@ You can use the APIs in the deploy module to deploy a TensorRT-LLM model to Trit
    from nemo_deploy import DeployPyTriton
 
    exporter = TensorRTMMExporter(model_dir="/opt/checkpoints/tmp_triton_model_repository/", modality="vision")
-   exporter.export(visual_checkpoint_path="/opt/checkpoints/nemo_neva.nemo", model_type="neva", llm_model_type="llama", tensor_parallel_size=1)
+   exporter.export(visual_checkpoint_path="/opt/checkpoints/nemo_mllama.nemo", model_type="mllama", tensor_parallel_size=1)
 
-   nm = DeployPyTriton(model=exporter, triton_model_name="neva", port=8000)
+   nm = DeployPyTriton(model=exporter, triton_model_name="mllama", port=8000)
    nm.deploy()
    nm.serve()
    ```
@@ -216,7 +205,7 @@ The NeMo Framework provides NemoQueryMultimodal APIs to send a query to the Trit
    ```python
    from nemo_deploy.multimodal import NemoQueryMultimodal
 
-   nq = NemoQueryMultimodal(url="localhost:8000", model_name="neva", model_type="neva")
+   nq = NemoQueryMultimodal(url="localhost:8000", model_name="mllama", model_type="mllama")
    output = nq.query(input_text="What is in this image?", input_media="/opt/data/image.jpg", max_output_len=30, top_k=1, top_p=0.0, temperature=1.0)
    print(output)
    ```
