@@ -55,7 +55,7 @@ class TestNemoQueryLLMPyTorch:
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
         # Test basic query
-        response = query.query_llm(prompts=["test prompt"], max_length=100, temperature=0.7, top_k=1, top_p=0.9)
+        response = query.query_llm(prompts=["test prompt"], max_length=100, temperature=0.7, top_k=0, top_p=0.9)
 
         assert isinstance(response, dict)
         assert "choices" in response
@@ -135,7 +135,7 @@ class TestNemoQueryLLMPyTorch:
             prompts=["test prompt"],
             use_greedy=True,
             temperature=0.8,
-            top_k=5,
+            top_k=0,
             top_p=0.95,
             repetition_penalty=1.1,
             add_BOS=True,
