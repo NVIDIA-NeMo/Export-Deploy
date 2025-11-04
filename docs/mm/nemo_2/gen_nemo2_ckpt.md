@@ -35,9 +35,9 @@ This checkpoint is used for in-framework deployment examples.
 
       # Import the model and convert to NeMo 2.0 format
       import_ckpt(
-         model=vlm.Qwen2VLModel(vlm.Qwen2VLConfig3BInstruct()),
+         model=vlm.Qwen2VLModel(vlm.Qwen25VLConfig3B(), model_version='qwen25-vl')
          source=f"hf://{hf_model_id}",  # Hugging Face model source
-         output_path=Path('/opt/checkpoints/qwen2_vl_3b')
+         output_path=Path('/opt/checkpoints/qwen25_vl_3b')
       )
    ```
 

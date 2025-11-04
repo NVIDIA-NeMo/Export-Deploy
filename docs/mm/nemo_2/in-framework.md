@@ -6,7 +6,7 @@ This section explains how to deploy [NeMo 2.0](https://github.com/NVIDIA-NeMo/Ne
 
 1. Follow the steps on the [Generate A NeMo 2.0 Checkpoint page](gen_nemo2_ckpt.md) to generate a NeMo 2.0 multimodal checkpoint.
 
-2. In a terminal, go to the folder where the ``qwen2_vl_3b`` is located. Pull and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
+2. In a terminal, go to the folder where the ``qwen25_vl_3b`` is located. Pull and run the Docker container image using the command shown below. Change the ``:vr`` tag to the version of the container you want to use:
 
    ```shell
    docker pull nvcr.io/nvidia/nemo:vr
@@ -21,7 +21,7 @@ This section explains how to deploy [NeMo 2.0](https://github.com/NVIDIA-NeMo/Ne
 3. Using a NeMo 2.0 multimodal model, run the following deployment script to verify that everything is working correctly. The script directly serves the NeMo 2.0 model on the Triton server:
 
    ```shell
-   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/qwen2_vl_3b --triton_model_name qwen
+   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/qwen25_vl_3b --triton_model_name qwen
    ```
 
 4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (for example, gradually by 50%).
@@ -55,7 +55,7 @@ Executing the script will directly deploy the NeMo 2.0 multimodal model and star
 2. To begin serving the downloaded model, run the following script:
 
    ```shell
-   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/qwen2_vl_3b --triton_model_name qwen
+   python /opt/Export-Deploy/scripts/deploy/multimodal/deploy_inframework_triton.py --nemo_checkpoint /opt/checkpoints/qwen25_vl_3b --triton_model_name qwen
    ```
 
    The following parameters are defined in the ``deploy_inframework_triton.py`` script:
