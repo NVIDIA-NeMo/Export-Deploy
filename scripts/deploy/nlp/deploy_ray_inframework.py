@@ -39,7 +39,7 @@ def parse_args():
         "--num_gpus",
         type=int,
         default=1,
-        help="Number of GPUs to use per node",
+        help="Number of GPUs per node in case of single node. In case of multinode total number of GPUs across all nodes",
     )
     parser.add_argument(
         "--tensor_model_parallel_size",
@@ -185,6 +185,12 @@ def parse_args():
         default=None,
         help="Micro batch size for model execution",
     )
+    parser.add_argument(
+        "--runtime_env",
+        type=dict,
+        default={},
+        help="Runtime environment for the deployment",
+    )
     return parser.parse_args()
 
 
@@ -192,7 +198,7 @@ def main():
     """Main function to deploy a Megatron model using Ray."""
     args = parse_args()
     # Initialize Ray deployment with updated DeployRay class
-    runtime_env = {}
+    runtime_env = args.runtime_env
     if args.cuda_visible_devices is not None:
         runtime_env["env_vars"] = {
             "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
