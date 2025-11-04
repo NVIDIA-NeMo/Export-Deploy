@@ -116,6 +116,7 @@ class vLLMExporter(ITritonDeployable):
         cpu_offload_gb: float = 0,
         enforce_eager: bool = False,
         max_seq_len_to_capture: int = 8192,
+        max_model_len: int = 8192,
         task: Literal["auto", "generate", "embedding"] = "auto",
     ):
         """
@@ -135,6 +136,7 @@ class vLLMExporter(ITritonDeployable):
             cpu_offload_gb (float, optional): Amount of CPU offload memory (in GB). Defaults to 0.
             enforce_eager (bool, optional): Whether to enforce eager execution. Defaults to False.
             max_seq_len_to_capture (int, optional): Maximum sequence length to capture. Defaults to 8192.
+            max_model_len (int, optional): Maximum model length. Defaults to 8192.
             task (Literal["auto", "generate", "embedding"], optional): Task type for vLLM. Defaults to "auto".
 
         Raises:
@@ -171,6 +173,7 @@ class vLLMExporter(ITritonDeployable):
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
                     max_seq_len_to_capture=max_seq_len_to_capture,
+                    max_model_len=max_model_len,
                     task=task,
                 )
         else:
@@ -188,6 +191,7 @@ class vLLMExporter(ITritonDeployable):
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
                 max_seq_len_to_capture=max_seq_len_to_capture,
+                max_model_len=max_model_len,
                 task=task,
             )
 
