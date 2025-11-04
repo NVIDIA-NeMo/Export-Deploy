@@ -153,6 +153,106 @@ class TestNemoQueryLLMPyTorch:
         assert isinstance(response, dict)
         assert "choices" in response
 
+    def test_query_llm_top_k_and_top_p_both_positive_raises_error(self, query):
+        """Test that having both top_k and top_p greater than zero raises ValueError"""
+        with pytest.raises(ValueError) as exc_info:
+            query.query_llm(
+                prompts=["test prompt"],
+                top_k=5,
+                top_p=0.9,
+            )
+        assert "Cannot have top_p and top_k both greater than zero" in str(exc_info.value)
+
+    @patch("nemo_deploy.llm.query_llm.ModelClient")
+    def test_query_llm_top_k_positive_top_p_zero(self, mock_client, query):
+        """Test that top_k > 0 with top_p = 0 is allowed"""
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # This should not raise an error
+        response = query.query_llm(prompts=["test prompt"], top_k=5, top_p=0.0)
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+
+    @patch("nemo_deploy.llm.query_llm.ModelClient")
+    def test_query_llm_top_k_zero_top_p_positive(self, mock_client, query):
+        """Test that top_k = 0 with top_p > 0 is allowed"""
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # This should not raise an error
+        response = query.query_llm(prompts=["test prompt"], top_k=0, top_p=0.9)
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+
+    @patch("nemo_deploy.llm.query_llm.ModelClient")
+    def test_query_llm_top_k_none_top_p_positive(self, mock_client, query):
+        """Test that top_k = None with top_p > 0 is allowed"""
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # This should not raise an error
+        response = query.query_llm(prompts=["test prompt"], top_k=None, top_p=0.9)
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+
+    @patch("nemo_deploy.llm.query_llm.ModelClient")
+    def test_query_llm_top_k_positive_top_p_none(self, mock_client, query):
+        """Test that top_k > 0 with top_p = None is allowed"""
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # This should not raise an error
+        response = query.query_llm(prompts=["test prompt"], top_k=5, top_p=None)
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+
+    @patch("nemo_deploy.llm.query_llm.ModelClient")
+    def test_query_llm_both_top_k_and_top_p_zero(self, mock_client, query):
+        """Test that top_k = 0 with top_p = 0 is allowed"""
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # This should not raise an error
+        response = query.query_llm(prompts=["test prompt"], top_k=0, top_p=0.0)
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+
+    @patch("nemo_deploy.llm.query_llm.ModelClient")
+    def test_query_llm_both_top_k_and_top_p_none(self, mock_client, query):
+        """Test that top_k = None with top_p = None is allowed"""
+        # Setup mock
+        mock_instance = MagicMock()
+        mock_client.return_value.__enter__.return_value = mock_instance
+        mock_instance.infer_batch.return_value = {"sentences": np.array([b"test response"])}
+        mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
+
+        # This should not raise an error
+        response = query.query_llm(prompts=["test prompt"], top_k=None, top_p=None)
+
+        assert isinstance(response, dict)
+        assert "choices" in response
+
 
 class TestNemoQueryLLMHF:
     @pytest.fixture
