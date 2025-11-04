@@ -101,14 +101,14 @@ def get_args(argv):
     )
     parser.add_argument(
         "-tps",
-        "--tensor_parallelism_size",
+        "--tensor_model_parallel_size",
         default=1,
         type=int,
         help="Tensor parallelism size",
     )
     parser.add_argument(
         "-pps",
-        "--pipeline_parallelism_size",
+        "--pipeline_model_parallel_size",
         default=1,
         type=int,
         help="Pipeline parallelism size",
