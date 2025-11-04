@@ -39,7 +39,7 @@ def parse_args():
         "--num_gpus",
         type=int,
         default=1,
-        help="Number of GPUs to use per node",
+        help="Number of GPUs per node in case of single node. In case of multinode total number of GPUs across all nodes",
     )
     parser.add_argument(
         "--tensor_model_parallel_size",
