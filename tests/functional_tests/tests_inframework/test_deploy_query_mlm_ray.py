@@ -146,7 +146,7 @@ class TestDeployRayMLM:
                 host="0.0.0.0",
                 port=8000,
                 model_id="llama",
-                prompt="What is the color of a banana?",
+                prompt="What is the color of a banana? ",
                 max_tokens=20,
             )
 
@@ -160,7 +160,7 @@ class TestDeployRayMLM:
                 host="0.0.0.0",
                 port=8000,
                 model_id="llama",
-                prompt="Hello, how are you?",
+                prompt="Hello, how are you? ",
                 max_tokens=20,
                 use_chat=True,
             )
