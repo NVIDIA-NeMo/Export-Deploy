@@ -42,194 +42,172 @@ def get_args(argv):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Deploy nemo models to Triton",
     )
-    parser.add_argument("-nc", "--nemo_checkpoint", type=str, help="Source .nemo file")
+    parser.add_argument("-nc", "--nemo-checkpoint", type=str, help="Source NeMo 2.0 checkpoint folder")
     parser.add_argument(
         "-tmn",
-        "--triton_model_name",
+        "--triton-model-name",
         required=True,
         type=str,
         help="Name for the service",
     )
     parser.add_argument(
         "-tmv",
-        "--triton_model_version",
+        "--triton-model-version",
         default=1,
         type=int,
         help="Version for the service",
     )
     parser.add_argument(
         "-sp",
-        "--server_port",
+        "--server-port",
         default=8080,
         type=int,
         help="Port for the REST server to listen for requests",
     )
     parser.add_argument(
         "-sa",
-        "--server_address",
+        "--server-address",
         default="0.0.0.0",
         type=str,
         help="HTTP address for the REST server",
     )
     parser.add_argument(
         "-trp",
-        "--triton_port",
+        "--triton-port",
         default=8000,
         type=int,
         help="Port for the Triton server to listen for requests",
     )
     parser.add_argument(
         "-tha",
-        "--triton_http_address",
+        "--triton-http-address",
         default="0.0.0.0",
         type=str,
         help="HTTP address for the Triton server",
     )
     parser.add_argument(
         "-ng",
-        "--num_gpus",
+        "--num-gpus",
         default=None,
         type=int,
         help="Number of GPUs for the deployment",
     )
     parser.add_argument(
         "-nn",
-        "--num_nodes",
+        "--num-nodes",
         default=None,
         type=int,
         help="Number of Nodes for the deployment",
     )
     parser.add_argument(
         "-tps",
-        "--tensor_model_parallel_size",
+        "--tensor-parallelism-size",
         default=1,
         type=int,
         help="Tensor parallelism size",
     )
     parser.add_argument(
         "-pps",
-        "--pipeline_model_parallel_size",
+        "--pipeline-parallelism-size",
         default=1,
         type=int,
         help="Pipeline parallelism size",
     )
     parser.add_argument(
         "-nlfps",
-        "--num_layers_in_first_pipeline_stage",
+        "--num-layers-in-first-pipeline-stage",
         default=None,
         type=int,
         help="Number of layers in the first pipeline stage",
     )
     parser.add_argument(
         "-nllps",
-        "--num_layers_in_last_pipeline_stage",
+        "--num-layers-in-last-pipeline-stage",
         default=None,
         type=int,
         help="Number of layers in the last pipeline stage",
     )
     parser.add_argument(
         "-cps",
-        "--context_parallel_size",
+        "--context-parallel-size",
         default=1,
         type=int,
         help="Context parallelism size",
     )
     parser.add_argument(
         "-emps",
-        "--expert_model_parallel_size",
+        "--expert-model-parallel-size",
         default=1,
         type=int,
         help="Distributes MoE Experts across sub data parallel dimension.",
     )
     parser.add_argument(
         "-eps",
-        "--account_for_embedding_in_pipeline_split",
+        "--account-for-embedding-in-pipeline-split",
         default=False,
         action="store_true",
         help="Account for embedding in the pipeline split",
     )
     parser.add_argument(
         "-lps",
-        "--account_for_loss_in_pipeline_split",
+        "--account-for-loss-in-pipeline-split",
         default=False,
         action="store_true",
         help="Account for loss in the pipeline split",
     )
     parser.add_argument(
         "-mbs",
-        "--max_batch_size",
+        "--max-batch-size",
         default=8,
         type=int,
         help="Max batch size of the model",
     )
     parser.add_argument(
         "-dm",
-        "--debug_mode",
+        "--debug-mode",
         default=False,
         action="store_true",
         help="Enable debug mode",
     )
     parser.add_argument(
         "-fd",
-        "--enable_flash_decode",
+        "--enable-flash-decode",
         default=False,
         action="store_true",
         help="Enable flash decoding",
     )
     parser.add_argument(
         "-cg",
-        "--enable_cuda_graphs",
+        "--enable-cuda-graphs",
         default=False,
         action="store_true",
         help="Enable CUDA graphs",
     )
     parser.add_argument(
         "-lc",
-        "--legacy_ckpt",
+        "--legacy-ckpt",
         action="store_true",
         help="Load checkpoint saved with TE < 1.14",
     )
     parser.add_argument(
         "-imsl",
-        "--inference_max_seq_length",
+        "--inference-max-seq-length",
         default=4096,
         type=int,
         help="Max sequence length for inference",
     )
     parser.add_argument(
-        "-mc",
-        "--megatron_checkpoint",
-        type=str,
-        default=None,
-        help="Path to the Megatron checkpoint file",
-    )
-    parser.add_argument(
-        "-mt",
-        "--model_type",
-        type=str,
-        default="gpt",
-        help="Type of model to load",
-    )
-    parser.add_argument(
-        "-mf",
-        "--model_format",
-        type=str,
-        default="nemo",
-        help="Format of model to load",
-    )
-    parser.add_argument(
         "-mb",
-        "--micro_batch_size",
+        "--micro-batch-size",
         type=int,
         default=None,
         help="Micro batch size for model execution",
     )
     parser.add_argument(
-        "-tp",
-        "--tokenizer_path",
-        type=str,
+        "--random-seed",
+        type=int,
         default=None,
-        help="Path to the tokenizer model file (optional, overrides checkpoint tokenizer)",
+        help="Random seed for reproducible inference",
     )
     args = parser.parse_args(argv)
     return args
@@ -250,11 +228,8 @@ def nemo_deploy(argv):
     if not megatron_llm_supported:
         raise ValueError("MegatronLLMDeployable is not supported in this environment.")
 
-    if args.model_format == "nemo" and args.nemo_checkpoint is None:
+    if args.nemo_checkpoint is None:
         raise ValueError("In-Framework deployment requires a checkpoint folder.")
-
-    if args.model_format == "megatron" and args.megatron_checkpoint is None:
-        raise ValueError("In-Framework deployment requires a Megatron checkpoint folder.")
 
     model_config_kwargs = {
         "account_for_embedding_in_pipeline_split": args.account_for_embedding_in_pipeline_split,
@@ -271,19 +246,16 @@ def nemo_deploy(argv):
         num_devices=args.num_gpus,
         num_nodes=args.num_nodes,
         nemo_checkpoint_filepath=args.nemo_checkpoint,
-        tensor_model_parallel_size=args.tensor_model_parallel_size,
-        pipeline_model_parallel_size=args.pipeline_model_parallel_size,
+        tensor_model_parallel_size=args.tensor_parallelism_size,
+        pipeline_model_parallel_size=args.pipeline_parallelism_size,
         inference_max_seq_length=args.inference_max_seq_length,
         context_parallel_size=args.context_parallel_size,
         max_batch_size=args.max_batch_size,
         enable_flash_decode=args.enable_flash_decode,
         enable_cuda_graphs=args.enable_cuda_graphs,
         legacy_ckpt=args.legacy_ckpt,
-        megatron_checkpoint_filepath=args.megatron_checkpoint,
-        model_type=args.model_type,
-        model_format=args.model_format,
         micro_batch_size=args.micro_batch_size,
-        tokenizer_path=args.tokenizer_path,
+        random_seed=args.random_seed,
         **model_config_kwargs,
     )
 

@@ -39,7 +39,7 @@ def parse_args():
         "--num_gpus",
         type=int,
         default=1,
-        help="Number of GPUs per node in case of single node. In case of multinode total number of GPUs across all nodes",
+        help="Number of GPUs to use per node",
     )
     parser.add_argument(
         "--tensor_model_parallel_size",
@@ -185,18 +185,6 @@ def parse_args():
         default=None,
         help="Micro batch size for model execution",
     )
-    parser.add_argument(
-        "--tokenizer_path",
-        type=str,
-        default=None,
-        help="Path to the tokenizer model file (optional, overrides checkpoint tokenizer)",
-    )
-    parser.add_argument(
-        "--runtime_env",
-        type=dict,
-        default={},
-        help="Runtime environment for the deployment",
-    )
     return parser.parse_args()
 
 
@@ -204,7 +192,7 @@ def main():
     """Main function to deploy a Megatron model using Ray."""
     args = parse_args()
     # Initialize Ray deployment with updated DeployRay class
-    runtime_env = args.runtime_env
+    runtime_env = {}
     if args.cuda_visible_devices is not None:
         runtime_env["env_vars"] = {
             "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
@@ -256,7 +244,6 @@ def main():
         model_type=args.model_type,
         model_format=model_format,
         micro_batch_size=args.micro_batch_size,
-        tokenizer_path=args.tokenizer_path,
         **model_config_kwargs,
     )
 

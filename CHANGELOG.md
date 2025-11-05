@@ -2,6 +2,13 @@
 
 * [NeMo Export-Deploy Release](https://github.com/NVIDIA-NeMo/Export-Deploy/releases)  
 
+## NVIDIA NeMo-Export-Deploy 0.2.1
+* Bug fixes for HuggingFace model deployment (#459)
+  - Fixed HuggingFace deployable implementations for both Triton and Ray Serve backends
+  - Improved tokenizer handling in HuggingFace deployment scripts
+* Minor fixes for Ray deployment (#464)
+  - Additional bug fixes in Ray deployment utilities
+
 ## NVIDIA NeMo-Export-Deploy 0.2.0
 * MegatronLM and Megatron-Bridge model deployment support with Triton Inference Server and Ray Serve
 * Multi-node multi-instance Ray Serve based deployment for NeMo 2, Megatron-Bridge, and Megatron-LM models. 

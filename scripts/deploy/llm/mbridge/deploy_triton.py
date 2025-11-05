@@ -101,14 +101,14 @@ def get_args(argv):
     )
     parser.add_argument(
         "-tps",
-        "--tensor_model_parallel_size",
+        "--tensor_parallelism_size",
         default=1,
         type=int,
         help="Tensor parallelism size",
     )
     parser.add_argument(
         "-pps",
-        "--pipeline_model_parallel_size",
+        "--pipeline_parallelism_size",
         default=1,
         type=int,
         help="Pipeline parallelism size",
@@ -224,13 +224,6 @@ def get_args(argv):
         default=None,
         help="Micro batch size for model execution",
     )
-    parser.add_argument(
-        "-tp",
-        "--tokenizer_path",
-        type=str,
-        default=None,
-        help="Path to the tokenizer model file (optional, overrides checkpoint tokenizer)",
-    )
     args = parser.parse_args(argv)
     return args
 
@@ -271,8 +264,8 @@ def nemo_deploy(argv):
         num_devices=args.num_gpus,
         num_nodes=args.num_nodes,
         nemo_checkpoint_filepath=args.nemo_checkpoint,
-        tensor_model_parallel_size=args.tensor_model_parallel_size,
-        pipeline_model_parallel_size=args.pipeline_model_parallel_size,
+        tensor_model_parallel_size=args.tensor_parallelism_size,
+        pipeline_model_parallel_size=args.pipeline_parallelism_size,
         inference_max_seq_length=args.inference_max_seq_length,
         context_parallel_size=args.context_parallel_size,
         max_batch_size=args.max_batch_size,
@@ -283,7 +276,6 @@ def nemo_deploy(argv):
         model_type=args.model_type,
         model_format=args.model_format,
         micro_batch_size=args.micro_batch_size,
-        tokenizer_path=args.tokenizer_path,
         **model_config_kwargs,
     )
 
