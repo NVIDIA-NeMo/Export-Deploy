@@ -72,7 +72,7 @@ class TestDeployPyTriton:
                 f"{self.testdir}/nemo2_ckpt",
                 "--triton_model_name",
                 "llama",
-                "--tensor_parallelism_size",
+                "--tensor_model_parallel_size",
                 str(2),
             ]
         )
