@@ -190,6 +190,7 @@ class DeployRay:
         model_type: str = "gpt",
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
+        tokenizer_path: Optional[str] = None,
         **model_config_kwargs,
     ):
         """Deploy an inframework NeMo/Megatron model using Ray Serve.
@@ -218,6 +219,7 @@ class DeployRay:
             model_type (str, optional): Type of model to load. Defaults to "gpt".
             model_format (str, optional): Format of model to load. Defaults to "nemo".
             micro_batch_size (Optional[int], optional): Micro batch size for model execution. Defaults to None.
+            tokenizer_path (Optional[str], optional): Path to the tokenizer model file. If provided, overrides checkpoint tokenizer. Defaults to None.
 
         Raises:
             SystemExit: If parallelism configuration is invalid.
@@ -260,6 +262,7 @@ class DeployRay:
                 model_type=model_type,
                 model_format=model_format,
                 micro_batch_size=micro_batch_size,
+                tokenizer_path=tokenizer_path,
                 **model_config_kwargs,
             )
 

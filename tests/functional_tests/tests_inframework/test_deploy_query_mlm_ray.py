@@ -103,3 +103,72 @@ class TestDeployRayMLM:
             if self.deploy_proc is not None:
                 terminate_deployment_process(self.deploy_proc)
                 self.deploy_proc = None
+
+    def test_deploy_ray_with_tokenizer_path(self):
+        mlm_checkpoint_path = "/home/TestData/megatron_bridge/checkpoints/llama3_145m-mlm_saved-distckpt"
+        tokenizer_path = "/home/TestData/megatron_bridge/checkpoints/llama3_145m-mlm_saved-distckpt/tokenizer.model"
+
+        try:
+            # Run Ray deployment with tokenizer_path
+            self.deploy_proc = subprocess.Popen(
+                [
+                    "coverage",
+                    "run",
+                    "--data-file=/workspace/.coverage",
+                    "--source=/workspace/",
+                    "--parallel-mode",
+                    "scripts/deploy/nlp/deploy_ray_inframework.py",
+                    "--megatron_checkpoint",
+                    mlm_checkpoint_path,
+                    "--model_id",
+                    "llama",
+                    "--num_gpus",
+                    str(1),
+                    "--host",
+                    "0.0.0.0",
+                    "--port",
+                    str(8000),
+                    "--cuda_visible_devices",
+                    "0",
+                    "--tokenizer_path",
+                    tokenizer_path,
+                ]
+            )
+            logging.info("Deployment with tokenizer_path started. Waiting for it to be ready...")
+
+            # Wait for deployment to be ready
+            if not wait_for_deployment_ready(host="0.0.0.0", port=8000, max_wait_time=180):
+                assert False, "Deployment failed to become ready within timeout"
+
+            time.sleep(120)
+
+            output = query_ray_deployment(
+                host="0.0.0.0",
+                port=8000,
+                model_id="llama",
+                prompt="What is the color of a banana? ",
+                max_tokens=20,
+            )
+
+            print(output)
+
+            # Check if deployment was successful
+            # assert output != "", "First prediction is empty"
+
+            # Send a second request using the chat endpoint
+            output_chat = query_ray_deployment(
+                host="0.0.0.0",
+                port=8000,
+                model_id="llama",
+                prompt="Hello, how are you? ",
+                max_tokens=20,
+                use_chat=True,
+            )
+            print(output_chat)
+            # Check if deployment was successful
+            # assert output_chat != "", "Second prediction (chat) is empty"
+        finally:
+            # Ensure the deployment is terminated as soon as queries complete or on failure
+            if self.deploy_proc is not None:
+                terminate_deployment_process(self.deploy_proc)
+                self.deploy_proc = None

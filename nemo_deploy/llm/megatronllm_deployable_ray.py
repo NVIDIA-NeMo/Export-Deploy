@@ -63,6 +63,7 @@ class ModelWorker:
         model_type: str = "gpt",
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
+        tokenizer_path: Optional[str] = None,
         **model_config_kwargs,
     ):
         # Use replica-specific environment variables to avoid conflicts
@@ -100,6 +101,7 @@ class ModelWorker:
                 model_type=model_type,
                 model_format=model_format,
                 micro_batch_size=micro_batch_size,
+                tokenizer_path=tokenizer_path,
                 **model_config_kwargs,
             )
             if rank != 0:
@@ -144,6 +146,7 @@ class MegatronRayDeployable:
         model_type: str = "gpt",
         model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
+        tokenizer_path: Optional[str] = None,
         **model_config_kwargs,
     ):
         """Initialize the distributed Megatron LLM model deployment.
@@ -165,6 +168,7 @@ class MegatronRayDeployable:
             model_type (str): Type of model to load.
             model_format (str): Format of model to load.
             micro_batch_size (Optional[int]): Micro batch size for model execution.
+            tokenizer_path (Optional[str]): Path to the tokenizer model file. If provided, overrides checkpoint tokenizer.
         """
         try:
             self.model_id = model_id
@@ -214,6 +218,7 @@ class MegatronRayDeployable:
                 model_type=model_type,
                 model_format=model_format,
                 micro_batch_size=micro_batch_size,
+                tokenizer_path=tokenizer_path,
                 **model_config_kwargs,
             )
             worker_futures.append(rank_0_worker)
@@ -244,6 +249,7 @@ class MegatronRayDeployable:
                     model_type=model_type,
                     model_format=model_format,
                     micro_batch_size=micro_batch_size,
+                    tokenizer_path=tokenizer_path,
                     **model_config_kwargs,
                 )
                 worker_futures.append(worker)

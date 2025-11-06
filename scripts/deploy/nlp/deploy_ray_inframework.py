@@ -186,6 +186,12 @@ def parse_args():
         help="Micro batch size for model execution",
     )
     parser.add_argument(
+        "--tokenizer_path",
+        type=str,
+        default=None,
+        help="Path to the tokenizer model file (optional, overrides checkpoint tokenizer)",
+    )
+    parser.add_argument(
         "--runtime_env",
         type=dict,
         default={},
@@ -250,6 +256,7 @@ def main():
         model_type=args.model_type,
         model_format=model_format,
         micro_batch_size=args.micro_batch_size,
+        tokenizer_path=args.tokenizer_path,
         **model_config_kwargs,
     )
 
