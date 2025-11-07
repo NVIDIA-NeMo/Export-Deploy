@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import argparse
+import json
 import logging
 import multiprocessing
-import json
 
 from nemo_deploy.deploy_ray import DeployRay
 
@@ -26,12 +26,14 @@ def get_available_cpus():
     """Get the total number of available CPUs in the system."""
     return multiprocessing.cpu_count()
 
+
 def json_type(string):
     """Parse JSON string into a dictionary."""
     try:
         return json.loads(string)
     except json.JSONDecodeError as e:
         raise argparse.ArgumentTypeError(f"Invalid JSON: {e}")
+
 
 def parse_args():
     """Parse command-line arguments for the Ray deployment script."""
