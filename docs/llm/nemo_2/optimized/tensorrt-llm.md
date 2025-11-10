@@ -185,7 +185,7 @@ You can use the APIs in the export module to export a NeMo 2.0 LLM checkpoint to
    
    trt_llm_exporter.forward(
        ["What is the best city in the world?"],
-       max_output_token=15,
+       max_output_len=15,
        top_k=1,
        top_p=0.0,
        temperature=1.0,
