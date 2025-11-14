@@ -157,8 +157,16 @@ class NeMoMultimodalDeployable(ITritonDeployable):
         )
         return text
 
-    def base64_to_image(self, image_base64):
-        """Convert base64-encoded image to PIL Image."""
+    def process_image_input(self, image_source):
+        """Process image input from base64-encoded string or HTTP URL.
+
+        Args:
+            image_source (str): Image source - either base64-encoded image string with data URI prefix
+                               (e.g., "data:image;base64,...") or HTTP/HTTPS URL (e.g., "http://example.com/image.jpg")
+
+        Returns:
+            Processed image content suitable for model inference.
+        """
         if isinstance(self.inference_wrapped_model, QwenVLInferenceWrapper):
             from qwen_vl_utils import process_vision_info
 
@@ -166,7 +174,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
                 {
                     "role": "user",
                     "content": [
-                        {"type": "image", "image": f"data:image;base64,{image_base64}"},
+                        {"type": "image", "image": image_source},
                     ],
                 }
             ]
@@ -259,6 +267,12 @@ class NeMoMultimodalDeployable(ITritonDeployable):
         Returns:
             dict: sentences.
         """
+        # Handle temperature=0.0 for greedy decoding
+        if temperature == 0.0:
+            LOGGER.warning("temperature=0.0 detected. Setting top_k=1 for greedy sampling.")
+            top_k = 1
+            top_p = 0.0
+
         inference_params = CommonInferenceParams(
             temperature=float(temperature),
             top_k=int(top_k),
@@ -266,7 +280,7 @@ class NeMoMultimodalDeployable(ITritonDeployable):
             num_tokens_to_generate=num_tokens_to_generate,
         )
 
-        images = [self.base64_to_image(img_b64) for img_b64 in images]
+        images = [self.process_image_input(image_source) for image_source in images]
 
         results = self.generate(
             prompts,
