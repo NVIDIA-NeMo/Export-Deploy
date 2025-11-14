@@ -464,12 +464,11 @@ For multimodal models deployed directly with `NeMoMultimodalDeployable`, use the
 
 ```python
 from nemo_deploy.multimodal import NemoQueryMultimodalPytorch
-from PIL import Image
 
 nq = NemoQueryMultimodalPytorch(url="localhost:8000", model_name="qwen")
 output = nq.query_multimodal(
     prompts=["What is in this image?"],
-    images=[Image.open("/path/to/image.jpg")],
+    images=["https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"],
     max_length=100,
     top_k=1,
     top_p=0.0,
