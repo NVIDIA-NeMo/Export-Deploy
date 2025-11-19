@@ -16,6 +16,9 @@ name: Generate UV Lockfile
 
 on:
   workflow_dispatch:  # Manual trigger only
+  push:
+    branches:
+      - new_peft_release_adjust_fix
 
 jobs:
   generate-lockfile:
