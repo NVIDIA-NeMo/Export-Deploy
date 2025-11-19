@@ -68,7 +68,7 @@ jobs:
               export UV_LINK_MODE=copy
 
               # Pre-install build dependencies before any sync/lock operation
-              uv pip install setuptools wheel pybind11 "Cython>=3.0.0" ninja packaging
+              uv pip install setuptools wheel wheel_stub pybind11 "Cython>=3.0.0" ninja packaging
 
               # Generate lockfile with the EXACT configuration from pyproject.toml
               # No modifications! This ensures lockfile matches what Dockerfile will use
