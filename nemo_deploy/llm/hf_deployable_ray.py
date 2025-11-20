@@ -173,10 +173,12 @@ class HFRayDeployable:
                 request["prompts"] = [request["prompt"]]
             temperature = request.get("temperature", 0.0)
             top_p = request.get("top_p", None)
-            
+
             # vLLM requires top_p to be in (0, 1], so handle invalid values
             if top_p is not None and top_p <= 0.0:
-                LOGGER.warning(f"top_p must be in (0, 1] for vLLM, got {top_p}. Setting to 0.1 for greedy-like sampling.")
+                LOGGER.warning(
+                    f"top_p must be in (0, 1] for vLLM, got {top_p}. Setting to 0.1 for greedy-like sampling."
+                )
                 request["top_p"] = 0.1
                 if temperature == 0.0:
                     LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
@@ -291,11 +293,13 @@ class HFRayDeployable:
         try:
             # Extract parameters from the request dictionary
             messages = request.get("messages", [])
-            
+
             # vLLM requires top_p to be in (0, 1], so handle invalid values
             top_p = request.get("top_p", None)
             if top_p is not None and top_p <= 0.0:
-                LOGGER.warning(f"top_p must be in (0, 1] for vLLM, got {top_p}. Setting to 0.1 for greedy-like sampling.")
+                LOGGER.warning(
+                    f"top_p must be in (0, 1] for vLLM, got {top_p}. Setting to 0.1 for greedy-like sampling."
+                )
                 request["top_p"] = 0.1
 
             # Convert messages to a single prompt
