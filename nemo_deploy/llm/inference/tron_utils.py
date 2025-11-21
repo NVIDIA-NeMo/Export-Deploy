@@ -320,7 +320,7 @@ def _initialize_tp_communicators(model_config: Union[GPTConfig, T5Config], micro
             "Tensor Parallel Communication/GEMM Overlap optimization needs 'yaml' and 'transformer_engine' packages"
         )
 
-    if hasattr(model_config, 'tp_comm_overlap_cfg') and model_config.tp_comm_overlap_cfg is not None:
+    if hasattr(model_config, "tp_comm_overlap_cfg") and model_config.tp_comm_overlap_cfg is not None:
         with open(model_config.tp_comm_overlap_cfg, "r") as stream:
             ub_cfgs = yaml.safe_load(stream)
     else:
