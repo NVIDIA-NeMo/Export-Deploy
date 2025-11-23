@@ -195,9 +195,16 @@ class NemoQueryMultimodalPytorch:
 
         nq = NemoQueryMultimodalPytorch(url="localhost", model_name="qwen")
 
-        # Encode image to base64
+        # Option 1: Use HTTP URL directly
+        output = nq.query_multimodal(
+            prompts=["Describe this image"],
+            images=["http://example.com/image.jpg"],
+            max_length=100,
+        )
+
+        # Option 2: Encode image to base64 with data URI prefix
         with open("image.jpg", "rb") as f:
-            image_base64 = base64.b64encode(f.read()).decode('utf-8')
+            image_base64 = "data:image;base64," + base64.b64encode(f.read()).decode('utf-8')
 
         output = nq.query_multimodal(
             prompts=["Describe this image"],
@@ -231,7 +238,8 @@ class NemoQueryMultimodalPytorch:
 
         Args:
             prompts (List[str]): List of input text prompts.
-            images (List[str]): List of base64-encoded image strings.
+            images (List[str]): List of image strings - either base64-encoded with data URI prefix
+                               (e.g., "data:image;base64,...") or HTTP/HTTPS URLs (e.g., "http://example.com/image.jpg").
             max_length (Optional[int]): Maximum number of tokens to generate.
             max_batch_size (Optional[int]): Maximum batch size for inference.
             top_k (Optional[int]): Limits to the top K tokens to consider at each step.

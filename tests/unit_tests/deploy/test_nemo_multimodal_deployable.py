@@ -255,10 +255,10 @@ class TestNeMoMultimodalDeployable:
         prompts = ["Test prompt 1", "Test prompt 2"]
         images = [sample_image_base64, sample_image_base64]
 
-        with patch.object(deployable, "base64_to_image") as mock_base64_to_image:
+        with patch.object(deployable, "process_image_input") as mock_process_image_input:
             with patch.object(deployable, "generate") as mock_generate:
-                # Mock base64_to_image to return PIL Images
-                mock_base64_to_image.return_value = sample_image
+                # Mock process_image_input to return PIL Images
+                mock_process_image_input.return_value = sample_image
                 mock_generate.return_value = [MockResult("Generated text 1"), MockResult("Generated text 2")]
 
                 result = deployable._infer_fn(
@@ -272,8 +272,8 @@ class TestNeMoMultimodalDeployable:
                     max_batch_size=3,
                 )
 
-                # Check that base64_to_image was called for each image
-                assert mock_base64_to_image.call_count == 2
+                # Check that process_image_input was called for each image
+                assert mock_process_image_input.call_count == 2
 
                 # Check that generate was called with the right parameters
                 assert mock_generate.call_count == 1
@@ -301,16 +301,16 @@ class TestNeMoMultimodalDeployable:
         prompts = ["Test prompt"]
         images = [sample_image_base64]
 
-        with patch.object(deployable, "base64_to_image") as mock_base64_to_image:
+        with patch.object(deployable, "process_image_input") as mock_process_image_input:
             with patch.object(deployable, "generate") as mock_generate:
-                # Mock base64_to_image to return PIL Images
-                mock_base64_to_image.return_value = sample_image
+                # Mock process_image_input to return PIL Images
+                mock_process_image_input.return_value = sample_image
                 mock_generate.return_value = [MockResult("Generated text 1")]
 
                 result = deployable._infer_fn(prompts=prompts, images=images)
 
-                # Check that base64_to_image was called
-                assert mock_base64_to_image.call_count == 1
+                # Check that process_image_input was called
+                assert mock_process_image_input.call_count == 1
 
                 # Check that generate was called with the right parameters
                 assert mock_generate.call_count == 1
@@ -330,6 +330,42 @@ class TestNeMoMultimodalDeployable:
                 assert call_args[1]["random_seed"] is None
 
                 assert result["sentences"] == ["Generated text 1"]
+
+    def test_infer_fn_with_temperature_zero(self, deployable):
+        """Test _infer_fn with temperature=0.0 for greedy decoding."""
+        sample_image = Image.new("RGB", (100, 100))
+        sample_image_base64 = "data:image;base64,test_base64_string"
+
+        prompts = ["Test prompt"]
+        images = [sample_image_base64]
+
+        with patch.object(deployable, "process_image_input") as mock_process_image:
+            with patch.object(deployable, "generate") as mock_generate:
+                # Mock process_image_input to return PIL Images
+                mock_process_image.return_value = sample_image
+                mock_generate.return_value = [MockResult("Generated text")]
+
+                result = deployable._infer_fn(
+                    prompts=prompts,
+                    images=images,
+                    temperature=0.0,  # Should trigger greedy sampling handling
+                    top_k=5,  # Should be overridden to 1
+                    top_p=0.5,  # Should be overridden to 0.0
+                    num_tokens_to_generate=100,
+                )
+
+                # Check that generate was called with the right parameters
+                assert mock_generate.call_count == 1
+                call_args = mock_generate.call_args
+
+                # Check that inference_params has greedy sampling parameters
+                assert isinstance(call_args[0][2], CommonInferenceParams)
+                assert call_args[0][2].temperature == 0.0  # Kept as 0.0
+                assert call_args[0][2].top_k == 1  # Overridden for greedy sampling
+                assert call_args[0][2].top_p == 0.0  # Overridden for greedy sampling
+                assert call_args[0][2].num_tokens_to_generate == 100
+
+                assert result["sentences"] == ["Generated text"]
 
     def test_dict_to_str_function(self):
         """Test the dict_to_str utility function."""
@@ -484,8 +520,8 @@ class TestNeMoMultimodalDeployable:
         )
         assert result == expected_text
 
-    def test_base64_to_image_with_qwenvl_wrapper(self, deployable):
-        """Test base64_to_image with QwenVLInferenceWrapper."""
+    def test_process_image_input_with_qwenvl_wrapper(self, deployable):
+        """Test process_image_input with QwenVLInferenceWrapper using base64 image."""
         # Create a mock QwenVLInferenceWrapper class
         mock_qwenvl_class = MagicMock()
 
@@ -493,9 +529,8 @@ class TestNeMoMultimodalDeployable:
         # Use isinstance check to return True for QwenVLInferenceWrapper
         deployable.inference_wrapped_model = MagicMock()
 
-        image_base64 = (
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-        )
+        # Image source with data URI prefix (new format)
+        image_source = "data:image;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
         expected_image = Image.new("RGB", (100, 100))
 
         with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
@@ -506,7 +541,7 @@ class TestNeMoMultimodalDeployable:
                 with patch("qwen_vl_utils.process_vision_info") as mock_process:
                     mock_process.return_value = (expected_image, None)
 
-                    result = deployable.base64_to_image(image_base64)
+                    result = deployable.process_image_input(image_source)
 
                     # Verify isinstance was called to check the model type
                     mock_isinstance.assert_called_once_with(deployable.inference_wrapped_model, mock_qwenvl_class)
@@ -516,19 +551,50 @@ class TestNeMoMultimodalDeployable:
                     assert len(call_args) == 1
                     assert call_args[0]["role"] == "user"
                     assert call_args[0]["content"][0]["type"] == "image"
-                    assert call_args[0]["content"][0]["image"] == f"data:image;base64,{image_base64}"
+                    assert call_args[0]["content"][0]["image"] == image_source
 
                     assert result == expected_image
 
-    def test_base64_to_image_with_unsupported_model(self, deployable):
-        """Test base64_to_image with unsupported model raises ValueError."""
+    def test_process_image_input_with_http_url(self, deployable):
+        """Test process_image_input with HTTP URL."""
+        # Create a mock QwenVLInferenceWrapper class
+        mock_qwenvl_class = MagicMock()
+
+        # Make deployable.inference_wrapped_model an instance of the mock class
+        deployable.inference_wrapped_model = MagicMock()
+
+        # HTTP URL as image source
+        image_source = "https://example.com/image.jpg"
+        expected_image = Image.new("RGB", (100, 100))
+
+        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
+            # Make isinstance return True for our mock
+            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.isinstance") as mock_isinstance:
+                mock_isinstance.return_value = True
+
+                with patch("qwen_vl_utils.process_vision_info") as mock_process:
+                    mock_process.return_value = (expected_image, None)
+
+                    result = deployable.process_image_input(image_source)
+
+                    # Verify process_vision_info was called with URL
+                    call_args = mock_process.call_args[0][0]
+                    assert len(call_args) == 1
+                    assert call_args[0]["role"] == "user"
+                    assert call_args[0]["content"][0]["type"] == "image"
+                    assert call_args[0]["content"][0]["image"] == image_source
+
+                    assert result == expected_image
+
+    def test_process_image_input_with_unsupported_model(self, deployable):
+        """Test process_image_input with unsupported model raises ValueError."""
         # Create a mock QwenVLInferenceWrapper class
         mock_qwenvl_class = MagicMock()
 
         # Make sure the wrapped model is NOT a QwenVLInferenceWrapper
         deployable.inference_wrapped_model = MagicMock()
 
-        image_base64 = "test_base64_string"
+        image_source = "data:image;base64,test_base64_string"
 
         with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
             # Make isinstance return False for our mock (not a QwenVLInferenceWrapper)
@@ -536,7 +602,7 @@ class TestNeMoMultimodalDeployable:
                 mock_isinstance.return_value = False
 
                 with pytest.raises(ValueError, match="not supported"):
-                    deployable.base64_to_image(image_base64)
+                    deployable.process_image_input(image_source)
 
     def test_ray_infer_fn(self, deployable):
         """Test ray_infer_fn method."""
