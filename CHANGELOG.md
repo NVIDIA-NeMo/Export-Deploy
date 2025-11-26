@@ -2,6 +2,11 @@
 
 * [NeMo Export-Deploy Release](https://github.com/NVIDIA-NeMo/Export-Deploy/releases)  
 
+## NVIDIA NeMo-Export-Deploy 0.3.0
+* Update TensorRT-LLM export to use NeMo->HF->TensorRT-LLM export path
+* Add chat template support for VLM deployment.
+* Bug fixes and folder name updates such as updating nlp to llm.
+
 ## NVIDIA NeMo-Export-Deploy 0.2.0
 * MegatronLM and Megatron-Bridge model deployment support with Triton Inference Server and Ray Serve
 * Multi-node multi-instance Ray Serve based deployment for NeMo 2, Megatron-Bridge, and Megatron-LM models. 
