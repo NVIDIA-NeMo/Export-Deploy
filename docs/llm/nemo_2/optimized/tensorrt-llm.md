@@ -284,7 +284,7 @@ python /opt/Export-Deploy/scripts/deploy/nlp/query.py --url "http://localhost:80
 Please see the below if you would like to use APIs to send a query.
 
 ```python
-from nemo_deploy.nlp import NemoQueryLLM
+from nemo_deploy.llm import NemoQueryLLM
 
 nq = NemoQueryLLM(url="localhost:8000", model_name="llama")
 output = nq.query_llm(
