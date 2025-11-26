@@ -2,6 +2,11 @@
 
 * [NeMo Export-Deploy Release](https://github.com/NVIDIA-NeMo/Export-Deploy/releases)  
 
+## NVIDIA NeMo-Export-Deploy 0.3.0
+* Update TensorRT-LLM export to use NeMo->HF->TensorRT-LLM export path
+* Add chat template support for VLM deployment.
+* Bug fixes and folder name updates such as updating nlp to llm.
+
 ## NVIDIA NeMo-Export-Deploy 0.2.1
 * Bug fixes for HuggingFace model deployment (#459)
   - Fixed HuggingFace deployable implementations for both Triton and Ray Serve backends
