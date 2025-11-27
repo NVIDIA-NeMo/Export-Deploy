@@ -224,6 +224,13 @@ def get_args(argv):
         default=None,
         help="Micro batch size for model execution",
     )
+    parser.add_argument(
+        "-tp",
+        "--tokenizer_path",
+        type=str,
+        default=None,
+        help="Path to the tokenizer model file (optional, overrides checkpoint tokenizer)",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -276,6 +283,7 @@ def nemo_deploy(argv):
         model_type=args.model_type,
         model_format=args.model_format,
         micro_batch_size=args.micro_batch_size,
+        tokenizer_path=args.tokenizer_path,
         **model_config_kwargs,
     )
 
