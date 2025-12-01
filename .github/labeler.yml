@@ -1,0 +1,64 @@
+export:
+- nemo_export/**/*
+- scripts/export/**/*
+- tests/functional_tests/tests_trtllm/test_export.py
+- tests/functional_tests/tests_onnx_trt/test_export.py
+- tests/unit_tests/export/**/*
+- docs/llm/**/*gen*ckpt.md
+- docs/mm/**/*gen*ckpt.md
+
+deploy:
+- nemo_deploy/**/*
+- scripts/deploy/**/*
+- tests/functional_tests/tests_trtllm/test_deploy*.py
+- tests/unit_tests/deploy/**/*
+- docs/llm/**/in-framework*.md
+- docs/mm/**/in-framework*.md
+
+multimodal:
+- nemo_export/multimodal/**/*
+- nemo_deploy/multimodal/**/*
+- scripts/deploy/multimodal/**/*
+- docs/mm/**/*
+
+LLM:
+- nemo_deploy/llm/**/*
+- scripts/deploy/nlp/**/*
+- docs/llm/**/*
+
+common:
+- nemo_export_deploy_common/**/*
+
+TensorRT-LLM:
+- nemo_export/trt_llm/**/*
+- nemo_export/tensorrt_llm*.py
+- tests/functional_tests/tests_trtllm/**/*
+- scripts/export/export_to_trt_llm.py
+- docs/llm/**/optimized/**/*
+- docs/mm/**/optimized/**/*
+
+vLLM:
+- nemo_export/vllm_exporter.py
+- tests/functional_tests/tests_vllm/**/*
+
+ONNX:
+- nemo_export/onnx_llm_exporter.py
+- tests/functional_tests/tests_onnx_trt/**/*
+- tutorials/onnx_tensorrt/**/*
+
+documentation:
+- docs/**/*
+- README.md
+- tutorials/**/*
+
+tests:
+- tests/**/*
+
+scripts:
+- scripts/**/*
+
+CI:
+- .github/**/*
+- Dockerfile*
+- docker/**/*
+
