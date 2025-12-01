@@ -19,7 +19,7 @@ from typing import List, Optional
 import numpy as np
 import requests
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
 from nemo_deploy.multimodal.query_multimodal import NemoQueryMultimodalPytorch
@@ -82,17 +82,9 @@ class BaseMultimodalRequest(BaseModel):
     max_tokens: int = 50
     temperature: float = 1.0
     top_p: float = 0.0
-    top_k: int = 1
+    top_k: int = 0
     random_seed: Optional[int] = None
     max_batch_size: int = 4
-
-    @model_validator(mode="after")
-    def set_greedy_params(self):
-        """Validate parameters for greedy decoding."""
-        if self.temperature == 0 and self.top_p == 0:
-            logging.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
-            self.top_k = 1
-        return self
 
 
 class MultimodalCompletionRequest(BaseMultimodalRequest):
@@ -290,12 +282,33 @@ def dict_to_str(messages):
 
 @app.post("/v1/chat/completions/")
 async def chat_completions_v1(request: MultimodalChatCompletionRequest):
-    """Defines the multimodal chat completions endpoint and queries the model deployed on PyTriton server."""
+    """Defines the multimodal chat completions endpoint and queries the model deployed on PyTriton server.
+
+    Supports two image content formats (normalized internally to format 1):
+    1. {"type": "image", "image": "url_or_base64"}
+    2. {"type": "image_url", "image_url": {"url": "url_or_base64"}} (OpenAI-style, converted to format 1)
+    """
     url = f"http://{triton_settings.triton_service_ip}:{triton_settings.triton_service_port}"
 
     prompts = request.messages
     if not isinstance(request.messages, list):
         prompts = [request.messages]
+
+    # Normalize image_url format to image format for consistent processing
+    for message in prompts:
+        for content in message["content"]:
+            if content["type"] == "image_url":
+                # Convert OpenAI-style image_url to standard image format
+                if isinstance(content.get("image_url"), dict):
+                    image_data = content["image_url"]["url"]
+                else:
+                    image_data = content["image_url"]
+                # Transform to image format
+                content["type"] = "image"
+                content["image"] = image_data
+                # Remove image_url field
+                content.pop("image_url", None)
+
     # Serialize the dictionary to a JSON string represnetation to be able to convert to numpy array
     # (str_list2numpy) and back to list (str_ndarray2list) as required by PyTriton. Using the dictionaries directly
     # with these methods is not possible as they expect string type.
