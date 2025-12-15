@@ -4,8 +4,6 @@
 
 ## NVIDIA NeMo-Export-Deploy 0.3.1
 * Fix vLLM top_p parameter handling in HuggingFace Ray deployment (#524)
-  - Properly handle invalid top_p values (<= 0.0) for vLLM compatibility
-  - Set default top_p to 1.0 when not specified to meet vLLM requirements
 * Pin peft dependency to <0.14.0 for compatibility (#524)
 
 ## NVIDIA NeMo-Export-Deploy 0.3.0
