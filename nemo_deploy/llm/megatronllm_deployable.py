@@ -471,7 +471,9 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
 
         results = self.generate(prompts, inference_params)
         # Handle DynamicInferenceRequestRecord objects by merging them into a single request
-        results = [r.merge(self.mcore_tokenizer) if isinstance(r, DynamicInferenceRequestRecord) else r for r in results]
+        results = [
+            r.merge(self.mcore_tokenizer) if isinstance(r, DynamicInferenceRequestRecord) else r for r in results
+        ]
         if echo:
             output_texts = [r.prompt + r.generated_text if text_only else r for r in results]
         else:
