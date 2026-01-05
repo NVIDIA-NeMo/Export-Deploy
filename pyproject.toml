@@ -82,7 +82,7 @@ dependencies = [
 inframework = []
 vllm = ["vllm>=0.10.0,<0.12.0", "pandas", "timm"]
 trtllm = ["tensorrt-llm>=1.0.0a0,<1.1.0,>=1.0.0rc6", "cuda-python~=12.8.0"]
-trt-onnx = ["tensorrt>=10.11.0.33,<10.12.0", "onnx>=1.18.0,<1.21.0", "transformers>=4.55.2,<=4.55.4"]
+trt-onnx = ["tensorrt>=10.11.0.33,<10.12.0", "onnx>=1.18.0,<1.21.0", "transformers>=4.55.2,<4.58.0"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
@@ -114,8 +114,6 @@ transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", 
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
-# Enable preview features for extra-build-dependencies
-preview = true
 # Currently, TE must be built with no build-isolation b/c it requires torch
 no-build-isolation-package = ["transformer-engine", "transformer-engine-torch"]
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
@@ -134,9 +132,6 @@ override-dependencies = [
     "fsspec[http]>=2023.1.0,<=2024.9.0",
 ]
 prerelease = "allow"
-
-[tool.uv.extra-build-dependencies]
-transformer-engine = ["setuptools"]
 
 [[tool.uv.index]]
 name = "pypi"
