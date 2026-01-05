@@ -133,6 +133,9 @@ override-dependencies = [
 ]
 prerelease = "allow"
 
+[tool.uv.extra-build-dependencies]
+transformer-engine = ["setuptools"]
+
 [[tool.uv.index]]
 name = "pypi"
 url = "https://pypi.org/simple"
