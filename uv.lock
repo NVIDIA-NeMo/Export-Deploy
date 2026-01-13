@@ -4475,7 +4475,7 @@ requires-dist = [
     { name = "torch", specifier = "==2.9.0", index = "https://download.pytorch.org/whl/cu130" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
     { name = "torchvision" },
-    { name = "transformer-engine", extras = ["pytorch"], marker = "sys_platform != 'darwin'", git = "https://github.com/NVIDIA/TransformerEngine.git?rev=0289e76380088358a584d809faf69effab1a7cda" },
+    { name = "transformer-engine", extras = ["pytorch"], marker = "sys_platform != 'darwin'", git = "https://github.com/NVIDIA/TransformerEngine.git?rev=c188b533cc3721ca9c6bbfd26148f5cf60108c25" },
     { name = "transformers", marker = "extra == 'trt-onnx'", specifier = "==4.51.3" },
     { name = "uvicorn" },
     { name = "vllm", marker = "platform_machine == 'aarch64' and extra == 'vllm'", specifier = ">=0.11.0,<0.12.0", index = "https://pypi.org/simple" },
@@ -9462,8 +9462,8 @@ wheels = [
 
 [[package]]
 name = "transformer-engine"
-version = "2.7.0+0289e76"
-source = { git = "https://github.com/NVIDIA/TransformerEngine.git?rev=0289e76380088358a584d809faf69effab1a7cda#0289e76380088358a584d809faf69effab1a7cda" }
+version = "2.11.0+c188b533"
+source = { git = "https://github.com/NVIDIA/TransformerEngine.git?rev=c188b533cc3721ca9c6bbfd26148f5cf60108c25#c188b533cc3721ca9c6bbfd26148f5cf60108c25" }
 dependencies = [
     { name = "einops", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
     { name = "importlib-metadata", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
