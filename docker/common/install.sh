@@ -150,7 +150,7 @@ main() {
         . $UV_PROJECT_ENVIRONMENT/bin/activate
 
         pip install --pre --no-cache-dir --upgrade pip
-        pip install --pre --no-cache-dir 'torch>=2.9.0,<2.10.0' pybind11 wheel_stub ninja wheel packaging
+        pip install --pre --no-cache-dir 'torch>=2.9.0,<2.10.0' pybind11 wheel_stub ninja wheel packaging Cython
 
 
         pip install --pre --no-cache-dir --no-build-isolation .$EXTRA
