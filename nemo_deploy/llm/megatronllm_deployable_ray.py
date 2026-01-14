@@ -192,9 +192,8 @@ class MegatronRayDeployable:
                     deployment_node_id = node.get("NodeID")
                     break
 
-            rank_0_worker = ModelWorker.options(
-                scheduling_strategy=NodeAffinitySchedulingStrategy(node_id=deployment_node_id, soft=False)
-            ).remote(
+            # Common arguments for rank 0 worker
+            rank_0_kwargs = dict(
                 nemo_checkpoint_filepath=nemo_checkpoint_filepath,
                 rank=0,
                 world_size=num_gpus,
@@ -216,6 +215,14 @@ class MegatronRayDeployable:
                 micro_batch_size=micro_batch_size,
                 **model_config_kwargs,
             )
+
+            # Use node affinity if we found a matching node, otherwise use default scheduling
+            if deployment_node_id is not None:
+                rank_0_worker = ModelWorker.options(
+                    scheduling_strategy=NodeAffinitySchedulingStrategy(node_id=deployment_node_id, soft=True)
+                ).remote(**rank_0_kwargs)
+            else:
+                rank_0_worker = ModelWorker.remote(**rank_0_kwargs)
             worker_futures.append(rank_0_worker)
 
             # Wait for rank 0 to start before creating other workers
