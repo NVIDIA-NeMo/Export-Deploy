@@ -41,11 +41,10 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    "megatron-core>=0.14.0a0,<0.15.0",
-    "megatron-bridge>=0.1.0a0,<0.2.0",
-    "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
-    "nvidia-resiliency-ext>=0.4.0a0,<0.5.0; sys_platform != 'darwin'",
-    "transformer-engine[pytorch]>=2.6.0a0,<2.7.0; sys_platform != 'darwin'",
+    "megatron-core",
+    "megatron-bridge",
+    "nvidia-resiliency-ext",
+    "transformer-engine[pytorch]>=2.10.0a0,<2.12.0",
     "accelerate",
     "fastapi",
     "pydantic-settings",
@@ -61,8 +60,6 @@ dependencies = [
     "lightning",
     "omegaconf>=2.3.0",
     "peft<0.14.0",
-    "torch==2.7.1",
-    "torchvision",
     "torchmetrics>=0.11.0",
     "wandb",
     "webdataset>=0.2.86",
@@ -110,8 +107,10 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 # megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "ecf05926b4765aada82c8eabab4a374e8e83a9c5" }
-transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "0289e76380088358a584d809faf69effab1a7cda" } # on release_v2.7.0
+transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "release_v2.11" } # on release_v2.7.0
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
+nvidia-resiliency-ext = { git = "https://github.com/NVIDIA/nvidia-resiliency-ext.git", rev = "54f85fe422d296cf04ea524130014bd3a2c3add1" }
+nvidia-modelopt = { git = "https://github.com/NVIDIA/TensorRT-Model-Optimizer.git", rev = "0a4f0a8b933121f7af080261a0a5a7717f2c5d49" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
@@ -130,6 +129,10 @@ override-dependencies = [
     "urllib3>1.27.0",
     "tiktoken>=0.9.0",                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
+    "nvidia-modelopt[torch]>=0.37.0",
+    "torch; sys_platform == 'never'",
+    "torchvision; sys_platform == 'never'",
+    "triton; sys_platform == 'never'",
 ]
 prerelease = "allow"
 
