@@ -42,7 +42,7 @@ requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
     "megatron-core>=0.15.0a0,<0.16.0",
-    "megatron-bridge>=0.1.0a0,<0.2.0",
+    "megatron-bridge>=0.1.0rc2,<0.2.0",
     "nvidia-modelopt[torch]>=0.35.0a0,<0.41.0; sys_platform != 'darwin'",
     "nvidia-resiliency-ext>=0.4.0a0,<0.5.0; sys_platform != 'darwin'",
     "transformer-engine[pytorch]>=2.10.0a0,<2.13.0; sys_platform != 'darwin'",
@@ -75,7 +75,7 @@ dependencies = [
     "tiktoken",
     "einops",
     "ijson",
-    "pyarrow<21.0.0",
+    "pyarrow",
 ]
 
 [project.optional-dependencies]
@@ -113,7 +113,7 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 # megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "ecf05926b4765aada82c8eabab4a374e8e83a9c5" }
-transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "c188b533cc3721ca9c6bbfd26148f5cf60108c25" } # on release_v2.11.0
+# transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "c188b533cc3721ca9c6bbfd26148f5cf60108c25" } # on release_v2.11.0
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
@@ -133,7 +133,13 @@ override-dependencies = [
     "urllib3>1.27.0",
     "tiktoken>=0.9.0",                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
-    "patchelf; sys_platform == 'never'"
+    "patchelf; sys_platform == 'never'",
+    "megatron-core>=0.15.0a0,<0.16.0",
+    "nvidia-modelopt[torch]>=0.35.0a0,<0.41.0; sys_platform != 'darwin'",
+    "transformer-engine[pytorch]>=2.10.0a0,<2.13.0; sys_platform != 'darwin'",
+    # Force CUDA 13 variants for transformer-engine
+    "transformer-engine-cu13>=2.10.0a0,<2.13.0; sys_platform != 'darwin'",
+    "transformer-engine-cu12; sys_platform == 'never'",
 ]
 prerelease = "allow"
 
