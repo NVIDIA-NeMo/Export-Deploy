@@ -82,7 +82,7 @@ main() {
         dpkg -i cuda-keyring_1.1-1_all.deb
         rm cuda-keyring_1.1-1_all.deb
         apt-get update
-        apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 libcutlass-dev
+        apt-get install -y cuda-toolkit-13-0 cudnn-cuda-13 libcudnn9-cuda-13 libcutlass-dev libnccl-dev
 
         # Install OpenMPI and nvinfer
         apt-get install -y libopenmpi-dev libnvinfer-lean-dev
@@ -150,7 +150,7 @@ main() {
         . $UV_PROJECT_ENVIRONMENT/bin/activate
 
         pip install --pre --no-cache-dir --upgrade pip
-        pip install --pre --no-cache-dir 'torch>=2.7.0,<2.8.0' pybind11 wheel_stub ninja wheel packaging
+        pip install --pre --no-cache-dir 'torch>=2.9.0,<2.10.0' pybind11 wheel_stub ninja wheel packaging
 
 
         pip install --pre --no-cache-dir --no-build-isolation .$EXTRA
