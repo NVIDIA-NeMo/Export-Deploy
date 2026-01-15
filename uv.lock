@@ -1388,15 +1388,12 @@ name = "cuda-toolkit"
 version = "13.0.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux'",
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/4e/8f222d8c0fa6aaf32e907deb61623ccf676c7fb56be5e83a1be30d89b2d8/cuda_toolkit-13.0.0-py2.py3-none-any.whl", hash = "sha256:1441a1b592da533644bf4aa6062cceb8842afc059235640610a11617d6b41134", size = 2349, upload-time = "2025-08-07T23:59:04.039Z" },
@@ -1412,23 +1409,16 @@ name = "cuda-toolkit"
 version = "13.1.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform == 'win32' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform == 'emscripten' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'win32' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'emscripten' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform == 'win32' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform == 'emscripten' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'win32' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'emscripten' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin'",
+    "python_full_version >= '3.12' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'darwin'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'emscripten'",
+    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version < '3.11' and sys_platform == 'darwin'",
+    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux'",
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/64/bb/e7692a4cf2a60dc8f8d133da847e57e27c2475f932dbbabe7543d55ab0dc/cuda_toolkit-13.1.0-py2.py3-none-any.whl", hash = "sha256:eab684dc673884bbaee94b8ce09521a1a9469ddf58be70122b63589f813cff92", size = 2395, upload-time = "2025-12-19T22:50:47.224Z" },
@@ -4391,7 +4381,7 @@ dependencies = [
 [package.optional-dependencies]
 trt-onnx = [
     { name = "onnx", version = "1.20.1", source = { registry = "https://pypi.org/simple" } },
-    { name = "tensorrt", version = "10.14.1.48", source = { registry = "https://pypi.org/simple" } },
+    { name = "tensorrt", version = "10.13.3.9", source = { registry = "https://pypi.org/simple" } },
     { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" } },
 ]
 trtllm = [
@@ -4473,7 +4463,7 @@ requires-dist = [
     { name = "ray" },
     { name = "ray", extras = ["serve"] },
     { name = "sentencepiece" },
-    { name = "tensorrt", marker = "extra == 'trt-onnx'", specifier = "==10.14.1.48" },
+    { name = "tensorrt", marker = "extra == 'trt-onnx'", specifier = "==10.13.3.9" },
     { name = "tensorrt-llm", marker = "extra == 'trtllm'", specifier = ">=1.1.0a0,<1.2.0" },
     { name = "tensorstore" },
     { name = "tiktoken" },
@@ -5163,18 +5153,21 @@ name = "nvidia-cuda-runtime"
 version = "13.1.80"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform == 'win32' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'win32' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform == 'win32' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'win32' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
+    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux'",
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/32/b7/8075a985c5a4a828d850f244266c67134f60b28d1106cd4abe6187bedcc3/nvidia_cuda_runtime-13.1.80-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:5f1aa8fd779cae1a78aa8fdbaa5e4f245300baff120099d9b5ee84e3f4506a29", size = 2317343, upload-time = "2025-12-05T17:34:27.824Z" },
     { url = "https://files.pythonhosted.org/packages/fe/60/03858bc3954b3263eedcff7626712c656b6b5a0d7d25bcb1fc1ebee9d4f1/nvidia_cuda_runtime-13.1.80-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:dac25b52e69050e5a7a84957e6df470a85b185f8f648a99a1ab1dfce027576cf", size = 2297816, upload-time = "2025-12-05T17:34:48.703Z" },
     { url = "https://files.pythonhosted.org/packages/d7/c2/737165823dd0c7717d02faf892bd697f517dd017b9044e5d663f4e03b979/nvidia_cuda_runtime-13.1.80-py3-none-win_amd64.whl", hash = "sha256:00db7158108d3ec7fe213fa78e2640d664b5b1b6b85485007dde29ccaa6abef6", size = 3093656, upload-time = "2025-12-05T17:47:34.995Z" },
 ]
+
+[[package]]
+name = "nvidia-cuda-runtime-cu13"
+version = "0.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/83/52/6cd70adb2e690815e5e91d5c81943652ae33020f7f405482a095fb3339ae/nvidia_cuda_runtime_cu13-0.0.1.tar.gz", hash = "sha256:65a96efb265c833d0f68ecd834b2c9a74ddc91182ad13dbfce8a76cdfe438442", size = 1379, upload-time = "2025-10-31T20:40:49.389Z" }
 
 [[package]]
 name = "nvidia-cudnn-cu13"
@@ -8737,6 +8730,27 @@ wheels = [
 
 [[package]]
 name = "tensorrt"
+version = "10.13.3.9"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12' and sys_platform == 'linux'",
+    "python_full_version >= '3.12' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'emscripten'",
+    "python_full_version >= '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux'",
+    "python_full_version < '3.11' and sys_platform == 'linux'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'emscripten'",
+    "python_full_version == '3.11.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32'",
+    "python_full_version < '3.11' and sys_platform != 'linux'",
+]
+dependencies = [
+    { name = "tensorrt-cu13", version = "10.13.3.9", source = { registry = "https://pypi.org/simple" } },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/77/88/5d4cac975abb19654a6589ce7cd06fab15f6299382b67ba876b9e2438d1f/tensorrt-10.13.3.9.tar.gz", hash = "sha256:89ec5c15c6327c17a9bf592a0801f793c786f45b4f0e0089a3a875d639887fa1", size = 40518, upload-time = "2025-09-05T18:54:22.142Z" }
+
+[[package]]
+name = "tensorrt"
 version = "10.13.3.9.post1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
@@ -8763,8 +8777,8 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d3/5c/b3a7018c4f7bf3df195368ac42f903aaf1d2de043adbf76d3645a252819e/tensorrt-10.13.3.9.post1.tar.gz", hash = "sha256:a3fece019f19d3dcd75c3f5607a978e5db38331f2491ab88b0062782f5b344b6", size = 40577, upload-time = "2025-11-07T18:04:14.472Z" }
 
 [[package]]
-name = "tensorrt"
-version = "10.14.1.48"
+name = "tensorrt-cu13"
+version = "10.13.3.9"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'linux'",
@@ -8779,9 +8793,10 @@ resolution-markers = [
     "python_full_version < '3.11' and sys_platform != 'linux'",
 ]
 dependencies = [
-    { name = "tensorrt-cu13", version = "10.14.1.48", source = { registry = "https://pypi.org/simple" } },
+    { name = "tensorrt-cu13-bindings", version = "10.13.3.9", source = { registry = "https://pypi.org/simple" } },
+    { name = "tensorrt-cu13-libs", version = "10.13.3.9", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/9a/e5cc29116c3b7348acbc6c70a8a1f5a36c422052ec1dda230375e3be8222/tensorrt-10.14.1.48.tar.gz", hash = "sha256:c47578649bd0dd55176d95b0f6d1e45162772791d81cb16ca1d1619552570caa", size = 16719, upload-time = "2025-11-04T20:48:50.187Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a6/a2/85966c080f2bf2a4dd762b30957432ecf4d78151862734292e19256db215/tensorrt_cu13-10.13.3.9.tar.gz", hash = "sha256:413eab91b37313ca6158e70df0773047d278ad8bcce243d1954a17cd8d3feaca", size = 18168, upload-time = "2025-09-05T18:54:44.033Z" }
 
 [[package]]
 name = "tensorrt-cu13"
@@ -8812,8 +8827,8 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e4/8b/b9b7f5235e759199cbe4048a3b6145da6c9169ea880329eaa3676d98a983/tensorrt_cu13-10.13.3.9.post1.tar.gz", hash = "sha256:fbfb1c9951e50a6d4020c65a65fa6282aa5240ca42484ec7cd0501407c0bcac7", size = 18187, upload-time = "2025-11-07T18:04:38.428Z" }
 
 [[package]]
-name = "tensorrt-cu13"
-version = "10.14.1.48"
+name = "tensorrt-cu13-bindings"
+version = "10.13.3.9"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'linux'",
@@ -8827,11 +8842,17 @@ resolution-markers = [
     "python_full_version == '3.11.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32'",
     "python_full_version < '3.11' and sys_platform != 'linux'",
 ]
-dependencies = [
-    { name = "tensorrt-cu13-bindings", version = "10.14.1.48", source = { registry = "https://pypi.org/simple" } },
-    { name = "tensorrt-cu13-libs", version = "10.14.1.48", source = { registry = "https://pypi.org/simple" } },
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/bb/28e98c6c41e293320a5f83020dbd694f072f4de3ddc657dd732bd4422a96/tensorrt_cu13_bindings-10.13.3.9-cp310-none-manylinux_2_28_x86_64.whl", hash = "sha256:6cd47014553af9b48d19dddab3dd053c9b3cc9d4c9939a8f989566f0821067ff", size = 1181469, upload-time = "2025-09-05T18:55:07.43Z" },
+    { url = "https://files.pythonhosted.org/packages/d2/21/4e4ac9f6cfab6ea9938cff29d7887db0fa7e73b89c1f4c5bfbaae867b822/tensorrt_cu13_bindings-10.13.3.9-cp310-none-manylinux_2_35_aarch64.whl", hash = "sha256:9a14b56daadb809059b7d7db509eb7bf4125e4db956f9cf9033c1b9cc02102d7", size = 1153621, upload-time = "2025-09-05T19:18:41.155Z" },
+    { url = "https://files.pythonhosted.org/packages/51/08/98bd4ea2d94ba340e7cfe59420ce0b6bf11d8cb95570fe52c7be20977c26/tensorrt_cu13_bindings-10.13.3.9-cp310-none-win_amd64.whl", hash = "sha256:df12c82cdc5fe4f94771a89b0a450f214eeeafd3aa07f3e3c77ca92271010f94", size = 874900, upload-time = "2025-09-05T18:23:07.179Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/0a/a60c1df4818cb22e6950a4643474c77e21baf359ef70ed7244e77f7c24f4/tensorrt_cu13_bindings-10.13.3.9-cp311-none-manylinux_2_28_x86_64.whl", hash = "sha256:f40c9e488af125b232fcca85ac4b21e090d7b1be55c3062eeaf48c2a9a9ed808", size = 1181761, upload-time = "2025-09-05T18:57:04.068Z" },
+    { url = "https://files.pythonhosted.org/packages/20/53/7317b4fdd76b5552499a3d8fd0f9777c64a56bc8d8f3865fbf59ad41f283/tensorrt_cu13_bindings-10.13.3.9-cp311-none-manylinux_2_35_aarch64.whl", hash = "sha256:0f4950794231287ee4a6b62f0cd3b3363dd958bea55e007f06cb8e68d72982ca", size = 1153891, upload-time = "2025-09-05T19:17:55.357Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/1b/820182b7e3e2ceae1a325b35ee6601670b35b0bb3a6c91e491a41f6eadab/tensorrt_cu13_bindings-10.13.3.9-cp311-none-win_amd64.whl", hash = "sha256:cd99d35fb1af73c9023b3df280c65fba0e72596a21305ae98221cd9d3422c921", size = 877327, upload-time = "2025-09-05T18:22:19.756Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/e9/087a8062dcc1c63fcb8d2292d48a1195ef8b29e5c7b178c8fd371942d063/tensorrt_cu13_bindings-10.13.3.9-cp312-none-manylinux_2_28_x86_64.whl", hash = "sha256:9e3adb281af85508518b90979d0bf3a1704a40c3165a99d5b27e2cfee72f1b14", size = 1184541, upload-time = "2025-09-05T18:55:53.4Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/71/a4342f7e6789e939a25d7fb58dc1b686e4a0d2d64a64c1f3b47bad6c98ed/tensorrt_cu13_bindings-10.13.3.9-cp312-none-manylinux_2_35_aarch64.whl", hash = "sha256:f4839d8803663eb6c6e0956eda68a6589928c52465575fea205b3815b5ddc90d", size = 1153795, upload-time = "2025-09-05T19:20:21.953Z" },
+    { url = "https://files.pythonhosted.org/packages/ad/c8/381dd22c2cd02d43f0621121f165d39a62065860eabf616e00735410c8ec/tensorrt_cu13_bindings-10.13.3.9-cp312-none-win_amd64.whl", hash = "sha256:7ffbc1a20d8845b2f4fa2f825a9ef6358f544379c3368b45573611cab2ac3b9c", size = 877010, upload-time = "2025-09-05T18:21:53.707Z" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d3/e8/e8d68abae8161db2019c7d579f89238444e7c9b35264d8cb58ddfcdee6c8/tensorrt_cu13-10.14.1.48.tar.gz", hash = "sha256:479cb524949d73326b5df5a0d4ac5b49be894bcf28096e4ee31a95eb3e68f19d", size = 18298, upload-time = "2025-11-04T20:49:12.57Z" }
 
 [[package]]
 name = "tensorrt-cu13-bindings"
@@ -8868,8 +8889,8 @@ wheels = [
 ]
 
 [[package]]
-name = "tensorrt-cu13-bindings"
-version = "10.14.1.48"
+name = "tensorrt-cu13-libs"
+version = "10.13.3.9"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'linux'",
@@ -8883,11 +8904,10 @@ resolution-markers = [
     "python_full_version == '3.11.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32'",
     "python_full_version < '3.11' and sys_platform != 'linux'",
 ]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/fe/cde9e0f4dcc3ece06077d616bf5eec744be640f32c0cf4f44582e96ae731/tensorrt_cu13_bindings-10.14.1.48-cp310-none-win_amd64.whl", hash = "sha256:791a9fbe725532293a2108f112edb7ae776c6552e34d19ca2e939d25b587b82c", size = 765952, upload-time = "2025-11-04T21:17:25.068Z" },
-    { url = "https://files.pythonhosted.org/packages/fc/cb/6fb26f82d84b0807f68f3cfabb9e5ddce4ac31df0d62be61a2747ba3e618/tensorrt_cu13_bindings-10.14.1.48-cp311-none-win_amd64.whl", hash = "sha256:62fd85a988143c789f2b14300626a37b1869acc06aea90363d621b280024eb62", size = 765929, upload-time = "2025-11-04T21:19:13.456Z" },
-    { url = "https://files.pythonhosted.org/packages/85/42/8a8cc19c63821154a55613ae88a467d0359edb498338708dc2f327d131ad/tensorrt_cu13_bindings-10.14.1.48-cp312-none-win_amd64.whl", hash = "sha256:f2eb3fc215e95d62aa406d74f5d1f7e0e0c48c2b59f57b8e02a070aad7470c7c", size = 768616, upload-time = "2025-11-04T21:17:48.455Z" },
+dependencies = [
+    { name = "nvidia-cuda-runtime-cu13" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/a6/ce/a2fb0d865c3d6ac7be80c96d32d6dbe728ebc54010cf2d4e563576265787/tensorrt_cu13_libs-10.13.3.9.tar.gz", hash = "sha256:9726be3d5582a9162a9e0cb3492e9367826960b8c5ad65701d420ce74cc67b0d", size = 706, upload-time = "2025-09-05T18:02:18.78Z" }
 
 [[package]]
 name = "tensorrt-cu13-libs"
@@ -8916,28 +8936,6 @@ dependencies = [
     { name = "cuda-toolkit", version = "13.1.0", source = { registry = "https://pypi.org/simple" }, extra = ["cudart"], marker = "(sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f3/cf/667d8387130ed60d1e44a47a76f5f18fca73346b2e8f93bc0955f4ada0eb/tensorrt_cu13_libs-10.13.3.9.post1.tar.gz", hash = "sha256:6d44834e596ce0cf9f513dae425df3431079d5b7d2516d7ad441144583bfb2dc", size = 728, upload-time = "2025-11-07T17:29:27.878Z" }
-
-[[package]]
-name = "tensorrt-cu13-libs"
-version = "10.14.1.48"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform == 'linux'",
-    "python_full_version >= '3.12' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux'",
-    "python_full_version < '3.11' and sys_platform == 'linux'",
-    "python_full_version == '3.11.*' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.11.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and sys_platform != 'linux'",
-]
-dependencies = [
-    { name = "cuda-toolkit", version = "13.0.0", source = { registry = "https://pypi.org/simple" }, extra = ["cudart"], marker = "(sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "cuda-toolkit", version = "13.1.0", source = { registry = "https://pypi.org/simple" }, extra = ["cudart"], marker = "(sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f5/6f/40bc237554ad3d42002ecde30f5ef3e4a80a07f951f3ec2d93aade44ccde/tensorrt_cu13_libs-10.14.1.48.tar.gz", hash = "sha256:76c4d003d84f29095616a03be04dd141dbf32739b0955d46c5cc711c7212f1f9", size = 717, upload-time = "2025-11-04T20:02:41.581Z" }
 
 [[package]]
 name = "tensorrt-llm"
