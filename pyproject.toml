@@ -41,11 +41,11 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    "megatron-core>=0.14.0a0,<0.15.0",
-    "megatron-bridge>=0.1.0a0,<0.2.0",
-    "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
-    "nvidia-resiliency-ext>=0.4.0a0,<0.5.0; sys_platform != 'darwin'",
-    "transformer-engine[pytorch]>=2.6.0a0,<2.7.0; sys_platform != 'darwin'",
+    "megatron-core",
+    "megatron-bridge",
+    "nvidia-modelopt[torch]; sys_platform != 'darwin'",
+    "nvidia-resiliency-ext; sys_platform != 'darwin'",
+    "transformer-engine[pytorch]",
     "accelerate",
     "fastapi",
     "pydantic-settings",
