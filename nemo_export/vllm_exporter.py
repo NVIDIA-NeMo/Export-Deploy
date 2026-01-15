@@ -170,7 +170,6 @@ class vLLMExporter(ITritonDeployable):
                     swap_space=swap_space,
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
-                    max_seq_len_to_capture=max_seq_len_to_capture,
                     task=task,
                 )
         else:
@@ -187,7 +186,6 @@ class vLLMExporter(ITritonDeployable):
                 swap_space=swap_space,
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
-                max_seq_len_to_capture=max_seq_len_to_capture,
                 task=task,
             )
 
