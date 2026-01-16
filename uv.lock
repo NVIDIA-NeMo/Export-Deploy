@@ -81,7 +81,7 @@ overrides = [
     { name = "nvidia-modelopt", extras = ["torch"], marker = "sys_platform != 'darwin'", specifier = ">=0.35.0a0,<0.41.0" },
     { name = "patchelf", marker = "sys_platform == 'never'" },
     { name = "tiktoken", specifier = ">=0.9.0" },
-    { name = "transformer-engine", extras = ["pytorch"], marker = "sys_platform != 'darwin'", specifier = ">=2.10.0a0,<2.13.0" },
+    { name = "transformer-engine", extras = ["pytorch", "core-cu13"], marker = "sys_platform != 'darwin'", specifier = ">=2.10.0a0,<2.13.0" },
     { name = "transformer-engine-cu12", marker = "sys_platform == 'never'" },
     { name = "transformer-engine-cu13", marker = "sys_platform != 'darwin'", specifier = ">=2.10.0a0,<2.13.0" },
     { name = "urllib3", specifier = ">1.27.0" },
@@ -3895,7 +3895,7 @@ dependencies = [
     { name = "tiktoken" },
     { name = "torch" },
     { name = "tqdm" },
-    { name = "transformer-engine", extra = ["pytorch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "transformer-engine", extra = ["core-cu13", "pytorch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "transformers", version = "4.56.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "transformers", version = "4.57.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm')" },
@@ -4354,6 +4354,7 @@ dependencies = [
     { name = "lightning" },
     { name = "megatron-bridge" },
     { name = "megatron-core" },
+    { name = "nvidia-cuda-runtime-cu13", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "nvidia-modelopt", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
@@ -4370,7 +4371,7 @@ dependencies = [
     { name = "torch" },
     { name = "torchmetrics" },
     { name = "torchvision" },
-    { name = "transformer-engine", extra = ["pytorch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "transformer-engine", extra = ["core-cu13", "pytorch"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "uvicorn" },
     { name = "wandb" },
     { name = "webdataset" },
@@ -4449,7 +4450,8 @@ requires-dist = [
     { name = "lightning", specifier = "<2.5.0" },
     { name = "megatron-bridge", specifier = ">=0.1.0rc2,<0.2.0" },
     { name = "megatron-core", specifier = ">=0.14.0a0,<0.16.0" },
-    { name = "nvidia-modelopt", extras = ["torch"], marker = "sys_platform != 'darwin'", specifier = ">=0.33.0a0,<0.41.0" },
+    { name = "nvidia-cuda-runtime-cu13", marker = "sys_platform == 'never'" },
+    { name = "nvidia-modelopt", extras = ["torch"] },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
     { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin'", specifier = ">=0.4.0a0,<0.5.0" },
     { name = "omegaconf", specifier = ">=2.3.0" },
@@ -4471,7 +4473,7 @@ requires-dist = [
     { name = "torch", specifier = "==2.9.0", index = "https://download.pytorch.org/whl/cu130" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
     { name = "torchvision" },
-    { name = "transformer-engine", extras = ["pytorch"], marker = "sys_platform != 'darwin'", specifier = ">=2.7.0a0,<2.13.0" },
+    { name = "transformer-engine", extras = ["core-cu13", "pytorch"], marker = "sys_platform != 'darwin'", specifier = ">=2.7.0a0,<2.13.0" },
     { name = "transformers", marker = "extra == 'trt-onnx'", specifier = "==4.51.3" },
     { name = "uvicorn" },
     { name = "vllm", marker = "platform_machine == 'aarch64' and extra == 'vllm'", specifier = ">=0.11.0,<0.12.0", index = "https://pypi.org/simple" },
@@ -9473,6 +9475,9 @@ wheels = [
 ]
 
 [package.optional-dependencies]
+core-cu13 = [
+    { name = "transformer-engine-cu13", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+]
 pytorch = [
     { name = "transformer-engine-torch", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
 ]
@@ -9489,6 +9494,20 @@ dependencies = [
 wheels = [
     { url = "https://files.pythonhosted.org/packages/05/27/5c4c27cb245a3513e5ad7ccef50e2e9688996e2cc558edbbb575dfcca276/transformer_engine_cu12-2.11.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:ed5fda0925cb304d6864b451d8d012c579d5bd097bfefefca769b2704b06381a", size = 287630565, upload-time = "2026-01-02T09:56:43.645Z" },
     { url = "https://files.pythonhosted.org/packages/fa/a2/1439bbb6bc7d4d6045bad7d213884f7be92301c0982f009e3bbafa40e4ff/transformer_engine_cu12-2.11.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:6e5c0707583b2a90b2570da6f57409c6802653e069dfec38cf07a3b77ba9b12d", size = 288159349, upload-time = "2026-01-02T09:57:56.435Z" },
+]
+
+[[package]]
+name = "transformer-engine-cu13"
+version = "2.11.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "importlib-metadata", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "packaging", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "pydantic", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c8/27/0de6e2f693529e1f735eaf5b9c652e8f68c2eec2f709909f0785f17cfb8d/transformer_engine_cu13-2.11.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:0f01df55df1817295385ded989b2d03d72ef32176401ff547fdffa38f93019ea", size = 178536851, upload-time = "2026-01-02T09:55:28.863Z" },
+    { url = "https://files.pythonhosted.org/packages/33/09/9f8c0948aa9561b24717ee05396868e3e784ee67d5c39b24e83c719c1273/transformer_engine_cu13-2.11.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:62febd0422cc9003f1048f97be75f4a05d6e43092baf28a5ff6b857b638181c0", size = 179248112, upload-time = "2026-01-02T09:44:26.223Z" },
 ]
 
 [[package]]
