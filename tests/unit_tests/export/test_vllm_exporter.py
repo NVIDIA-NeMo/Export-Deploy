@@ -599,13 +599,14 @@ def test_export_megatron_bridge_not_available(exporter):
 @pytest.mark.run_only_on("GPU")
 def test_export_megatron_bridge_no_hf_model_id(exporter, mock_llm):
     """Test export with megatron_bridge when hf_model_id cannot be extracted and not provided"""
+    # Create mock AutoBridge class
+    mock_auto_bridge = MagicMock()
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = None
+
     with (
         patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
-        patch("nemo_export.vllm_exporter.AutoBridge") as mock_auto_bridge,
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
     ):
-        # Mock that AutoBridge.get_hf_model_id_from_checkpoint returns None
-        mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = None
-
         with pytest.raises(
             Exception,
             match="Could not find HuggingFace model ID in Megatron-Bridge checkpoint metadata",
@@ -617,22 +618,25 @@ def test_export_megatron_bridge_no_hf_model_id(exporter, mock_llm):
 @pytest.mark.run_only_on("GPU")
 def test_export_megatron_bridge_with_explicit_hf_model_id(exporter, mock_llm):
     """Test export with megatron_bridge when hf_model_id is provided explicitly"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = None
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
     with (
         patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
-        patch("nemo_export.vllm_exporter.AutoBridge") as mock_auto_bridge,
-        patch("nemo_export.vllm_exporter.AutoConfig") as mock_auto_config,
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
         patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
         patch("nemo_export.vllm_exporter.Path") as mock_path,
     ):
-        # Setup mocks
-        mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = None
-        mock_config = MagicMock()
-        mock_auto_config.from_pretrained.return_value = mock_config
-        mock_auto_bridge.supports.return_value = True
-
-        mock_bridge_instance = MagicMock()
-        mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
-
         # Mock temp directory
         mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
         mock_path_instance = MagicMock()
@@ -668,22 +672,26 @@ def test_export_megatron_bridge_with_explicit_hf_model_id(exporter, mock_llm):
 @pytest.mark.run_only_on("GPU")
 def test_export_megatron_bridge_with_extracted_hf_model_id(exporter, mock_llm):
     """Test export with megatron_bridge when hf_model_id is extracted from checkpoint"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks - AutoBridge extracts model ID from checkpoint
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
     with (
         patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
-        patch("nemo_export.vllm_exporter.AutoBridge") as mock_auto_bridge,
-        patch("nemo_export.vllm_exporter.AutoConfig") as mock_auto_config,
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
         patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
         patch("nemo_export.vllm_exporter.Path") as mock_path,
     ):
-        # Setup mocks - AutoBridge extracts model ID from checkpoint
-        mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
-        mock_config = MagicMock()
-        mock_auto_config.from_pretrained.return_value = mock_config
-        mock_auto_bridge.supports.return_value = True
-
-        mock_bridge_instance = MagicMock()
-        mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
-
         # Mock temp directory
         mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
         mock_path_instance = MagicMock()
@@ -707,22 +715,26 @@ def test_export_megatron_bridge_with_extracted_hf_model_id(exporter, mock_llm):
 @pytest.mark.run_only_on("GPU")
 def test_export_megatron_bridge_model_not_supported(exporter, mock_llm):
     """Test export with megatron_bridge when model is not supported by AutoBridge"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "unsupported/model"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = False
+    mock_auto_bridge.list_supported_models.return_value = [
+        "LlamaForCausalLM",
+        "MistralForCausalLM",
+        "GPT2ForCausalLM",
+    ]
+
     with (
         patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
-        patch("nemo_export.vllm_exporter.AutoBridge") as mock_auto_bridge,
-        patch("nemo_export.vllm_exporter.AutoConfig") as mock_auto_config,
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
     ):
-        # Setup mocks
-        mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "unsupported/model"
-        mock_config = MagicMock()
-        mock_auto_config.from_pretrained.return_value = mock_config
-        mock_auto_bridge.supports.return_value = False
-        mock_auto_bridge.list_supported_models.return_value = [
-            "LlamaForCausalLM",
-            "MistralForCausalLM",
-            "GPT2ForCausalLM",
-        ]
-
         with pytest.raises(Exception, match="Model 'unsupported/model' is not supported by AutoBridge"):
             exporter.export(model_path_id="/path/to/megatron/checkpoint", model_format="megatron_bridge")
 
@@ -731,22 +743,26 @@ def test_export_megatron_bridge_model_not_supported(exporter, mock_llm):
 @pytest.mark.run_only_on("GPU")
 def test_export_megatron_bridge_conversion_failed_empty_dir(exporter, mock_llm):
     """Test export with megatron_bridge when checkpoint conversion results in empty directory"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
     with (
         patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
-        patch("nemo_export.vllm_exporter.AutoBridge") as mock_auto_bridge,
-        patch("nemo_export.vllm_exporter.AutoConfig") as mock_auto_config,
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
         patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
         patch("nemo_export.vllm_exporter.Path") as mock_path,
     ):
-        # Setup mocks
-        mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
-        mock_config = MagicMock()
-        mock_auto_config.from_pretrained.return_value = mock_config
-        mock_auto_bridge.supports.return_value = True
-
-        mock_bridge_instance = MagicMock()
-        mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
-
         # Mock temp directory - but empty after conversion
         mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
         mock_path_instance = MagicMock()
@@ -764,22 +780,26 @@ def test_export_megatron_bridge_conversion_failed_empty_dir(exporter, mock_llm):
 @pytest.mark.run_only_on("GPU")
 def test_export_megatron_bridge_with_trust_remote_code(exporter, mock_llm):
     """Test export with megatron_bridge using trust_remote_code option"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
     with (
         patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
-        patch("nemo_export.vllm_exporter.AutoBridge") as mock_auto_bridge,
-        patch("nemo_export.vllm_exporter.AutoConfig") as mock_auto_config,
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
         patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
         patch("nemo_export.vllm_exporter.Path") as mock_path,
     ):
-        # Setup mocks
-        mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
-        mock_config = MagicMock()
-        mock_auto_config.from_pretrained.return_value = mock_config
-        mock_auto_bridge.supports.return_value = True
-
-        mock_bridge_instance = MagicMock()
-        mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
-
         # Mock temp directory
         mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
         mock_path_instance = MagicMock()
@@ -804,22 +824,26 @@ def test_export_megatron_bridge_with_trust_remote_code(exporter, mock_llm):
 @pytest.mark.run_only_on("GPU")
 def test_export_megatron_bridge_full_success_path(exporter, mock_llm):
     """Test complete successful export path for megatron_bridge checkpoint"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
     with (
         patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
-        patch("nemo_export.vllm_exporter.AutoBridge") as mock_auto_bridge,
-        patch("nemo_export.vllm_exporter.AutoConfig") as mock_auto_config,
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
         patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
         patch("nemo_export.vllm_exporter.Path") as mock_path,
     ):
-        # Setup mocks
-        mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
-        mock_config = MagicMock()
-        mock_auto_config.from_pretrained.return_value = mock_config
-        mock_auto_bridge.supports.return_value = True
-
-        mock_bridge_instance = MagicMock()
-        mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
-
         # Mock temp directory with successful conversion
         mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
         mock_path_instance = MagicMock()
@@ -863,22 +887,26 @@ def test_export_megatron_bridge_full_success_path(exporter, mock_llm):
 @pytest.mark.run_only_on("GPU")
 def test_export_megatron_bridge_with_all_vllm_params(exporter, mock_llm):
     """Test export with megatron_bridge passing all vLLM parameters"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
     with (
         patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
-        patch("nemo_export.vllm_exporter.AutoBridge") as mock_auto_bridge,
-        patch("nemo_export.vllm_exporter.AutoConfig") as mock_auto_config,
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
         patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
         patch("nemo_export.vllm_exporter.Path") as mock_path,
     ):
-        # Setup mocks
-        mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
-        mock_config = MagicMock()
-        mock_auto_config.from_pretrained.return_value = mock_config
-        mock_auto_bridge.supports.return_value = True
-
-        mock_bridge_instance = MagicMock()
-        mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
-
         # Mock temp directory
         mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
         mock_path_instance = MagicMock()
