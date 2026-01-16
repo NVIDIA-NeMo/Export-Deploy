@@ -119,7 +119,7 @@ jobs:
           PAT: ${{ secrets.PAT }}
           inference-framework: trtllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner-prefix: ${{ needs.pre-flight.outputs.runner_prefix }}
+          runner: ${{ matrix.runner }}
 
   cicd-unit-tests-vllm:
     strategy:
@@ -159,7 +159,7 @@ jobs:
           PAT: ${{ secrets.PAT }}
           inference-framework: vllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner-prefix: ${{ needs.pre-flight.outputs.runner_prefix }}
+          runner: ${{ matrix.runner }}
 
   cicd-e2e-tests-trtllm:
     strategy:
@@ -198,7 +198,7 @@ jobs:
           PAT: ${{ secrets.PAT }}
           inference-framework: trtllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner-prefix: ${{ needs.pre-flight.outputs.runner_prefix }}
+          runner: ${{ matrix.runner }}
 
   cicd-e2e-tests-trt-onnx:
     needs: [cicd-unit-tests-trtllm]
@@ -231,7 +231,7 @@ jobs:
           PAT: ${{ secrets.PAT }}
           inference-framework: trt-onnx
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner-prefix: ${{ needs.pre-flight.outputs.runner_prefix }}
+          runner: ${{ matrix.runner }}
 
   cicd-e2e-tests-vllm:
     needs: [cicd-unit-tests-vllm]
@@ -262,7 +262,7 @@ jobs:
           PAT: ${{ secrets.PAT }}
           inference-framework: vllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner-prefix: ${{ needs.pre-flight.outputs.runner_prefix }}
+          runner: ${{ matrix.runner }}
 
   cicd-e2e-tests-inframework:
     needs: [cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
@@ -293,7 +293,7 @@ jobs:
           PAT: ${{ secrets.PAT }}
           inference-framework: inframework
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner-prefix: ${{ needs.pre-flight.outputs.runner_prefix }}
+          runner: ${{ matrix.runner }}
 
   Nemo_CICD_Test:
     needs:
