@@ -114,7 +114,8 @@ vllm = [
     { index = "pytorch-cu130", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
-megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "0465189601951c14ad592bd8eefbb673929e25bc" }
+megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "4e3dbd2952ea1feca388f679ed14675527d2eef8" }
+megatron-core = { git = "https://github.com/NVIDIA/Megatron-LM.git", rev = "b213e10a5fb1f3700ec227db71dd7a8a75dffce7" }
 # transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "c188b533cc3721ca9c6bbfd26148f5cf60108c25" } # on release_v2.11.0
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
@@ -149,7 +150,7 @@ override-dependencies = [
     "transformer-engine-cu13>=2.10.0a0,<2.13.0; sys_platform != 'darwin'",
     "transformer-engine-cu12; sys_platform == 'never'",
     "open-clip-torch>=3.2.0",
-    "transformers==4.57.5"
+    "mamba-ssm>=2.3.0,<2.4.0"
 ]
 prerelease = "allow"
 
