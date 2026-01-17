@@ -13,9 +13,7 @@
 # limitations under the License.
 
 import argparse
-from unittest.mock import MagicMock
 
-import datasets
 from nemo.collections import llm
 from nemo.collections.llm.modelopt import ExportConfig, QuantizationConfig
 
@@ -68,10 +66,6 @@ def get_args():
 
 def main():
     """Example NeMo 2.0 Post Training Quantization workflow."""
-    # Mock FileLock to avoid writing to the read-only test directory
-    # HF Datasets library will always write a lock file even if reading from cache
-    datasets.builder.FileLock = MagicMock()
-
     args = get_args()
 
     quantization_config = QuantizationConfig(
