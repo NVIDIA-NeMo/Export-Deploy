@@ -15,7 +15,9 @@
 import argparse
 import os
 from functools import partial
+from unittest.mock import MagicMock
 
+import datasets
 import tensorrt as trt
 import torch
 from nemo.collections.llm.gpt.model.hf_llama_embedding import (
@@ -95,6 +97,10 @@ def get_args():
 
 
 def export_onnx_trt(args):
+    # Mock FileLock to avoid writing to the read-only test directory
+    # HF Datasets library will always write a lock file even if reading from cache
+    datasets.builder.FileLock = MagicMock()
+
     # Base Llama model needs to be adapted to turn it into an embedding model.
     model, tokenizer = get_llama_bidirectional_hf_model(
         model_name_or_path=args.hf_model_path,
