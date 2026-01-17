@@ -262,7 +262,7 @@ jobs:
           PAT: ${{ secrets.PAT }}
           inference-framework: vllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner: ${{ matrix.runner }}
+          runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
 
   cicd-e2e-tests-inframework:
     needs: [cicd-unit-tests-trtllm, cicd-unit-tests-vllm, pre-flight]
@@ -293,7 +293,7 @@ jobs:
           PAT: ${{ secrets.PAT }}
           inference-framework: inframework
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner: ${{ matrix.runner }}
+          runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
 
   Nemo_CICD_Test:
     needs:
