@@ -56,8 +56,14 @@ prerelease-mode = "allow"
 
 [manifest]
 overrides = [
+    { name = "datasets", specifier = ">=3.3.0" },
+    { name = "flash-linear-attention", specifier = "<0.3.2" },
     { name = "fsspec", extras = ["http"], specifier = ">=2023.1.0,<=2024.9.0" },
+    { name = "megatron-energon", extras = ["av-decode"], specifier = "~=6.0" },
+    { name = "nvidia-modelopt", extras = ["torch"], specifier = ">=0.33.0a0,<0.41.0" },
+    { name = "open-clip-torch", specifier = ">=3.2.0" },
     { name = "tiktoken", specifier = ">=0.9.0" },
+    { name = "transformer-engine", extras = ["pytorch"], specifier = ">=2.9.0a0,<2.13.0" },
     { name = "urllib3", specifier = ">1.27.0" },
 ]
 
@@ -125,6 +131,7 @@ wheels = [
 name = "aenum"
 version = "3.1.16"
 source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/09/7a/61ed58e8be9e30c3fe518899cc78c284896d246d51381bab59b5db11e1f3/aenum-3.1.16.tar.gz", hash = "sha256:bfaf9589bdb418ee3a986d85750c7318d9d2839c1b1a1d6fe8fc53ec201cf140", size = 137693, upload-time = "2026-01-12T22:34:38.819Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e3/52/6ad8f63ec8da1bf40f96996d25d5b650fdd38f5975f8c813732c47388f18/aenum-3.1.16-py3-none-any.whl", hash = "sha256:9035092855a98e41b66e3d0998bd7b96280e85ceb3a04cc035636138a1943eaf", size = 165627, upload-time = "2025-04-25T03:17:58.89Z" },
 ]
@@ -308,15 +315,6 @@ wheels = [
 ]
 
 [[package]]
-name = "argcomplete"
-version = "3.6.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/16/0f/861e168fc813c56a78b35f3c30d91c6757d1fd185af1110f1aec784b35d0/argcomplete-3.6.2.tar.gz", hash = "sha256:d0519b1bc867f5f4f4713c41ad0aba73a4a5f007449716b16f385f2166dc6adf", size = 73403, upload-time = "2025-04-03T04:57:03.52Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/31/da/e42d7a9d8dd33fa775f467e4028a47936da2f01e4b0e561f9ba0d74cb0ca/argcomplete-3.6.2-py3-none-any.whl", hash = "sha256:65b3133a29ad53fb42c48cf5114752c7ab66c1c38544fdf6460f450c09b42591", size = 43708, upload-time = "2025-04-03T04:57:01.591Z" },
-]
-
-[[package]]
 name = "asciitree"
 version = "0.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -473,17 +471,62 @@ wheels = [
 ]
 
 [[package]]
-name = "bitsandbytes"
-version = "0.46.0"
+name = "bitarray"
+version = "3.8.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/95/06/92fdc84448d324ab8434b78e65caf4fb4c6c90b4f8ad9bdd4c8021bfaf1e/bitarray-3.8.0.tar.gz", hash = "sha256:3eae38daffd77c9621ae80c16932eea3fb3a4af141fb7cc724d4ad93eff9210d", size = 151991, upload-time = "2025-11-02T21:41:15.117Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e8/b9/8a645fd36fc4c01ee223f97eccd4699c2f2e91681ccb33c0e963881c8e58/bitarray-3.8.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:f08342dc8d19214faa7ef99574dea6c37a2790d6d04a9793ef8fa76c188dc08d", size = 148504, upload-time = "2025-11-02T21:38:54.596Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/f4/11b562e13ff732bd0674376f367f0a272034ebc28b8efbafbeb924552d21/bitarray-3.8.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:792462abfeeca6cc8c6c1e6d27e14319682f0182f6b0ba37befe911af794db70", size = 145481, upload-time = "2025-11-02T21:38:56.253Z" },
+    { url = "https://files.pythonhosted.org/packages/d3/7c/5a2487da579491b38abab3b437e01d3b05be6e16e69cc5eb304040dcebd5/bitarray-3.8.0-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0df69d26f21a9d2f1b20266f6737fa43f08aa5015c99900fb69f255fbe4dabb4", size = 322760, upload-time = "2025-11-02T21:38:57.189Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/59/f0ef82d6a878d4af1b4961d208a716317929aa172fc0dfa5f4115319a873/bitarray-3.8.0-cp310-cp310-manylinux2014_ppc64le.manylinux_2_17_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:b4f10d3f304be7183fac79bf2cd997f82e16aa9a9f37343d76c026c6e435a8a8", size = 350332, upload-time = "2025-11-02T21:38:58.238Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/ec/d444b22fce853327d4a8adec1de9987e11b28fcc2d7204dcbc544e196ed9/bitarray-3.8.0-cp310-cp310-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl", hash = "sha256:fc98ff43abad61f00515ad9a06213b7716699146e46eabd256cdfe7cb522bd97", size = 360787, upload-time = "2025-11-02T21:38:59.239Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/9e/60b205f52ea9ff155e9f12249090475159c909039daa29e47cd95e115dd5/bitarray-3.8.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:81c6b4a6c1af800d52a6fa32389ef8f4281583f4f99dc1a40f2bb47667281541", size = 329050, upload-time = "2025-11-02T21:39:00.455Z" },
+    { url = "https://files.pythonhosted.org/packages/e3/da/2ce373b423bc85a0eb93ee1cba3977971259a92a116932632f417b1b04d2/bitarray-3.8.0-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:f3fd8df63c41ff6a676d031956aebf68ebbc687b47c507da25501eb22eec341f", size = 320507, upload-time = "2025-11-02T21:39:01.714Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/88/437408a2674b8bdb02063dd1535969b9c73cb8fdd197485de431e506c50e/bitarray-3.8.0-cp310-cp310-musllinux_1_2_ppc64le.whl", hash = "sha256:f0ce9d9e07c75da8027c62b4c9f45771d1d8aae7dc9ad7fb606c6a5aedbe9741", size = 348449, upload-time = "2025-11-02T21:39:03.124Z" },
+    { url = "https://files.pythonhosted.org/packages/97/46/d799e7e731c778b6dcb4627bafd395102065e5ab15a4a31f4222a3e20706/bitarray-3.8.0-cp310-cp310-musllinux_1_2_s390x.whl", hash = "sha256:8a9c962c64a4c08def58b9799333e33af94ec53038cf151d36edacdb41f81646", size = 344776, upload-time = "2025-11-02T21:39:04.147Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/9a/129fff56d22d316b1c848c6e13e64191485756b5cd6ceb08e640edb80020/bitarray-3.8.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:1a54d7e7999735faacdcbe8128e30207abc2caf9f9fd7102d180b32f1b78bfce", size = 325899, upload-time = "2025-11-02T21:39:05.118Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/ba/4b01e99452ecc39f4abccf9bf83fe0f01c390e9794dad2d04b2c8b893c5f/bitarray-3.8.0-cp310-cp310-win32.whl", hash = "sha256:3ea52df96566457735314794422274bd1962066bfb609e7eea9113d70cf04ffe", size = 142756, upload-time = "2025-11-02T21:39:06.402Z" },
+    { url = "https://files.pythonhosted.org/packages/18/3f/c83635a67d90f45f88012468566c233eed1e9e9a9184fa882ba4039fadb3/bitarray-3.8.0-cp310-cp310-win_amd64.whl", hash = "sha256:82a07de83dce09b4fa1bccbdc8bde8f188b131666af0dc9048ba0a0e448d8a3b", size = 149527, upload-time = "2025-11-02T21:39:07.377Z" },
+    { url = "https://files.pythonhosted.org/packages/33/46/391b3902a523d4555313640746460b19d317c6233d9379e150af97fa1554/bitarray-3.8.0-cp310-cp310-win_arm64.whl", hash = "sha256:c5ba07e58fd98c9782201e79eb8dd4225733d212a5a3700f9a84d329bd0463a6", size = 146453, upload-time = "2025-11-02T21:39:08.624Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/7d/63558f1d0eb09217a3d30c1c847890879973e224a728fcff9391fab999b8/bitarray-3.8.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:25b9cff6c9856bc396232e2f609ea0c5ec1a8a24c500cee4cca96ba8a3cd50b6", size = 148502, upload-time = "2025-11-02T21:39:09.993Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/7b/f957ad211cb0172965b5f0881b67b99e2b6d41512af0a1001f44a44ddf4a/bitarray-3.8.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4d9984017314da772f5f7460add7a0301a4ffc06c72c2998bb16c300a6253607", size = 145484, upload-time = "2025-11-02T21:39:10.904Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/dc/897973734f14f91467a3a795a4624752238053ecffaec7c8bbda1e363fda/bitarray-3.8.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:bbbbfbb7d039b20d289ce56b1beb46138d65769d04af50c199c6ac4cb6054d52", size = 330909, upload-time = "2025-11-02T21:39:12.276Z" },
+    { url = "https://files.pythonhosted.org/packages/67/be/24b4b792426d92de289e73e09682915d567c2e69d47e8857586cbdc865d0/bitarray-3.8.0-cp311-cp311-manylinux2014_ppc64le.manylinux_2_17_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:f1f723e260c35e1c7c57a09d3a6ebe681bd56c83e1208ae3ce1869b7c0d10d4f", size = 358469, upload-time = "2025-11-02T21:39:13.766Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/0e/2eda69a7a59a6998df8fb57cc9d1e0e62888c599fb5237b0a8b479a01afb/bitarray-3.8.0-cp311-cp311-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl", hash = "sha256:cbd1660fb48827381ce3a621a4fdc237959e1cd4e98b098952a8f624a0726425", size = 369131, upload-time = "2025-11-02T21:39:15.041Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/7b/8a372d6635a6b2622477b2f96a569b2cd0318a62bc95a4a2144c7942c987/bitarray-3.8.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:df6d7bf3e15b7e6e202a16ff4948a51759354016026deb04ab9b5acbbe35e096", size = 337089, upload-time = "2025-11-02T21:39:16.124Z" },
+    { url = "https://files.pythonhosted.org/packages/93/f0/8eca934dbe5dee47a0e5ef44eeb72e85acacc8097c27cd164337bc4ec5d3/bitarray-3.8.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:d5c931ec1c03111718cabf85f6012bb2815fa0ce578175567fa8d6f2cc15d3b4", size = 328504, upload-time = "2025-11-02T21:39:17.321Z" },
+    { url = "https://files.pythonhosted.org/packages/88/dd/928b8e23a9950f8a8bfc42bc1e7de41f4e27f57de01a716308be5f683c2b/bitarray-3.8.0-cp311-cp311-musllinux_1_2_ppc64le.whl", hash = "sha256:41b53711f89008ba2de62e4c2d2260a8b357072fd4f18e1351b28955db2719dc", size = 356461, upload-time = "2025-11-02T21:39:18.396Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/93/4fb58417aff47fa2fe1874a39c9346b589a1d78c93a9cb24cccede5dc737/bitarray-3.8.0-cp311-cp311-musllinux_1_2_s390x.whl", hash = "sha256:4f298daaaea58d45e245a132d6d2bdfb6f856da50dc03d75ebb761439fb626cf", size = 353008, upload-time = "2025-11-02T21:39:19.828Z" },
+    { url = "https://files.pythonhosted.org/packages/da/54/aa04e4a7b45aa5913f08ee377d43319b0979925e3c0407882eb29df3be66/bitarray-3.8.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:30989a2451b693c3f9359d91098a744992b5431a0be4858f1fdf0ec76b457125", size = 334048, upload-time = "2025-11-02T21:39:20.924Z" },
+    { url = "https://files.pythonhosted.org/packages/da/52/e851f41076df014c05d6ac1ce34fbf7db5fa31241da3e2f09bb2be9e283d/bitarray-3.8.0-cp311-cp311-win32.whl", hash = "sha256:e5aed4754895942ae15ffa48c52d181e1c1463236fda68d2dba29c03aa61786b", size = 142907, upload-time = "2025-11-02T21:39:22.312Z" },
+    { url = "https://files.pythonhosted.org/packages/28/01/db0006148b1dd13b4ac2686df8fa57d12f5887df313a506e939af0cb0997/bitarray-3.8.0-cp311-cp311-win_amd64.whl", hash = "sha256:22c540ed20167d3dbb1e2d868ca935180247d620c40eace90efa774504a40e3b", size = 149670, upload-time = "2025-11-02T21:39:23.341Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/ea/b7d55ee269b1426f758a535c9ec2a07c056f20f403fa981685c3c8b4798c/bitarray-3.8.0-cp311-cp311-win_arm64.whl", hash = "sha256:84b52b2cf77bb7f703d16c4007b021078dbbe6cf8ffb57abe81a7bacfc175ef2", size = 146709, upload-time = "2025-11-02T21:39:24.343Z" },
+    { url = "https://files.pythonhosted.org/packages/82/a0/0c41d893eda756315491adfdbf9bc928aee3d377a7f97a8834d453aa5de1/bitarray-3.8.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:f2fcbe9b3a5996b417e030aa33a562e7e20dfc86271e53d7e841fc5df16268b8", size = 148575, upload-time = "2025-11-02T21:39:25.718Z" },
+    { url = "https://files.pythonhosted.org/packages/0e/30/12ab2f4a4429bd844b419c37877caba93d676d18be71354fbbeb21d9f4cc/bitarray-3.8.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:cd761d158f67e288fd0ebe00c3b158095ce80a4bc7c32b60c7121224003ba70d", size = 145454, upload-time = "2025-11-02T21:39:26.695Z" },
+    { url = "https://files.pythonhosted.org/packages/26/58/314b3e3f219533464e120f0c51ac5123e7b1c1b91f725a4073fb70c5a858/bitarray-3.8.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c394a3f055b49f92626f83c1a0b6d6cd2c628f1ccd72481c3e3c6aa4695f3b20", size = 332949, upload-time = "2025-11-02T21:39:27.801Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/ce/ca8c706bd8341c7a22dd92d2a528af71f7e5f4726085d93f81fd768cb03b/bitarray-3.8.0-cp312-cp312-manylinux2014_ppc64le.manylinux_2_17_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:969fd67de8c42affdb47b38b80f1eaa79ac0ef17d65407cdd931db1675315af1", size = 360599, upload-time = "2025-11-02T21:39:28.964Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/dc/aa181df85f933052d962804906b282acb433cb9318b08ec2aceb4ee34faf/bitarray-3.8.0-cp312-cp312-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl", hash = "sha256:99d25aff3745c54e61ab340b98400c52ebec04290a62078155e0d7eb30380220", size = 371972, upload-time = "2025-11-02T21:39:30.228Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/d9/b805bfa158c7bcf4df0ac19b1be581b47e1ddb792c11023aed80a7058e78/bitarray-3.8.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:e645b4c365d6f1f9e0799380ad6395268f3c3b898244a650aaeb8d9d27b74c35", size = 340303, upload-time = "2025-11-02T21:39:31.342Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/42/5308cc97ea929e30727292617a3a88293470166851e13c9e3f16f395da55/bitarray-3.8.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:2fa23fdb3beab313950bbb49674e8a161e61449332d3997089fe3944953f1b77", size = 330494, upload-time = "2025-11-02T21:39:32.769Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/89/64f1596cb80433323efdbc8dcd0d6e57c40dfbe6ea3341623f34ec397edd/bitarray-3.8.0-cp312-cp312-musllinux_1_2_ppc64le.whl", hash = "sha256:165052a0e61c880f7093808a0c524ce1b3555bfa114c0dfb5c809cd07918a60d", size = 358123, upload-time = "2025-11-02T21:39:34.331Z" },
+    { url = "https://files.pythonhosted.org/packages/27/fd/f3d49c5443b57087f888b5e118c8dd78bb7c8e8cfeeed250f8e92128a05f/bitarray-3.8.0-cp312-cp312-musllinux_1_2_s390x.whl", hash = "sha256:337c8cd46a4c6568d367ed676cbf2d7de16f890bb31dbb54c44c1d6bb6d4a1de", size = 356046, upload-time = "2025-11-02T21:39:35.449Z" },
+    { url = "https://files.pythonhosted.org/packages/aa/db/1fd0b402bd2b47142e958b6930dbb9445235d03fa703c9a24caa6e576ae2/bitarray-3.8.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:21ca6a47bf20db9e7ad74ca04b3d479e4d76109b68333eb23535553d2705339e", size = 336872, upload-time = "2025-11-02T21:39:36.891Z" },
+    { url = "https://files.pythonhosted.org/packages/58/73/680b47718f1313b4538af479c4732eaca0aeda34d93fc5b869f87932d57d/bitarray-3.8.0-cp312-cp312-win32.whl", hash = "sha256:178c5a4c7fdfb5cd79e372ae7f675390e670f3732e5bc68d327e01a5b3ff8d55", size = 143025, upload-time = "2025-11-02T21:39:38.303Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/11/7792587c19c79a8283e8838f44709fa4338a8f7d2a3091dfd81c07ae89c7/bitarray-3.8.0-cp312-cp312-win_amd64.whl", hash = "sha256:75a3b6e9c695a6570ea488db75b84bb592ff70a944957efa1c655867c575018b", size = 149969, upload-time = "2025-11-02T21:39:39.715Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/00/9df64b5d8a84e8e9ec392f6f9ce93f50626a5b301cb6c6b3fe3406454d66/bitarray-3.8.0-cp312-cp312-win_arm64.whl", hash = "sha256:5591daf81313096909d973fb2612fccd87528fdfdd39f6478bdce54543178954", size = 146907, upload-time = "2025-11-02T21:39:40.815Z" },
+]
+
+[[package]]
+name = "bitstring"
+version = "4.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_machine == 'aarch64' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (platform_machine == 'aarch64' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torch", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_machine == 'aarch64' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (platform_machine == 'aarch64' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "bitarray" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/15/a8/a80c890db75d5bdd5314b5de02c4144c7de94fd0cefcae51acaeb14c6a3f/bitstring-4.3.1.tar.gz", hash = "sha256:a08bc09d3857216d4c0f412a1611056f1cc2b64fd254fb1e8a0afba7cfa1a95a", size = 251426, upload-time = "2025-03-22T09:39:06.978Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/39/aa68b7bd28b091a96795be18810b2325ce9263ba8db087f6f196a663f03a/bitsandbytes-0.46.0-py3-none-manylinux_2_24_aarch64.whl", hash = "sha256:010709b56c85b0355f47fefbb37fe9058e8b18b9bf275bd576c5bd95a0d14d0c", size = 25533201, upload-time = "2025-05-27T21:25:27.601Z" },
-    { url = "https://files.pythonhosted.org/packages/72/27/ec6ee3408e09e01ab05db07af5a97dc76db7bc18824cf5f5dbc98e1e08a4/bitsandbytes-0.46.0-py3-none-manylinux_2_24_x86_64.whl", hash = "sha256:ef38883cfd26f36a0dfff1715f620f87cee3813431f33e10e9658205160cb89b", size = 67047276, upload-time = "2025-05-27T21:25:31.299Z" },
-    { url = "https://files.pythonhosted.org/packages/f3/06/2ef5f6b28d8fa442c670b5acc1eb09dd57d4edb00b435b35529c3f09936c/bitsandbytes-0.46.0-py3-none-win_amd64.whl", hash = "sha256:121820a6df80ae3b7e361f7ef193279c3204c361a7e21eb43b5ffa7293403979", size = 66452401, upload-time = "2025-05-27T21:25:35.552Z" },
+    { url = "https://files.pythonhosted.org/packages/75/2d/174566b533755ddf8efb32a5503af61c756a983de379f8ad3aed6a982d38/bitstring-4.3.1-py3-none-any.whl", hash = "sha256:69d1587f0ac18dc7d93fc7e80d5f447161a33e57027e726dc18a0a8bacf1711a", size = 71930, upload-time = "2025-03-22T09:39:05.163Z" },
 ]
 
 [[package]]
@@ -696,6 +739,17 @@ wheels = [
 ]
 
 [[package]]
+name = "causal-conv1d"
+version = "1.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ninja" },
+    { name = "packaging" },
+    { name = "torch" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/db/df/63a384c49743b9fc8fec4c05dbd0b515e1c1c2b07e4559acc4fc37c69223/causal_conv1d-1.6.0.tar.gz", hash = "sha256:4eae3220d08e1e88238f3a0a88783147cbdf47f612cc610add75127c7a37ca3e", size = 29356, upload-time = "2026-01-12T17:33:32.794Z" }
+
+[[package]]
 name = "cbor2"
 version = "5.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -792,15 +846,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/11/74/539e56497d9bd1d484fd863dd69cbbfa653cd2aa27abfe35653494d85e94/cfgv-3.4.0.tar.gz", hash = "sha256:e52591d4c5f5dead8e0f673fb16db7949d2cfb3f7da4582893288f0ded8fe560", size = 7114, upload-time = "2023-08-12T20:38:17.776Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c5/55/51844dd50c4fc7a33b653bfaba4c2456f06955289ca770a5dbd5fd267374/cfgv-3.4.0-py2.py3-none-any.whl", hash = "sha256:b7265b1f29fd3316bfcd2b330d63d024f2bfd8bcb8b0272f8e19a504856c48f9", size = 7249, upload-time = "2023-08-12T20:38:16.269Z" },
-]
-
-[[package]]
-name = "chardet"
-version = "5.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f3/0d/f7b6ab21ec75897ed80c17d79b15951a719226b9fababf1e40ea74d69079/chardet-5.2.0.tar.gz", hash = "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7", size = 2069618, upload-time = "2023-08-01T19:23:02.662Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/6f/f5fbc992a329ee4e0f288c1fe0e2ad9485ed064cac731ed2fe47dcc38cbf/chardet-5.2.0-py3-none-any.whl", hash = "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970", size = 199385, upload-time = "2023-08-01T19:23:00.661Z" },
 ]
 
 [[package]]
@@ -1243,107 +1288,23 @@ wheels = [
 ]
 
 [[package]]
-name = "dataproperty"
-version = "1.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "mbstrdecoder" },
-    { name = "typepy", extra = ["datetime"] },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/81/8c8b64ae873cb9014815214c07b63b12e3b18835780fb342223cfe3fe7d8/dataproperty-1.1.0.tar.gz", hash = "sha256:b038437a4097d1a1c497695c3586ea34bea67fdd35372b9a50f30bf044d77d04", size = 42574, upload-time = "2024-12-31T14:37:26.033Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/c2/e12e95e289e6081a40454199ab213139ef16a528c7c86432de545b05a23a/DataProperty-1.1.0-py3-none-any.whl", hash = "sha256:c61fcb2e2deca35e6d1eb1f251a7f22f0dcde63e80e61f0cc18c19f42abfd25b", size = 27581, upload-time = "2024-12-31T14:37:22.657Z" },
-]
-
-[[package]]
-name = "datasets"
-version = "3.1.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'linux'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.11.*' and sys_platform == 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux'",
-    "python_full_version < '3.11' and sys_platform == 'darwin'",
-    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux'",
-]
-dependencies = [
-    { name = "aiohttp", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "dill", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "filelock", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "fsspec", extra = ["http"], marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "huggingface-hub", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "multiprocess", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "numpy", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "packaging", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pandas", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pyarrow", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pyyaml", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "requests", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "tqdm", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "xxhash", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/b2/25ef6d54dcb2d1412e5efec59449d1af92e7a6d969e27adfe9965e780c1f/datasets-3.1.0.tar.gz", hash = "sha256:c92cac049e0f9f85b0dd63739c68e564c657b1624bc2b66b1e13489062832e27", size = 558115, upload-time = "2024-10-31T15:14:11.675Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ed/a5/33cf000137545a08b0a3a6ea76c8ccbd87917f78bb5d737f9f56f3b11ef6/datasets-3.1.0-py3-none-any.whl", hash = "sha256:dc8808a6d17838fe05e13b39aa7ac3ea0fd0806ed7004eaf4d4eb2c2a356bc61", size = 480554, upload-time = "2024-10-31T15:14:09.907Z" },
-]
-
-[[package]]
 name = "datasets"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version >= '3.12' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
-]
 dependencies = [
-    { name = "dill", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "filelock", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "fsspec", extra = ["http"], marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "huggingface-hub", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "multiprocess", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "numpy", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "packaging", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pandas", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pyarrow", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pyyaml", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "requests", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "tqdm", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "xxhash", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "dill" },
+    { name = "filelock" },
+    { name = "fsspec", extra = ["http"] },
+    { name = "huggingface-hub" },
+    { name = "multiprocess" },
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "pandas" },
+    { name = "pyarrow" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "tqdm" },
+    { name = "xxhash" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e3/9d/348ed92110ba5f9b70b51ca1078d4809767a835aa2b7ce7e74ad2b98323d/datasets-4.0.0.tar.gz", hash = "sha256:9657e7140a9050db13443ba21cb5de185af8af944479b00e7ff1e00a61c8dbf1", size = 569566, upload-time = "2025-07-09T14:35:52.431Z" }
 wheels = [
@@ -1503,6 +1464,15 @@ wheels = [
 ]
 
 [[package]]
+name = "ebmlite"
+version = "3.4.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ea/ae/70f7b3e255c330ac64bc404d8305f2bf1b439bc14c1b18da72ff566a4f4a/ebmlite-3.4.1.tar.gz", hash = "sha256:428cc88014e7f3544dfd64f1e7a35b7636d11eaef944d27c5da9d203f1498316", size = 90832, upload-time = "2025-07-24T15:06:14.172Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/57/06/41a15af1f9b4d3144fa4ee39d8e7b9b87a97ad3a04a6fa85c64788ca0af8/ebmlite-3.4.1-py3-none-any.whl", hash = "sha256:995765284e69d139fab34bbfb40e9e16a04116a95c7c9af368d90db7ca6b395c", size = 93430, upload-time = "2025-07-24T15:06:13.118Z" },
+]
+
+[[package]]
 name = "einops"
 version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1537,6 +1507,16 @@ wheels = [
 ]
 
 [[package]]
+name = "emerging-optimizers"
+version = "0.1.0"
+source = { git = "https://github.com/NVIDIA-NeMo/Emerging-Optimizers.git?rev=v0.1.0#d5363b4a418128cd8111983b191c4b8869a9766b" }
+dependencies = [
+    { name = "absl-py" },
+    { name = "torch" },
+    { name = "typing-extensions" },
+]
+
+[[package]]
 name = "etcd3"
 version = "0.12.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1553,10 +1533,9 @@ name = "evaluate"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "datasets", version = "3.1.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "datasets", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "datasets" },
     { name = "dill" },
-    { name = "fsspec", extra = ["http"] },
+    { name = "fsspec", extra = ["http"], marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "huggingface-hub" },
     { name = "multiprocess" },
     { name = "numpy" },
@@ -1828,6 +1807,94 @@ wheels = [
 ]
 
 [[package]]
+name = "filetype"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/29/745f7d30d47fe0f251d3ad3dc2978a23141917661998763bebb6da007eb1/filetype-1.2.0.tar.gz", hash = "sha256:66b56cd6474bf41d8c54660347d37afcc3f7d1970648de365c102ef77548aadb", size = 998020, upload-time = "2022-11-02T17:34:04.141Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/18/79/1b8fa1bb3568781e84c9200f951c735f3f157429f44be0495da55894d620/filetype-1.2.0-py2.py3-none-any.whl", hash = "sha256:7ce71b6880181241cf7ac8697a2f1eb6a8bd9b429f7ad6d27b8db9ba5f1c2d25", size = 19970, upload-time = "2022-11-02T17:34:01.425Z" },
+]
+
+[[package]]
+name = "flash-linear-attention"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12' and sys_platform == 'linux'",
+    "python_full_version >= '3.12' and sys_platform != 'linux'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux'",
+    "python_full_version < '3.11' and sys_platform == 'linux'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux'",
+    "python_full_version < '3.11' and sys_platform != 'linux'",
+]
+dependencies = [
+    { name = "datasets", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "einops", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "pytest", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "torch", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6d/03/68de1cdae3c037a0cae44825ee47edefe01d7281df04fb0211432afbd2b7/flash_linear_attention-0.3.0.tar.gz", hash = "sha256:e001df933db346353f4e1fc959047318f69e890d8cd34872a01087c7c2e0f5fb", size = 384321, upload-time = "2025-07-14T09:49:46.371Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ec/16/df1c4d74d647c51c3758f26b50681ec7e92343f0f4e3808b7b60768b795f/flash_linear_attention-0.3.0-py3-none-any.whl", hash = "sha256:5ba20ee898fcb7b0505de2cbd8772b1024ef34f9e97e73ca1d669276ca493b42", size = 639946, upload-time = "2025-07-14T09:49:45.085Z" },
+]
+
+[[package]]
+name = "flash-linear-attention"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
+]
+dependencies = [
+    { name = "datasets", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trt-onnx'" },
+    { name = "einops", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trt-onnx'" },
+    { name = "pytest", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trt-onnx'" },
+    { name = "torch", marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trt-onnx'" },
+    { name = "transformers", version = "4.53.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "transformers", version = "4.56.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/eb/c8/ac810dd9d4f8ba3db1c78043a08b8a505bdf06814d3c343c429722593da6/flash_linear_attention-0.3.1.tar.gz", hash = "sha256:15ad483a8dbed37072dde881408b6f83da3487dc24f8c165a862821c10aebe4b", size = 412941, upload-time = "2025-08-26T20:28:25.933Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7d/53/6dbd370bbf39fea35133aa7ebba0a9a7957530f86f3d55baa595c93e734b/flash_linear_attention-0.3.1-py3-none-any.whl", hash = "sha256:de6bbd2ffc56ec765a70474d75ee7fac610e9f66ebdccc552fe5c01e016cf5c5", size = 672490, upload-time = "2025-08-26T20:28:24.354Z" },
+]
+
+[[package]]
 name = "flashinfer-python"
 version = "0.2.5"
 source = { registry = "https://pypi.org/simple" }
@@ -1858,16 +1925,22 @@ version = "0.4.0rc3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
@@ -1883,17 +1956,17 @@ resolution-markers = [
     "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
 ]
 dependencies = [
-    { name = "click", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "einops", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "ninja", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "numpy", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cudnn-frontend", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-ml-py", version = "13.580.82", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "packaging", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "requests", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "tabulate", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torch", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "tqdm", marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "click", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "einops", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "ninja", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "numpy", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-cudnn-frontend", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-ml-py", version = "13.580.82", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "packaging", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "requests", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "tabulate", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "torch", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "tqdm", marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/65/91/cf9e3a0a2626711bfab18ea4a4c739e0eb823e9513addc0e9e1b8f929538/flashinfer_python-0.4.0rc3.tar.gz", hash = "sha256:a2b54132d8ef5866611e534f0cc437caf6c8dd182698e9059c0ff2c479fb4451", size = 3887662, upload-time = "2025-09-24T23:32:38.214Z" }
 
@@ -2645,24 +2718,15 @@ wheels = [
 ]
 
 [[package]]
-name = "immutabledict"
-version = "4.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/55/f4/710c84db4d77767176342913ac6b25f43aaed6d0a0bdb9168a8d2936d9c7/immutabledict-4.2.0.tar.gz", hash = "sha256:e003fd81aad2377a5a758bf7e1086cf3b70b63e9a5cc2f46bce8d0a2b4727c5f", size = 6165, upload-time = "2024-03-06T18:46:46.235Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/13/3cf4ac5b3403f3456e645c4533883ef67b1bb0c72e56b79c707715f57a74/immutabledict-4.2.0-py3-none-any.whl", hash = "sha256:d728b2c2410d698d95e6200237feb50a695584d20289ad3379a439aa3d90baba", size = 4702, upload-time = "2024-03-06T18:46:44.991Z" },
-]
-
-[[package]]
 name = "importlib-metadata"
-version = "8.7.0"
+version = "8.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "zipp" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641, upload-time = "2025-04-27T15:29:01.736Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/33/08/c1395a292bb23fd03bdf572a1357c5a733d3eecbab877641ceacab23db6e/importlib_metadata-8.6.1.tar.gz", hash = "sha256:310b41d755445d74569f993ccfc22838295d9fe005425094fad953d7f15c8580", size = 55767, upload-time = "2025-01-20T22:21:30.429Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/b0/36bd937216ec521246249be3bf9855081de4c5e06a0c9b4219dbeda50373/importlib_metadata-8.7.0-py3-none-any.whl", hash = "sha256:e5dd1551894c77868a30651cef00984d50e1002d06942a7101d34870c5f02afd", size = 27656, upload-time = "2025-04-27T15:29:00.214Z" },
+    { url = "https://files.pythonhosted.org/packages/79/9d/0fb148dc4d6fa4a7dd1d8378168d9b4cd8d4560a6fbf6f0121c5fc34eb68/importlib_metadata-8.6.1-py3-none-any.whl", hash = "sha256:02a89390c1e15fdfdc0d7c6b25cb3e62650d0494005c97d6f148bf5b9787525e", size = 26971, upload-time = "2025-01-20T22:21:29.177Z" },
 ]
 
 [[package]]
@@ -2923,18 +2987,6 @@ wheels = [
 ]
 
 [[package]]
-name = "jsonlines"
-version = "4.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "attrs" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/35/87/bcda8e46c88d0e34cad2f09ee2d0c7f5957bccdb9791b0b934ec84d84be4/jsonlines-4.0.0.tar.gz", hash = "sha256:0c6d2c09117550c089995247f605ae4cf77dd1533041d366351f6f298822ea74", size = 11359, upload-time = "2023-09-01T12:34:44.187Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f8/62/d9ba6323b9202dd2fe166beab8a86d29465c41a0288cbe229fac60c1ab8d/jsonlines-4.0.0-py3-none-any.whl", hash = "sha256:185b334ff2ca5a91362993f42e83588a360cf95ce4b71a73548502bda52a7c55", size = 8701, upload-time = "2023-09-01T12:34:42.563Z" },
-]
-
-[[package]]
 name = "jsonschema"
 version = "4.25.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3054,15 +3106,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/37/43/fd431c4278101dd25c44ae4c04166905671280f3d6b50d28dc062df544dc/kornia_rs-0.1.9-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e74a8901843e8e5e47f495927462288c7b7b8dc8a253495051c72a5fbda5f664", size = 2760478, upload-time = "2025-05-07T11:42:27.525Z" },
     { url = "https://files.pythonhosted.org/packages/2f/f1/be747ef1b553950cdce6e63a2031e9b55ba3a793d2a8dd506cfcc9a83d10/kornia_rs-0.1.9-cp312-cp312-win_amd64.whl", hash = "sha256:fdfe0baa04800e541425730d03f3b3d217a1a6f0303926889b443b4562c0fda5", size = 2276689, upload-time = "2025-05-07T11:43:04.878Z" },
 ]
-
-[[package]]
-name = "langdetect"
-version = "1.0.9"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0e/72/a3add0e4eec4eb9e2569554f7c70f4a3c27712f40e3284d483e88094cc0e/langdetect-1.0.9.tar.gz", hash = "sha256:cbc1fef89f8d062739774bd51eda3da3274006b3661d199c2655f6b3f6d605a0", size = 981474, upload-time = "2021-05-07T07:54:13.562Z" }
 
 [[package]]
 name = "lark"
@@ -3315,6 +3358,23 @@ wheels = [
 ]
 
 [[package]]
+name = "mamba-ssm"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "einops" },
+    { name = "ninja" },
+    { name = "packaging" },
+    { name = "setuptools" },
+    { name = "torch" },
+    { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "transformers", version = "4.53.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "transformers", version = "4.56.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm')" },
+    { name = "triton" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/54/69/a87f06d9dba78c041adb81f2228e978aab179477c64f1a210c0fe0d63e8d/mamba_ssm-2.3.0.tar.gz", hash = "sha256:8294e12125f76021e4e190f4137e84a84935920eeda5d0037a6917524456b303", size = 121116, upload-time = "2026-01-12T17:07:22.152Z" }
+
+[[package]]
 name = "markdown"
 version = "3.9"
 source = { registry = "https://pypi.org/simple" }
@@ -3445,18 +3505,6 @@ wheels = [
 ]
 
 [[package]]
-name = "mbstrdecoder"
-version = "1.1.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "chardet" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/31/ab/05ae008357c8bdb6245ebf8a101d99f26c096e0ea20800b318153da23796/mbstrdecoder-1.1.4.tar.gz", hash = "sha256:8105ef9cf6b7d7d69fe7fd6b68a2d8f281ca9b365d7a9b670be376b2e6c81b21", size = 14527, upload-time = "2025-01-18T10:07:31.089Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/30/ac/5ce64a1d4cce00390beab88622a290420401f1cabf05caf2fc0995157c21/mbstrdecoder-1.1.4-py3-none-any.whl", hash = "sha256:03dae4ec50ec0d2ff4743e63fdbd5e0022815857494d35224b60775d3d934a8c", size = 7933, upload-time = "2025-01-18T10:07:29.562Z" },
-]
-
-[[package]]
 name = "mdit-py-plugins"
 version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3496,61 +3544,85 @@ wheels = [
 
 [[package]]
 name = "megatron-bridge"
-version = "0.1.0rc2"
-source = { registry = "https://pypi.org/simple" }
+version = "0.3.0rc0"
+source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=9577b1280eaadd60b9d7b0ce6df09ac80e87e323#9577b1280eaadd60b9d7b0ce6df09ac80e87e323" }
 dependencies = [
     { name = "accelerate" },
-    { name = "datasets", version = "3.1.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "datasets", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "einops" },
+    { name = "causal-conv1d" },
+    { name = "datasets" },
+    { name = "flash-linear-attention", version = "0.3.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "flash-linear-attention", version = "0.3.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trt-onnx'" },
     { name = "hydra-core" },
-    { name = "megatron-core" },
-    { name = "numpy" },
-    { name = "nvidia-modelopt", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "mamba-ssm" },
+    { name = "megatron-core", extra = ["dev", "mlm"] },
+    { name = "nvidia-resiliency-ext" },
     { name = "omegaconf" },
-    { name = "packaging" },
+    { name = "open-clip-torch" },
     { name = "pyyaml" },
+    { name = "qwen-vl-utils" },
     { name = "regex" },
     { name = "rich" },
-    { name = "sentencepiece" },
     { name = "six" },
     { name = "tensorboard" },
-    { name = "tiktoken" },
-    { name = "torch" },
+    { name = "timm" },
     { name = "tqdm" },
-    { name = "transformer-engine", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "transformer-engine", extra = ["pytorch"] },
     { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "transformers", version = "4.53.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "transformers", version = "4.56.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm')" },
     { name = "typing-extensions" },
     { name = "wandb" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4a/69/7307e6aa41e680ac3f85d9f21b53989177e62af4ec302f3f9eb9481ecda1/megatron_bridge-0.1.0rc2.tar.gz", hash = "sha256:17e10461c56682ec2d74f590110b538de7e4b345bdd42ce33d0f8c31c62f17f2", size = 320360, upload-time = "2025-08-26T16:45:51.479Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8c/20/2f452d7d96fd874322cb40d1a045253690bcf42ac17d76c43ba7bb9fa5e7/megatron_bridge-0.1.0rc2-py3-none-any.whl", hash = "sha256:65cd63d288ecaecd9a68f01a49b29d26ddca3f89b47f419c0e9d6e5a4d49d15c", size = 518378, upload-time = "2025-08-26T16:45:50.243Z" },
-]
 
 [[package]]
 name = "megatron-core"
-version = "0.14.0rc7"
-source = { registry = "https://pypi.org/simple" }
+version = "0.16.0rc0"
+source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?subdirectory=3rdparty%2FMegatron-LM&rev=9577b1280eaadd60b9d7b0ce6df09ac80e87e323#9577b1280eaadd60b9d7b0ce6df09ac80e87e323" }
 dependencies = [
     { name = "numpy" },
     { name = "packaging" },
     { name = "torch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/dc/af7ce0e891a441745d3ab7a73d7bf8d7012b481ed57fa43a8981f515b35d/megatron_core-0.14.0rc7.tar.gz", hash = "sha256:1353877ca64b154d2a9cda28f3ebd6ef27a1a3816c62113fc0d89043eb990a0a", size = 793544, upload-time = "2025-09-08T14:30:19.164Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/68/95/fe0641ee9bc8737edcec234dd1ed51564d577b1ad346aefd4732a158f3b9/megatron_core-0.14.0rc7-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0769ad181168750581cf524c5a87c515e0c34ab94927211132dae1583fb1e3a5", size = 2103689, upload-time = "2025-09-08T14:30:12.338Z" },
-    { url = "https://files.pythonhosted.org/packages/57/ff/1c105f8eff2cd7de99aec8d2ae49ca68634700975c5793f241a2b4d184e3/megatron_core-0.14.0rc7-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:76202147126a45d7a5689be8ba51d5a20a3abfce0621b3e4d8426fdc403b9056", size = 2134962, upload-time = "2025-09-08T14:30:14.458Z" },
-    { url = "https://files.pythonhosted.org/packages/90/14/1d4e6033a0a6db1bf8e125585a14ccd067642df274bf326ae83274128ede/megatron_core-0.14.0rc7-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:5e6d26e6d6a60c4a6f4eb44481481345cfcd4bb911e8e8297546a910c05c5f1f", size = 2114729, upload-time = "2025-09-08T14:30:16.285Z" },
-    { url = "https://files.pythonhosted.org/packages/b1/d3/d1bd6ef24b5ed5bb1c1263bc458e557c662e38acebbe20cf874834d54fd7/megatron_core-0.14.0rc7-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a0945078e19ab1397819ca4cecd2c41b79bc2a18f2fbc1b269590975965e4e38", size = 2146564, upload-time = "2025-09-08T14:30:17.648Z" },
+
+[package.optional-dependencies]
+dev = [
+    { name = "av" },
+    { name = "causal-conv1d" },
+    { name = "einops" },
+    { name = "emerging-optimizers" },
+    { name = "fastapi", version = "0.115.4", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "fastapi", version = "0.118.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "flash-linear-attention", version = "0.3.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "flash-linear-attention", version = "0.3.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trt-onnx'" },
+    { name = "flashinfer-python", version = "0.2.5", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "flashinfer-python", version = "0.4.0rc3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "mamba-ssm" },
+    { name = "megatron-energon", extra = ["av-decode"] },
+    { name = "multi-storage-client" },
+    { name = "nv-grouped-gemm" },
+    { name = "nvidia-modelopt" },
+    { name = "nvidia-resiliency-ext" },
+    { name = "nvtx" },
+    { name = "onnxscript" },
+    { name = "opentelemetry-api" },
+    { name = "tensorstore" },
+    { name = "tqdm" },
+    { name = "transformer-engine", extra = ["pytorch"] },
+    { name = "wget" },
+]
+mlm = [
+    { name = "flask-restful" },
+    { name = "sentencepiece" },
+    { name = "tiktoken" },
+    { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "transformers", version = "4.53.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "transformers", version = "4.56.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm')" },
+    { name = "wandb" },
 ]
 
 [[package]]
 name = "megatron-energon"
-version = "5.2.0"
+version = "6.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "braceexpand" },
@@ -3565,9 +3637,19 @@ dependencies = [
     { name = "tqdm" },
     { name = "webdataset" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2b/7c/4c6c5ca0080c1c525fcd411d051820b488c95b8d55d903a656a334426490/megatron_energon-5.2.0.tar.gz", hash = "sha256:5beff19be30db02f7d10e56511d0ee7c07dea9c0073d472923832169ee7d18ad", size = 119731, upload-time = "2025-02-19T10:24:36.812Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/06/19/7cbb748913db83662c9e4a82164e2a008482048809d3aa163440aa3824bd/megatron_energon-6.0.1.tar.gz", hash = "sha256:39dddd2c91ddf2938ad5440a061363930b09a0c09ee1b459764df149cac34f21", size = 141410, upload-time = "2025-03-17T12:11:22.452Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8c/2a/e83f115dc04373ce55cec6b167bd11286103b951dc5125921dc2cfdceb9d/megatron_energon-5.2.0-py3-none-any.whl", hash = "sha256:63cedb5ddaefb241b2c18da3843e9e2160392a53365dd9f5c9229c2d4d4acf9d", size = 175899, upload-time = "2025-02-19T10:24:35.298Z" },
+    { url = "https://files.pythonhosted.org/packages/71/d8/d67bac7beaba18d595b3a7d038661b6f27d69fa2099b2fabe85a63343054/megatron_energon-6.0.1-py3-none-any.whl", hash = "sha256:2214250bdc7956791556f3a48b221601fd63d36844644cff9110c312b1cd47a5", size = 202240, upload-time = "2025-03-17T12:11:20.657Z" },
+]
+
+[package.optional-dependencies]
+av-decode = [
+    { name = "av" },
+    { name = "bitstring" },
+    { name = "ebmlite" },
+    { name = "filetype" },
+    { name = "sortedcontainers" },
+    { name = "soundfile" },
 ]
 
 [[package]]
@@ -3967,7 +4049,7 @@ dependencies = [
     { name = "lightning" },
     { name = "megatron-bridge" },
     { name = "megatron-core" },
-    { name = "nvidia-modelopt", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-modelopt" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "omegaconf" },
@@ -3984,7 +4066,6 @@ dependencies = [
     { name = "torch" },
     { name = "torchmetrics" },
     { name = "torchvision" },
-    { name = "transformer-engine", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "uvicorn" },
     { name = "wandb" },
     { name = "webdataset" },
@@ -4034,7 +4115,10 @@ nemo-run = [
     { name = "nemo-run" },
 ]
 nemo-toolkit = [
-    { name = "nemo-toolkit", extra = ["automodel", "common-only", "eval", "multimodal-only", "nlp-only"] },
+    { name = "nemo-toolkit", extra = ["common-only", "multimodal-only", "nlp-only"] },
+    { name = "nv-one-logger-core" },
+    { name = "nv-one-logger-pytorch-lightning-integration" },
+    { name = "nv-one-logger-training-telemetry" },
 ]
 test = [
     { name = "click" },
@@ -4056,9 +4140,9 @@ requires-dist = [
     { name = "hydra-core", specifier = ">1.3,<=1.3.2" },
     { name = "ijson" },
     { name = "lightning" },
-    { name = "megatron-bridge", specifier = ">=0.1.0a0,<0.2.0" },
-    { name = "megatron-core", specifier = ">=0.14.0a0,<0.15.0" },
-    { name = "nvidia-modelopt", extras = ["torch"], marker = "sys_platform != 'darwin'", specifier = ">=0.33.0a0,<0.34.0" },
+    { name = "megatron-bridge", git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=9577b1280eaadd60b9d7b0ce6df09ac80e87e323" },
+    { name = "megatron-core", specifier = ">=0.14.0a0,<0.17.0" },
+    { name = "nvidia-modelopt", extras = ["torch"], marker = "sys_platform != 'darwin'", specifier = ">=0.33.0a0,<0.41.0" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
     { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin'", specifier = ">=0.4.0a0,<0.5.0" },
     { name = "omegaconf", specifier = ">=2.3.0" },
@@ -4080,7 +4164,6 @@ requires-dist = [
     { name = "torch", specifier = "==2.7.1", index = "https://download.pytorch.org/whl/cu128" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
     { name = "torchvision" },
-    { name = "transformer-engine", extras = ["pytorch"], marker = "sys_platform != 'darwin'", git = "https://github.com/NVIDIA/TransformerEngine.git?rev=0289e76380088358a584d809faf69effab1a7cda" },
     { name = "transformers", marker = "extra == 'trt-onnx'", specifier = "==4.51.3" },
     { name = "uvicorn" },
     { name = "vllm", marker = "platform_machine == 'aarch64' and extra == 'vllm'", specifier = "~=0.10.0", index = "https://pypi.org/simple" },
@@ -4113,7 +4196,12 @@ linting = [
     { name = "ruff", specifier = "~=0.9.0" },
 ]
 nemo-run = [{ name = "nemo-run" }]
-nemo-toolkit = [{ name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], specifier = ">=2.5.0a0,<2.6.0" }]
+nemo-toolkit = [
+    { name = "nemo-toolkit", extras = ["automodel", "common-only", "nlp-only", "eval", "multimodal-only"], specifier = ">=2.6.0a0,<2.7.0" },
+    { name = "nv-one-logger-core", specifier = ">=2.3.1" },
+    { name = "nv-one-logger-pytorch-lightning-integration", specifier = ">=2.3.1" },
+    { name = "nv-one-logger-training-telemetry", specifier = ">=2.3.1" },
+]
 test = [
     { name = "click" },
     { name = "coverage" },
@@ -4147,12 +4235,15 @@ wheels = [
 
 [[package]]
 name = "nemo-toolkit"
-version = "2.5.0rc0"
+version = "2.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "cuda-bindings", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "fsspec", extra = ["http"] },
     { name = "huggingface-hub" },
-    { name = "numba" },
+    { name = "numba", marker = "sys_platform == 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "numba-cuda", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "numexpr" },
     { name = "numpy" },
     { name = "onnx", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "onnx", version = "1.19.1rc1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trt-onnx'" },
@@ -4168,28 +4259,20 @@ dependencies = [
     { name = "wget" },
     { name = "wrapt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/68/8b/704fc223030f1145e9a273a12ab850e6eb073d96032aa3268107eb2ff3ad/nemo_toolkit-2.5.0rc0.tar.gz", hash = "sha256:14ecf310e189fced1b07d3ac40c16eae3481b7ceee3129f67e63a98e1d3486ab", size = 4730605, upload-time = "2025-08-03T16:50:02.944Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3b/05/82a24a2567e33abd8b82f1f901e2784341d2dc9b24c3f4a46272326634db/nemo_toolkit-2.6.1.tar.gz", hash = "sha256:37802ca378bc5b7119a9a26bb2bcf6095f991eb36869bb4cc8a45d4758a0ec04", size = 3988616, upload-time = "2026-01-09T18:03:18.185Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a4/e8/eac2226e4571c413f1c5595fbc8d11d92b0fa668d4071dacd569544c72f1/nemo_toolkit-2.5.0rc0-py3-none-any.whl", hash = "sha256:861a75b1b18be2f2a166b72141cecaca7ceb432372d570dbbab9c576e62b78f4", size = 6698124, upload-time = "2025-08-03T16:49:59.266Z" },
+    { url = "https://files.pythonhosted.org/packages/53/e2/a588a4e4845c78d1335f0d3a70e16573a9d4a372e7b58f3e7ef431124211/nemo_toolkit-2.6.1-py3-none-any.whl", hash = "sha256:a5428dc3e6c17c3af1a7cef2dc68ea9e4d64bd0606cb510fe29da3247f22880b", size = 5647873, upload-time = "2026-01-09T18:03:14.478Z" },
 ]
 
 [package.optional-dependencies]
-automodel = [
-    { name = "bitsandbytes", marker = "(platform_machine == 'x86_64' and sys_platform != 'darwin') or (platform_machine != 'x86_64' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (platform_machine != 'x86_64' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (platform_machine != 'x86_64' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
 common-only = [
-    { name = "datasets", version = "3.1.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "datasets", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "datasets" },
     { name = "einops" },
     { name = "inflect" },
     { name = "mediapy" },
     { name = "pandas" },
     { name = "sacremoses" },
     { name = "sentencepiece" },
-]
-eval = [
-    { name = "flask" },
-    { name = "nvidia-lm-eval" },
 ]
 multimodal-only = [
     { name = "addict" },
@@ -4199,7 +4282,7 @@ multimodal-only = [
     { name = "einops-exts" },
     { name = "imageio" },
     { name = "kornia" },
-    { name = "megatron-energon" },
+    { name = "megatron-energon", extra = ["av-decode"] },
     { name = "nerfacc" },
     { name = "open-clip-torch" },
     { name = "qwen-vl-utils" },
@@ -4225,7 +4308,7 @@ nlp-only = [
     { name = "multi-storage-client" },
     { name = "nltk" },
     { name = "numpy" },
-    { name = "nvidia-modelopt", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-modelopt" },
     { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "nvtx" },
     { name = "opencc" },
@@ -4396,6 +4479,18 @@ wheels = [
 ]
 
 [[package]]
+name = "numba-cuda"
+version = "0.15.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numba", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/56/d7/f8dd134b7896b30d69e5b29af27264b1143458d43e088f210abc16cba91e/numba_cuda-0.15.1.tar.gz", hash = "sha256:219771179a396ba2a6911648b908609c1373d2055373d5fb8294f0a1947c4690", size = 491996, upload-time = "2025-06-14T21:34:24.931Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f8/04/307a793117d631fceb2ae9b32c2b1cd42e36ba857f1815d1b417d1faa9b7/numba_cuda-0.15.1-py3-none-any.whl", hash = "sha256:b1b804d1b970996e9aab474d689166d1af62934abb456581fe005d052b4e70c6", size = 591026, upload-time = "2025-06-14T21:34:23.409Z" },
+]
+
+[[package]]
 name = "numcodecs"
 version = "0.13.1"
 source = { registry = "https://pypi.org/simple" }
@@ -4552,6 +4647,63 @@ wheels = [
 ]
 
 [[package]]
+name = "nv-grouped-gemm"
+version = "1.1.4.post8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "absl-py" },
+    { name = "numpy" },
+    { name = "torch" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/02/ad/046a097b63a96c1ba1d85f0031dbe7fcbdb33e6c445dfbaba2ffaefdd497/nv_grouped_gemm-1.1.4.post8.tar.gz", hash = "sha256:ab321693f0292cfd8a26dc7b6f14decd9eb00e209494de7218e4fad36191275d", size = 20821209, upload-time = "2025-12-17T02:22:38.432Z" }
+
+[[package]]
+name = "nv-one-logger-core"
+version = "2.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "overrides" },
+    { name = "pydantic" },
+    { name = "strenum" },
+    { name = "toml" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3b/37/963095797035f371e0db6ea761f5aaccb624fc786af217115b423baeb0e2/nv_one_logger_core-2.3.1.tar.gz", hash = "sha256:cbb2f87604c78b96a302f32d87199902129d76153a73a20f8455a250b3246c1d", size = 52640, upload-time = "2025-10-29T21:11:55.812Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ee/c4/ea91554c4fcbff66057f667690101d7a4b965605741350ac661b03fa6c46/nv_one_logger_core-2.3.1-py3-none-any.whl", hash = "sha256:0c8b77bcdac4daa1ea913bf8d4afd2a057bd5526e3654ac39f67caba157341a6", size = 63066, upload-time = "2025-10-29T21:11:52.753Z" },
+]
+
+[[package]]
+name = "nv-one-logger-pytorch-lightning-integration"
+version = "2.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lightning" },
+    { name = "nv-one-logger-core" },
+    { name = "nv-one-logger-training-telemetry" },
+    { name = "setuptools" },
+    { name = "strenum" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0c/d0/3475b7ab17d367362f650fb0419e8669f41e63c1018f4a8ac2fbecfd2e85/nv_one_logger_pytorch_lightning_integration-2.3.1.tar.gz", hash = "sha256:b32d99b6a8f02a16538bcade939b0a7edd7249e936aacefe336b5519447340c3", size = 10979, upload-time = "2025-10-29T21:22:10.464Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/56/01a55efb365b6864646b4ac941a1d9de66f024e880764510ba5a7a63f62c/nv_one_logger_pytorch_lightning_integration-2.3.1-py3-none-any.whl", hash = "sha256:f92904055fb0082516480cc1e3dd0bb6cedb2b033985ebfd4814b9cbf7da2cb2", size = 9822, upload-time = "2025-10-29T21:22:09.37Z" },
+]
+
+[[package]]
+name = "nv-one-logger-training-telemetry"
+version = "2.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nv-one-logger-core" },
+    { name = "strenum" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c5/21/016fa067967734d52f1ccf5a2a37a1a65216f2d7053bc2b85872cce956ca/nv_one_logger_training_telemetry-2.3.1.tar.gz", hash = "sha256:8c67940ea71799afaf1f46df3ba2f52f93aea26321c6f1c1d54aae02efc2a4af", size = 44435, upload-time = "2025-10-29T21:21:42.035Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/15/97e6e4ddfe5fc35bcee74a45b7c33fb73abb83713c7dfa26420b971a86c3/nv_one_logger_training_telemetry-2.3.1-py3-none-any.whl", hash = "sha256:5319443829b59378a498c3c62ac98973e14f31be675c229ff2b14e2fe109aa0b", size = 44140, upload-time = "2025-10-29T21:21:40.72Z" },
+]
+
+[[package]]
 name = "nvidia-cublas-cu12"
 version = "12.8.3.14"
 source = { registry = "https://pypi.org/simple" }
@@ -4691,74 +4843,6 @@ wheels = [
 ]
 
 [[package]]
-name = "nvidia-eval-commons"
-version = "1.0.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "flask" },
-    { name = "jinja2" },
-    { name = "psutil" },
-    { name = "pydantic" },
-    { name = "pydantic-core" },
-    { name = "pyyaml" },
-    { name = "requests" },
-    { name = "structlog" },
-    { name = "typing-extensions" },
-    { name = "werkzeug" },
-    { name = "yq" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/56/ce/a25d661944dbfc140dd8856d3331a2fd2a9737cd7790f121a9e6dbeb5a3e/nvidia_eval_commons-1.0.5-py3-none-any.whl", hash = "sha256:ff99942fa54bd513b8ebae174ee6f59b0a9669066a21060a7e00989b0a23aa9a", size = 103314, upload-time = "2025-09-16T10:15:27.479Z" },
-]
-
-[[package]]
-name = "nvidia-lm-eval"
-version = "25.8.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "aiohttp" },
-    { name = "beautifulsoup4" },
-    { name = "datasets", version = "3.1.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "datasets", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "dill" },
-    { name = "evaluate" },
-    { name = "httpx" },
-    { name = "immutabledict" },
-    { name = "jinja2" },
-    { name = "jsonlines" },
-    { name = "langdetect" },
-    { name = "more-itertools" },
-    { name = "nltk" },
-    { name = "numexpr" },
-    { name = "numpy" },
-    { name = "nvidia-eval-commons" },
-    { name = "openai" },
-    { name = "pandas" },
-    { name = "protobuf" },
-    { name = "pybind11" },
-    { name = "pytablewriter" },
-    { name = "requests" },
-    { name = "rouge-score" },
-    { name = "sacrebleu" },
-    { name = "scikit-learn" },
-    { name = "sentencepiece" },
-    { name = "tenacity" },
-    { name = "tiktoken" },
-    { name = "tqdm" },
-    { name = "tqdm-multiprocess" },
-    { name = "transformers", version = "4.51.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "transformers", version = "4.53.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "transformers", version = "4.56.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-vllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm')" },
-    { name = "tree-sitter" },
-    { name = "tree-sitter-python" },
-    { name = "word2number" },
-    { name = "zstandard" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/74/18/388ab8ae59759ebd8ed6ef928761f1d20a19534d10d43903b0d788ec96fc/nvidia_lm_eval-25.8.1-py3-none-any.whl", hash = "sha256:38eec564522defd597b73a0ffde450ec88a9a760280db3b6aee927a4ca9d52c4", size = 7849887, upload-time = "2025-09-16T10:00:47.632Z" },
-]
-
-[[package]]
 name = "nvidia-ml-py"
 version = "12.575.51"
 source = { registry = "https://pypi.org/simple" }
@@ -4787,16 +4871,22 @@ version = "13.580.82"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
@@ -4824,7 +4914,7 @@ dependencies = [
     { name = "ninja" },
     { name = "numpy" },
     { name = "nvidia-ml-py", version = "12.575.51", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-ml-py", version = "13.580.82", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-ml-py", version = "13.580.82", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "nvidia-modelopt-core" },
     { name = "packaging" },
     { name = "pulp" },
@@ -4832,8 +4922,8 @@ dependencies = [
     { name = "regex" },
     { name = "rich" },
     { name = "safetensors" },
-    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and sys_platform != 'darwin') or (python_full_version < '3.11' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (python_full_version < '3.11' and extra == 'extra-18-nemo-export-deploy-trtllm') or (python_full_version < '3.11' and extra != 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "scipy", version = "1.16.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and sys_platform != 'darwin') or (python_full_version >= '3.11' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (python_full_version >= '3.11' and extra == 'extra-18-nemo-export-deploy-trtllm') or (python_full_version >= '3.11' and extra != 'extra-18-nemo-export-deploy-vllm') or (python_full_version < '3.11' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (python_full_version < '3.11' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (python_full_version < '3.11' and extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "scipy", version = "1.16.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "torch" },
     { name = "torchprofile" },
     { name = "torchvision" },
@@ -4914,25 +5004,17 @@ wheels = [
 [[package]]
 name = "nvidia-resiliency-ext"
 version = "0.4.1"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/NVIDIA/nvidia-resiliency-ext.git?rev=54f85fe422d296cf04ea524130014bd3a2c3add1#54f85fe422d296cf04ea524130014bd3a2c3add1" }
 dependencies = [
-    { name = "defusedxml", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-ml-py", version = "12.575.51", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-ml-py", version = "13.580.82", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "packaging", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "psutil", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pynvml", version = "12.0.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pynvml", version = "13.0.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pyyaml", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torch", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a7/8c/6547d9fdea9730d4f69a19ca492ccbe221768f8473b82502a78a824acc3d/nvidia_resiliency_ext-0.4.1-cp310-cp310-manylinux_2_31_aarch64.whl", hash = "sha256:cf80599411018ebbf03da64769527dee6b37746b72b8606f919b7999633770b8", size = 442891, upload-time = "2025-07-17T03:53:38.878Z" },
-    { url = "https://files.pythonhosted.org/packages/34/0d/520cab980949ad11bd5291784fea309bcd6654a9c97943a3a87644c1d111/nvidia_resiliency_ext-0.4.1-cp310-cp310-manylinux_2_31_x86_64.whl", hash = "sha256:0c23e621d598ba436549db83deeb3569c19df0194b89fe6169d62b6ead711be3", size = 448044, upload-time = "2025-07-17T03:48:30.851Z" },
-    { url = "https://files.pythonhosted.org/packages/46/77/8cda264b262e2868a4e6ebcddaea112200b1e34b8d5a35a2fe3b4978d137/nvidia_resiliency_ext-0.4.1-cp311-cp311-manylinux_2_31_aarch64.whl", hash = "sha256:d8ca454a8b8abef72e0ff0e33914686c263414e8891471c02a9f6af9d2d6b925", size = 443649, upload-time = "2025-07-17T03:49:16.183Z" },
-    { url = "https://files.pythonhosted.org/packages/3a/53/029cc7493b5833cb8dfa201f15a1e422e2e1cc6308d34c5b0a90028a73fd/nvidia_resiliency_ext-0.4.1-cp311-cp311-manylinux_2_31_x86_64.whl", hash = "sha256:dde6034f29350ac6326cdd861ceec641bdd93be0eddbf034739f4cd9452a4dd9", size = 449189, upload-time = "2025-07-17T03:52:15.24Z" },
-    { url = "https://files.pythonhosted.org/packages/70/05/38d491962273c7905708762279f440520eb79f3c00b67a023497215ad023/nvidia_resiliency_ext-0.4.1-cp312-cp312-manylinux_2_31_aarch64.whl", hash = "sha256:b3bd5f01535574b16d0f38bca6e39afe3806c4a2896eee1b321cd944e00025a7", size = 444570, upload-time = "2025-07-17T03:50:58.877Z" },
-    { url = "https://files.pythonhosted.org/packages/18/8b/4cb8aa2bbdf3705d3034c3f3dacdadb03b3b7dd3dc7f5200e64663fb477f/nvidia_resiliency_ext-0.4.1-cp312-cp312-manylinux_2_31_x86_64.whl", hash = "sha256:ca9f8de465af345952bedbea53c90c0e2323d88cfd830ded0e806fad91845c0e", size = 450280, upload-time = "2025-07-17T03:49:55.327Z" },
+    { name = "defusedxml" },
+    { name = "nvidia-ml-py", version = "12.575.51", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-ml-py", version = "13.580.82", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "packaging" },
+    { name = "psutil" },
+    { name = "pynvml", version = "12.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "pynvml", version = "13.0.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "pyyaml" },
+    { name = "torch" },
 ]
 
 [[package]]
@@ -5102,11 +5184,11 @@ name = "onnx-ir"
 version = "0.1.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ml-dtypes", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "numpy", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "ml-dtypes" },
+    { name = "numpy" },
     { name = "onnx", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "onnx", version = "1.19.1rc1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "typing-extensions", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "onnx", version = "1.19.1rc1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trt-onnx'" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e8/57/6673f325f275ab7875ba8dcaa96cc87d0b3ca67aeec4e94c4dd6fccbdc72/onnx_ir-0.1.9.tar.gz", hash = "sha256:edbbcd7b1b7ef62883b3bdb893dbbf712f4cf321760587279b7642a593ef9ab9", size = 109997, upload-time = "2025-09-12T16:50:39.833Z" }
 wheels = [
@@ -5118,13 +5200,13 @@ name = "onnxscript"
 version = "0.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ml-dtypes", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "numpy", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "ml-dtypes" },
+    { name = "numpy" },
     { name = "onnx", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "onnx", version = "1.19.1rc1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "onnx-ir", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "packaging", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "typing-extensions", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "onnx", version = "1.19.1rc1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trt-onnx'" },
+    { name = "onnx-ir" },
+    { name = "packaging" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/62/24/7583317b1ee93d06a7e9c482a0e264af76dd63de0d24f67dbf47467d4bf0/onnxscript-0.3.1.tar.gz", hash = "sha256:8f18d2e7119743187579e21bc7d031b5666b56b7e31fcba9a14491f088ead68e", size = 571946, upload-time = "2025-06-26T19:44:17.849Z" }
 wheels = [
@@ -5133,22 +5215,21 @@ wheels = [
 
 [[package]]
 name = "open-clip-torch"
-version = "2.24.0"
+version = "3.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ftfy" },
     { name = "huggingface-hub" },
-    { name = "protobuf" },
     { name = "regex" },
-    { name = "sentencepiece" },
+    { name = "safetensors" },
     { name = "timm" },
     { name = "torch" },
     { name = "torchvision" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2a/a3/4dc94bfbfc45cbc49f0b7cac1aee1f2b15420013b26e18a94fdcdd906a2a/open_clip_torch-2.24.0.tar.gz", hash = "sha256:1ae2482aee313827c399eb8a4e735f0b0cd31e4c62085ce2dbfa3a13190219ff", size = 1479567, upload-time = "2024-01-08T10:35:55.753Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/30/46/fb8be250fa7fcfc56fbeb41583645e18d868268f67fbbbeb8ed62a8ff18a/open_clip_torch-3.2.0.tar.gz", hash = "sha256:62b7743012ccc40fb7c64819fa762fba0a13dd74585ac733babe58c2974c2506", size = 1502853, upload-time = "2025-09-21T17:32:08.289Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d9/d2/6ae2ee32d0d2ea9982774920e0ef96d439ee332f459f6d8a941149b1b4ad/open_clip_torch-2.24.0-py3-none-any.whl", hash = "sha256:2537dbe76c8008caa46652bc97cb32bceeae56baff6289e7b4eb22539a80c801", size = 1497056, upload-time = "2024-01-08T10:35:53.143Z" },
+    { url = "https://files.pythonhosted.org/packages/94/91/397327cc1597fa317942cc15bef414175eee4b3c2263b34407c57f3521f9/open_clip_torch-3.2.0-py3-none-any.whl", hash = "sha256:e1f5b3ecbadb6d8ea64b1f887db23efee9739e7c0d0075a8a2a3cabae8fed8d1", size = 1546677, upload-time = "2025-09-21T17:32:06.269Z" },
 ]
 
 [[package]]
@@ -5253,29 +5334,29 @@ wheels = [
 
 [[package]]
 name = "opentelemetry-api"
-version = "1.37.0"
+version = "1.33.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "deprecated" },
     { name = "importlib-metadata" },
-    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/63/04/05040d7ce33a907a2a02257e601992f0cdf11c73b33f13c4492bf6c3d6d5/opentelemetry_api-1.37.0.tar.gz", hash = "sha256:540735b120355bd5112738ea53621f8d5edb35ebcd6fe21ada3ab1c61d1cd9a7", size = 64923, upload-time = "2025-09-11T10:29:01.662Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9a/8d/1f5a45fbcb9a7d87809d460f09dc3399e3fbd31d7f3e14888345e9d29951/opentelemetry_api-1.33.1.tar.gz", hash = "sha256:1c6055fc0a2d3f23a50c7e17e16ef75ad489345fd3df1f8b8af7c0bbf8a109e8", size = 65002, upload-time = "2025-05-16T18:52:41.146Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/91/48/28ed9e55dcf2f453128df738210a980e09f4e468a456fa3c763dbc8be70a/opentelemetry_api-1.37.0-py3-none-any.whl", hash = "sha256:accf2024d3e89faec14302213bc39550ec0f4095d1cf5ca688e1bfb1c8612f47", size = 65732, upload-time = "2025-09-11T10:28:41.826Z" },
+    { url = "https://files.pythonhosted.org/packages/05/44/4c45a34def3506122ae61ad684139f0bbc4e00c39555d4f7e20e0e001c8a/opentelemetry_api-1.33.1-py3-none-any.whl", hash = "sha256:4db83ebcf7ea93e64637ec6ee6fabee45c5cbe4abd9cf3da95c43828ddb50b83", size = 65771, upload-time = "2025-05-16T18:52:17.419Z" },
 ]
 
 [[package]]
 name = "opentelemetry-exporter-prometheus"
-version = "0.58b0"
+version = "0.54b1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-sdk" },
     { name = "prometheus-client" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1a/4c/e351559526ee35fa36d990d3455e81a5607c1fa3e544b599ad802f2481f8/opentelemetry_exporter_prometheus-0.58b0.tar.gz", hash = "sha256:70f2627b4bb82bac65a1fcf95f6e0dcce9e823dd47379ced854753a7e14dfc93", size = 14972, upload-time = "2025-09-11T10:29:05.513Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/ef/563c6413dbf042f1b738c4e23f7ff5f80fd0ae5ba64037433a5eeb0a1f79/opentelemetry_exporter_prometheus-0.54b1.tar.gz", hash = "sha256:6a28fde40ac8693bd653b84ba9deff75721fd05edf4e4313939327ea336ad3a9", size = 14948, upload-time = "2025-05-16T18:52:46.152Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/e3/50e9cdc5a52c2ab19585dd69e668ec9fee0343fafc4bffa919ca79230a4f/opentelemetry_exporter_prometheus-0.58b0-py3-none-any.whl", hash = "sha256:02005033a7a108ab9f3000ff3aa49e2d03a8893b5bf3431322ffa246affbf951", size = 13016, upload-time = "2025-09-11T10:28:47.67Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/4e/f351f6fe640c270158cf2521978978eb8a8fb3113fdaa5e98eedc22e8126/opentelemetry_exporter_prometheus-0.54b1-py3-none-any.whl", hash = "sha256:78052c9818140021b8b3738f653f8bf4088a34bf970144c6816b5f561c0178dc", size = 12950, upload-time = "2025-05-16T18:52:26.51Z" },
 ]
 
 [[package]]
@@ -5292,29 +5373,29 @@ wheels = [
 
 [[package]]
 name = "opentelemetry-sdk"
-version = "1.37.0"
+version = "1.33.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-semantic-conventions" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f4/62/2e0ca80d7fe94f0b193135375da92c640d15fe81f636658d2acf373086bc/opentelemetry_sdk-1.37.0.tar.gz", hash = "sha256:cc8e089c10953ded765b5ab5669b198bbe0af1b3f89f1007d19acd32dc46dda5", size = 170404, upload-time = "2025-09-11T10:29:11.779Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/67/12/909b98a7d9b110cce4b28d49b2e311797cffdce180371f35eba13a72dd00/opentelemetry_sdk-1.33.1.tar.gz", hash = "sha256:85b9fcf7c3d23506fbc9692fd210b8b025a1920535feec50bd54ce203d57a531", size = 161885, upload-time = "2025-05-16T18:52:52.832Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/62/9f4ad6a54126fb00f7ed4bb5034964c6e4f00fcd5a905e115bd22707e20d/opentelemetry_sdk-1.37.0-py3-none-any.whl", hash = "sha256:8f3c3c22063e52475c5dbced7209495c2c16723d016d39287dfc215d1771257c", size = 131941, upload-time = "2025-09-11T10:28:57.83Z" },
+    { url = "https://files.pythonhosted.org/packages/df/8e/ae2d0742041e0bd7fe0d2dcc5e7cce51dcf7d3961a26072d5b43cc8fa2a7/opentelemetry_sdk-1.33.1-py3-none-any.whl", hash = "sha256:19ea73d9a01be29cacaa5d6c8ce0adc0b7f7b4d58cc52f923e4413609f670112", size = 118950, upload-time = "2025-05-16T18:52:37.297Z" },
 ]
 
 [[package]]
 name = "opentelemetry-semantic-conventions"
-version = "0.58b0"
+version = "0.54b1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "deprecated" },
     { name = "opentelemetry-api" },
-    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/aa/1b/90701d91e6300d9f2fb352153fb1721ed99ed1f6ea14fa992c756016e63a/opentelemetry_semantic_conventions-0.58b0.tar.gz", hash = "sha256:6bd46f51264279c433755767bb44ad00f1c9e2367e1b42af563372c5a6fa0c25", size = 129867, upload-time = "2025-09-11T10:29:12.597Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5b/2c/d7990fc1ffc82889d466e7cd680788ace44a26789809924813b164344393/opentelemetry_semantic_conventions-0.54b1.tar.gz", hash = "sha256:d1cecedae15d19bdaafca1e56b29a66aa286f50b5d08f036a145c7f3e9ef9cee", size = 118642, upload-time = "2025-05-16T18:52:53.962Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/90/68152b7465f50285d3ce2481b3aec2f82822e3f52e5152eeeaf516bab841/opentelemetry_semantic_conventions-0.58b0-py3-none-any.whl", hash = "sha256:5564905ab1458b96684db1340232729fce3b5375a06e140e8904c78e4f815b28", size = 207954, upload-time = "2025-09-11T10:28:59.218Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/80/08b1698c52ff76d96ba440bf15edc2f4bc0a279868778928e947c1004bdd/opentelemetry_semantic_conventions-0.54b1-py3-none-any.whl", hash = "sha256:29dab644a7e435b58d3a3918b58c333c92686236b30f7891d5e51f02933ca60d", size = 194938, upload-time = "2025-05-16T18:52:38.796Z" },
 ]
 
 [[package]]
@@ -5372,6 +5453,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/86/82/dd116270e984f5a3936ec747404676cc4c306a92f4f0fcc077ac6be90024/outlines_core-0.2.10-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:faf5b43181b1d033871364e74e9d348362c6a77b1d054d7af35e09fdfcff5b16", size = 2101406, upload-time = "2025-05-12T18:19:51.54Z" },
     { url = "https://files.pythonhosted.org/packages/41/3a/63e9729dadd962e83dabbd52d600d9b8dd7154d92b6f351c10b514bd121f/outlines_core-0.2.10-cp312-cp312-win32.whl", hash = "sha256:b37e192de974fdbfe20332720a4a9cdda92719536dface60b48dc8eeeda24390", size = 1761638, upload-time = "2025-05-12T18:19:53.252Z" },
     { url = "https://files.pythonhosted.org/packages/aa/e4/e6cb03a092043997babcee5d52d37b59254b265751bcf0f0e75aba11fc1d/outlines_core-0.2.10-cp312-cp312-win_amd64.whl", hash = "sha256:f895834da0a577120dcb8d979c12c0690fe912095413bf0070a73e9ff363b7bf", size = 2053750, upload-time = "2025-05-12T18:19:55.587Z" },
+]
+
+[[package]]
+name = "overrides"
+version = "7.7.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/36/86/b585f53236dec60aba864e050778b25045f857e17f6e5ea0ae95fe80edd2/overrides-7.7.0.tar.gz", hash = "sha256:55158fa3d93b98cc75299b1e67078ad9003ca27945c76162c1c0766d6f91820a", size = 22812, upload-time = "2024-01-27T21:01:33.423Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2c/ab/fc8290c6a4c722e5514d80f62b2dc4c4df1a68a41d1364e625c35990fcf3/overrides-7.7.0-py3-none-any.whl", hash = "sha256:c7ed9d062f78b8e4c1a7b70bd8796b35ead4d9f510227ef9c5dc7626c60d7e49", size = 17832, upload-time = "2024-01-27T21:01:31.393Z" },
 ]
 
 [[package]]
@@ -5458,15 +5548,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/86/13/459e86c9c67a006651803a3df3d0b08f7708bc5483fdc482582d75562949/partial_json_parser-0.2.1.1.post6.tar.gz", hash = "sha256:43896b68929678224cbbe4884a6a5fe9251ded4b30b8b7d7eb569e5feea93afc", size = 10299, upload-time = "2025-06-23T17:51:45.372Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/40/1f922794af3dc7503f19319a8804b398a161a2cd54183cff8b12225b8d85/partial_json_parser-0.2.1.1.post6-py3-none-any.whl", hash = "sha256:abc332f09b13ef5233384dbfe7128a0e9ea3fa4b8f8be9b37ac1b433c810e99e", size = 10876, upload-time = "2025-06-23T17:51:44.332Z" },
-]
-
-[[package]]
-name = "pathvalidate"
-version = "3.3.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fa/2a/52a8da6fe965dea6192eb716b357558e103aea0a1e9a8352ad575a8406ca/pathvalidate-3.3.1.tar.gz", hash = "sha256:b18c07212bfead624345bb8e1d6141cdcf15a39736994ea0b94035ad2b1ba177", size = 63262, upload-time = "2025-06-15T09:07:20.736Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9a/70/875f4a23bfc4731703a5835487d0d2fb999031bd415e7d17c0ae615c18b7/pathvalidate-3.3.1-py3-none-any.whl", hash = "sha256:5263baab691f8e1af96092fa5137ee17df5bdfbd6cff1fcac4d6ef4bc2e1735f", size = 24305, upload-time = "2025-06-15T09:07:19.117Z" },
 ]
 
 [[package]]
@@ -6313,16 +6394,22 @@ version = "13.0.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
+    "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
     "python_full_version >= '3.12' and sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
@@ -6338,7 +6425,7 @@ resolution-markers = [
     "python_full_version < '3.11' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm'",
 ]
 dependencies = [
-    { name = "nvidia-ml-py", version = "13.580.82", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trtllm') or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-ml-py", version = "13.580.82", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or extra != 'extra-18-nemo-export-deploy-trtllm' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/5c/57/da7dc63a79f59e082e26a66ac02d87d69ea316b35b35b7a00d82f3ce3d2f/pynvml-13.0.1.tar.gz", hash = "sha256:1245991d9db786b4d2f277ce66869bd58f38ac654e38c9397d18f243c8f6e48f", size = 35226, upload-time = "2025-09-05T20:33:25.377Z" }
 wheels = [
@@ -6383,24 +6470,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/bd/11/293dd436aea955d45fc4e8a35b6ae7270f5b8e00b53cf6c024c83b657a11/PySocks-1.7.1.tar.gz", hash = "sha256:3f8804571ebe159c380ac6de37643bb4685970655d3bba243530d6558b799aa0", size = 284429, upload-time = "2019-09-20T02:07:35.714Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8d/59/b4572118e098ac8e46e399a1dd0f2d85403ce8bbaad9ec79373ed6badaf9/PySocks-1.7.1-py3-none-any.whl", hash = "sha256:2725bd0a9925919b9b51739eea5f9e2bae91e83288108a9ad338b2e3a4435ee5", size = 16725, upload-time = "2019-09-20T02:06:22.938Z" },
-]
-
-[[package]]
-name = "pytablewriter"
-version = "1.2.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "dataproperty" },
-    { name = "mbstrdecoder" },
-    { name = "pathvalidate" },
-    { name = "setuptools" },
-    { name = "tabledata" },
-    { name = "tcolorpy" },
-    { name = "typepy", extra = ["datetime"] },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f6/a1/617730f290f04d347103ab40bf67d317df6691b14746f6e1ea039fb57062/pytablewriter-1.2.1.tar.gz", hash = "sha256:7bd0f4f397e070e3b8a34edcf1b9257ccbb18305493d8350a5dbc9957fced959", size = 619241, upload-time = "2025-01-01T15:37:00.04Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/4c/c199512f01c845dfe5a7840ab3aae6c60463b5dc2a775be72502dfd9170a/pytablewriter-1.2.1-py3-none-any.whl", hash = "sha256:e906ff7ff5151d70a5f66e0f7b75642a7f2dce8d893c265b79cc9cf6bc04ddb4", size = 91083, upload-time = "2025-01-01T15:36:55.63Z" },
 ]
 
 [[package]]
@@ -7556,6 +7625,15 @@ wheels = [
 ]
 
 [[package]]
+name = "sortedcontainers"
+version = "2.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e8/c4/ba2f8066cceb6f23394729afe52f3bf7adec04bf9ed2c820b39e19299111/sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88", size = 30594, upload-time = "2021-05-16T22:03:42.897Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/32/46/9cb0e58b2deb7f82b84065f37f3bffeb12413f947f9388e4cac22c4621ce/sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0", size = 29575, upload-time = "2021-05-16T22:03:41.177Z" },
+]
+
+[[package]]
 name = "soundfile"
 version = "0.13.1"
 source = { registry = "https://pypi.org/simple" }
@@ -7969,18 +8047,6 @@ wheels = [
 ]
 
 [[package]]
-name = "structlog"
-version = "25.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/79/b9/6e672db4fec07349e7a8a8172c1a6ae235c58679ca29c3f86a61b5e59ff3/structlog-25.4.0.tar.gz", hash = "sha256:186cd1b0a8ae762e29417095664adf1d6a31702160a46dacb7796ea82f7409e4", size = 1369138, upload-time = "2025-06-02T08:21:12.971Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/4a/97ee6973e3a73c74c8120d59829c3861ea52210667ec3e7a16045c62b64d/structlog-25.4.0-py3-none-any.whl", hash = "sha256:fe809ff5c27e557d14e613f45ca441aabda051d119ee5a0102aaba6ce40eed2c", size = 68720, upload-time = "2025-06-02T08:21:11.43Z" },
-]
-
-[[package]]
 name = "sympy"
 version = "1.14.0"
 source = { registry = "https://pypi.org/simple" }
@@ -7990,19 +8056,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/83/d3/803453b36afefb7c2bb238361cd4ae6125a569b4db67cd9e79846ba2d68c/sympy-1.14.0.tar.gz", hash = "sha256:d3d3fe8df1e5a0b42f0e7bdf50541697dbe7d23746e894990c030e2b05e72517", size = 7793921, upload-time = "2025-04-27T18:05:01.611Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl", hash = "sha256:e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5", size = 6299353, upload-time = "2025-04-27T18:04:59.103Z" },
-]
-
-[[package]]
-name = "tabledata"
-version = "1.3.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "dataproperty" },
-    { name = "typepy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b2/35/171c8977162f1163368406deddde4c59673b62bd0cb2f34948a02effb075/tabledata-1.3.4.tar.gz", hash = "sha256:e9649cab129d718f3bff4150083b77f8a78c30f6634a30caf692b10fdc60cb97", size = 25074, upload-time = "2024-12-31T14:12:31.198Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/08/64/fa4160151976ee4b2cf0c1217a99443ffaeb991956feddfeac9eee9952f8/tabledata-1.3.4-py3-none-any.whl", hash = "sha256:1f56e433bfdeb89f4487abfa48c4603a3b07c5d3a3c7e05ff73dd018c24bd0d4", size = 11820, upload-time = "2024-12-31T14:12:28.584Z" },
 ]
 
 [[package]]
@@ -8029,15 +8082,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/03/ba/b22d13b38dee3805982a3ee2ef03234f11b6f26aa6220c92b23a0fc760a3/taming-transformers-0.0.1.tar.gz", hash = "sha256:bdaffda4dcdee8f64930f4fe4f43bc83e6f4d3e264cfd8811f62ac0b3a423ccc", size = 42100, upload-time = "2021-03-10T14:42:05.181Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/c2/ae7227e4b089c6a8210920db9d5ac59186b0a84eb1e6d96b9218916cdaf1/taming_transformers-0.0.1-py3-none-any.whl", hash = "sha256:6c6e5336479dd31963c3218875da8821cc89273c59ac7fbd9b126ea36da342a2", size = 45588, upload-time = "2021-03-10T14:42:03.996Z" },
-]
-
-[[package]]
-name = "tcolorpy"
-version = "0.1.7"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/80/cc/44f2d81d8f9093aad81c3467a5bf5718d2b5f786e887b6e4adcfc17ec6b9/tcolorpy-0.1.7.tar.gz", hash = "sha256:0fbf6bf238890bbc2e32662aa25736769a29bf6d880328f310c910a327632614", size = 299437, upload-time = "2024-12-29T15:24:23.847Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/a2/ed023f2edd1e011b4d99b6727bce8253842d66c3fbf9ed0a26fc09a92571/tcolorpy-0.1.7-py3-none-any.whl", hash = "sha256:26a59d52027e175a37e0aba72efc99dda43f074db71f55b316d3de37d3251378", size = 8096, upload-time = "2024-12-29T15:24:21.33Z" },
 ]
 
 [[package]]
@@ -8139,7 +8183,7 @@ dependencies = [
     { name = "click-option-group" },
     { name = "colored" },
     { name = "cuda-python" },
-    { name = "datasets", version = "3.1.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "datasets" },
     { name = "diffusers" },
     { name = "einops" },
     { name = "etcd3" },
@@ -8382,6 +8426,15 @@ wheels = [
 ]
 
 [[package]]
+name = "toml"
+version = "0.10.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f", size = 22253, upload-time = "2020-11-01T01:40:22.204Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b", size = 16588, upload-time = "2020-11-01T01:40:20.672Z" },
+]
+
+[[package]]
 name = "tomli"
 version = "2.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -8408,15 +8461,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/1c/9a/47c0449b98e6e7d1be6cbac02f93dd79003234ddc4aaab6ba07a9a7482e2/tomli-2.2.1-cp312-cp312-win32.whl", hash = "sha256:889f80ef92701b9dbb224e49ec87c645ce5df3fa2cc548664eb8a25e03127a98", size = 98875, upload-time = "2024-11-27T22:38:19.159Z" },
     { url = "https://files.pythonhosted.org/packages/ef/60/9b9638f081c6f1261e2688bd487625cd1e660d0a85bd469e91d8db969734/tomli-2.2.1-cp312-cp312-win_amd64.whl", hash = "sha256:7fc04e92e1d624a4a63c76474610238576942d6b8950a2d7f908a340494e67e4", size = 109418, upload-time = "2024-11-27T22:38:20.064Z" },
     { url = "https://files.pythonhosted.org/packages/6e/c2/61d3e0f47e2b74ef40a68b9e6ad5984f6241a942f7cd3bbfbdbd03861ea9/tomli-2.2.1-py3-none-any.whl", hash = "sha256:cb55c73c5f4408779d0cf3eef9f762b9c9f147a77de7b258bef0a5628adc85cc", size = 14257, upload-time = "2024-11-27T22:38:35.385Z" },
-]
-
-[[package]]
-name = "tomlkit"
-version = "0.13.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/cc/18/0bbf3884e9eaa38819ebe46a7bd25dcd56b67434402b66a58c4b8e552575/tomlkit-0.13.3.tar.gz", hash = "sha256:430cf247ee57df2b94ee3fbe588e71d362a941ebb545dec29b53961d61add2a1", size = 185207, upload-time = "2025-06-05T07:13:44.947Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/75/8539d011f6be8e29f339c42e633aae3cb73bffa95dd0f9adec09b9c58e85/tomlkit-0.13.3-py3-none-any.whl", hash = "sha256:c89c649d79ee40629a9fda55f8ace8c6a1b42deb912b2a8fd8d942ddadb606b0", size = 38901, upload-time = "2025-06-05T07:13:43.546Z" },
 ]
 
 [[package]]
@@ -8599,19 +8643,6 @@ wheels = [
 ]
 
 [[package]]
-name = "tqdm-multiprocess"
-version = "0.0.11"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "colorama" },
-    { name = "tqdm" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b4/1e/de81bd0f6cb2b61d6ee7ccbf304d99a42a0f53879481536dfb3288ee9a87/tqdm-multiprocess-0.0.11.tar.gz", hash = "sha256:a74002a1222ea9cbe8cdc9bd460108c6009be359621fbee9b92d0515d4d180f7", size = 8082, upload-time = "2020-10-27T06:57:54.313Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/25/7e/0d889fc6c84e3df6b69aaafe893fc77f69b3d968ac9ce574d1c62c688050/tqdm_multiprocess-0.0.11-py3-none-any.whl", hash = "sha256:3ebdf03e7a675150fa0bbceaa9c3c64b8cb556e9ffafa4fe6c078e51820524aa", size = 9817, upload-time = "2020-10-27T06:57:53.167Z" },
-]
-
-[[package]]
 name = "traitlets"
 version = "5.14.3"
 source = { registry = "https://pypi.org/simple" }
@@ -8630,18 +8661,46 @@ wheels = [
 
 [[package]]
 name = "transformer-engine"
-version = "2.7.0+0289e76"
-source = { git = "https://github.com/NVIDIA/TransformerEngine.git?rev=0289e76380088358a584d809faf69effab1a7cda#0289e76380088358a584d809faf69effab1a7cda" }
-dependencies = [
-    { name = "einops", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "importlib-metadata", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "onnx", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "onnx", version = "1.19.1rc1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "onnxscript", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "packaging", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pydantic", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torch", marker = "sys_platform != 'darwin' or extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra != 'extra-18-nemo-export-deploy-trtllm' and extra != 'extra-18-nemo-export-deploy-vllm')" },
+version = "2.11.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/33/44571ec584c88e1715f4c2afefc0ddd45064c7065ac1c6ffc8e832bc3ba3/transformer_engine-2.11.0-py3-none-any.whl", hash = "sha256:7ee1eae8fa6b0cb471c6066aa3555304fda8537174e5019929dc0c8655071df3", size = 723110, upload-time = "2026-01-02T09:58:23.245Z" },
 ]
+
+[package.optional-dependencies]
+pytorch = [
+    { name = "transformer-engine-torch" },
+]
+
+[[package]]
+name = "transformer-engine-cu13"
+version = "2.11.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "importlib-metadata" },
+    { name = "packaging" },
+    { name = "pydantic" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c8/27/0de6e2f693529e1f735eaf5b9c652e8f68c2eec2f709909f0785f17cfb8d/transformer_engine_cu13-2.11.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:0f01df55df1817295385ded989b2d03d72ef32176401ff547fdffa38f93019ea", size = 178536851, upload-time = "2026-01-02T09:55:28.863Z" },
+    { url = "https://files.pythonhosted.org/packages/33/09/9f8c0948aa9561b24717ee05396868e3e784ee67d5c39b24e83c719c1273/transformer_engine_cu13-2.11.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:62febd0422cc9003f1048f97be75f4a05d6e43092baf28a5ff6b857b638181c0", size = 179248112, upload-time = "2026-01-02T09:44:26.223Z" },
+]
+
+[[package]]
+name = "transformer-engine-torch"
+version = "2.11.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "einops" },
+    { name = "onnx", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "onnx", version = "1.19.1rc1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-18-nemo-export-deploy-trtllm' or extra == 'extra-18-nemo-export-deploy-vllm' or extra != 'extra-18-nemo-export-deploy-trt-onnx'" },
+    { name = "onnxscript" },
+    { name = "packaging" },
+    { name = "pydantic" },
+    { name = "torch" },
+    { name = "transformer-engine-cu13" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/09/42/068a40f5b213a3a8899e3885eb178776662897abed03cd725953d1106c39/transformer_engine_torch-2.11.0.tar.gz", hash = "sha256:b58d6322bdf885dfab0646da572aff9cf090b332ad470559aa58883c231e1816", size = 242065, upload-time = "2026-01-02T09:58:58.423Z" }
 
 [[package]]
 name = "transformers"
@@ -8755,51 +8814,6 @@ wheels = [
 ]
 
 [[package]]
-name = "tree-sitter"
-version = "0.25.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/66/7c/0350cfc47faadc0d3cf7d8237a4e34032b3014ddf4a12ded9933e1648b55/tree-sitter-0.25.2.tar.gz", hash = "sha256:fe43c158555da46723b28b52e058ad444195afd1db3ca7720c59a254544e9c20", size = 177961, upload-time = "2025-09-25T17:37:59.751Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/d4/f7ffb855cb039b7568aba4911fbe42e4c39c0e4398387c8e0d8251489992/tree_sitter-0.25.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:72a510931c3c25f134aac2daf4eb4feca99ffe37a35896d7150e50ac3eee06c7", size = 146749, upload-time = "2025-09-25T17:37:16.475Z" },
-    { url = "https://files.pythonhosted.org/packages/9a/58/f8a107f9f89700c0ab2930f1315e63bdedccbb5fd1b10fcbc5ebadd54ac8/tree_sitter-0.25.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:44488e0e78146f87baaa009736886516779253d6d6bac3ef636ede72bc6a8234", size = 137766, upload-time = "2025-09-25T17:37:18.138Z" },
-    { url = "https://files.pythonhosted.org/packages/19/fb/357158d39f01699faea466e8fd5a849f5a30252c68414bddc20357a9ac79/tree_sitter-0.25.2-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c2f8e7d6b2f8489d4a9885e3adcaef4bc5ff0a275acd990f120e29c4ab3395c5", size = 599809, upload-time = "2025-09-25T17:37:19.169Z" },
-    { url = "https://files.pythonhosted.org/packages/c5/a4/68ae301626f2393a62119481cb660eb93504a524fc741a6f1528a4568cf6/tree_sitter-0.25.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:20b570690f87f1da424cd690e51cc56728d21d63f4abd4b326d382a30353acc7", size = 627676, upload-time = "2025-09-25T17:37:20.715Z" },
-    { url = "https://files.pythonhosted.org/packages/69/fe/4c1bef37db5ca8b17ca0b3070f2dff509468a50b3af18f17665adcab42b9/tree_sitter-0.25.2-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:a0ec41b895da717bc218a42a3a7a0bfcfe9a213d7afaa4255353901e0e21f696", size = 624281, upload-time = "2025-09-25T17:37:21.823Z" },
-    { url = "https://files.pythonhosted.org/packages/d4/30/3283cb7fa251cae2a0bf8661658021a789810db3ab1b0569482d4a3671fd/tree_sitter-0.25.2-cp310-cp310-win_amd64.whl", hash = "sha256:7712335855b2307a21ae86efe949c76be36c6068d76df34faa27ce9ee40ff444", size = 127295, upload-time = "2025-09-25T17:37:22.977Z" },
-    { url = "https://files.pythonhosted.org/packages/88/90/ceb05e6de281aebe82b68662890619580d4ffe09283ebd2ceabcf5df7b4a/tree_sitter-0.25.2-cp310-cp310-win_arm64.whl", hash = "sha256:a925364eb7fbb9cdce55a9868f7525a1905af512a559303bd54ef468fd88cb37", size = 113991, upload-time = "2025-09-25T17:37:23.854Z" },
-    { url = "https://files.pythonhosted.org/packages/7c/22/88a1e00b906d26fa8a075dd19c6c3116997cb884bf1b3c023deb065a344d/tree_sitter-0.25.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:b8ca72d841215b6573ed0655b3a5cd1133f9b69a6fa561aecad40dca9029d75b", size = 146752, upload-time = "2025-09-25T17:37:24.775Z" },
-    { url = "https://files.pythonhosted.org/packages/57/1c/22cc14f3910017b7a76d7358df5cd315a84fe0c7f6f7b443b49db2e2790d/tree_sitter-0.25.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:cc0351cfe5022cec5a77645f647f92a936b38850346ed3f6d6babfbeeeca4d26", size = 137765, upload-time = "2025-09-25T17:37:26.103Z" },
-    { url = "https://files.pythonhosted.org/packages/1c/0c/d0de46ded7d5b34631e0f630d9866dab22d3183195bf0f3b81de406d6622/tree_sitter-0.25.2-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1799609636c0193e16c38f366bda5af15b1ce476df79ddaae7dd274df9e44266", size = 604643, upload-time = "2025-09-25T17:37:27.398Z" },
-    { url = "https://files.pythonhosted.org/packages/34/38/b735a58c1c2f60a168a678ca27b4c1a9df725d0bf2d1a8a1c571c033111e/tree_sitter-0.25.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3e65ae456ad0d210ee71a89ee112ac7e72e6c2e5aac1b95846ecc7afa68a194c", size = 632229, upload-time = "2025-09-25T17:37:28.463Z" },
-    { url = "https://files.pythonhosted.org/packages/32/f6/cda1e1e6cbff5e28d8433578e2556d7ba0b0209d95a796128155b97e7693/tree_sitter-0.25.2-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:49ee3c348caa459244ec437ccc7ff3831f35977d143f65311572b8ba0a5f265f", size = 629861, upload-time = "2025-09-25T17:37:29.593Z" },
-    { url = "https://files.pythonhosted.org/packages/f9/19/427e5943b276a0dd74c2a1f1d7a7393443f13d1ee47dedb3f8127903c080/tree_sitter-0.25.2-cp311-cp311-win_amd64.whl", hash = "sha256:56ac6602c7d09c2c507c55e58dc7026b8988e0475bd0002f8a386cce5e8e8adc", size = 127304, upload-time = "2025-09-25T17:37:30.549Z" },
-    { url = "https://files.pythonhosted.org/packages/eb/d9/eef856dc15f784d85d1397a17f3ee0f82df7778efce9e1961203abfe376a/tree_sitter-0.25.2-cp311-cp311-win_arm64.whl", hash = "sha256:b3d11a3a3ac89bb8a2543d75597f905a9926f9c806f40fcca8242922d1cc6ad5", size = 113990, upload-time = "2025-09-25T17:37:31.852Z" },
-    { url = "https://files.pythonhosted.org/packages/3c/9e/20c2a00a862f1c2897a436b17edb774e831b22218083b459d0d081c9db33/tree_sitter-0.25.2-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:ddabfff809ffc983fc9963455ba1cecc90295803e06e140a4c83e94c1fa3d960", size = 146941, upload-time = "2025-09-25T17:37:34.813Z" },
-    { url = "https://files.pythonhosted.org/packages/ef/04/8512e2062e652a1016e840ce36ba1cc33258b0dcc4e500d8089b4054afec/tree_sitter-0.25.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:c0c0ab5f94938a23fe81928a21cc0fac44143133ccc4eb7eeb1b92f84748331c", size = 137699, upload-time = "2025-09-25T17:37:36.349Z" },
-    { url = "https://files.pythonhosted.org/packages/47/8a/d48c0414db19307b0fb3bb10d76a3a0cbe275bb293f145ee7fba2abd668e/tree_sitter-0.25.2-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:dd12d80d91d4114ca097626eb82714618dcdfacd6a5e0955216c6485c350ef99", size = 607125, upload-time = "2025-09-25T17:37:37.725Z" },
-    { url = "https://files.pythonhosted.org/packages/39/d1/b95f545e9fc5001b8a78636ef942a4e4e536580caa6a99e73dd0a02e87aa/tree_sitter-0.25.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b43a9e4c89d4d0839de27cd4d6902d33396de700e9ff4c5ab7631f277a85ead9", size = 635418, upload-time = "2025-09-25T17:37:38.922Z" },
-    { url = "https://files.pythonhosted.org/packages/de/4d/b734bde3fb6f3513a010fa91f1f2875442cdc0382d6a949005cd84563d8f/tree_sitter-0.25.2-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:fbb1706407c0e451c4f8cc016fec27d72d4b211fdd3173320b1ada7a6c74c3ac", size = 631250, upload-time = "2025-09-25T17:37:40.039Z" },
-    { url = "https://files.pythonhosted.org/packages/46/f2/5f654994f36d10c64d50a192239599fcae46677491c8dd53e7579c35a3e3/tree_sitter-0.25.2-cp312-cp312-win_amd64.whl", hash = "sha256:6d0302550bbe4620a5dc7649517c4409d74ef18558276ce758419cf09e578897", size = 127156, upload-time = "2025-09-25T17:37:41.132Z" },
-    { url = "https://files.pythonhosted.org/packages/67/23/148c468d410efcf0a9535272d81c258d840c27b34781d625f1f627e2e27d/tree_sitter-0.25.2-cp312-cp312-win_arm64.whl", hash = "sha256:0c8b6682cac77e37cfe5cf7ec388844957f48b7bd8d6321d0ca2d852994e10d5", size = 113984, upload-time = "2025-09-25T17:37:42.074Z" },
-]
-
-[[package]]
-name = "tree-sitter-python"
-version = "0.25.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b8/8b/c992ff0e768cb6768d5c96234579bf8842b3a633db641455d86dd30d5dac/tree_sitter_python-0.25.0.tar.gz", hash = "sha256:b13e090f725f5b9c86aa455a268553c65cadf325471ad5b65cd29cac8a1a68ac", size = 159845, upload-time = "2025-09-11T06:47:58.159Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cf/64/a4e503c78a4eb3ac46d8e72a29c1b1237fa85238d8e972b063e0751f5a94/tree_sitter_python-0.25.0-cp310-abi3-macosx_10_9_x86_64.whl", hash = "sha256:14a79a47ddef72f987d5a2c122d148a812169d7484ff5c75a3db9609d419f361", size = 73790, upload-time = "2025-09-11T06:47:47.652Z" },
-    { url = "https://files.pythonhosted.org/packages/e6/1d/60d8c2a0cc63d6ec4ba4e99ce61b802d2e39ef9db799bdf2a8f932a6cd4b/tree_sitter_python-0.25.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:480c21dbd995b7fe44813e741d71fed10ba695e7caab627fb034e3828469d762", size = 76691, upload-time = "2025-09-11T06:47:49.038Z" },
-    { url = "https://files.pythonhosted.org/packages/aa/cb/d9b0b67d037922d60cbe0359e0c86457c2da721bc714381a63e2c8e35eba/tree_sitter_python-0.25.0-cp310-abi3-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:86f118e5eecad616ecdb81d171a36dde9bef5a0b21ed71ea9c3e390813c3baf5", size = 108133, upload-time = "2025-09-11T06:47:50.499Z" },
-    { url = "https://files.pythonhosted.org/packages/40/bd/bf4787f57e6b2860f3f1c8c62f045b39fb32d6bac4b53d7a9e66de968440/tree_sitter_python-0.25.0-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:be71650ca2b93b6e9649e5d65c6811aad87a7614c8c1003246b303f6b150f61b", size = 110603, upload-time = "2025-09-11T06:47:51.985Z" },
-    { url = "https://files.pythonhosted.org/packages/5d/25/feff09f5c2f32484fbce15db8b49455c7572346ce61a699a41972dea7318/tree_sitter_python-0.25.0-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:e6d5b5799628cc0f24691ab2a172a8e676f668fe90dc60468bee14084a35c16d", size = 108998, upload-time = "2025-09-11T06:47:53.046Z" },
-    { url = "https://files.pythonhosted.org/packages/75/69/4946da3d6c0df316ccb938316ce007fb565d08f89d02d854f2d308f0309f/tree_sitter_python-0.25.0-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:71959832fc5d9642e52c11f2f7d79ae520b461e63334927e93ca46cd61cd9683", size = 107268, upload-time = "2025-09-11T06:47:54.388Z" },
-    { url = "https://files.pythonhosted.org/packages/ed/a2/996fc2dfa1076dc460d3e2f3c75974ea4b8f02f6bc925383aaae519920e8/tree_sitter_python-0.25.0-cp310-abi3-win_amd64.whl", hash = "sha256:9bcde33f18792de54ee579b00e1b4fe186b7926825444766f849bf7181793a76", size = 76073, upload-time = "2025-09-11T06:47:55.773Z" },
-    { url = "https://files.pythonhosted.org/packages/07/19/4b5569d9b1ebebb5907d11554a96ef3fa09364a30fcfabeff587495b512f/tree_sitter_python-0.25.0-cp310-abi3-win_arm64.whl", hash = "sha256:0fbf6a3774ad7e89ee891851204c2e2c47e12b63a5edbe2e9156997731c128bb", size = 74169, upload-time = "2025-09-11T06:47:56.747Z" },
-]
-
-[[package]]
 name = "trimesh"
 version = "4.8.3"
 source = { registry = "https://pypi.org/simple" }
@@ -8816,7 +8830,7 @@ name = "triton"
 version = "3.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "setuptools", marker = "sys_platform == 'linux'" },
+    { name = "setuptools" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8d/a9/549e51e9b1b2c9b854fd761a1d23df0ba2fbc60bd0c13b489ffa518cfcb7/triton-3.3.1-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b74db445b1c562844d3cfad6e9679c72e93fdfb1a90a24052b03bb5c49d1242e", size = 155600257, upload-time = "2025-05-29T23:39:36.085Z" },
@@ -8864,25 +8878,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c7/68/71c1a15b5f65f40e91b65da23b8224dad41349894535a97f63a52e462196/typeguard-4.4.4.tar.gz", hash = "sha256:3a7fd2dffb705d4d0efaed4306a704c89b9dee850b688f060a8b1615a79e5f74", size = 75203, upload-time = "2025-06-18T09:56:07.624Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1b/a9/e3aee762739c1d7528da1c3e06d518503f8b6c439c35549b53735ba52ead/typeguard-4.4.4-py3-none-any.whl", hash = "sha256:b5f562281b6bfa1f5492470464730ef001646128b180769880468bd84b68b09e", size = 34874, upload-time = "2025-06-18T09:56:05.999Z" },
-]
-
-[[package]]
-name = "typepy"
-version = "1.3.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "mbstrdecoder" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/79/59/4c39942077d7de285f762a91024dbda731be693591732977358f77d120fb/typepy-1.3.4.tar.gz", hash = "sha256:89c1f66de6c6133209c43a94d23431d320ba03ef5db18f241091ea594035d9de", size = 39558, upload-time = "2024-12-29T09:18:15.774Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/31/e393c3830bdedd01735bd195c85ac3034b6bcaf6c18142bab60a4047ca36/typepy-1.3.4-py3-none-any.whl", hash = "sha256:d5ed3e0c7f49521bff0603dd08cf8d453371cf68d65a29d3d0038552ccc46e2e", size = 31449, upload-time = "2024-12-29T09:18:13.135Z" },
-]
-
-[package.optional-dependencies]
-datetime = [
-    { name = "packaging" },
-    { name = "python-dateutil" },
-    { name = "pytz" },
 ]
 
 [[package]]
@@ -9281,12 +9276,6 @@ wheels = [
 ]
 
 [[package]]
-name = "word2number"
-version = "1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4a/29/a31940c848521f0725f0df6b25dca8917f13a2025b0e8fcbe5d0457e45e6/word2number-1.1.zip", hash = "sha256:70e27a5d387f67b04c71fbb7621c05930b19bfd26efd6851e6e0f9969dcde7d0", size = 9723, upload-time = "2017-06-02T15:45:14.488Z" }
-
-[[package]]
 name = "wrapt"
 version = "1.17.3"
 source = { registry = "https://pypi.org/simple" }
@@ -9415,15 +9404,6 @@ wheels = [
 ]
 
 [[package]]
-name = "xmltodict"
-version = "1.0.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6a/aa/917ceeed4dbb80d2f04dbd0c784b7ee7bba8ae5a54837ef0e5e062cd3cfb/xmltodict-1.0.2.tar.gz", hash = "sha256:54306780b7c2175a3967cad1db92f218207e5bc1aba697d887807c0fb68b7649", size = 25725, upload-time = "2025-09-17T21:59:26.459Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c0/20/69a0e6058bc5ea74892d089d64dfc3a62ba78917ec5e2cfa70f7c92ba3a5/xmltodict-1.0.2-py3-none-any.whl", hash = "sha256:62d0fddb0dcbc9f642745d8bbf4d81fd17d6dfaec5a15b5c1876300aad92af0d", size = 13893, upload-time = "2025-09-17T21:59:24.859Z" },
-]
-
-[[package]]
 name = "xxhash"
 version = "3.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -9547,21 +9527,6 @@ wheels = [
 ]
 
 [[package]]
-name = "yq"
-version = "3.4.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "argcomplete" },
-    { name = "pyyaml" },
-    { name = "tomlkit" },
-    { name = "xmltodict" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/38/6a/eb9721ed0929d0f55d167c2222d288b529723afbef0a07ed7aa6cca72380/yq-3.4.3.tar.gz", hash = "sha256:ba586a1a6f30cf705b2f92206712df2281cd320280210e7b7b80adcb8f256e3b", size = 33214, upload-time = "2024-04-27T15:39:43.29Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f2/ba/d1b21f3e57469030bd6536b91bb28fedd2511d4e68b5a575f2bdb3a3dbb6/yq-3.4.3-py3-none-any.whl", hash = "sha256:547e34bc3caacce83665fd3429bf7c85f8e8b6b9aaee3f953db1ad716ff3434d", size = 18812, upload-time = "2024-04-27T15:39:41.652Z" },
-]
-
-[[package]]
 name = "zarr"
 version = "2.18.3"
 source = { registry = "https://pypi.org/simple" }
@@ -9682,62 +9647,4 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/da/29/49effcff64ef30731e35520a152a9dfcafec86cf114b4c2aff942e8264ba/zope_interface-8.0.1-cp312-cp312-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:35a1565d5244997f2e629c5c68715b3d9d9036e8df23c4068b08d9316dcb2822", size = 264696, upload-time = "2025-09-25T05:58:13.351Z" },
     { url = "https://files.pythonhosted.org/packages/c7/39/b947673ec9a258eeaa20208dd2f6127d9fbb3e5071272a674ebe02063a78/zope_interface-8.0.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:029ea1db7e855a475bf88d9910baab4e94d007a054810e9007ac037a91c67c6f", size = 264229, upload-time = "2025-09-25T06:26:26.226Z" },
     { url = "https://files.pythonhosted.org/packages/8f/ee/eed6efd1fc3788d1bef7a814e0592d8173b7fe601c699b935009df035fc2/zope_interface-8.0.1-cp312-cp312-win_amd64.whl", hash = "sha256:0beb3e7f7dc153944076fcaf717a935f68d39efa9fce96ec97bafcc0c2ea6cab", size = 212270, upload-time = "2025-09-25T05:58:53.584Z" },
-]
-
-[[package]]
-name = "zstandard"
-version = "0.25.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fd/aa/3e0508d5a5dd96529cdc5a97011299056e14c6505b678fd58938792794b1/zstandard-0.25.0.tar.gz", hash = "sha256:7713e1179d162cf5c7906da876ec2ccb9c3a9dcbdffef0cc7f70c3667a205f0b", size = 711513, upload-time = "2025-09-14T22:15:54.002Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/56/7a/28efd1d371f1acd037ac64ed1c5e2b41514a6cc937dd6ab6a13ab9f0702f/zstandard-0.25.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e59fdc271772f6686e01e1b3b74537259800f57e24280be3f29c8a0deb1904dd", size = 795256, upload-time = "2025-09-14T22:15:56.415Z" },
-    { url = "https://files.pythonhosted.org/packages/96/34/ef34ef77f1ee38fc8e4f9775217a613b452916e633c4f1d98f31db52c4a5/zstandard-0.25.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4d441506e9b372386a5271c64125f72d5df6d2a8e8a2a45a0ae09b03cb781ef7", size = 640565, upload-time = "2025-09-14T22:15:58.177Z" },
-    { url = "https://files.pythonhosted.org/packages/9d/1b/4fdb2c12eb58f31f28c4d28e8dc36611dd7205df8452e63f52fb6261d13e/zstandard-0.25.0-cp310-cp310-manylinux2010_i686.manylinux2014_i686.manylinux_2_12_i686.manylinux_2_17_i686.whl", hash = "sha256:ab85470ab54c2cb96e176f40342d9ed41e58ca5733be6a893b730e7af9c40550", size = 5345306, upload-time = "2025-09-14T22:16:00.165Z" },
-    { url = "https://files.pythonhosted.org/packages/73/28/a44bdece01bca027b079f0e00be3b6bd89a4df180071da59a3dd7381665b/zstandard-0.25.0-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:e05ab82ea7753354bb054b92e2f288afb750e6b439ff6ca78af52939ebbc476d", size = 5055561, upload-time = "2025-09-14T22:16:02.22Z" },
-    { url = "https://files.pythonhosted.org/packages/e9/74/68341185a4f32b274e0fc3410d5ad0750497e1acc20bd0f5b5f64ce17785/zstandard-0.25.0-cp310-cp310-manylinux2014_ppc64le.manylinux_2_17_ppc64le.whl", hash = "sha256:78228d8a6a1c177a96b94f7e2e8d012c55f9c760761980da16ae7546a15a8e9b", size = 5402214, upload-time = "2025-09-14T22:16:04.109Z" },
-    { url = "https://files.pythonhosted.org/packages/8b/67/f92e64e748fd6aaffe01e2b75a083c0c4fd27abe1c8747fee4555fcee7dd/zstandard-0.25.0-cp310-cp310-manylinux2014_s390x.manylinux_2_17_s390x.whl", hash = "sha256:2b6bd67528ee8b5c5f10255735abc21aa106931f0dbaf297c7be0c886353c3d0", size = 5449703, upload-time = "2025-09-14T22:16:06.312Z" },
-    { url = "https://files.pythonhosted.org/packages/fd/e5/6d36f92a197c3c17729a2125e29c169f460538a7d939a27eaaa6dcfcba8e/zstandard-0.25.0-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:4b6d83057e713ff235a12e73916b6d356e3084fd3d14ced499d84240f3eecee0", size = 5556583, upload-time = "2025-09-14T22:16:08.457Z" },
-    { url = "https://files.pythonhosted.org/packages/d7/83/41939e60d8d7ebfe2b747be022d0806953799140a702b90ffe214d557638/zstandard-0.25.0-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:9174f4ed06f790a6869b41cba05b43eeb9a35f8993c4422ab853b705e8112bbd", size = 5045332, upload-time = "2025-09-14T22:16:10.444Z" },
-    { url = "https://files.pythonhosted.org/packages/b3/87/d3ee185e3d1aa0133399893697ae91f221fda79deb61adbe998a7235c43f/zstandard-0.25.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:25f8f3cd45087d089aef5ba3848cd9efe3ad41163d3400862fb42f81a3a46701", size = 5572283, upload-time = "2025-09-14T22:16:12.128Z" },
-    { url = "https://files.pythonhosted.org/packages/0a/1d/58635ae6104df96671076ac7d4ae7816838ce7debd94aecf83e30b7121b0/zstandard-0.25.0-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:3756b3e9da9b83da1796f8809dd57cb024f838b9eeafde28f3cb472012797ac1", size = 4959754, upload-time = "2025-09-14T22:16:14.225Z" },
-    { url = "https://files.pythonhosted.org/packages/75/d6/57e9cb0a9983e9a229dd8fd2e6e96593ef2aa82a3907188436f22b111ccd/zstandard-0.25.0-cp310-cp310-musllinux_1_2_i686.whl", hash = "sha256:81dad8d145d8fd981b2962b686b2241d3a1ea07733e76a2f15435dfb7fb60150", size = 5266477, upload-time = "2025-09-14T22:16:16.343Z" },
-    { url = "https://files.pythonhosted.org/packages/d1/a9/ee891e5edf33a6ebce0a028726f0bbd8567effe20fe3d5808c42323e8542/zstandard-0.25.0-cp310-cp310-musllinux_1_2_ppc64le.whl", hash = "sha256:a5a419712cf88862a45a23def0ae063686db3d324cec7edbe40509d1a79a0aab", size = 5440914, upload-time = "2025-09-14T22:16:18.453Z" },
-    { url = "https://files.pythonhosted.org/packages/58/08/a8522c28c08031a9521f27abc6f78dbdee7312a7463dd2cfc658b813323b/zstandard-0.25.0-cp310-cp310-musllinux_1_2_s390x.whl", hash = "sha256:e7360eae90809efd19b886e59a09dad07da4ca9ba096752e61a2e03c8aca188e", size = 5819847, upload-time = "2025-09-14T22:16:20.559Z" },
-    { url = "https://files.pythonhosted.org/packages/6f/11/4c91411805c3f7b6f31c60e78ce347ca48f6f16d552fc659af6ec3b73202/zstandard-0.25.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:75ffc32a569fb049499e63ce68c743155477610532da1eb38e7f24bf7cd29e74", size = 5363131, upload-time = "2025-09-14T22:16:22.206Z" },
-    { url = "https://files.pythonhosted.org/packages/ef/d6/8c4bd38a3b24c4c7676a7a3d8de85d6ee7a983602a734b9f9cdefb04a5d6/zstandard-0.25.0-cp310-cp310-win32.whl", hash = "sha256:106281ae350e494f4ac8a80470e66d1fe27e497052c8d9c3b95dc4cf1ade81aa", size = 436469, upload-time = "2025-09-14T22:16:25.002Z" },
-    { url = "https://files.pythonhosted.org/packages/93/90/96d50ad417a8ace5f841b3228e93d1bb13e6ad356737f42e2dde30d8bd68/zstandard-0.25.0-cp310-cp310-win_amd64.whl", hash = "sha256:ea9d54cc3d8064260114a0bbf3479fc4a98b21dffc89b3459edd506b69262f6e", size = 506100, upload-time = "2025-09-14T22:16:23.569Z" },
-    { url = "https://files.pythonhosted.org/packages/2a/83/c3ca27c363d104980f1c9cee1101cc8ba724ac8c28a033ede6aab89585b1/zstandard-0.25.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:933b65d7680ea337180733cf9e87293cc5500cc0eb3fc8769f4d3c88d724ec5c", size = 795254, upload-time = "2025-09-14T22:16:26.137Z" },
-    { url = "https://files.pythonhosted.org/packages/ac/4d/e66465c5411a7cf4866aeadc7d108081d8ceba9bc7abe6b14aa21c671ec3/zstandard-0.25.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:a3f79487c687b1fc69f19e487cd949bf3aae653d181dfb5fde3bf6d18894706f", size = 640559, upload-time = "2025-09-14T22:16:27.973Z" },
-    { url = "https://files.pythonhosted.org/packages/12/56/354fe655905f290d3b147b33fe946b0f27e791e4b50a5f004c802cb3eb7b/zstandard-0.25.0-cp311-cp311-manylinux2010_i686.manylinux2014_i686.manylinux_2_12_i686.manylinux_2_17_i686.whl", hash = "sha256:0bbc9a0c65ce0eea3c34a691e3c4b6889f5f3909ba4822ab385fab9057099431", size = 5348020, upload-time = "2025-09-14T22:16:29.523Z" },
-    { url = "https://files.pythonhosted.org/packages/3b/13/2b7ed68bd85e69a2069bcc72141d378f22cae5a0f3b353a2c8f50ef30c1b/zstandard-0.25.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:01582723b3ccd6939ab7b3a78622c573799d5d8737b534b86d0e06ac18dbde4a", size = 5058126, upload-time = "2025-09-14T22:16:31.811Z" },
-    { url = "https://files.pythonhosted.org/packages/c9/dd/fdaf0674f4b10d92cb120ccff58bbb6626bf8368f00ebfd2a41ba4a0dc99/zstandard-0.25.0-cp311-cp311-manylinux2014_ppc64le.manylinux_2_17_ppc64le.whl", hash = "sha256:5f1ad7bf88535edcf30038f6919abe087f606f62c00a87d7e33e7fc57cb69fcc", size = 5405390, upload-time = "2025-09-14T22:16:33.486Z" },
-    { url = "https://files.pythonhosted.org/packages/0f/67/354d1555575bc2490435f90d67ca4dd65238ff2f119f30f72d5cde09c2ad/zstandard-0.25.0-cp311-cp311-manylinux2014_s390x.manylinux_2_17_s390x.whl", hash = "sha256:06acb75eebeedb77b69048031282737717a63e71e4ae3f77cc0c3b9508320df6", size = 5452914, upload-time = "2025-09-14T22:16:35.277Z" },
-    { url = "https://files.pythonhosted.org/packages/bb/1f/e9cfd801a3f9190bf3e759c422bbfd2247db9d7f3d54a56ecde70137791a/zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:9300d02ea7c6506f00e627e287e0492a5eb0371ec1670ae852fefffa6164b072", size = 5559635, upload-time = "2025-09-14T22:16:37.141Z" },
-    { url = "https://files.pythonhosted.org/packages/21/88/5ba550f797ca953a52d708c8e4f380959e7e3280af029e38fbf47b55916e/zstandard-0.25.0-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:bfd06b1c5584b657a2892a6014c2f4c20e0db0208c159148fa78c65f7e0b0277", size = 5048277, upload-time = "2025-09-14T22:16:38.807Z" },
-    { url = "https://files.pythonhosted.org/packages/46/c0/ca3e533b4fa03112facbe7fbe7779cb1ebec215688e5df576fe5429172e0/zstandard-0.25.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:f373da2c1757bb7f1acaf09369cdc1d51d84131e50d5fa9863982fd626466313", size = 5574377, upload-time = "2025-09-14T22:16:40.523Z" },
-    { url = "https://files.pythonhosted.org/packages/12/9b/3fb626390113f272abd0799fd677ea33d5fc3ec185e62e6be534493c4b60/zstandard-0.25.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:6c0e5a65158a7946e7a7affa6418878ef97ab66636f13353b8502d7ea03c8097", size = 4961493, upload-time = "2025-09-14T22:16:43.3Z" },
-    { url = "https://files.pythonhosted.org/packages/cb/d3/23094a6b6a4b1343b27ae68249daa17ae0651fcfec9ed4de09d14b940285/zstandard-0.25.0-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:c8e167d5adf59476fa3e37bee730890e389410c354771a62e3c076c86f9f7778", size = 5269018, upload-time = "2025-09-14T22:16:45.292Z" },
-    { url = "https://files.pythonhosted.org/packages/8c/a7/bb5a0c1c0f3f4b5e9d5b55198e39de91e04ba7c205cc46fcb0f95f0383c1/zstandard-0.25.0-cp311-cp311-musllinux_1_2_ppc64le.whl", hash = "sha256:98750a309eb2f020da61e727de7d7ba3c57c97cf6213f6f6277bb7fb42a8e065", size = 5443672, upload-time = "2025-09-14T22:16:47.076Z" },
-    { url = "https://files.pythonhosted.org/packages/27/22/503347aa08d073993f25109c36c8d9f029c7d5949198050962cb568dfa5e/zstandard-0.25.0-cp311-cp311-musllinux_1_2_s390x.whl", hash = "sha256:22a086cff1b6ceca18a8dd6096ec631e430e93a8e70a9ca5efa7561a00f826fa", size = 5822753, upload-time = "2025-09-14T22:16:49.316Z" },
-    { url = "https://files.pythonhosted.org/packages/e2/be/94267dc6ee64f0f8ba2b2ae7c7a2df934a816baaa7291db9e1aa77394c3c/zstandard-0.25.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:72d35d7aa0bba323965da807a462b0966c91608ef3a48ba761678cb20ce5d8b7", size = 5366047, upload-time = "2025-09-14T22:16:51.328Z" },
-    { url = "https://files.pythonhosted.org/packages/7b/a3/732893eab0a3a7aecff8b99052fecf9f605cf0fb5fb6d0290e36beee47a4/zstandard-0.25.0-cp311-cp311-win32.whl", hash = "sha256:f5aeea11ded7320a84dcdd62a3d95b5186834224a9e55b92ccae35d21a8b63d4", size = 436484, upload-time = "2025-09-14T22:16:55.005Z" },
-    { url = "https://files.pythonhosted.org/packages/43/a3/c6155f5c1cce691cb80dfd38627046e50af3ee9ddc5d0b45b9b063bfb8c9/zstandard-0.25.0-cp311-cp311-win_amd64.whl", hash = "sha256:daab68faadb847063d0c56f361a289c4f268706b598afbf9ad113cbe5c38b6b2", size = 506183, upload-time = "2025-09-14T22:16:52.753Z" },
-    { url = "https://files.pythonhosted.org/packages/8c/3e/8945ab86a0820cc0e0cdbf38086a92868a9172020fdab8a03ac19662b0e5/zstandard-0.25.0-cp311-cp311-win_arm64.whl", hash = "sha256:22a06c5df3751bb7dc67406f5374734ccee8ed37fc5981bf1ad7041831fa1137", size = 462533, upload-time = "2025-09-14T22:16:53.878Z" },
-    { url = "https://files.pythonhosted.org/packages/82/fc/f26eb6ef91ae723a03e16eddb198abcfce2bc5a42e224d44cc8b6765e57e/zstandard-0.25.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:7b3c3a3ab9daa3eed242d6ecceead93aebbb8f5f84318d82cee643e019c4b73b", size = 795738, upload-time = "2025-09-14T22:16:56.237Z" },
-    { url = "https://files.pythonhosted.org/packages/aa/1c/d920d64b22f8dd028a8b90e2d756e431a5d86194caa78e3819c7bf53b4b3/zstandard-0.25.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:913cbd31a400febff93b564a23e17c3ed2d56c064006f54efec210d586171c00", size = 640436, upload-time = "2025-09-14T22:16:57.774Z" },
-    { url = "https://files.pythonhosted.org/packages/53/6c/288c3f0bd9fcfe9ca41e2c2fbfd17b2097f6af57b62a81161941f09afa76/zstandard-0.25.0-cp312-cp312-manylinux2010_i686.manylinux2014_i686.manylinux_2_12_i686.manylinux_2_17_i686.whl", hash = "sha256:011d388c76b11a0c165374ce660ce2c8efa8e5d87f34996aa80f9c0816698b64", size = 5343019, upload-time = "2025-09-14T22:16:59.302Z" },
-    { url = "https://files.pythonhosted.org/packages/1e/15/efef5a2f204a64bdb5571e6161d49f7ef0fffdbca953a615efbec045f60f/zstandard-0.25.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:6dffecc361d079bb48d7caef5d673c88c8988d3d33fb74ab95b7ee6da42652ea", size = 5063012, upload-time = "2025-09-14T22:17:01.156Z" },
-    { url = "https://files.pythonhosted.org/packages/b7/37/a6ce629ffdb43959e92e87ebdaeebb5ac81c944b6a75c9c47e300f85abdf/zstandard-0.25.0-cp312-cp312-manylinux2014_ppc64le.manylinux_2_17_ppc64le.whl", hash = "sha256:7149623bba7fdf7e7f24312953bcf73cae103db8cae49f8154dd1eadc8a29ecb", size = 5394148, upload-time = "2025-09-14T22:17:03.091Z" },
-    { url = "https://files.pythonhosted.org/packages/e3/79/2bf870b3abeb5c070fe2d670a5a8d1057a8270f125ef7676d29ea900f496/zstandard-0.25.0-cp312-cp312-manylinux2014_s390x.manylinux_2_17_s390x.whl", hash = "sha256:6a573a35693e03cf1d67799fd01b50ff578515a8aeadd4595d2a7fa9f3ec002a", size = 5451652, upload-time = "2025-09-14T22:17:04.979Z" },
-    { url = "https://files.pythonhosted.org/packages/53/60/7be26e610767316c028a2cbedb9a3beabdbe33e2182c373f71a1c0b88f36/zstandard-0.25.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:5a56ba0db2d244117ed744dfa8f6f5b366e14148e00de44723413b2f3938a902", size = 5546993, upload-time = "2025-09-14T22:17:06.781Z" },
-    { url = "https://files.pythonhosted.org/packages/85/c7/3483ad9ff0662623f3648479b0380d2de5510abf00990468c286c6b04017/zstandard-0.25.0-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:10ef2a79ab8e2974e2075fb984e5b9806c64134810fac21576f0668e7ea19f8f", size = 5046806, upload-time = "2025-09-14T22:17:08.415Z" },
-    { url = "https://files.pythonhosted.org/packages/08/b3/206883dd25b8d1591a1caa44b54c2aad84badccf2f1de9e2d60a446f9a25/zstandard-0.25.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:aaf21ba8fb76d102b696781bddaa0954b782536446083ae3fdaa6f16b25a1c4b", size = 5576659, upload-time = "2025-09-14T22:17:10.164Z" },
-    { url = "https://files.pythonhosted.org/packages/9d/31/76c0779101453e6c117b0ff22565865c54f48f8bd807df2b00c2c404b8e0/zstandard-0.25.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:1869da9571d5e94a85a5e8d57e4e8807b175c9e4a6294e3b66fa4efb074d90f6", size = 4953933, upload-time = "2025-09-14T22:17:11.857Z" },
-    { url = "https://files.pythonhosted.org/packages/18/e1/97680c664a1bf9a247a280a053d98e251424af51f1b196c6d52f117c9720/zstandard-0.25.0-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:809c5bcb2c67cd0ed81e9229d227d4ca28f82d0f778fc5fea624a9def3963f91", size = 5268008, upload-time = "2025-09-14T22:17:13.627Z" },
-    { url = "https://files.pythonhosted.org/packages/1e/73/316e4010de585ac798e154e88fd81bb16afc5c5cb1a72eeb16dd37e8024a/zstandard-0.25.0-cp312-cp312-musllinux_1_2_ppc64le.whl", hash = "sha256:f27662e4f7dbf9f9c12391cb37b4c4c3cb90ffbd3b1fb9284dadbbb8935fa708", size = 5433517, upload-time = "2025-09-14T22:17:16.103Z" },
-    { url = "https://files.pythonhosted.org/packages/5b/60/dd0f8cfa8129c5a0ce3ea6b7f70be5b33d2618013a161e1ff26c2b39787c/zstandard-0.25.0-cp312-cp312-musllinux_1_2_s390x.whl", hash = "sha256:99c0c846e6e61718715a3c9437ccc625de26593fea60189567f0118dc9db7512", size = 5814292, upload-time = "2025-09-14T22:17:17.827Z" },
-    { url = "https://files.pythonhosted.org/packages/fc/5f/75aafd4b9d11b5407b641b8e41a57864097663699f23e9ad4dbb91dc6bfe/zstandard-0.25.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:474d2596a2dbc241a556e965fb76002c1ce655445e4e3bf38e5477d413165ffa", size = 5360237, upload-time = "2025-09-14T22:17:19.954Z" },
-    { url = "https://files.pythonhosted.org/packages/ff/8d/0309daffea4fcac7981021dbf21cdb2e3427a9e76bafbcdbdf5392ff99a4/zstandard-0.25.0-cp312-cp312-win32.whl", hash = "sha256:23ebc8f17a03133b4426bcc04aabd68f8236eb78c3760f12783385171b0fd8bd", size = 436922, upload-time = "2025-09-14T22:17:24.398Z" },
-    { url = "https://files.pythonhosted.org/packages/79/3b/fa54d9015f945330510cb5d0b0501e8253c127cca7ebe8ba46a965df18c5/zstandard-0.25.0-cp312-cp312-win_amd64.whl", hash = "sha256:ffef5a74088f1e09947aecf91011136665152e0b4b359c42be3373897fb39b01", size = 506276, upload-time = "2025-09-14T22:17:21.429Z" },
-    { url = "https://files.pythonhosted.org/packages/ea/6b/8b51697e5319b1f9ac71087b0af9a40d8a6288ff8025c36486e0c12abcc4/zstandard-0.25.0-cp312-cp312-win_arm64.whl", hash = "sha256:181eb40e0b6a29b3cd2849f825e0fa34397f649170673d385f3598ae17cca2e9", size = 462679, upload-time = "2025-09-14T22:17:23.147Z" },
 ]

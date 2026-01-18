@@ -41,11 +41,10 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    "megatron-core>=0.14.0a0,<0.15.0",
-    "megatron-bridge>=0.1.0a0,<0.2.0",
-    "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
+    "megatron-core>=0.14.0a0,<0.17.0",
+    "megatron-bridge>=0.1.0a0,<0.4.0",
+    "nvidia-modelopt[torch]>=0.33.0a0,<0.41.0; sys_platform != 'darwin'",
     "nvidia-resiliency-ext>=0.4.0a0,<0.5.0; sys_platform != 'darwin'",
-    "transformer-engine[pytorch]>=2.6.0a0,<2.7.0; sys_platform != 'darwin'",
     "accelerate",
     "fastapi",
     "pydantic-settings",
@@ -98,7 +97,10 @@ docs = [
 linting = ["pre-commit>=3.6.0", "ruff~=0.9.0"]
 test = ["pytest", "pytest-mock", "coverage", "click"]
 nemo-toolkit = [
-    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]>=2.5.0a0,<2.6.0",
+    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]>=2.6.0a0,<2.7.0",
+    "nv_one_logger_core>=2.3.1",
+    "nv_one_logger_training_telemetry>=2.3.1",
+    "nv_one_logger_pytorch_lightning_integration>=2.3.1"
 ]
 nemo-run = ["nemo-run"]
 
@@ -109,13 +111,18 @@ vllm = [
     { index = "pytorch-cu128", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
-# megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "ecf05926b4765aada82c8eabab4a374e8e83a9c5" }
-transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "0289e76380088358a584d809faf69effab1a7cda" } # on release_v2.7.0
+megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "9577b1280eaadd60b9d7b0ce6df09ac80e87e323" }
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
-no-build-isolation-package = ["transformer-engine", "transformer-engine-torch"]
+no-build-isolation-package = [
+    "transformer-engine",
+    "transformer-engine-torch",
+    "mamba-ssm",
+    "causal-conv1d",
+    "flash-linear-attention",
+]
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
 # and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
 # avoid including these in the default dependency set, but for now it's required.
@@ -130,6 +137,12 @@ override-dependencies = [
     "urllib3>1.27.0",
     "tiktoken>=0.9.0",                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
+    "transformer-engine[pytorch]>=2.9.0a0,<2.13.0",
+    "nvidia-modelopt[torch]>=0.33.0a0,<0.41.0",
+    "open-clip-torch>=3.2.0",
+    "megatron-energon[av_decode]~=6.0",
+    "datasets>=3.3.0",
+    "flash-linear-attention<0.3.2"
 ]
 prerelease = "allow"
 
