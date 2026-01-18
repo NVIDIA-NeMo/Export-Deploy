@@ -231,7 +231,7 @@ jobs:
           PAT: ${{ secrets.PAT }}
           inference-framework: trt-onnx
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner: ${{ matrix.runner }}
+          runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
 
   cicd-e2e-tests-vllm:
     needs: [cicd-unit-tests-vllm, pre-flight]
