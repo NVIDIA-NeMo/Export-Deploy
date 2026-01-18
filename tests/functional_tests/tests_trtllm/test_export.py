@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import os
 import shutil
 import subprocess
 import tempfile
@@ -239,6 +240,10 @@ class TestTRTLLMExport:
                 "--generate_sample",
             ],
             check=True,
+            env={
+                **os.environ.copy(),
+                "HF_DATASETS_CACHE": "/tmp/hf_datasets_cache",
+            },
         )
 
         subprocess.run(

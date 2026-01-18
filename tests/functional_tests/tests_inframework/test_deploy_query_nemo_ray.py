@@ -73,7 +73,7 @@ class TestDeployRay:
             if not wait_for_deployment_ready(host="0.0.0.0", port=8000, max_wait_time=180):
                 assert False, "Deployment failed to become ready within timeout"
 
-            time.sleep(120)
+            time.sleep(240)
 
             output = query_ray_deployment(
                 host="0.0.0.0",
