@@ -145,6 +145,7 @@ override-dependencies = [
     "flash-linear-attention<0.3.2",
     "transformer-engine-cu12>=2.10.0a0,<2.13.0; sys_platform != 'darwin'",
     "transformer-engine-cu13; sys_platform == 'never'",
+    "transformers>=4.57.0,<5.0.0"
 ]
 prerelease = "allow"
 
