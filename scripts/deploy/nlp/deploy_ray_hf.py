@@ -132,6 +132,17 @@ def parse_args():
         action="store_true",
         help="Whether to use vLLM backend for deployment",
     )
+    parser.add_argument(
+        "--enforce_eager",
+        action="store_true",
+        help="Enforce eager execution in vLLM (disables CUDA graphs). Recommended for shared GPU environments.",
+    )
+    parser.add_argument(
+        "--gpu_memory_utilization",
+        type=float,
+        default=0.9,
+        help="Fraction of GPU memory to use for vLLM. Lower values help in shared GPU environments.",
+    )
     return parser.parse_args()
 
 
@@ -168,6 +179,8 @@ def main():
         num_gpus_per_replica=args.num_gpus_per_replica,
         max_ongoing_requests=args.max_ongoing_requests,
         use_vllm_backend=args.use_vllm_backend,
+        enforce_eager=args.enforce_eager,
+        gpu_memory_utilization=args.gpu_memory_utilization,
     )
 
 
