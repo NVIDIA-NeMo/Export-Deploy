@@ -52,7 +52,7 @@ class TestONNXTRTExport:
             env={
                 **os.environ.copy(),
                 "HF_DATASETS_CACHE": "/tmp/hf_datasets_cache",
-            }
+            },
         )
 
     def test_export_onnx_trt_embedding_int8(self):
@@ -79,7 +79,7 @@ class TestONNXTRTExport:
             env={
                 **os.environ.copy(),
                 "HF_DATASETS_CACHE": "/tmp/hf_datasets_cache",
-            }
+            },
         )
 
     def test_export_onnx_trt_reranking(self):
@@ -98,5 +98,5 @@ class TestONNXTRTExport:
             env={
                 **os.environ.copy(),
                 "HF_DATASETS_CACHE": "/tmp/hf_datasets_cache",
-            }
+            },
         )

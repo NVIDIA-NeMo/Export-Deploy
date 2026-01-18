@@ -243,7 +243,7 @@ class TestTRTLLMExport:
             env={
                 **os.environ.copy(),
                 "HF_DATASETS_CACHE": "/tmp/hf_datasets_cache",
-            }
+            },
         )
 
         subprocess.run(
