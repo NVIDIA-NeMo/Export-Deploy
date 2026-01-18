@@ -41,7 +41,7 @@ def terminate_deployment_process(process: subprocess.Popen | None) -> None:
         logger.error(f"Error terminating deployment: {e}")
         try:
             process.kill()
-        except Exception:
+        except Exception:wa
             pass
 
 
@@ -73,6 +73,8 @@ def query_ray_deployment(
             response = requests.post(completions_url, json=payload, timeout=300)
             if response.status_code == 200:
                 result = response.json()
+                logger.info("help me")
+                logger.info(f"Completions endpoint result: {result}")
                 text = result.get("choices", [{}])[0].get("text", "")
                 logger.info(f"Completions endpoint response: {text}")
                 return text
