@@ -76,6 +76,7 @@ dependencies = [
     "einops",
     "ijson",
     "pyarrow<21.0.0",
+    "onnx==1.18.0", #trtllm requirement
 ]
 
 [project.optional-dependencies]
