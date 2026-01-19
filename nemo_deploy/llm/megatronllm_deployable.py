@@ -22,7 +22,7 @@ import torch
 import torch.distributed
 from jinja2 import Template
 from megatron.core.inference.common_inference_params import CommonInferenceParams
-from megatron.core.inference.inference_request import DynamicInferenceRequestRecord, InferenceRequest
+from megatron.core.inference.inference_request import InferenceRequest
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.llm.inference.inference_base import create_mcore_engine
@@ -472,7 +472,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         results = self.generate(prompts, inference_params)
         # Handle DynamicInferenceRequestRecord objects by merging them into a single request
         results = [
-            r.merge(self.mcore_tokenizer) if isinstance(r, DynamicInferenceRequestRecord) else r for r in results
+            r.merge(self.mcore_tokenizer) if type(r).__name__ == "DynamicInferenceRequestRecord" else r for r in results
         ]
         if echo:
             output_texts = [r.prompt + r.generated_text if text_only else r for r in results]
