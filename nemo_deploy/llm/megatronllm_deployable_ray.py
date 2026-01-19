@@ -68,6 +68,10 @@ class ModelWorker:
     ):
         # Use replica-specific environment variables to avoid conflicts
         master_addr = "127.0.0.1"
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("", 0))  # Bind to port 0 lets OS pick a free port
+            new_port = s.getsockname()[1]
+        self.master_port = str(new_port)
 
         os.environ["MASTER_PORT"] = master_port
         # All ranks must use the SAME MASTER_ADDR (rank 0 node IP)
