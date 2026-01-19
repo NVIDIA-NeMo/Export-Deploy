@@ -41,7 +41,7 @@ def terminate_deployment_process(process: subprocess.Popen | None) -> None:
         logger.error(f"Error terminating deployment: {e}")
         try:
             process.kill()
-        except Exception:wa
+        except Exception:
             pass
 
 
