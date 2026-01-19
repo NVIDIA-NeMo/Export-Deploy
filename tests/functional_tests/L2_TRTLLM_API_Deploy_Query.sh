@@ -16,6 +16,7 @@
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
 export CUDA_VISIBLE_DEVICES="0,1"
+export HF_MODULES_CACHE=/tmp/hf_modules_cache
 
 coverage run -a --data-file=/workspace/.coverage --source=/workspace tests/functional_tests/utils/run_trtllm_api_deploy_query.py \
   --hf_model_path /home/TestData/hf/Llama-3.2-1B \
