@@ -85,6 +85,11 @@ class ModelWorker:
             LOGGER.info(f"Replica {replica_id} - MASTER_PORT: {os.environ['MASTER_PORT']}")
             LOGGER.info(f"Replica {replica_id} - MASTER_ADDR: {os.environ['MASTER_ADDR']}")
 
+        if rank != 0:
+            sleep_time = 5 + rank  # Rank 1 waits 6s, Rank 2 waits 7s, etc.
+            LOGGER.info(f"Worker {rank}: Sleeping {sleep_time}s to avoid JIT lock contention...")
+            time.sleep(sleep_time)
+
         try:
             self.model = MegatronLLMDeployableNemo2(
                 nemo_checkpoint_filepath=nemo_checkpoint_filepath,
