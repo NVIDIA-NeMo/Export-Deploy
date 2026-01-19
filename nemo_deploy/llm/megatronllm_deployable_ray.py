@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import random
+import socket
 import time
 from typing import Any, Dict, Optional
 
@@ -66,6 +67,8 @@ class ModelWorker:
         **model_config_kwargs,
     ):
         # Use replica-specific environment variables to avoid conflicts
+        master_addr = "127.0.0.1"
+
         os.environ["MASTER_PORT"] = master_port
         # All ranks must use the SAME MASTER_ADDR (rank 0 node IP)
         os.environ["MASTER_ADDR"] = master_addr if master_addr else ray._private.services.get_node_ip_address()
