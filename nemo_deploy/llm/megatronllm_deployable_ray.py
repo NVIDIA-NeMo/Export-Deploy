@@ -117,6 +117,7 @@ class ModelWorker:
     num_replicas=1,
     ray_actor_options={"num_cpus": 8},
     max_ongoing_requests=32,
+    log_level="DEBUG",
 )
 @serve.ingress(app)
 class MegatronRayDeployable:
