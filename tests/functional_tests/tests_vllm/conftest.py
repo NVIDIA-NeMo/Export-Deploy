@@ -27,7 +27,6 @@ def stabilize_gpu_memory_between_tests():
     If memory changes between these two steps (e.g., another process releases memory),
     vLLM raises an AssertionError. This fixture ensures memory is stable before each test.
     """
-
     def _cleanup_and_wait():
         # Force garbage collection
         gc.collect()
@@ -35,7 +34,6 @@ def stabilize_gpu_memory_between_tests():
         # Try to clean up CUDA memory if torch is available
         try:
             import torch
-
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
                 torch.cuda.synchronize()
@@ -45,7 +43,6 @@ def stabilize_gpu_memory_between_tests():
         # Try to clean up Ray resources if Ray is available
         try:
             import ray
-
             if ray.is_initialized():
                 # Give Ray time to clean up any pending tasks
                 pass
@@ -62,3 +59,4 @@ def stabilize_gpu_memory_between_tests():
 
     # After test: cleanup
     _cleanup_and_wait()
+
