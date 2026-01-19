@@ -68,7 +68,6 @@ class TestDeployRayHFVLLM:
                     "--cuda_visible_devices",
                     "0",
                     "--use_vllm_backend",
-                    "--enforce_eager",  # Recommended for shared GPU environments (K8s time-slicing)
                 ]
             )
             print("HF Deployment with vLLM backend started. Waiting for it to be ready...")
@@ -157,7 +156,6 @@ class TestDeployRayHFVLLM:
                     "--cuda_visible_devices",
                     "0",
                     "--use_vllm_backend",
-                    "--enforce_eager",  # Recommended for shared GPU environments (K8s time-slicing)
                     "--num_replicas",
                     str(1),
                     "--num_gpus_per_replica",

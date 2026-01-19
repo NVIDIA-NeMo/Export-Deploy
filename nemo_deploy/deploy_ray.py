@@ -293,8 +293,6 @@ class DeployRay:
         max_ongoing_requests: int = 10,
         use_vllm_backend: bool = False,
         test_mode: bool = False,
-        enforce_eager: bool = False,
-        gpu_memory_utilization: float = 0.9,
     ):
         """Deploy a Hugging Face model using Ray Serve.
 
@@ -319,10 +317,6 @@ class DeployRay:
             use_vllm_backend (bool, optional): Whether to use vLLM backend for deployment. If True, exports the HF ckpt
             to vLLM format and uses vLLM backend for inference. Defaults to False.
             test_mode (bool, optional): Enable test mode. Defaults to False.
-            enforce_eager (bool, optional): Enforce eager execution in vLLM (disables CUDA graphs).
-                Recommended for shared GPU environments (e.g., K8s with time-slicing). Defaults to False.
-            gpu_memory_utilization (float, optional): Fraction of GPU memory to use for vLLM.
-                Lower values help in shared GPU environments. Defaults to 0.9.
         Raises:
             Exception: If Ray is not installed or deployment fails.
         """
@@ -358,8 +352,6 @@ class DeployRay:
                 max_memory=max_memory,
                 model_id=model_id,
                 use_vllm_backend=use_vllm_backend,
-                enforce_eager=enforce_eager,
-                gpu_memory_utilization=gpu_memory_utilization,
             )
 
             # Deploy the model
