@@ -36,7 +36,7 @@ def get_args():
         default="/tmp/onnx_model_reranker/",
         help="Path to store ONNX model.",
     )
-    parser.add_argument("--onnx_opset", type=int, default=17, help="ONNX version to use for export.")
+    parser.add_argument("--onnx_opset", type=int, default=20, help="ONNX version to use for export.")
     parser.add_argument(
         "--trt_model_path",
         type=str,
