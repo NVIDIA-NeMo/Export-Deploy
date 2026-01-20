@@ -256,6 +256,7 @@ class OnnxLLMExporter(ITritonDeployable):
                 dynamic_axes={**dynamic_axes_input, **dynamic_axes_output},
                 verbose=verbose,
                 opset_version=opset,
+                autograd_inlining=False
             )
         logging.info(f"Successfully exported PyTorch model to ONNX model {self.onnx_model_path}")
 
