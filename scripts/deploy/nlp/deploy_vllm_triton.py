@@ -35,14 +35,28 @@ except Exception as e:
 def get_args(argv):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Export NeMo models to vLLM and deploy them on Triton",
+        description="Export NeMo, Megatron-Bridge, or Hugging Face models to vLLM and deploy them on Triton",
     )
     parser.add_argument(
         "-mpi",
         "--model_path_id",
         required=True,
         type=str,
-        help="Path of a NeMo checkpoint, or Hugging Face model ID or path.",
+        help="Path of a NeMo checkpoint, Megatron-Bridge checkpoint, or Hugging Face model ID or path.",
+    )
+    parser.add_argument(
+        "-hfp",
+        "--hf_model_id_path",
+        type=str,
+        help="Huggingface model path or id in case of Megatron-Bridge checkpoint does not contain the required metadata.",
+    )
+    parser.add_argument(
+        "-mf",
+        "--model_format",
+        choices=["hf", "nemo2", "megatron_bridge"],
+        default="nemo2",
+        type=str,
+        help="Format of the input checkpoint: 'hf' for Hugging Face, 'nemo2' for NeMo2, 'megatron_bridge' for Megatron-Bridge.",
     )
     parser.add_argument(
         "-t",
@@ -199,6 +213,8 @@ def nemo_deploy(argv):
             enforce_eager=args.enforce_eager,
             max_seq_len_to_capture=args.max_seq_len_to_capture,
             task="generate",
+            model_format=args.model_format,
+            hf_model_id=args.hf_model_id_path,
         )
 
         nm = DeployPyTriton(
