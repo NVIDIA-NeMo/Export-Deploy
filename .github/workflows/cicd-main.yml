@@ -161,66 +161,33 @@ jobs:
   #         test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
   #         runner: ${{ matrix.runner }}
 
-  cicd-e2e-tests-trtllm:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # - script: L2_Launch_TRTLLM
-          #   runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
-          - script: L2_TRTLLM_API_Deploy_Query
-            runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
-    needs: [pre-flight]
-    runs-on: ${{ matrix.runner }}
-    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
-    if: |
-      (
-        success()
-        || needs.pre-flight.outputs.is_ci_workload == 'true'
-        || needs.pre-flight.outputs.force_run_all == 'true'
-      )
-      && !cancelled()
-    environment: nemo-ci
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: main
-        uses: ./.github/actions/test-template
-        with:
-          script: ${{ matrix.script }}
-          is_optional: ${{ matrix.is_optional || false }}
-          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          has-azure-credentials: true
-          is_unit_test: "false"
-          timeout: 60
-          PAT: ${{ secrets.PAT }}
-          inference-framework: trtllm
-          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner: ${{ matrix.runner }}
-
-  # cicd-e2e-tests-trt-onnx:
-  #   needs: [cicd-unit-tests-trtllm, pre-flight]
-  #   runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+  # cicd-e2e-tests-trtllm:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         # - script: L2_Launch_TRTLLM
+  #         #   runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+  #         - script: L2_TRTLLM_API_Deploy_Query
+  #           runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+  #   needs: [pre-flight]
+  #   runs-on: ${{ matrix.runner }}
   #   name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
-  #   environment: nemo-ci
   #   if: |
   #     (
   #       success()
-  #       || (
-  #         needs.cicd-wait-in-queue.result == 'skipped'
-  #         && needs.pre-flight.outputs.is_ci_workload == 'true'
-  #       )
+  #       || needs.pre-flight.outputs.is_ci_workload == 'true'
+  #       || needs.pre-flight.outputs.force_run_all == 'true'
   #     )
   #     && !cancelled()
+  #   environment: nemo-ci
   #   steps:
   #     - name: Checkout
   #       uses: actions/checkout@v4
   #     - name: main
   #       uses: ./.github/actions/test-template
   #       with:
-  #         script: L2_ONNX_TRT
+  #         script: ${{ matrix.script }}
   #         is_optional: ${{ matrix.is_optional || false }}
   #         azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
   #         azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -229,9 +196,42 @@ jobs:
   #         is_unit_test: "false"
   #         timeout: 60
   #         PAT: ${{ secrets.PAT }}
-  #         inference-framework: trt-onnx
+  #         inference-framework: trtllm
   #         test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-  #         runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+  #         runner: ${{ matrix.runner }}
+
+  cicd-e2e-tests-trt-onnx:
+    needs: [pre-flight]
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    environment: nemo-ci
+    if: |
+      (
+        success()
+        || (
+          needs.cicd-wait-in-queue.result == 'skipped'
+          && needs.pre-flight.outputs.is_ci_workload == 'true'
+        )
+      )
+      && !cancelled()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: main
+        uses: ./.github/actions/test-template
+        with:
+          script: L2_ONNX_TRT
+          is_optional: ${{ matrix.is_optional || false }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          has-azure-credentials: true
+          is_unit_test: "false"
+          timeout: 60
+          PAT: ${{ secrets.PAT }}
+          inference-framework: trt-onnx
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
 
   # cicd-e2e-tests-vllm:
   #   needs: [cicd-unit-tests-vllm, pre-flight]
@@ -264,45 +264,46 @@ jobs:
   #         test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
   #         runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
 
-  cicd-e2e-tests-inframework:
-    needs: [pre-flight]
-    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
-    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
-    environment: nemo-ci
-    if: |
-      (
-        success()
-        || needs.pre-flight.outputs.is_ci_workload == 'true'
-        || needs.pre-flight.outputs.force_run_all == 'true'
-      )
-      && !cancelled()
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: main
-        uses: ./.github/actions/test-template
-        with:
-          script: L2_Launch_InFramework
-          is_optional: ${{ matrix.is_optional || false }}
-          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          has-azure-credentials: true
-          is_unit_test: "false"
-          timeout: 60
-          PAT: ${{ secrets.PAT }}
-          inference-framework: inframework
-          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+  # cicd-e2e-tests-inframework:
+  #   needs: [pre-flight]
+  #   runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+  #   name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+  #   environment: nemo-ci
+  #   if: |
+  #     (
+  #       success()
+  #       || needs.pre-flight.outputs.is_ci_workload == 'true'
+  #       || needs.pre-flight.outputs.force_run_all == 'true'
+  #     )
+  #     && !cancelled()
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: main
+  #       uses: ./.github/actions/test-template
+  #       with:
+  #         script: L2_Launch_InFramework
+  #         is_optional: ${{ matrix.is_optional || false }}
+  #         azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+  #         azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+  #         azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  #         has-azure-credentials: true
+  #         is_unit_test: "false"
+  #         timeout: 60
+  #         PAT: ${{ secrets.PAT }}
+  #         inference-framework: inframework
+  #         test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+  #         runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
 
   Nemo_CICD_Test:
     needs:
       - pre-flight
       # - cicd-unit-tests-trtllm
       # - cicd-unit-tests-vllm
-      - cicd-e2e-tests-trtllm
+      # - cicd-e2e-tests-trtllm
       # - cicd-e2e-tests-vllm
-      - cicd-e2e-tests-inframework
+      # - cicd-e2e-tests-inframework
+      - cicd-e2e-tests-trt-onnx
     if: |
       (
         needs.pre-flight.outputs.docs_only == 'true'
