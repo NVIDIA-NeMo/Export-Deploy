@@ -265,7 +265,7 @@ jobs:
           runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
 
   cicd-e2e-tests-inframework:
-    needs: [pre-flight, cicd-unit-tests-trtllm, cicd-unit-tests-vllm]]
+    needs: [pre-flight, cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
