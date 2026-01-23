@@ -79,7 +79,7 @@ class TestDeployRay:
                 host="0.0.0.0",
                 port=8000,
                 model_id="llama",
-                prompt="Hello, how are you?",
+                prompt="What is the color of a banana?",
                 max_tokens=20,
             )
 
