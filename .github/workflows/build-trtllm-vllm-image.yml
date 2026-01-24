@@ -62,7 +62,7 @@ on:
         default: "13.0.88-1"
 
 env:
-  container-registry: nemoci.azurecr.io
+  container-registry: ${{ vars.container-registry || 'nemoci.azurecr.io' }}
 
 jobs:
   pre-flight:
@@ -111,6 +111,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set truncated commit hash
+        env:
+          TRTLLM_COMMIT: ${{ inputs.trtllm_commit }}
+        run: echo "TRTLLM_COMMIT_SHORT=${TRTLLM_COMMIT:0:7}" >> $GITHUB_ENV
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -128,9 +133,9 @@ jobs:
             CUBLAS_VER=${{ inputs.cublas_version }}
             NVRTC_VER=${{ inputs.nvrtc_version }}
           cache-from: |
-            type=registry,ref=${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ substring(inputs.trtllm_commit, 0, 7) }}-${{ inputs.vllm_version }}-buildcache,mode=max
+            type=registry,ref=${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ env.TRTLLM_COMMIT_SHORT }}-${{ inputs.vllm_version }}-buildcache,mode=max
           cache-to: |
-            type=registry,ref=${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ substring(inputs.trtllm_commit, 0, 7) }}-${{ inputs.vllm_version }}-buildcache,mode=max
+            type=registry,ref=${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ env.TRTLLM_COMMIT_SHORT }}-${{ inputs.vllm_version }}-buildcache,mode=max
           no-cache: false
           tags: |
-            ${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ substring(inputs.trtllm_commit, 0, 7) }}-${{ inputs.vllm_version }}
+            ${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ env.TRTLLM_COMMIT_SHORT }}-${{ inputs.vllm_version }}
