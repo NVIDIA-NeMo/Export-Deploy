@@ -23,28 +23,6 @@ WORKDIR /opt
 
 ##############################################################################
 ##
-## VLLM wheel
-##
-##############################################################################
-
-FROM base AS vllm_wheel
-
-ARG VLLM_VERSION
-ARG MAX_JOBS=4
-
-WORKDIR /src/vllm
-
-# Build vllm
-RUN git clone https://github.com/vllm-project/vllm.git . && \
-    echo "Building vLLM version: $VLLM_VERSION" && \
-    git checkout $VLLM_VERSION && \
-    python use_existing_torch.py && \
-    pip install -r requirements/build.txt && \
-    sed -i "/xgrammar/d" requirements/common.txt && \
-    pip wheel --no-deps --no-build-isolation -v .
-
-##############################################################################
-##
 ## TRT-LLM repo
 ##
 ##############################################################################
@@ -83,7 +61,7 @@ RUN git clone https://github.com/NVIDIA/TensorRT-LLM.git . && \
 ##
 ##############################################################################
 
-FROM vllm_wheel AS trtllm_builder
+FROM base AS trtllm_builder
 
 ARG TRT_VER
 ARG CUDA_VER
@@ -112,7 +90,7 @@ RUN --mount=type=bind,from=trtllm_repo,source=/src/tensorrt_llm/docker/common,ta
 FROM trtllm_builder AS trtllm_wheel
 
 ARG BUILD_WHEEL_ARGS="--clean --trt_root /usr/local/tensorrt --benchmarks"
-ARG JOB_COUNT=32
+ARG JOB_COUNT=16
 
 WORKDIR /src/tensorrt_llm
 
@@ -123,6 +101,28 @@ RUN bash docker/common/install_base.sh && \
     bash docker/common/install_ccache.sh
 
 RUN python3 scripts/build_wheel.py --job_count $JOB_COUNT ${BUILD_WHEEL_ARGS}
+
+##############################################################################
+##
+## VLLM wheel
+##
+##############################################################################
+
+FROM trtllm_wheel AS vllm_wheel
+
+ARG VLLM_VERSION
+ARG MAX_JOBS=4
+
+WORKDIR /src/vllm
+
+# Build vllm
+RUN git clone https://github.com/vllm-project/vllm.git . && \
+    echo "Building vLLM version: $VLLM_VERSION" && \
+    git checkout $VLLM_VERSION && \
+    python use_existing_torch.py && \
+    pip install -r requirements/build.txt && \
+    sed -i "/xgrammar/d" requirements/common.txt && \
+    pip wheel --no-deps --no-build-isolation -v .
 
 ##############################################################################
 ##
