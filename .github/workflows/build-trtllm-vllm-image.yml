@@ -1,0 +1,136 @@
+# Copyright (c) 2026, NVIDIA CORPORATION. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+name: Build TRT-LLM and vLLM image
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      base_image_tag:
+        description: NGC Pytorch Base image tag to use for the build
+        required: true
+        type: string
+        default: 25.11-py3
+      vllm_version:
+        description: Version of vLLM to use for the build
+        required: true
+        type: string
+        default: 0.11.2
+      trtllm_commit:
+        description: Commit of TRT-LLM to use for the build
+        required: true
+        type: string
+        default: 48b7b5d8b7ed1e6bff57aecc6ff7d1533288bed8
+      trt_version:
+        description: Version of TensorRT to use for the build
+        required: true
+        type: 10.14.1.48
+      cuda_version:
+        description: Version of CUDA to use for the build
+        required: true
+        type: string
+        default: "13.0"
+      cudnn_version:
+        description: Version of cuDNN to use for the build
+        required: true
+        type: string
+        default: "9.17.0.29-1"
+      nccl_version:
+        description: Version of NCCL to use for the build
+        required: true
+        type: string
+        default: "2.28.9-1+cuda13.0"
+      cublas_version:
+        description: Version of cuBLAS to use for the build
+        required: true
+        type: string
+        default: "13.1.0.3-1"
+      nvrtc_version:
+        description: Version of nvrtc to use for the build
+        required: true
+        type: string
+        default: "13.0.88-1"
+
+env:
+  container-registry: nemoci.azurecr.io
+
+jobs:
+  pre-flight:
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@v0.69.1
+    with:
+      default_runner_prefix: ${{ vars.DEFAULT_RUNNER_PREFIX }}
+      non_nvidia_runner_prefix: ${{ vars.NON_NVIDIA_RUNNER_PREFIX }}
+      default_test_data_path: ${{ vars.DEFAULT_TEST_DATA_PATH }}
+      non_nvidia_test_data_path: ${{ vars.NON_NVIDIA_TEST_DATA_PATH }}
+    secrets:
+      NVIDIA_MANAGEMENT_ORG_PAT: ${{ secrets.NVIDIA_MANAGEMENT_ORG_PAT }}
+
+  cicd-container-build:
+    needs: [pre-flight]
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+    environment: nemo-ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install Azure CLI
+        shell: bash
+        run: |
+          echo "::group::Install Azure CLI"
+          # Create systemd override for proper dependencies
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+          echo "::endgroup::"
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Azure ACR Login
+        shell: bash
+        run: |
+          az acr login --name nemoci
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          file: ./docker/Dockerfile.trtllm_vllm
+          push: true
+          context: .
+          build-args: |
+            BASE_IMAGE=nvcr.io/nvidia/pytorch:${{ inputs.base_image_tag }}
+            VLLM_VERSION=${{ inputs.vllm_version }}
+            TRT_LLM_COMMIT=${{ inputs.trtllm_commit }}
+            TRT_VER=${{ inputs.trt_version }}
+            CUDA_VER=${{ inputs.cuda_version }}
+            CUDNN_VER=${{ inputs.cudnn_version }}
+            NCCL_VER=${{ inputs.nccl_version }}
+            CUBLAS_VER=${{ inputs.cublas_version }}
+            NVRTC_VER=${{ inputs.nvrtc_version }}
+          cache-from: |
+            type=registry,ref=${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ substring(inputs.trtllm_commit, 0, 7) }}-${{ inputs.vllm_version }}-buildcache,mode=max
+          cache-to: |
+            type=registry,ref=${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ substring(inputs.trtllm_commit, 0, 7) }}-${{ inputs.vllm_version }}-buildcache,mode=max
+          no-cache: false
+          tags: |
+            ${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ substring(inputs.trtllm_commit, 0, 7) }}-${{ inputs.vllm_version }}
