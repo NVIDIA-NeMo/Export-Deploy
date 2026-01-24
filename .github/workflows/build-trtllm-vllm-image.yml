@@ -34,7 +34,8 @@ on:
       trt_version:
         description: Version of TensorRT to use for the build
         required: true
-        type: 10.14.1.48
+        type: string
+        default: 10.14.1.48
       cuda_version:
         description: Version of CUDA to use for the build
         required: true
@@ -63,6 +64,15 @@ on:
 
 env:
   container-registry: ${{ vars.container-registry || 'nemoci.azurecr.io' }}
+  base-image-tag: ${{ inputs.base_image_tag || '25.11-py3' }}
+  trtllm-commit: ${{ inputs.trtllm_commit || '48b7b5d8b7ed1e6bff57aecc6ff7d1533288bed8' }}
+  vllm-version: ${{ inputs.vllm_version || '0.11.2' }}
+  trt-version: ${{ inputs.trt_version || '10.14.1.48' }}
+  cuda-version: ${{ inputs.cuda_version || '13.0' }}
+  cudnn-version: ${{ inputs.cudnn_version || '9.17.0.29-1' }}
+  nccl-version: ${{ inputs.nccl_version || '2.28.9-1+cuda13.0' }}
+  cublas-version: ${{ inputs.cublas_version || '13.1.0.3-1' }}
+  nvrtc-version: ${{ inputs.nvrtc_version || '13.0.88-1' }}
 
 permissions:
   id-token: write
@@ -117,7 +127,7 @@ jobs:
 
       - name: Set truncated commit hash
         env:
-          TRTLLM_COMMIT: ${{ inputs.trtllm_commit }}
+          TRTLLM_COMMIT: ${{ env.trtllm-commit }}
         run: echo "TRTLLM_COMMIT_SHORT=${TRTLLM_COMMIT:0:7}" >> $GITHUB_ENV
 
       - name: Build and push
@@ -127,19 +137,19 @@ jobs:
           push: true
           context: .
           build-args: |
-            BASE_IMAGE=nvcr.io/nvidia/pytorch:${{ inputs.base_image_tag }}
-            VLLM_VERSION=${{ inputs.vllm_version }}
-            TRT_LLM_COMMIT=${{ inputs.trtllm_commit }}
-            TRT_VER=${{ inputs.trt_version }}
-            CUDA_VER=${{ inputs.cuda_version }}
-            CUDNN_VER=${{ inputs.cudnn_version }}
-            NCCL_VER=${{ inputs.nccl_version }}
-            CUBLAS_VER=${{ inputs.cublas_version }}
-            NVRTC_VER=${{ inputs.nvrtc_version }}
+            BASE_IMAGE=nvcr.io/nvidia/pytorch:${{ env.base-image-tag }}
+            VLLM_VERSION=${{ env.vllm-version }}
+            TRT_LLM_COMMIT=${{ env.trtllm-commit }}
+            TRT_VER=${{ env.trt-version }}
+            CUDA_VER=${{ env.cuda-version }}
+            CUDNN_VER=${{ env.cudnn-version }}
+            NCCL_VER=${{ env.nccl-version }}
+            CUBLAS_VER=${{ env.cublas-version }}
+            NVRTC_VER=${{ env.nvrtc-version }}
           cache-from: |
-            type=registry,ref=${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ env.TRTLLM_COMMIT_SHORT }}-${{ inputs.vllm_version }}-buildcache,mode=max
+            type=registry,ref=${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ env.base-image-tag }}-${{ env.TRTLLM_COMMIT_SHORT }}-${{ env.vllm-version }}-buildcache,mode=max
           cache-to: |
-            type=registry,ref=${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ env.TRTLLM_COMMIT_SHORT }}-${{ inputs.vllm_version }}-buildcache,mode=max
+            type=registry,ref=${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ env.base-image-tag }}-${{ env.TRTLLM_COMMIT_SHORT }}-${{ env.vllm-version }}-buildcache,mode=max
           no-cache: false
           tags: |
-            ${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ inputs.base_image_tag }}-${{ env.TRTLLM_COMMIT_SHORT }}-${{ inputs.vllm_version }}
+            ${{ env.container-registry }}/export-deploy-trtllm-vllm:${{ env.base-image-tag }}-${{ env.TRTLLM_COMMIT_SHORT }}-${{ env.vllm-version }}
