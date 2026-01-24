@@ -25,7 +25,7 @@ on:
         description: Version of vLLM to use for the build
         required: true
         type: string
-        default: 0.11.2
+        default: v0.11.2
       trtllm_commit:
         description: Commit of TRT-LLM to use for the build
         required: true
@@ -66,7 +66,7 @@ env:
   container-registry: ${{ vars.container-registry || 'nemoci.azurecr.io' }}
   base-image-tag: ${{ inputs.base_image_tag || '25.11-py3' }}
   trtllm-commit: ${{ inputs.trtllm_commit || '48b7b5d8b7ed1e6bff57aecc6ff7d1533288bed8' }}
-  vllm-version: ${{ inputs.vllm_version || '0.11.2' }}
+  vllm-version: ${{ inputs.vllm_version || 'v0.11.2' }}
   trt-version: ${{ inputs.trt_version || '10.14.1.48' }}
   cuda-version: ${{ inputs.cuda_version || '13.0' }}
   cudnn-version: ${{ inputs.cudnn_version || '9.17.0.29-1' }}
