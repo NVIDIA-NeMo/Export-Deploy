@@ -64,6 +64,10 @@ on:
 env:
   container-registry: ${{ vars.container-registry || 'nemoci.azurecr.io' }}
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   pre-flight:
     uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@v0.69.1
