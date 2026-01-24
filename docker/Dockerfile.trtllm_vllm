@@ -131,7 +131,7 @@ RUN python3 scripts/build_wheel.py --job_count $JOB_COUNT ${BUILD_WHEEL_ARGS}
 ##
 ##############################################################################
 
-FROM dep_builder AS trtllm_vllm_final
+FROM trtllm_builder AS trtllm_vllm_final
 
 WORKDIR /opt/tensorrt_llm
 
