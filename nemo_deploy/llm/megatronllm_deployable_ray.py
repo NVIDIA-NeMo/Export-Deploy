@@ -25,7 +25,6 @@ import ray
 import torch
 from fastapi import FastAPI, HTTPException
 from ray import serve
-from ray.serve.schema import LoggingConfig
 from ray.util.scheduling_strategies import NodeAffinitySchedulingStrategy
 
 from ..ray_utils import find_available_port
@@ -118,7 +117,6 @@ class ModelWorker:
     num_replicas=1,
     ray_actor_options={"num_cpus": 8},
     max_ongoing_requests=32,
-    logging_config=LoggingConfig(log_level="DEBUG"),
 )
 @serve.ingress(app)
 class MegatronRayDeployable:
