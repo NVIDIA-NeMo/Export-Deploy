@@ -13,7 +13,6 @@
 # limitations under the License.
 name: Build TRT-LLM and vLLM image
 on:
-  push:
   workflow_dispatch:
     inputs:
       base_image_tag:
