@@ -91,7 +91,7 @@ jobs:
 
   cicd-container-build:
     needs: [pre-flight]
-    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+    runs-on: azure-gpu-vm-runner13
     environment: nemo-ci
     steps:
       - name: Checkout

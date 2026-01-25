@@ -102,27 +102,27 @@ RUN bash docker/common/install_base.sh && \
 
 RUN python3 scripts/build_wheel.py --job_count $JOB_COUNT ${BUILD_WHEEL_ARGS}
 
-##############################################################################
-##
-## VLLM wheel
-##
-##############################################################################
+# ##############################################################################
+# ##
+# ## VLLM wheel
+# ##
+# ##############################################################################
 
-FROM trtllm_wheel AS vllm_wheel
+# FROM trtllm_wheel AS vllm_wheel
 
-ARG VLLM_VERSION
-ARG MAX_JOBS=4
+# ARG VLLM_VERSION
+# ARG MAX_JOBS=4
 
-WORKDIR /src/vllm
+# WORKDIR /src/vllm
 
-# Build vllm
-RUN git clone https://github.com/vllm-project/vllm.git . && \
-    echo "Building vLLM version: $VLLM_VERSION" && \
-    git checkout $VLLM_VERSION && \
-    python use_existing_torch.py && \
-    pip install -r requirements/build.txt && \
-    sed -i "/xgrammar/d" requirements/common.txt && \
-    pip wheel --no-deps --no-build-isolation -v .
+# # Build vllm
+# RUN git clone https://github.com/vllm-project/vllm.git . && \
+#     echo "Building vLLM version: $VLLM_VERSION" && \
+#     git checkout $VLLM_VERSION && \
+#     python use_existing_torch.py && \
+#     pip install -r requirements/build.txt && \
+#     sed -i "/xgrammar/d" requirements/common.txt && \
+#     pip wheel --no-deps --no-build-isolation -v .
 
 ##############################################################################
 ##
@@ -136,7 +136,7 @@ WORKDIR /opt/tensorrt_llm
 
 # Copy Wheels
 RUN --mount=type=bind,from=trtllm_wheel,source=/src/tensorrt_llm/build/,target=/tmp/tensorrt_llm/build/ \
-    --mount=type=bind,from=vllm_wheel,source=/src/vllm/,target=/tmp/vllm/ \
+    # --mount=type=bind,from=vllm_wheel,source=/src/vllm/,target=/tmp/vllm/ \
     pip install --no-deps xgrammar==0.1.25 && \
     pip install /tmp/vllm/vllm*.whl && \
     pip install /tmp/tensorrt_llm/build/tensorrt_llm*.whl --extra-index-url https://pypi.nvidia.com && \
