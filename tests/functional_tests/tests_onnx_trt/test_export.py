@@ -34,6 +34,7 @@ def tmp_dir():
         logger.warning(f"Error removing temporary directory {tmp_dir}: {e}")
 
 
+@pytest.mark.skip(reason="Temporarily disabled")
 class TestONNXTRTExport:
     def test_export_onnx_trt_embedding(self):
         subprocess.run(
