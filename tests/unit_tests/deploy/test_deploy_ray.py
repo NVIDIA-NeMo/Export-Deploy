@@ -190,7 +190,7 @@ class TestDeployRay(unittest.TestCase):
         )
 
         mock_start.assert_called_once()
-        mock_serve.run.assert_called_once_with(mock_app, name="nemo-model")
+        mock_serve.run.assert_called_once_with(mock_app, name="megatron-model")
         mock_megatron.options.assert_called_once()
         # Ensure actor options include provided CPUs
         _, kwargs = mock_megatron.options.call_args
