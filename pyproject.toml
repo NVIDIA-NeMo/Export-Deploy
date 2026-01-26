@@ -115,7 +115,13 @@ transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", 
 
 [tool.uv]
 # Currently, TE must be built with no build-isolation b/c it requires torch
-no-build-isolation-package = ["transformer-engine", "transformer-engine-torch"]
+no-build-isolation-package = [
+    "transformer-engine",
+    "transformer-engine-torch",
+    "mamba-ssm",
+    "causal-conv1d",
+    "nv-grouped-gemm",
+]
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
 # and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
 # avoid including these in the default dependency set, but for now it's required.
@@ -136,7 +142,8 @@ override-dependencies = [
     "flashinfer-python>=0.5.0,<0.6.dev0",
     "datasets>=3.3.0",
     "flash-linear-attention>=0.3.0,<0.4.dev0",
-    "patchelf; sys_platform=='never'"
+    "patchelf; sys_platform=='never'",
+    "nvidia-resiliency-ext>=0.3.0,<0.6.0"
 ]
 prerelease = "allow"
 
