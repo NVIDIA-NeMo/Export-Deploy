@@ -41,11 +41,11 @@ description = "NeMo Export and Deploy - a library to export and deploy LLMs and 
 requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
-    "megatron-core>=0.14.0a0,<0.15.0",
-    "megatron-bridge>=0.1.0a0,<0.2.0",
-    "nvidia-modelopt[torch]>=0.33.0a0,<0.34.0; sys_platform != 'darwin'",
-    "nvidia-resiliency-ext>=0.4.0a0,<0.5.0; sys_platform != 'darwin'",
-    "transformer-engine[pytorch]>=2.6.0a0,<2.7.0; sys_platform != 'darwin'",
+    "megatron-core",
+    "megatron-bridge",
+    "nvidia-modelopt[torch]; sys_platform != 'darwin'",
+    "nvidia-resiliency-ext; sys_platform != 'darwin'",
+    "transformer-engine[pytorch]; sys_platform != 'darwin'",
     "accelerate",
     "fastapi",
     "pydantic-settings",
@@ -61,7 +61,7 @@ dependencies = [
     "lightning",
     "omegaconf>=2.3.0",
     "peft<0.14.0",
-    "torch==2.7.1",
+    "torch>=2.6.0",
     "torchvision",
     "torchmetrics>=0.11.0",
     "wandb",
@@ -80,13 +80,13 @@ dependencies = [
 
 [project.optional-dependencies]
 inframework = []
-vllm = ["vllm~=0.10.0", "pandas", "timm"]
-trtllm = ["tensorrt-llm>=1.0.0a0,<1.1.0,>=1.0.0rc6", "cuda-python~=12.8.0"]
-trt-onnx = ["tensorrt==10.11.0.33", "onnx==1.18.0", "transformers==4.51.3"]
+vllm = ["vllm~=0.11.2", "pandas", "timm"]
+trtllm = ["tensorrt-llm~=1.1.0", "cuda-python~=13.0.0"]
+trt-onnx = ["tensorrt==10.14.1.48", "onnx==1.18.0", "transformers==4.51.3"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
-build = ["setuptools", "torch==2.7.1", "pybind11", "Cython>=3.0.0", "ninja"]
+build = ["setuptools", "torch", "pybind11", "Cython>=3.0.0", "ninja"]
 docs = [
     "sphinx",
     "sphinx-autobuild",    # For live doc serving while editing docs
@@ -98,19 +98,19 @@ docs = [
 linting = ["pre-commit>=3.6.0", "ruff~=0.9.0"]
 test = ["pytest", "pytest-mock", "coverage", "click"]
 nemo-toolkit = [
-    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]>=2.5.0a0,<2.6.0",
+    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]>=2.5.0a0,<2.7.0",
 ]
 nemo-run = ["nemo-run"]
 
 [tool.uv.sources]
-xformers = [{ index = "pytorch-cu128" }]
-torch = [{ index = "pytorch-cu128" }]
+xformers = [{ index = "pytorch-cu130" }]
+torch = [{ index = "pytorch-cu130" }]
 vllm = [
-    { index = "pytorch-cu128", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
+    { index = "pytorch-cu130", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
-# megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "ecf05926b4765aada82c8eabab4a374e8e83a9c5" }
-transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "0289e76380088358a584d809faf69effab1a7cda" } # on release_v2.7.0
+megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "127ccb48e4454179b2791214c4fb6a3b1da2cbfe" }
+transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "6a34b6574fa6c29d9d07fdcddf9812cbb1488878" }
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
@@ -130,6 +130,13 @@ override-dependencies = [
     "urllib3>1.27.0",
     "tiktoken>=0.9.0",                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
+    "transformer-engine[pytorch]>=2.9.0a0,<2.13.0",
+    "open-clip-torch>=3.2.0",
+    "megatron-energon[av-decode]>=6.0,<7.dev0",
+    "flashinfer-python>=0.5.0,<0.6.dev0",
+    "datasets>=3.3.0",
+    "flash-linear-attention>=0.3.0,<0.4.dev0",
+    "patchelf; sys_platform=='never'"
 ]
 prerelease = "allow"
 
@@ -139,8 +146,8 @@ url = "https://pypi.org/simple"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
 explicit = true
 
 [tool.pytest.ini_options]
