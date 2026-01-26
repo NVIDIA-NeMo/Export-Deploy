@@ -49,7 +49,7 @@ def deployable(mock_engine_and_tokenizer):
         deployable.mcore_engine = mock_engine
         deployable.inference_wrapped_model = mock_model
         deployable.mcore_tokenizer = mock_tokenizer
-        deployable.nemo_checkpoint_filepath = "dummy.nemo"
+        deployable.megatron_checkpoint_filepath = "dummy.megatron"
         deployable.max_batch_size = 32
         deployable.enable_cuda_graphs = True
 
@@ -347,7 +347,7 @@ def test_infer_fn_echo_with_log_probs_different_lengths(deployable):
 @pytest.mark.run_only_on("GPU")
 def test_initialization(deployable):
     """Test initialization of the deployable class."""
-    assert deployable.nemo_checkpoint_filepath == "dummy.nemo"
+    assert deployable.megatron_checkpoint_filepath == "dummy.megatron"
     assert deployable.max_batch_size == 32
     assert deployable.enable_cuda_graphs is True
 

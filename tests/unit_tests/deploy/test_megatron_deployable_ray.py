@@ -216,7 +216,7 @@ class TestMegatronRayDeployable:
     ):
         """Test basic initialization of MegatronRayDeployable with single GPU."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
             tensor_model_parallel_size=1,
             pipeline_model_parallel_size=1,
@@ -246,7 +246,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with multiple GPUs."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=2,
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=1,
@@ -271,7 +271,7 @@ class TestMegatronRayDeployable:
     ):
         """Test list models endpoint."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
             model_id="test-list-models",
         )
@@ -296,7 +296,7 @@ class TestMegatronRayDeployable:
     ):
         """Test health check endpoint."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
             model_id="test-health-model",
         )
@@ -317,7 +317,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with CUDA graphs enabled."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
             enable_cuda_graphs=True,
             model_id="test-cuda-graphs-model",
@@ -339,7 +339,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with Flash Decode enabled."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
             enable_flash_decode=True,
             model_id="test-flash-decode-model",
@@ -361,7 +361,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with legacy checkpoint format."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=1,
             legacy_ckpt=True,
             model_id="test-legacy-ckpt-model",
@@ -383,7 +383,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with multiple nodes."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=4,
             tensor_model_parallel_size=4,
             pipeline_model_parallel_size=1,
@@ -406,7 +406,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with pipeline parallelism."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=4,
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=2,
@@ -429,7 +429,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with context parallelism."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_nemo_checkpoint,
             num_gpus=2,
             tensor_model_parallel_size=1,
             pipeline_model_parallel_size=1,

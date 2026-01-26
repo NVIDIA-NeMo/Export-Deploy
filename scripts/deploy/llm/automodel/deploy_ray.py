@@ -30,10 +30,10 @@ def parse_args():
     """Parse command-line arguments for the Ray deployment script."""
     parser = argparse.ArgumentParser(description="Deploy a Megatron model using Ray")
     parser.add_argument(
-        "--nemo_checkpoint",
+        "--megatron_checkpoint",
         type=str,
         default=None,
-        help="Path to the .nemo checkpoint file",
+        help="Path to the Megatron checkpoint directory",
     )
     parser.add_argument(
         "--num_gpus",
@@ -226,7 +226,7 @@ def main():
 
     # Deploy the inframework model using the updated API
     ray_deployer.deploy_inframework_model(
-        nemo_checkpoint=args.nemo_checkpoint,
+        megatron_checkpoint=args.megatron_checkpoint,
         num_gpus=args.num_gpus,
         tensor_model_parallel_size=args.tensor_model_parallel_size,
         pipeline_model_parallel_size=args.pipeline_model_parallel_size,

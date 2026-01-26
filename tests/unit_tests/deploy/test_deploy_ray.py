@@ -178,14 +178,14 @@ class TestDeployRay(unittest.TestCase):
         mock_megatron.options.return_value = mock_options
 
         deploy.deploy_inframework_model(
-            nemo_checkpoint="/path/to/model.nemo",
+            megatron_checkpoint="/path/to/model.megatron",
             num_gpus=4,
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=1,
             context_parallel_size=1,
             num_replicas=2,
             num_cpus_per_replica=4,
-            model_id="nemo-model",
+            model_id="megatron-model",
             test_mode=True,
         )
 
