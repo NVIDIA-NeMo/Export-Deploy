@@ -41,7 +41,13 @@ from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import (
     get_weights_dtype,
     load_nemo_model,
 )
-from nemo_export.trt_llm.qnemo import qnemo_to_tensorrt_llm
+
+try:
+    from nemo_export.trt_llm.qnemo import qnemo_to_tensorrt_llm
+except Exception:
+    print(os.environ)
+    raise
+
 from nemo_export.trt_llm.qnemo.utils import is_qnemo_checkpoint
 from nemo_export.trt_llm.tensorrt_llm_run import (
     generate,
