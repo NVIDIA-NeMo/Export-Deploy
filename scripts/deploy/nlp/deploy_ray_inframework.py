@@ -218,8 +218,6 @@ def main():
     if not args.megatron_checkpoint:
         raise ValueError("--megatron_checkpoint must be provided")
 
-    model_format = "megatron"
-
     model_config_kwargs = {
         "account_for_embedding_in_pipeline_split": args.account_for_embedding_in_pipeline_split,
         "account_for_loss_in_pipeline_split": args.account_for_loss_in_pipeline_split,
@@ -247,9 +245,7 @@ def main():
         legacy_ckpt=args.legacy_ckpt,
         max_batch_size=args.max_batch_size,
         random_seed=args.random_seed,
-        megatron_checkpoint_filepath=args.megatron_checkpoint,
         model_type=args.model_type,
-        model_format=model_format,
         micro_batch_size=args.micro_batch_size,
         **model_config_kwargs,
     )
