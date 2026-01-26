@@ -39,12 +39,6 @@ def parse_args():
     """Parse command-line arguments for the Ray deployment script."""
     parser = argparse.ArgumentParser(description="Deploy a Megatron model using Ray")
     parser.add_argument(
-        "--nemo_checkpoint",
-        type=str,
-        default=None,
-        help="Path to the .nemo checkpoint file",
-    )
-    parser.add_argument(
         "--num_gpus",
         type=int,
         default=1,
@@ -221,12 +215,10 @@ def main():
         port=args.port,
         runtime_env=runtime_env,
     )
-    if args.nemo_checkpoint:
-        model_format = "nemo"
-    elif args.megatron_checkpoint:
-        model_format = "megatron"
-    else:
-        raise ValueError("Either --nemo_checkpoint or --megatron_checkpoint must be provided")
+    if not args.megatron_checkpoint:
+        raise ValueError("--megatron_checkpoint must be provided")
+
+    model_format = "megatron"
 
     model_config_kwargs = {
         "account_for_embedding_in_pipeline_split": args.account_for_embedding_in_pipeline_split,
@@ -241,7 +233,7 @@ def main():
 
     # Deploy the inframework model using the updated API
     ray_deployer.deploy_inframework_model(
-        nemo_checkpoint=args.nemo_checkpoint,
+        megatron_checkpoint=args.megatron_checkpoint,
         num_gpus=args.num_gpus,
         tensor_model_parallel_size=args.tensor_model_parallel_size,
         pipeline_model_parallel_size=args.pipeline_model_parallel_size,

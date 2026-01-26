@@ -87,8 +87,8 @@ def mock_nemo_checkpoint():
 
 @pytest.fixture
 def mock_megatron_model():
-    """Mock the MegatronLLMDeployableNemo2 model to avoid loading real models."""
-    with patch("nemo_deploy.llm.megatronllm_deployable_ray.MegatronLLMDeployableNemo2") as mock:
+    """Mock the MegatronLLMDeployable model to avoid loading real models."""
+    with patch("nemo_deploy.llm.megatronllm_deployable_ray.MegatronLLMDeployable") as mock:
         mock_instance = MagicMock()
 
         # Mock the ray_infer_fn method

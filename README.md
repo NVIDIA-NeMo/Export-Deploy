@@ -242,13 +242,13 @@ In order to run examples with NeMo models, a NeMo checkpoint is required. Please
    huggingface-cli login
    ```
 
-4. Run the following Python code to generate the NeMo 2.0 checkpoint:
+4. Run the following Python code to generate the NeMo checkpoint:
 
-   ```shell
-   python scripts/export/export_hf_to_nemo2.py \
-    --hf_model meta-llama/Llama-3.2-1B \
-    --output_path /opt/checkpoints/hf_llama32_1B_nemo2 \
-    --config Llama32Config1B
+   ```python
+   from nemo.collections import llm
+   
+   # Example: Converting Hugging Face model to NeMo format
+   # See NeMo documentation for detailed instructions
    ```
 
 ## 🚀 Export and Deploy Examples
@@ -297,9 +297,9 @@ from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_deploy import DeployPyTriton
 
 # Export model to TensorRT-LLM
-exporter = TensorRTLLM(model_dir="/tmp/hf_llama32_1B_nemo2")
+exporter = TensorRTLLM(model_dir="/tmp/llama32_1B_nemo")
 exporter.export(
-    nemo_checkpoint_path="/opt/checkpoints/hf_llama32_1B_nemo2",
+    nemo_checkpoint_path="/opt/checkpoints/llama32_1B_nemo",
     tensor_parallelism_size=1,
 )
 
@@ -328,8 +328,8 @@ from nemo_deploy import DeployPyTriton
 # Export model to vLLM
 exporter = vLLMExporter()
 exporter.export(
-    nemo_checkpoint="/opt/checkpoints/hf_llama32_1B_nemo2",
-    model_dir="/tmp/hf_llama32_1B_nemo2",
+    nemo_checkpoint="/opt/checkpoints/llama32_1B_nemo",
+    model_dir="/tmp/llama32_1B_nemo",
     tensor_parallel_size=1,
 )
 
@@ -355,10 +355,10 @@ You can also deploy NeMo and Hugging Face models directly using Triton Inference
 
 ```python
 from nemo_deploy import DeployPyTriton
-from nemo_deploy.nlp.megatronllm_deployable import MegatronLLMDeployableNemo2
+from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
 
-model = MegatronLLMDeployableNemo2(
-    nemo_checkpoint_filepath="/opt/checkpoints/hf_llama32_1B_nemo2",
+model = MegatronLLMDeployable(
+    nemo_checkpoint_filepath="/opt/checkpoints/llama32_1B_nemo",
     num_devices=1,
     num_nodes=1,
 )
