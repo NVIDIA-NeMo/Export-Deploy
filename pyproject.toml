@@ -45,7 +45,7 @@ dependencies = [
     "megatron-bridge",
     "nvidia-modelopt[torch]; sys_platform != 'darwin'",
     "nvidia-resiliency-ext; sys_platform != 'darwin'",
-    "transformer-engine[pytorch]; sys_platform != 'darwin'",
+    "transformer-engine[pytorch, core_cu13]; sys_platform != 'darwin'",
     "accelerate",
     "fastapi",
     "pydantic-settings",
@@ -98,7 +98,7 @@ docs = [
 linting = ["pre-commit>=3.6.0", "ruff~=0.9.0"]
 test = ["pytest", "pytest-mock", "coverage", "click"]
 nemo-toolkit = [
-    "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]>=2.5.0a0,<2.7.0",
+    "nemo-toolkit[common-only,nlp-only,multimodal-only]>=2.5.0a0,<2.7.0",
     "nv_one_logger_core>=2.3.1",
     "nv_one_logger_training_telemetry>=2.3.1",
     "nv_one_logger_pytorch_lightning_integration>=2.3.1",
@@ -113,7 +113,6 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "127ccb48e4454179b2791214c4fb6a3b1da2cbfe" }
-transformer-engine = { git = "https://github.com/NVIDIA/TransformerEngine.git", rev = "6a34b6574fa6c29d9d07fdcddf9812cbb1488878" }
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
@@ -146,7 +145,11 @@ override-dependencies = [
     "datasets>=3.3.0",
     "flash-linear-attention>=0.3.0,<0.4.dev0",
     "patchelf; sys_platform=='never'",
-    "nvidia-resiliency-ext>=0.3.0,<0.6.0"
+    "nvidia-resiliency-ext>=0.3.0,<0.6.0",
+    "transformer-engine[pytorch,core_cu13]>=2.10.0a0,<2.13.0; sys_platform != 'darwin'",
+    "transformer-engine-cu13>=2.10.0a0,<2.13.0; sys_platform != 'darwin'",
+    "transformer-engine-cu12; sys_platform == 'never'",
+    "mamba-ssm>=2.3.0,<2.4.0",
 ]
 prerelease = "allow"
 
