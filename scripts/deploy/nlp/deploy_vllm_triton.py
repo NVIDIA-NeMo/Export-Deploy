@@ -35,14 +35,14 @@ except Exception as e:
 def get_args(argv):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Export NeMo, Megatron-Bridge, or Hugging Face models to vLLM and deploy them on Triton",
+        description="Export Megatron-Bridge or Hugging Face models to vLLM and deploy them on Triton",
     )
     parser.add_argument(
         "-mpi",
         "--model_path_id",
         required=True,
         type=str,
-        help="Path of a NeMo checkpoint, Megatron-Bridge checkpoint, or Hugging Face model ID or path.",
+        help="Path of a Megatron-Bridge checkpoint or Hugging Face model ID or path.",
     )
     parser.add_argument(
         "-hfp",
@@ -53,10 +53,10 @@ def get_args(argv):
     parser.add_argument(
         "-mf",
         "--model_format",
-        choices=["hf", "nemo2", "megatron_bridge"],
-        default="nemo2",
+        choices=["hf", "megatron_bridge"],
+        default="hf",
         type=str,
-        help="Format of the input checkpoint: 'hf' for Hugging Face, 'nemo2' for NeMo2, 'megatron_bridge' for Megatron-Bridge.",
+        help="Format of the input checkpoint: 'hf' for Hugging Face, 'megatron_bridge' for Megatron-Bridge.",
     )
     parser.add_argument(
         "-t",
