@@ -77,7 +77,7 @@ class TestDeployRayTRTLLM:
                     "--model_id",
                     model_id,
                     "--cuda_visible_devices",
-                    "0,1",
+                    "0",
                 ]
             )
             print("TRT-LLM Deployment started. Waiting for it to be ready...")
