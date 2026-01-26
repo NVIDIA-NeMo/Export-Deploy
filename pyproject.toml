@@ -99,6 +99,9 @@ linting = ["pre-commit>=3.6.0", "ruff~=0.9.0"]
 test = ["pytest", "pytest-mock", "coverage", "click"]
 nemo-toolkit = [
     "nemo-toolkit[automodel,common-only,nlp-only,eval,multimodal-only]>=2.5.0a0,<2.7.0",
+    "nv_one_logger_core>=2.3.1",
+    "nv_one_logger_training_telemetry>=2.3.1",
+    "nv_one_logger_pytorch_lightning_integration>=2.3.1",
 ]
 nemo-run = ["nemo-run"]
 
