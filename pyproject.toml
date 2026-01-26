@@ -83,7 +83,7 @@ dependencies = [
 inframework = []
 vllm = ["vllm~=0.11.2", "pandas", "timm"]
 trtllm = ["tensorrt-llm~=1.1.0", "cuda-python~=13.0.0"]
-trt-onnx = ["tensorrt==10.14.1.48", "onnx==1.18.0", "transformers==4.51.3"]
+trt-onnx = ["tensorrt==10.14.1.48.post1", "onnx==1.18.0", "transformers==4.51.3"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
@@ -113,7 +113,7 @@ vllm = [
     { index = "pytorch-cu130", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
-megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "127ccb48e4454179b2791214c4fb6a3b1da2cbfe" }
+megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "c12ab34779904155037b2ceefade77b2188fa6a4" }
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]

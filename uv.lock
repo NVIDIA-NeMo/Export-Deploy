@@ -3637,7 +3637,7 @@ wheels = [
 [[package]]
 name = "megatron-bridge"
 version = "0.3.0rc0"
-source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=127ccb48e4454179b2791214c4fb6a3b1da2cbfe#127ccb48e4454179b2791214c4fb6a3b1da2cbfe" }
+source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=c12ab34779904155037b2ceefade77b2188fa6a4#c12ab34779904155037b2ceefade77b2188fa6a4" }
 dependencies = [
     { name = "accelerate" },
     { name = "causal-conv1d" },
@@ -3667,7 +3667,7 @@ dependencies = [
 [[package]]
 name = "megatron-core"
 version = "0.16.0rc0"
-source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?subdirectory=3rdparty%2FMegatron-LM&rev=127ccb48e4454179b2791214c4fb6a3b1da2cbfe#127ccb48e4454179b2791214c4fb6a3b1da2cbfe" }
+source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?subdirectory=3rdparty%2FMegatron-LM&rev=c12ab34779904155037b2ceefade77b2188fa6a4#c12ab34779904155037b2ceefade77b2188fa6a4" }
 dependencies = [
     { name = "numpy" },
     { name = "packaging" },
@@ -4172,7 +4172,7 @@ dependencies = [
 [package.optional-dependencies]
 trt-onnx = [
     { name = "onnx", version = "1.18.0", source = { registry = "https://pypi.org/simple" } },
-    { name = "tensorrt", version = "10.14.1.48", source = { registry = "https://pypi.org/simple" } },
+    { name = "tensorrt", version = "10.14.1.48.post1", source = { registry = "https://pypi.org/simple" } },
     { name = "transformers" },
 ]
 trtllm = [
@@ -4236,7 +4236,7 @@ requires-dist = [
     { name = "hydra-core", specifier = ">1.3,<=1.3.2" },
     { name = "ijson" },
     { name = "lightning", specifier = "<2.5.0" },
-    { name = "megatron-bridge", git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=127ccb48e4454179b2791214c4fb6a3b1da2cbfe" },
+    { name = "megatron-bridge", git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=c12ab34779904155037b2ceefade77b2188fa6a4" },
     { name = "megatron-core" },
     { name = "nvidia-modelopt", extras = ["torch"], marker = "sys_platform != 'darwin'" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
@@ -4252,7 +4252,7 @@ requires-dist = [
     { name = "ray" },
     { name = "ray", extras = ["serve"] },
     { name = "sentencepiece" },
-    { name = "tensorrt", marker = "extra == 'trt-onnx'", specifier = "==10.14.1.48" },
+    { name = "tensorrt", marker = "extra == 'trt-onnx'", specifier = "==10.14.1.48.post1" },
     { name = "tensorrt-llm", marker = "extra == 'trtllm'", specifier = "~=1.1.0" },
     { name = "tensorstore" },
     { name = "tiktoken" },
@@ -8086,7 +8086,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/d3/5c/b3a7018c4f7bf3df1
 
 [[package]]
 name = "tensorrt"
-version = "10.14.1.48"
+version = "10.14.1.48.post1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'linux'",
@@ -8100,9 +8100,9 @@ resolution-markers = [
     "python_full_version < '3.11' and sys_platform == 'darwin'",
 ]
 dependencies = [
-    { name = "tensorrt-cu13", version = "10.14.1.48", source = { registry = "https://pypi.org/simple" } },
+    { name = "tensorrt-cu13", version = "10.14.1.48.post1", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/9a/e5cc29116c3b7348acbc6c70a8a1f5a36c422052ec1dda230375e3be8222/tensorrt-10.14.1.48.tar.gz", hash = "sha256:c47578649bd0dd55176d95b0f6d1e45162772791d81cb16ca1d1619552570caa", size = 16719, upload-time = "2025-11-04T20:48:50.187Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cd/d7/1455a247ecc3a85929cd3136e1ebcb0c2afbef3fb893cb47efbebec95034/tensorrt-10.14.1.48.post1.tar.gz", hash = "sha256:5aed87c541fcef881f874fb5724eadbe291851fe2152c962b9cba57cafd4872b", size = 16725, upload-time = "2025-11-07T17:14:17.028Z" }
 
 [[package]]
 name = "tensorrt-cu13"
@@ -8130,7 +8130,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/e4/8b/b9b7f5235e759199c
 
 [[package]]
 name = "tensorrt-cu13"
-version = "10.14.1.48"
+version = "10.14.1.48.post1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'linux'",
@@ -8144,10 +8144,10 @@ resolution-markers = [
     "python_full_version < '3.11' and sys_platform == 'darwin'",
 ]
 dependencies = [
-    { name = "tensorrt-cu13-bindings", version = "10.14.1.48", source = { registry = "https://pypi.org/simple" } },
-    { name = "tensorrt-cu13-libs", version = "10.14.1.48", source = { registry = "https://pypi.org/simple" } },
+    { name = "tensorrt-cu13-bindings", version = "10.14.1.48.post1", source = { registry = "https://pypi.org/simple" } },
+    { name = "tensorrt-cu13-libs", version = "10.14.1.48.post1", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d3/e8/e8d68abae8161db2019c7d579f89238444e7c9b35264d8cb58ddfcdee6c8/tensorrt_cu13-10.14.1.48.tar.gz", hash = "sha256:479cb524949d73326b5df5a0d4ac5b49be894bcf28096e4ee31a95eb3e68f19d", size = 18298, upload-time = "2025-11-04T20:49:12.57Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/c3/2905ffaf789b53d68c84930d081e14cb96b7516a5c13f8e66c5545a47464/tensorrt_cu13-10.14.1.48.post1.tar.gz", hash = "sha256:f667aee4b4b908520820b824ada7b7168f29e2659aacee2d5ae42139c6cb884e", size = 18328, upload-time = "2025-11-07T17:14:39.291Z" }
 
 [[package]]
 name = "tensorrt-cu13-bindings"
@@ -8181,7 +8181,7 @@ wheels = [
 
 [[package]]
 name = "tensorrt-cu13-bindings"
-version = "10.14.1.48"
+version = "10.14.1.48.post1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'linux'",
@@ -8195,9 +8195,15 @@ resolution-markers = [
     "python_full_version < '3.11' and sys_platform == 'darwin'",
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/fe/cde9e0f4dcc3ece06077d616bf5eec744be640f32c0cf4f44582e96ae731/tensorrt_cu13_bindings-10.14.1.48-cp310-none-win_amd64.whl", hash = "sha256:791a9fbe725532293a2108f112edb7ae776c6552e34d19ca2e939d25b587b82c", size = 765952, upload-time = "2025-11-04T21:17:25.068Z" },
-    { url = "https://files.pythonhosted.org/packages/fc/cb/6fb26f82d84b0807f68f3cfabb9e5ddce4ac31df0d62be61a2747ba3e618/tensorrt_cu13_bindings-10.14.1.48-cp311-none-win_amd64.whl", hash = "sha256:62fd85a988143c789f2b14300626a37b1869acc06aea90363d621b280024eb62", size = 765929, upload-time = "2025-11-04T21:19:13.456Z" },
-    { url = "https://files.pythonhosted.org/packages/85/42/8a8cc19c63821154a55613ae88a467d0359edb498338708dc2f327d131ad/tensorrt_cu13_bindings-10.14.1.48-cp312-none-win_amd64.whl", hash = "sha256:f2eb3fc215e95d62aa406d74f5d1f7e0e0c48c2b59f57b8e02a070aad7470c7c", size = 768616, upload-time = "2025-11-04T21:17:48.455Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/dd/be2121fabc3a3bc5bca2d91b76630a74fc32fa43ae186584a865dc97d2d9/tensorrt_cu13_bindings-10.14.1.48.post1-cp310-none-manylinux_2_28_x86_64.whl", hash = "sha256:d8f13ac102187c4a45d11cc671f7f7e59a01ec4e4f1c707fb748d30042a49416", size = 879656, upload-time = "2025-11-07T17:16:03.153Z" },
+    { url = "https://files.pythonhosted.org/packages/25/98/b42abb0a4ddeeb9e77278c5276db9136bb34e95f80e41171b730c87b8752/tensorrt_cu13_bindings-10.14.1.48.post1-cp310-none-manylinux_2_35_aarch64.whl", hash = "sha256:35e34a14411a24fde813471e4ef1882615992ee1e093c5c254f4fca070b98973", size = 958832, upload-time = "2025-11-07T18:28:04.98Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/d5/903808b18cc08ba0d8e4a6a469b08244c7c2b36291d95fc09058ec0bb39f/tensorrt_cu13_bindings-10.14.1.48.post1-cp310-none-win_amd64.whl", hash = "sha256:8f8ee0d11ee6c3f53d80c768dd9a18b75f7325babb3022b549236bb524fc807a", size = 766043, upload-time = "2025-11-07T18:57:50.67Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/f6/37a3a59fc925b9d9cdd44375468b934adb4906482a42b2228a1967d6146c/tensorrt_cu13_bindings-10.14.1.48.post1-cp311-none-manylinux_2_28_x86_64.whl", hash = "sha256:30e220ec5cd049709270e9c835d2d69ae5b05d5c269fc067e27155d2b1ba8ff5", size = 879697, upload-time = "2025-11-07T17:15:40.107Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/ce/0df4587d1690d615c0fa2a22f7e9c32a5547f66f370c4a0cd789c7ebf965/tensorrt_cu13_bindings-10.14.1.48.post1-cp311-none-manylinux_2_35_aarch64.whl", hash = "sha256:31a6f3d8217fa52533aecbe15073114fa26c2f7835d8d3c8b5371b22899c912a", size = 959312, upload-time = "2025-11-07T18:26:17.172Z" },
+    { url = "https://files.pythonhosted.org/packages/de/2f/a591eb4c6251705896a579c5b0b5b4210d7a547b0fbf867da0ae9221ae1e/tensorrt_cu13_bindings-10.14.1.48.post1-cp311-none-win_amd64.whl", hash = "sha256:83c58af9c32e527567cf4927957126a487d8b89604822c2be2522bf3e348228b", size = 766024, upload-time = "2025-11-07T18:59:17.105Z" },
+    { url = "https://files.pythonhosted.org/packages/65/5a/4101e26fffadc08630dd4850045fdf4ec3d58e0cda6fa67935c0daede5c4/tensorrt_cu13_bindings-10.14.1.48.post1-cp312-none-manylinux_2_28_x86_64.whl", hash = "sha256:1a098123ddf9e69629d66320666efbb2e237db76cd4faf715b7377471b9f4275", size = 879890, upload-time = "2025-11-07T17:17:27.641Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/b1/d8098e73df5e43610408b2726280d5cf36f3b9b2a45250aa1545c8970606/tensorrt_cu13_bindings-10.14.1.48.post1-cp312-none-manylinux_2_35_aarch64.whl", hash = "sha256:e8db2ddd753097b23e13bd29b61e24431db0724f6f143e917ef107a4f58dff43", size = 959698, upload-time = "2025-11-07T18:28:56.083Z" },
+    { url = "https://files.pythonhosted.org/packages/82/75/9032bbef64e0e1bcf35171e6524a4a027e3620ebc0bd8310bfb3b74fd221/tensorrt_cu13_bindings-10.14.1.48.post1-cp312-none-win_amd64.whl", hash = "sha256:c762c813bcaddf88e0aae43f8fad2b8637d1088818e9684de2f5e17f773592b5", size = 768710, upload-time = "2025-11-07T18:59:40.181Z" },
 ]
 
 [[package]]
@@ -8225,7 +8231,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/f3/cf/667d8387130ed60d1
 
 [[package]]
 name = "tensorrt-cu13-libs"
-version = "10.14.1.48"
+version = "10.14.1.48.post1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'linux'",
@@ -8241,7 +8247,7 @@ resolution-markers = [
 dependencies = [
     { name = "cuda-toolkit", extra = ["cudart"], marker = "extra == 'extra-18-nemo-export-deploy-trt-onnx' or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f5/6f/40bc237554ad3d42002ecde30f5ef3e4a80a07f951f3ec2d93aade44ccde/tensorrt_cu13_libs-10.14.1.48.tar.gz", hash = "sha256:76c4d003d84f29095616a03be04dd141dbf32739b0955d46c5cc711c7212f1f9", size = 717, upload-time = "2025-11-04T20:02:41.581Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/38/7f/98c80315da5b2cf19bd2a47b4b676d66a0cebc95d1b5d277349147b082e4/tensorrt_cu13_libs-10.14.1.48.post1.tar.gz", hash = "sha256:8ffa01f315276bff7c7dd01bf11415d0c8c21c45012abd42f2878153ba312d76", size = 726, upload-time = "2025-11-07T17:21:49.844Z" }
 
 [[package]]
 name = "tensorrt-llm"
