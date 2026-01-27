@@ -126,7 +126,7 @@ class vLLMExporter(ITritonDeployable):
         gpu_memory_utilization: float = 0.9,
         swap_space: float = 4,
         cpu_offload_gb: float = 0,
-        enforce_eager: bool = False,
+        enforce_eager: bool = True,
         max_seq_len_to_capture: int = 8192,
         task: Literal["auto", "generate", "embedding"] = "auto",
         model_format: Literal["hf", "nemo2", "megatron_bridge"] = "nemo2",
