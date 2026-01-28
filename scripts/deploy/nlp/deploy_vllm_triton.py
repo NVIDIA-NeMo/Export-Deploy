@@ -130,13 +130,8 @@ def get_args(argv):
         action="store_true",
         help="Whether to enforce eager execution.",
     )
-    parser.add_argument(
-        "-mslc",
-        "--max_seq_len_to_capture",
-        default=8192,
-        type=int,
-        help="Maximum sequence len covered by CUDA graphs.",
-    )
+    # Removed max_seq_len_to_capture as it's no longer supported in newer vLLM versions
+    # CUDA graph capture is now controlled via compilation config
     parser.add_argument(
         "-tmn",
         "--triton_model_name",
@@ -211,7 +206,6 @@ def nemo_deploy(argv):
             swap_space=args.swap_space,
             cpu_offload_gb=args.cpu_offload_gb,
             enforce_eager=args.enforce_eager,
-            max_seq_len_to_capture=args.max_seq_len_to_capture,
             task="generate",
             model_format=args.model_format,
             hf_model_id=args.hf_model_id_path,

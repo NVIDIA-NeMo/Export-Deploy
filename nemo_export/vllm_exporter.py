@@ -115,7 +115,6 @@ class vLLMExporter(ITritonDeployable):
         swap_space: float = 4,
         cpu_offload_gb: float = 0,
         enforce_eager: bool = False,
-        max_seq_len_to_capture: int = 8192,
         task: Literal["auto", "generate", "embedding"] = "auto",
         model_format: Literal["hf", "megatron_bridge"] = "megatron_bridge",
         hf_model_id: str = None,
@@ -136,7 +135,6 @@ class vLLMExporter(ITritonDeployable):
             swap_space (float, optional): Amount of swap space (in GB) to use. Defaults to 4.
             cpu_offload_gb (float, optional): Amount of CPU offload memory (in GB). Defaults to 0.
             enforce_eager (bool, optional): Whether to enforce eager execution. Defaults to False.
-            max_seq_len_to_capture (int, optional): Maximum sequence length to capture. Defaults to 8192.
             task (Literal["auto", "generate", "embedding"], optional): Task type for vLLM. Defaults to "auto".
             model_format (Literal["hf", "megatron_bridge"], optional): Format of the input checkpoint.
                 - "hf": Hugging Face format (default)
@@ -208,7 +206,6 @@ class vLLMExporter(ITritonDeployable):
                     swap_space=swap_space,
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
-                    max_seq_len_to_capture=max_seq_len_to_capture,
                     task=task,
                 )
         else:
@@ -225,7 +222,6 @@ class vLLMExporter(ITritonDeployable):
                 swap_space=swap_space,
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
-                max_seq_len_to_capture=max_seq_len_to_capture,
                 task=task,
             )
 
