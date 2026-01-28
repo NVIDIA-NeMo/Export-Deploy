@@ -21,7 +21,7 @@ from pathlib import Path
 
 import torch
 
-from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployableNemo2
+from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
 
 run_export_tests = True
 try:
@@ -129,8 +129,8 @@ def run_in_framework_inference(
     max_input_len=None,
     max_output_len=None,
 ):
-    model = MegatronLLMDeployableNemo2(
-        nemo_checkpoint_filepath=checkpoint_path,
+    model = MegatronLLMDeployable(
+        megatron_checkpoint_filepath=checkpoint_path,
         num_devices=n_gpu,
         num_nodes=1,
     )

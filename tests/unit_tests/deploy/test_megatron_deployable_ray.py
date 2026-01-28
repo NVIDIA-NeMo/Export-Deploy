@@ -70,9 +70,9 @@ def deploy_ray_instance(ray_cluster):
 
 
 @pytest.fixture
-def mock_nemo_checkpoint():
-    """Create a temporary mock .nemo checkpoint file."""
-    with tempfile.NamedTemporaryFile(suffix=".nemo", delete=False) as f:
+def mock_megatron_checkpoint():
+    """Create a temporary mock Megatron checkpoint directory."""
+    with tempfile.NamedTemporaryFile(suffix=".megatron", delete=False) as f:
         checkpoint_path = f.name
         f.write(b"mock checkpoint data")
 
@@ -87,8 +87,8 @@ def mock_nemo_checkpoint():
 
 @pytest.fixture
 def mock_megatron_model():
-    """Mock the MegatronLLMDeployableNemo2 model to avoid loading real models."""
-    with patch("nemo_deploy.llm.megatronllm_deployable_ray.MegatronLLMDeployableNemo2") as mock:
+    """Mock the MegatronLLMDeployable model to avoid loading real models."""
+    with patch("nemo_deploy.llm.megatronllm_deployable_ray.MegatronLLMDeployable") as mock:
         mock_instance = MagicMock()
 
         # Mock the ray_infer_fn method
@@ -208,7 +208,7 @@ class TestMegatronRayDeployable:
 
     def test_megatron_ray_deployable_initialization_single_gpu(
         self,
-        mock_nemo_checkpoint,
+        mock_megatron_checkpoint,
         mock_model_worker,
         mock_environment_setup,
         ray_cluster,
@@ -216,7 +216,7 @@ class TestMegatronRayDeployable:
     ):
         """Test basic initialization of MegatronRayDeployable with single GPU."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_megatron_checkpoint,
             num_gpus=1,
             tensor_model_parallel_size=1,
             pipeline_model_parallel_size=1,
@@ -238,7 +238,7 @@ class TestMegatronRayDeployable:
 
     def test_megatron_ray_deployable_initialization_multi_gpu(
         self,
-        mock_nemo_checkpoint,
+        mock_megatron_checkpoint,
         mock_model_worker,
         mock_environment_setup,
         ray_cluster,
@@ -246,7 +246,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with multiple GPUs."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_megatron_checkpoint,
             num_gpus=2,
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=1,
@@ -263,7 +263,7 @@ class TestMegatronRayDeployable:
 
     def test_list_models_endpoint(
         self,
-        mock_nemo_checkpoint,
+        mock_megatron_checkpoint,
         mock_model_worker,
         mock_environment_setup,
         ray_cluster,
@@ -271,7 +271,7 @@ class TestMegatronRayDeployable:
     ):
         """Test list models endpoint."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_megatron_checkpoint,
             num_gpus=1,
             model_id="test-list-models",
         )
@@ -288,7 +288,7 @@ class TestMegatronRayDeployable:
 
     def test_health_check_endpoint(
         self,
-        mock_nemo_checkpoint,
+        mock_megatron_checkpoint,
         mock_model_worker,
         mock_environment_setup,
         ray_cluster,
@@ -296,7 +296,7 @@ class TestMegatronRayDeployable:
     ):
         """Test health check endpoint."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_megatron_checkpoint,
             num_gpus=1,
             model_id="test-health-model",
         )
@@ -309,7 +309,7 @@ class TestMegatronRayDeployable:
 
     def test_initialization_with_cuda_graphs(
         self,
-        mock_nemo_checkpoint,
+        mock_megatron_checkpoint,
         mock_model_worker,
         mock_environment_setup,
         ray_cluster,
@@ -317,7 +317,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with CUDA graphs enabled."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_megatron_checkpoint,
             num_gpus=1,
             enable_cuda_graphs=True,
             model_id="test-cuda-graphs-model",
@@ -331,7 +331,7 @@ class TestMegatronRayDeployable:
 
     def test_initialization_with_flash_decode(
         self,
-        mock_nemo_checkpoint,
+        mock_megatron_checkpoint,
         mock_model_worker,
         mock_environment_setup,
         ray_cluster,
@@ -339,7 +339,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with Flash Decode enabled."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_megatron_checkpoint,
             num_gpus=1,
             enable_flash_decode=True,
             model_id="test-flash-decode-model",
@@ -353,7 +353,7 @@ class TestMegatronRayDeployable:
 
     def test_initialization_with_legacy_checkpoint(
         self,
-        mock_nemo_checkpoint,
+        mock_megatron_checkpoint,
         mock_model_worker,
         mock_environment_setup,
         ray_cluster,
@@ -361,7 +361,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with legacy checkpoint format."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_megatron_checkpoint,
             num_gpus=1,
             legacy_ckpt=True,
             model_id="test-legacy-ckpt-model",
@@ -375,7 +375,7 @@ class TestMegatronRayDeployable:
 
     def test_multi_node_initialization(
         self,
-        mock_nemo_checkpoint,
+        mock_megatron_checkpoint,
         mock_model_worker,
         mock_environment_setup,
         ray_cluster,
@@ -383,7 +383,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with multiple nodes."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_megatron_checkpoint,
             num_gpus=4,
             tensor_model_parallel_size=4,
             pipeline_model_parallel_size=1,
@@ -398,7 +398,7 @@ class TestMegatronRayDeployable:
 
     def test_pipeline_parallelism_initialization(
         self,
-        mock_nemo_checkpoint,
+        mock_megatron_checkpoint,
         mock_model_worker,
         mock_environment_setup,
         ray_cluster,
@@ -406,7 +406,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with pipeline parallelism."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_megatron_checkpoint,
             num_gpus=4,
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=2,
@@ -421,7 +421,7 @@ class TestMegatronRayDeployable:
 
     def test_context_parallelism_initialization(
         self,
-        mock_nemo_checkpoint,
+        mock_megatron_checkpoint,
         mock_model_worker,
         mock_environment_setup,
         ray_cluster,
@@ -429,7 +429,7 @@ class TestMegatronRayDeployable:
     ):
         """Test initialization with context parallelism."""
         deployment_handle = MegatronRayDeployable.bind(
-            nemo_checkpoint_filepath=mock_nemo_checkpoint,
+            megatron_checkpoint_filepath=mock_megatron_checkpoint,
             num_gpus=2,
             tensor_model_parallel_size=1,
             pipeline_model_parallel_size=1,

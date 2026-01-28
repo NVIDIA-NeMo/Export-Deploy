@@ -27,7 +27,7 @@ def mock_ray_deployment():
     """Fixture to create a mock Ray deployment instance."""
     # Create a mock deployment that mimics MegatronRayDeployable's interface
     deployment = MagicMock()
-    deployment.model_id = "nemo-model"
+    deployment.model_id = "megatron-model"
     deployment.workers = [MagicMock()]
     deployment.primary_worker = deployment.workers[0]
 
@@ -79,7 +79,7 @@ def test_completions_output_format_basic(mock_ray_deployment):
         assert "id" in output
         assert output["object"] == "text_completion"
         assert "created" in output
-        assert output["model"] == "nemo-model"
+        assert output["model"] == "megatron-model"
         assert "choices" in output
         assert "usage" in output
 
@@ -265,7 +265,7 @@ def test_completions_complete_output_structure(mock_ray_deployment):
         assert "id" in output and isinstance(output["id"], str)
         assert output["object"] == "text_completion"
         assert "created" in output and isinstance(output["created"], int)
-        assert output["model"] == "nemo-model"
+        assert output["model"] == "megatron-model"
 
         # Verify choices
         assert len(output["choices"]) == 1

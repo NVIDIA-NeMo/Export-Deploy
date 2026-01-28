@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import tarfile
-import tempfile
 import typing
 
 import numpy as np
@@ -25,13 +22,10 @@ from pytriton.model_config import Tensor
 
 from nemo_deploy.utils import (
     MISSING_PIL_MSG,
-    NEMO1,
-    NEMO2,
     UnavailableError,
     broadcast_list,
     cast_output,
     ndarray2img,
-    nemo_checkpoint_version,
     str_list2numpy,
     str_ndarray2list,
     typedict2tensor,
@@ -101,44 +95,6 @@ class TestTypedict2Tensor:
         str_list_tensor = next(t for t in tensors if t.name == "str_list")
         assert str_list_tensor.dtype == bytes
         assert str_list_tensor.shape == (1,)
-
-
-class TestNemoCheckpointVersion:
-    def test_nemo2_checkpoint_dir(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Create NEMO 2.0 structure
-            os.makedirs(os.path.join(tmpdir, "context"))
-            os.makedirs(os.path.join(tmpdir, "weights"))
-            assert nemo_checkpoint_version(tmpdir) == NEMO2
-
-    def test_nemo1_checkpoint_dir(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Create NEMO 1.0 structure (no context/weights dirs)
-            assert nemo_checkpoint_version(tmpdir) == NEMO1
-
-    def test_nemo2_checkpoint_tar(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tar_path = os.path.join(tmpdir, "checkpoint.tar")
-            with tarfile.open(tar_path, "w") as tar:
-                # Create NEMO 2.0 structure in tar
-                context_info = tarfile.TarInfo("context")
-                context_info.type = tarfile.DIRTYPE
-                tar.addfile(context_info)
-
-                weights_info = tarfile.TarInfo("weights")
-                weights_info.type = tarfile.DIRTYPE
-                tar.addfile(weights_info)
-
-            assert nemo_checkpoint_version(tar_path) == NEMO2
-
-    def test_nemo1_checkpoint_tar(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tar_path = os.path.join(tmpdir, "checkpoint.tar")
-            with tarfile.open(tar_path, "w"):
-                # Create empty tar (NEMO 1.0)
-                pass
-
-            assert nemo_checkpoint_version(tar_path) == NEMO1
 
 
 class TestStringConversions:
