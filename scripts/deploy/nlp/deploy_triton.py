@@ -483,10 +483,10 @@ def get_trtllm_deployable(args):
 
 
 def get_nemo_deployable(args):
-    if args.nemo_checkpoint is None:
-        raise ValueError("In-Framework deployment requires a .nemo checkpoint")
+    if args.megatron_checkpoint is None:
+        raise ValueError("In-Framework deployment requires a Megatron checkpoint")
 
-    return MegatronLLMDeployable(args.nemo_checkpoint, args.num_gpus)
+    return MegatronLLMDeployable(megatron_checkpoint_filepath=args.megatron_checkpoint, num_devices=args.num_gpus)
 
 
 def nemo_deploy(argv):
