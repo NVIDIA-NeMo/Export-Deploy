@@ -210,13 +210,6 @@ def get_args(argv):
         help="Type of model to load",
     )
     parser.add_argument(
-        "-mf",
-        "--model_format",
-        type=str,
-        default="nemo",
-        help="Format of model to load",
-    )
-    parser.add_argument(
         "-mb",
         "--micro_batch_size",
         type=int,
