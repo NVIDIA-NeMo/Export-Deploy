@@ -365,6 +365,7 @@ class MegatronRayDeployable:
             # Get sampling parameters
             temperature = request.get("temperature", 0.0)
             top_p = request.get("top_p", 0.0)
+            top_k = request.get("top_k", 0)
 
             # Greedy sampling check: when both temperature and top_p are 0, set top_k to 1
             if temperature == 0.0 and top_p == 0.0:
