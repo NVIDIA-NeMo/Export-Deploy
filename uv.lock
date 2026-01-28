@@ -3468,7 +3468,7 @@ wheels = [
 [[package]]
 name = "megatron-bridge"
 version = "0.3.0rc0"
-source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=c12ab34779904155037b2ceefade77b2188fa6a4#c12ab34779904155037b2ceefade77b2188fa6a4" }
+source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=7a50d2ee726ba17ea5e75acf4c56b0b53b43a0d6#7a50d2ee726ba17ea5e75acf4c56b0b53b43a0d6" }
 dependencies = [
     { name = "accelerate" },
     { name = "causal-conv1d" },
@@ -3498,7 +3498,7 @@ dependencies = [
 [[package]]
 name = "megatron-core"
 version = "0.16.0rc0"
-source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?subdirectory=3rdparty%2FMegatron-LM&rev=c12ab34779904155037b2ceefade77b2188fa6a4#c12ab34779904155037b2ceefade77b2188fa6a4" }
+source = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?subdirectory=3rdparty%2FMegatron-LM&rev=7a50d2ee726ba17ea5e75acf4c56b0b53b43a0d6#7a50d2ee726ba17ea5e75acf4c56b0b53b43a0d6" }
 dependencies = [
     { name = "numpy" },
     { name = "packaging" },
@@ -4067,7 +4067,7 @@ requires-dist = [
     { name = "hydra-core", specifier = ">1.3,<=1.3.2" },
     { name = "ijson" },
     { name = "lightning", specifier = "<2.5.0" },
-    { name = "megatron-bridge", git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=c12ab34779904155037b2ceefade77b2188fa6a4" },
+    { name = "megatron-bridge", git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git?rev=7a50d2ee726ba17ea5e75acf4c56b0b53b43a0d6" },
     { name = "megatron-core" },
     { name = "nvidia-modelopt", extras = ["torch"], marker = "sys_platform != 'darwin'" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
