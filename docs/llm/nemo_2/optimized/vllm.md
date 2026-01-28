@@ -81,7 +81,6 @@ After executing the script, it will export the model to vLLM and then initiate t
    - ``--swap_space``: Size (GiB) of CPU memory per GPU to use as swap space. Default is 4.
    - ``--cpu_offload_gb``: Size (GiB) of CPU memory to use for offloading model weights. Default is 0.
    - ``--enforce_eager``: Whether to enforce eager execution. Default is False.
-   - ``--max_seq_len_to_capture``: Maximum sequence length covered by CUDA graphs. Default is 8192.
    - ``--triton_model_name``: Name for the service/model on Triton. (Required)
    - ``--triton_model_version``: Version for the service/model. Default is 1.
    - ``--triton_port``: Port for the Triton server to listen for requests. Default is 8000.
