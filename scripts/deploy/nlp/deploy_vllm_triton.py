@@ -54,7 +54,7 @@ def get_args(argv):
         "-mf",
         "--model_format",
         choices=["hf", "megatron_bridge"],
-        default="hf",
+        default="megatron_bridge",
         type=str,
         help="Format of the input checkpoint: 'hf' for Hugging Face, 'megatron_bridge' for Megatron-Bridge.",
     )
