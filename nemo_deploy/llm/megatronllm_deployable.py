@@ -167,15 +167,14 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
     ):
         if not HAVE_TRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
-        self.model_format = model_format
-        if self.model_format == "nemo":
+        if model_format == "nemo":
             checkpoint_filepath = nemo_checkpoint_filepath
-        elif self.model_format == "megatron":
+        elif model_format == "megatron":
             if model_type not in ["gpt", "mamba"]:
                 raise ValueError(f"Model type {model_type} not supported for Megatron models.")
             checkpoint_filepath = megatron_checkpoint_filepath
         else:
-            raise ValueError(f"Model format {self.model_format} not supported.")
+            raise ValueError(f"Model format {model_format} not supported.")
 
         self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = create_mcore_engine(
             num_devices=num_devices,
@@ -194,7 +193,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             enable_cuda_graphs=enable_cuda_graphs,
             legacy_ckpt=legacy_ckpt,
             model_type=model_type,
-            model_format=self.model_format,
+            model_format=model_format,
             micro_batch_size=micro_batch_size,
             **model_config_kwargs,
         )
@@ -274,16 +273,12 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         Works when model's tokenizer has chat template (typically chat models).
         """
         try:
-            if self.model_format == "megatron":
-                # MBridge chat template is stored as below
-                tokenizer_chat_template = self.mcore_tokenizer._tokenizer.chat_template
-            elif self.model_format == "nemo":
-                tokenizer_chat_template = self.mcore_tokenizer.tokenizer.tokenizer.chat_template
+            tokenizer_chat_template = self.mcore_tokenizer._tokenizer.chat_template
 
             # Try to get bos_token
             bos_token = None
             try:
-                bos_token = self.mcore_tokenizer._tokenizer.bos_token if self.model_format == "megatron" else self.mcore_tokenizer.tokenizer.tokenizer.bos_token
+                bos_token = self.mcore_tokenizer._tokenizer.bos_token
             except AttributeError:
                 # Some tokenizers might not have bos_token, use empty string as fallback
                 bos_token = ""
@@ -315,12 +310,12 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         """Removes eos token if it exists in the output, otherwise does nothing."""
         # MBridge tokenizer: access underlying HF tokenizer via _tokenizer
         try:
-            eos_token = self.mcore_tokenizer._tokenizer.eos_token if self.model_format == "megatron" else self.mcore_tokenizer.tokenizer.tokenizer.eos_token
+            eos_token = self.mcore_tokenizer._tokenizer.eos_token
         except AttributeError:
             # Fallback for TiktokenTokenizer and similar tokenizers
             try:
-                eos_id = self.mcore_tokenizer._tokenizer.eos_id if self.model_format == "megatron" else self.mcore_tokenizer.tokenizer.tokenizer.eos_id
-                eos_token = self.mcore_tokenizer._tokenizer.inv_vocab[eos_id] if self.model_format == "megatron" else self.mcore_tokenizer.tokenizer.tokenizer.special_tokens[eos_id]
+                eos_id = self.mcore_tokenizer._tokenizer.eos_id
+                eos_token = self.mcore_tokenizer._tokenizer.inv_vocab[eos_id]
             except AttributeError:
                 # If neither approach works, return text unchanged
                 return text
