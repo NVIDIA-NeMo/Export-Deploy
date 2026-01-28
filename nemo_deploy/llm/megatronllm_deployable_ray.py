@@ -362,15 +362,24 @@ class MegatronRayDeployable:
             # Extract parameters from the request dictionary
             messages = request.get("messages", [])
 
+            # Get sampling parameters
+            temperature = request.get("temperature", 0.0)
+            top_p = request.get("top_p", 0.0)
+
+            # Greedy sampling check: when both temperature and top_p are 0, set top_k to 1
+            if temperature == 0.0 and top_p == 0.0:
+                LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
+                top_k = 1
+
             # Prepare inference parameters
             # For chat templates, we need to pass the entire messages list as a single prompt
             # so that apply_chat_template receives the full conversation context
             inference_inputs = {
-                "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
-                "max_length": request.get("max_tokens", 256),
-                "temperature": request.get("temperature", 1.0),
-                "top_k": request.get("top_k", 0),
-                "top_p": request.get("top_p", 0.0),
+                "prompts": [messages],
+                "max_length": request.get("max_tokens", 512),
+                "temperature": temperature,
+                "top_k": top_k,
+                "top_p": top_p,
                 "compute_logprob": True if request.get("logprobs") == 1 else False,
                 "apply_chat_template": request.get("apply_chat_template", True),
             }
@@ -380,7 +389,6 @@ class MegatronRayDeployable:
 
             # Extract generated texts from results
             generated_texts = results["sentences"]
-
             # Calculate token counts
             prompt_tokens = sum(len(str(msg).split()) for msg in messages)
             completion_tokens = sum(len(r.split()) for r in generated_texts)
