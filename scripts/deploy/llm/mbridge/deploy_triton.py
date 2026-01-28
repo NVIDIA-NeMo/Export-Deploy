@@ -31,7 +31,7 @@ if not LOGGER.hasHandlers():
 
 megatron_llm_supported = True
 try:
-    from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployableNemo2
+    from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
 except Exception as e:
     LOGGER.warning(f"Cannot import MegatronLLMDeployable, it will not be available. {type(e).__name__}: {e}")
     megatron_llm_supported = False
@@ -42,7 +42,6 @@ def get_args(argv):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Deploy nemo models to Triton",
     )
-    parser.add_argument("-nc", "--nemo_checkpoint", type=str, help="Source .nemo file")
     parser.add_argument(
         "-tmn",
         "--triton_model_name",
@@ -243,10 +242,7 @@ def nemo_deploy(argv):
     if not megatron_llm_supported:
         raise ValueError("MegatronLLMDeployable is not supported in this environment.")
 
-    if args.model_format == "nemo" and args.nemo_checkpoint is None:
-        raise ValueError("In-Framework deployment requires a checkpoint folder.")
-
-    if args.model_format == "megatron" and args.megatron_checkpoint is None:
+    if args.megatron_checkpoint is None:
         raise ValueError("In-Framework deployment requires a Megatron checkpoint folder.")
 
     model_config_kwargs = {
@@ -260,10 +256,10 @@ def nemo_deploy(argv):
     if args.num_layers_in_last_pipeline_stage is not None:
         model_config_kwargs["num_layers_in_last_pipeline_stage"] = args.num_layers_in_last_pipeline_stage
 
-    model = MegatronLLMDeployableNemo2(
+    model = MegatronLLMDeployable(
+        megatron_checkpoint_filepath=args.megatron_checkpoint,
         num_devices=args.num_gpus,
         num_nodes=args.num_nodes,
-        nemo_checkpoint_filepath=args.nemo_checkpoint,
         tensor_model_parallel_size=args.tensor_parallelism_size,
         pipeline_model_parallel_size=args.pipeline_parallelism_size,
         inference_max_seq_length=args.inference_max_seq_length,
@@ -272,9 +268,7 @@ def nemo_deploy(argv):
         enable_flash_decode=args.enable_flash_decode,
         enable_cuda_graphs=args.enable_cuda_graphs,
         legacy_ckpt=args.legacy_ckpt,
-        megatron_checkpoint_filepath=args.megatron_checkpoint,
         model_type=args.model_type,
-        model_format=args.model_format,
         micro_batch_size=args.micro_batch_size,
         **model_config_kwargs,
     )
