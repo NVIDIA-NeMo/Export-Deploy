@@ -38,13 +38,10 @@ try:
     from megatron.core.inference.common_inference_params import CommonInferenceParams
 
     from nemo_deploy.llm import NemoQueryLLMPyTorch
-    from nemo_deploy.llm.megatronllm_deployable import (
-        MegatronLLMDeploy,
-        MegatronLLMDeployableNemo2,
-    )
+    from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
 except Exception as e:
     LOGGER.warning(
-        "Cannot import MegatronLLMDeploy* classes, or NemoQueryLLMPyTorch, or CommonInferenceParams, "
+        "Cannot import MegatronLLMDeployable class, or NemoQueryLLMPyTorch, or CommonInferenceParams, "
         f"in-framework inference will not be available. Reason: {type(e).__name__}: {e}"
     )
     in_framework_supported = False
@@ -106,7 +103,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path, use_vllm: bo
             expected_output = record["last_word"].strip().lower()
             all_expected_outputs.append(expected_output)
             if model is not None:
-                if in_framework_supported and isinstance(model, MegatronLLMDeployableNemo2):
+                if in_framework_supported and isinstance(model, MegatronLLMDeployable):
                     model_output = model.generate(
                         prompts=[prompt],
                         inference_params=CommonInferenceParams(
@@ -510,8 +507,8 @@ def run_in_framework_inference(
 
             print("Path: {0} and model: {1} will be tested".format(checkpoint_path, model_name))
 
-        deployed_model = MegatronLLMDeploy.get_deployable(
-            checkpoint_path,
+        deployed_model = MegatronLLMDeployable(
+            megatron_checkpoint_filepath=checkpoint_path,
             num_nodes=num_nodes,
             num_devices=num_gpus,
             enable_flash_decode=enable_flash_decode,
