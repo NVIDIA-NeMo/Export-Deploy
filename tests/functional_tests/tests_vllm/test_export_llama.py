@@ -29,7 +29,7 @@ class TestVLLMExportLlama:
         cls.testdir = tempfile.mkdtemp()
         logger.info(f"Test directory: {cls.testdir}")
 
-        # Update HF model
+        # Create HF model for testing
         subprocess.run(
             [
                 "coverage",
@@ -54,23 +54,6 @@ class TestVLLMExportLlama:
                         "torch_dtype": "float16",
                     }
                 ),
-            ],
-            check=True,
-        )
-
-        # HF to NeMo2
-        subprocess.run(
-            [
-                "coverage",
-                "run",
-                "--data-file=/workspace/.coverage",
-                "--source=/workspace/",
-                "--parallel-mode",
-                "scripts/export/export_hf_to_nemo2.py",
-                "--hf_model",
-                f"{cls.testdir}/llama_head64",
-                "--output_path",
-                f"{cls.testdir}/nemo2_ckpt",
             ],
             check=True,
         )
@@ -100,11 +83,11 @@ class TestVLLMExportLlama:
                 "--test_deployment",
                 "True",
                 "--model_name",
-                "nemo2_ckpt",
+                "llama_head64",
                 "--model_dir",
-                f"{self.testdir}/vllm_from_nemo2",
+                f"{self.testdir}/vllm_from_hf",
                 "--checkpoint_dir",
-                f"{self.testdir}/nemo2_ckpt",
+                f"{self.testdir}/llama_head64",
                 "--run_accuracy",
                 "True",
                 "--test_data_path",
