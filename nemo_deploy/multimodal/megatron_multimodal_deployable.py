@@ -25,7 +25,6 @@ from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
 from nemo_export_deploy_common.import_utils import (
     MISSING_MBRIDGE_MSG,
-    MISSING_NEMO_MSG,
     MISSING_TRITON_MSG,
     UnavailableError,
     null_decorator,

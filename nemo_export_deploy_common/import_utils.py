@@ -39,7 +39,9 @@ MISSING_TRITON_MSG = "pytriton is not available. Please install it with `pip ins
 MISSING_TENSORRT_LLM_MSG = "tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`."
 MISSING_TENSORRT_MSG = "tensorrt is not available. Please install it with `pip install nvidia-tensorrt`."
 MISSING_NEMO_MSG = "nemo is not available. Please install it with `pip install nemo`."
-MISSING_MBRIDGE_MSG = "megatron.bridge is not available. Please install it from https://github.com/NVIDIA-NeMo/Megatron-Bridge"
+MISSING_MBRIDGE_MSG = (
+    "megatron.bridge is not available. Please install it from https://github.com/NVIDIA-NeMo/Megatron-Bridge"
+)
 MISSING_TORCHVISION_MSG = "torchvision is not available. Please install it with `pip install torchvision`."
 MISSING_MODELOPT_MSG = "modelopt is not available. Please install it with `pip install nvidia-modelopt[torch]`."
 MISSING_RAY_MSG = "ray is not available. Please install it with `pip install ray`."

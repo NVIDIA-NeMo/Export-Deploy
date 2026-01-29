@@ -388,7 +388,10 @@ class TestMegatronMultimodalDeployable:
     @patch("nemo_deploy.multimodal.megatron_multimodal_deployable.HAVE_MBRIDGE", False)
     def test_initialization_no_mbridge(self):
         """Test that initialization fails when Megatron Bridge is not available."""
-        with pytest.raises(UnavailableError, match="megatron.bridge is not available. Please install it from https://github.com/NVIDIA-NeMo/Megatron-Bridge"):
+        with pytest.raises(
+            UnavailableError,
+            match="megatron.bridge is not available. Please install it from https://github.com/NVIDIA-NeMo/Megatron-Bridge",
+        ):
             MegatronMultimodalDeployable(megatron_checkpoint_filepath="test_checkpoint.nemo")
 
     def test_initialization_missing_checkpoint(self, mock_setup_model_and_tokenizer, mock_triton_imports):
