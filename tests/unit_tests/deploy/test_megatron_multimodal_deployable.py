@@ -21,7 +21,7 @@ import torch
 from megatron.core.inference.common_inference_params import CommonInferenceParams
 from PIL import Image
 
-from nemo_deploy.multimodal.nemo_multimodal_deployable import NeMoMultimodalDeployable
+from nemo_deploy.multimodal.megatron_multimodal_deployable import MegatronMultimodalDeployable
 from nemo_export_deploy_common.import_utils import UnavailableError
 
 
@@ -43,18 +43,18 @@ class MockResult:
 
 @pytest.fixture
 def mock_setup_model_and_tokenizer():
-    with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.setup_model_and_tokenizer") as mock:
+    with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.setup_model_and_tokenizer") as mock:
         mock.return_value = (MockInferenceWrappedModel(), MockProcessor())
         yield mock
 
 
 @pytest.fixture
 def mock_triton_imports():
-    with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.HAVE_TRITON", True):
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.HAVE_NEMO", True):
-            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.batch") as mock_batch:
-                with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.first_value") as mock_first_value:
-                    with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.Tensor") as mock_tensor:
+    with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.HAVE_TRITON", True):
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.HAVE_MBRIDGE", True):
+            with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.batch") as mock_batch:
+                with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.first_value") as mock_first_value:
+                    with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.Tensor") as mock_tensor:
                         mock_batch.return_value = lambda x: x
                         mock_first_value.return_value = lambda x: x
 
@@ -74,8 +74,8 @@ def mock_triton_imports():
 
 @pytest.fixture
 def mock_utils():
-    with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.str_ndarray2list") as mock_str2list:
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.cast_output") as mock_cast:
+    with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.str_ndarray2list") as mock_str2list:
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.cast_output") as mock_cast:
             mock_str2list.return_value = ["test prompt 1", "test prompt 2"]
             mock_cast.return_value = np.array([b"Generated text 1", b"Generated text 2"])
             yield mock_str2list, mock_cast
@@ -94,23 +94,23 @@ def sample_image_base64():
 
 @pytest.fixture
 def deployable(mock_setup_model_and_tokenizer, mock_triton_imports):
-    return NeMoMultimodalDeployable(
-        nemo_checkpoint_filepath="test_checkpoint.nemo",
-        tensor_parallel_size=1,
-        pipeline_parallel_size=1,
+    return MegatronMultimodalDeployable(
+        megatron_checkpoint_filepath="test_checkpoint.nemo",
+        tensor_model_parallel_size=1,
+        pipeline_model_parallel_size=1,
         params_dtype=torch.bfloat16,
         inference_batch_times_seqlen_threshold=1000,
     )
 
 
-class TestNeMoMultimodalDeployable:
+class TestMegatronMultimodalDeployable:
     def test_initialization_success(self, mock_setup_model_and_tokenizer, mock_triton_imports):
-        """Test successful initialization of NeMoMultimodalDeployable."""
-        deployable = NeMoMultimodalDeployable(nemo_checkpoint_filepath="test_checkpoint.nemo")
+        """Test successful initialization of MegatronMultimodalDeployable."""
+        deployable = MegatronMultimodalDeployable(megatron_checkpoint_filepath="test_checkpoint.nemo")
 
-        assert deployable.nemo_checkpoint_filepath == "test_checkpoint.nemo"
-        assert deployable.tensor_parallel_size == 1
-        assert deployable.pipeline_parallel_size == 1
+        assert deployable.megatron_checkpoint_filepath == "test_checkpoint.nemo"
+        assert deployable.tensor_model_parallel_size == 1
+        assert deployable.pipeline_model_parallel_size == 1
         assert deployable.params_dtype == torch.bfloat16
         assert deployable.inference_batch_times_seqlen_threshold == 1000
         assert deployable.inference_wrapped_model is not None
@@ -118,35 +118,37 @@ class TestNeMoMultimodalDeployable:
 
     def test_initialization_with_custom_params(self, mock_setup_model_and_tokenizer, mock_triton_imports):
         """Test initialization with custom parameters."""
-        deployable = NeMoMultimodalDeployable(
-            nemo_checkpoint_filepath="custom_checkpoint.nemo",
-            tensor_parallel_size=2,
-            pipeline_parallel_size=2,
+        deployable = MegatronMultimodalDeployable(
+            megatron_checkpoint_filepath="custom_checkpoint.nemo",
+            tensor_model_parallel_size=2,
+            pipeline_model_parallel_size=2,
             params_dtype=torch.float16,
             inference_batch_times_seqlen_threshold=2000,
         )
 
-        assert deployable.tensor_parallel_size == 2
-        assert deployable.pipeline_parallel_size == 2
+        assert deployable.tensor_model_parallel_size == 2
+        assert deployable.pipeline_model_parallel_size == 2
         assert deployable.params_dtype == torch.float16
         assert deployable.inference_batch_times_seqlen_threshold == 2000
 
     def test_initialization_calls_setup_model(self, mock_setup_model_and_tokenizer, mock_triton_imports):
         """Test that initialization calls setup_model_and_tokenizer with correct parameters."""
-        NeMoMultimodalDeployable(
-            nemo_checkpoint_filepath="test_checkpoint.nemo",
-            tensor_parallel_size=2,
-            pipeline_parallel_size=2,
+        MegatronMultimodalDeployable(
+            megatron_checkpoint_filepath="test_checkpoint.nemo",
+            tensor_model_parallel_size=2,
+            pipeline_model_parallel_size=2,
             params_dtype=torch.float16,
             inference_batch_times_seqlen_threshold=1500,
+            inference_max_seq_length=4096,
         )
 
         mock_setup_model_and_tokenizer.assert_called_once_with(
-            path="test_checkpoint.nemo",
-            tp_size=2,
-            pp_size=2,
+            megatron_model_path="test_checkpoint.nemo",
+            tp=2,
+            pp=2,
             params_dtype=torch.float16,
             inference_batch_times_seqlen_threshold=1500,
+            inference_max_seq_length=4096,
         )
 
     def test_generate_method(self, deployable, sample_image):
@@ -155,7 +157,7 @@ class TestNeMoMultimodalDeployable:
         images = [sample_image, sample_image]
         inference_params = CommonInferenceParams(temperature=0.7, top_k=10, top_p=0.9, num_tokens_to_generate=100)
 
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.generate") as mock_generate:
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.generate") as mock_generate:
             with patch.object(deployable, "apply_chat_template", side_effect=lambda x: x):
                 mock_generate.return_value = [MockResult("Generated text 1"), MockResult("Generated text 2")]
 
@@ -189,7 +191,7 @@ class TestNeMoMultimodalDeployable:
         prompts = ["Test prompt"]
         images = [sample_image]
 
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.generate") as mock_generate:
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.generate") as mock_generate:
             mock_generate.return_value = [MockResult("Generated text")]
 
             deployable.generate(prompts=prompts, images=images)
@@ -369,7 +371,7 @@ class TestNeMoMultimodalDeployable:
 
     def test_dict_to_str_function(self):
         """Test the dict_to_str utility function."""
-        from nemo_deploy.multimodal.nemo_multimodal_deployable import dict_to_str
+        from nemo_deploy.multimodal.megatron_multimodal_deployable import dict_to_str
 
         test_dict = {"key1": "value1", "key2": "value2"}
         result = dict_to_str(test_dict)
@@ -377,26 +379,26 @@ class TestNeMoMultimodalDeployable:
         assert isinstance(result, str)
         assert json.loads(result) == test_dict
 
-    @patch("nemo_deploy.multimodal.nemo_multimodal_deployable.HAVE_TRITON", False)
+    @patch("nemo_deploy.multimodal.megatron_multimodal_deployable.HAVE_TRITON", False)
     def test_initialization_no_triton(self):
         """Test that initialization fails when Triton is not available."""
         with pytest.raises(UnavailableError):
-            NeMoMultimodalDeployable(nemo_checkpoint_filepath="test_checkpoint.nemo")
+            MegatronMultimodalDeployable(megatron_checkpoint_filepath="test_checkpoint.nemo")
 
-    @patch("nemo_deploy.multimodal.nemo_multimodal_deployable.HAVE_NEMO", False)
-    def test_initialization_no_nemo(self):
-        """Test that initialization fails when NeMo is not available."""
-        with pytest.raises(UnavailableError, match="nemo is not available. Please install it with `pip install nemo`."):
-            NeMoMultimodalDeployable(nemo_checkpoint_filepath="test_checkpoint.nemo")
+    @patch("nemo_deploy.multimodal.megatron_multimodal_deployable.HAVE_MBRIDGE", False)
+    def test_initialization_no_mbridge(self):
+        """Test that initialization fails when Megatron Bridge is not available."""
+        with pytest.raises(UnavailableError, match="megatron.bridge is not available. Please install it from https://github.com/NVIDIA-NeMo/Megatron-Bridge"):
+            MegatronMultimodalDeployable(megatron_checkpoint_filepath="test_checkpoint.nemo")
 
-    def test_initialization_missing_checkpoint(self, mock_triton_imports):
+    def test_initialization_missing_checkpoint(self, mock_setup_model_and_tokenizer, mock_triton_imports):
         """Test initialization with missing checkpoint filepath."""
         with pytest.raises(TypeError):
-            NeMoMultimodalDeployable()
+            MegatronMultimodalDeployable()
 
     def test_generate_empty_inputs(self, deployable):
         """Test generate method with empty inputs."""
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.generate") as mock_generate:
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.generate") as mock_generate:
             mock_generate.return_value = []
 
             results = deployable.generate(prompts=[], images=[])
@@ -407,7 +409,7 @@ class TestNeMoMultimodalDeployable:
         prompts = ["prompt1", "prompt2"]
         images = [sample_image]  # Only one image for two prompts
 
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.generate") as mock_generate:
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.generate") as mock_generate:
             mock_generate.return_value = [MockResult("Generated text 1"), MockResult("Generated text 2")]
 
             # This should work as the mock handles it, but in real scenario it might fail
@@ -429,8 +431,8 @@ class TestNeMoMultimodalDeployable:
             "apply_chat_template": np.array([False]),
         }
 
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.str_ndarray2list") as mock_str2list:
-            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.cast_output") as mock_cast:
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.str_ndarray2list") as mock_str2list:
+            with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.cast_output") as mock_cast:
                 with patch.object(deployable, "_infer_fn") as mock_infer:
                     # Setup mocks
                     mock_str2list.side_effect = [["test prompt 1", "test prompt 2"], ["mock_base64_1", "mock_base64_2"]]
@@ -533,9 +535,9 @@ class TestNeMoMultimodalDeployable:
         image_source = "data:image;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
         expected_image = Image.new("RGB", (100, 100))
 
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
             # Make isinstance return True for our mock
-            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.isinstance") as mock_isinstance:
+            with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.isinstance") as mock_isinstance:
                 mock_isinstance.return_value = True
 
                 with patch("qwen_vl_utils.process_vision_info") as mock_process:
@@ -596,9 +598,9 @@ class TestNeMoMultimodalDeployable:
 
         image_source = "data:image;base64,test_base64_string"
 
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
             # Make isinstance return False for our mock (not a QwenVLInferenceWrapper)
-            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.isinstance") as mock_isinstance:
+            with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.isinstance") as mock_isinstance:
                 mock_isinstance.return_value = False
 
                 with pytest.raises(ValueError, match="not supported"):
