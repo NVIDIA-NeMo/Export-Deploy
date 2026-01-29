@@ -28,7 +28,7 @@ from ray import serve
 from ray.util.scheduling_strategies import NodeAffinitySchedulingStrategy
 
 from ..ray_utils import find_available_port
-from .megatronllm_deployable import MegatronLLMDeployableNemo2
+from .megatronllm_deployable import MegatronLLMDeployable
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -44,7 +44,7 @@ class ModelWorker:
 
     def __init__(
         self,
-        nemo_checkpoint_filepath: str,
+        megatron_checkpoint_filepath: str,
         rank: int,
         world_size: int,
         tensor_model_parallel_size: int,
@@ -59,9 +59,7 @@ class ModelWorker:
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
         random_seed: Optional[int] = None,
-        megatron_checkpoint_filepath: str = None,
         model_type: str = "gpt",
-        model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
         **model_config_kwargs,
     ):
@@ -83,8 +81,8 @@ class ModelWorker:
             LOGGER.info(f"Replica {replica_id} - MASTER_ADDR: {os.environ['MASTER_ADDR']}")
 
         try:
-            self.model = MegatronLLMDeployableNemo2(
-                nemo_checkpoint_filepath=nemo_checkpoint_filepath,
+            self.model = MegatronLLMDeployable(
+                megatron_checkpoint_filepath=megatron_checkpoint_filepath,
                 num_devices=world_size,
                 num_nodes=world_size // torch.cuda.device_count(),
                 tensor_model_parallel_size=tensor_model_parallel_size,
@@ -96,9 +94,7 @@ class ModelWorker:
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
                 random_seed=random_seed,
-                megatron_checkpoint_filepath=megatron_checkpoint_filepath,
                 model_type=model_type,
-                model_format=model_format,
                 micro_batch_size=micro_batch_size,
                 **model_config_kwargs,
             )
@@ -128,28 +124,26 @@ class MegatronRayDeployable:
 
     def __init__(
         self,
-        nemo_checkpoint_filepath: str,
+        megatron_checkpoint_filepath: str,
         num_gpus: int = 1,
         tensor_model_parallel_size: int = 1,
         pipeline_model_parallel_size: int = 1,
         context_parallel_size: int = 1,
         expert_model_parallel_size: int = 1,
-        model_id: str = "nemo-model",
+        model_id: str = "megatron-model",
         enable_cuda_graphs: bool = False,
         enable_flash_decode: bool = False,
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
         random_seed: Optional[int] = None,
-        megatron_checkpoint_filepath: str = None,
         model_type: str = "gpt",
-        model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
         **model_config_kwargs,
     ):
         """Initialize the distributed Megatron LLM model deployment.
 
         Args:
-            nemo_checkpoint_filepath (str): Path to the .nemo checkpoint file.
+            megatron_checkpoint_filepath (str): Path to the Megatron checkpoint directory.
             num_gpus (int): Number of GPUs to use for the deployment
             tensor_model_parallel_size (int): Size of tensor model parallelism.
             pipeline_model_parallel_size (int): Size of pipeline model parallelism.
@@ -192,10 +186,9 @@ class MegatronRayDeployable:
                     deployment_node_id = node.get("NodeID")
                     break
 
-            rank_0_worker = ModelWorker.options(
-                scheduling_strategy=NodeAffinitySchedulingStrategy(node_id=deployment_node_id, soft=False)
-            ).remote(
-                nemo_checkpoint_filepath=nemo_checkpoint_filepath,
+            # Common arguments for rank 0 worker
+            rank_0_kwargs = dict(
+                megatron_checkpoint_filepath=megatron_checkpoint_filepath,
                 rank=0,
                 world_size=num_gpus,
                 tensor_model_parallel_size=tensor_model_parallel_size,
@@ -210,12 +203,18 @@ class MegatronRayDeployable:
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
                 random_seed=random_seed,
-                megatron_checkpoint_filepath=megatron_checkpoint_filepath,
                 model_type=model_type,
-                model_format=model_format,
                 micro_batch_size=micro_batch_size,
                 **model_config_kwargs,
             )
+
+            # Use node affinity if we found a matching node, otherwise use default scheduling
+            if deployment_node_id is not None:
+                rank_0_worker = ModelWorker.options(
+                    scheduling_strategy=NodeAffinitySchedulingStrategy(node_id=deployment_node_id, soft=True)
+                ).remote(**rank_0_kwargs)
+            else:
+                rank_0_worker = ModelWorker.remote(**rank_0_kwargs)
             worker_futures.append(rank_0_worker)
 
             # Wait for rank 0 to start before creating other workers
@@ -226,7 +225,7 @@ class MegatronRayDeployable:
             # Create remaining workers in parallel
             for rank in range(1, num_gpus):
                 worker = ModelWorker.remote(
-                    nemo_checkpoint_filepath=nemo_checkpoint_filepath,
+                    megatron_checkpoint_filepath=megatron_checkpoint_filepath,
                     rank=rank,
                     world_size=num_gpus,
                     tensor_model_parallel_size=tensor_model_parallel_size,
@@ -240,9 +239,7 @@ class MegatronRayDeployable:
                     enable_flash_decode=enable_flash_decode,
                     max_batch_size=max_batch_size,
                     random_seed=random_seed,
-                    megatron_checkpoint_filepath=megatron_checkpoint_filepath,
                     model_type=model_type,
-                    model_format=model_format,
                     micro_batch_size=micro_batch_size,
                     **model_config_kwargs,
                 )

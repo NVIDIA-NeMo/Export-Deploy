@@ -100,7 +100,7 @@ class HFRayDeployable:
                 from nemo_export.vllm_exporter import vLLMExporter
 
                 vllm_exporter = vLLMExporter()
-                vllm_exporter.export(model_path_id=hf_model_id_path, **kwargs)
+                vllm_exporter.export(model_path_id=hf_model_id_path, model_format="hf", **kwargs)
                 self.model = vllm_exporter
             else:
                 self.model = HuggingFaceLLMDeploy(
@@ -172,20 +172,24 @@ class HFRayDeployable:
             if "prompt" in request:
                 request["prompts"] = [request["prompt"]]
             temperature = request.get("temperature", 0.0)
-            top_p = request.get("top_p", 0.0)
-            if temperature == 0.0 and top_p == 0.0:
-                LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
-                request["top_k"] = 1
-                # Required for vllm's top_p should be in (0,1] error. Not required for HF in-fw.
-                # TODO: athitten check if this can be removed with some setting in vllm.
+            top_p = request.get("top_p", None)
+
+            # vLLM requires top_p to be in (0, 1], so handle invalid values
+            if top_p is not None and top_p <= 0.0:
+                LOGGER.warning(
+                    f"top_p must be in (0, 1] for vLLM, got {top_p}. Setting to 0.1 for greedy-like sampling."
+                )
                 request["top_p"] = 0.1
+                if temperature == 0.0:
+                    LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
+                    request["top_k"] = 1
 
             inference_inputs = {
                 "prompts": request.get("prompts", []),
                 "max_tokens": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 0.0),
                 "top_k": request.get("top_k", 0),
-                "top_p": request.get("top_p", 0),
+                "top_p": request.get("top_p", 1.0),  # vLLM requires top_p in (0, 1], use 1.0 as default
                 "compute_logprob": True
                 if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0)
                 else False,
@@ -290,6 +294,14 @@ class HFRayDeployable:
             # Extract parameters from the request dictionary
             messages = request.get("messages", [])
 
+            # vLLM requires top_p to be in (0, 1], so handle invalid values
+            top_p = request.get("top_p", None)
+            if top_p is not None and top_p <= 0.0:
+                LOGGER.warning(
+                    f"top_p must be in (0, 1] for vLLM, got {top_p}. Setting to 0.1 for greedy-like sampling."
+                )
+                request["top_p"] = 0.1
+
             # Convert messages to a single prompt
             prompt = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages])
             prompt += "\nassistant:"
@@ -300,7 +312,7 @@ class HFRayDeployable:
                 "max_tokens": request.get("max_tokens", 256),
                 "temperature": request.get("temperature", 1.0),
                 "top_k": request.get("top_k", 0),
-                "top_p": request.get("top_p", 0),
+                "top_p": request.get("top_p", 1.0),  # vLLM requires top_p in (0, 1], use 1.0 as default
                 "output_logits": request.get("output_logits", False),
                 "output_scores": request.get("output_scores", False),
             }

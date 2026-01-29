@@ -34,6 +34,7 @@ from nemo_deploy.llm.inference.inference_base import (
     initialize_megatron_for_inference,
     load_nemo_checkpoint_to_tron_model,
     peel,
+    setup_megatron_model_and_tokenizer_for_inference,
     setup_model_and_tokenizer_for_inference,
 )
 from nemo_deploy.llm.inference.tron_utils import DistributedInitConfig, RNGConfig
@@ -460,6 +461,267 @@ class TestInferenceBase(unittest.TestCase):
     def test_create_mcore_engine_unavailable_nemo_raises(self):
         with self.assertRaises(UnavailableError):
             create_mcore_engine(path=self.mock_path)
+
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    def test_attention_backend_conversion_fused(
+        self, mock_load_tokenizer, mock_build_model, mock_init_megatron, mock_load_config, mock_torch_dist
+    ):
+        """Test that attention_backend string 'AttnBackend.fused' is converted to enum."""
+        from megatron.core.transformer.enums import AttnBackend
+
+        # Setup model config with string attention_backend
+        mock_config = MagicMock()
+        mock_config.attention_backend = "AttnBackend.fused"
+        mock_config.tensor_model_parallel_size = 1
+        mock_config.pipeline_model_parallel_size = 1
+        mock_config.context_parallel_size = 1
+        mock_config.expert_model_parallel_size = 1
+
+        mock_mlm_args = MagicMock()
+        mock_load_config.return_value = (mock_config, mock_mlm_args)
+
+        mock_model = MagicMock()
+        mock_build_model.return_value = [mock_model]
+        mock_tokenizer = MagicMock()
+        mock_load_tokenizer.return_value = mock_tokenizer
+
+        # Call the function
+        setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tensor_model_parallel_size=1,
+            pipeline_model_parallel_size=1,
+        )
+
+        # Verify that attention_backend was converted to enum
+        self.assertEqual(mock_config.attention_backend, AttnBackend.fused)
+
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    def test_attention_backend_conversion_flash(
+        self, mock_load_tokenizer, mock_build_model, mock_init_megatron, mock_load_config, mock_torch_dist
+    ):
+        """Test that attention_backend string 'AttnBackend.flash' is converted to enum."""
+        from megatron.core.transformer.enums import AttnBackend
+
+        # Setup model config with string attention_backend
+        mock_config = MagicMock()
+        mock_config.attention_backend = "AttnBackend.flash"
+        mock_config.tensor_model_parallel_size = 1
+        mock_config.pipeline_model_parallel_size = 1
+        mock_config.context_parallel_size = 1
+        mock_config.expert_model_parallel_size = 1
+
+        mock_mlm_args = MagicMock()
+        mock_load_config.return_value = (mock_config, mock_mlm_args)
+
+        mock_model = MagicMock()
+        mock_build_model.return_value = [mock_model]
+        mock_tokenizer = MagicMock()
+        mock_load_tokenizer.return_value = mock_tokenizer
+
+        # Call the function
+        setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tensor_model_parallel_size=1,
+            pipeline_model_parallel_size=1,
+        )
+
+        # Verify that attention_backend was converted to enum
+        self.assertEqual(mock_config.attention_backend, AttnBackend.flash)
+
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    def test_attention_backend_conversion_unfused(
+        self, mock_load_tokenizer, mock_build_model, mock_init_megatron, mock_load_config, mock_torch_dist
+    ):
+        """Test that attention_backend string 'AttnBackend.unfused' is converted to enum."""
+        from megatron.core.transformer.enums import AttnBackend
+
+        # Setup model config with string attention_backend
+        mock_config = MagicMock()
+        mock_config.attention_backend = "AttnBackend.unfused"
+        mock_config.tensor_model_parallel_size = 1
+        mock_config.pipeline_model_parallel_size = 1
+        mock_config.context_parallel_size = 1
+        mock_config.expert_model_parallel_size = 1
+
+        mock_mlm_args = MagicMock()
+        mock_load_config.return_value = (mock_config, mock_mlm_args)
+
+        mock_model = MagicMock()
+        mock_build_model.return_value = [mock_model]
+        mock_tokenizer = MagicMock()
+        mock_load_tokenizer.return_value = mock_tokenizer
+
+        # Call the function
+        setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tensor_model_parallel_size=1,
+            pipeline_model_parallel_size=1,
+        )
+
+        # Verify that attention_backend was converted to enum
+        self.assertEqual(mock_config.attention_backend, AttnBackend.unfused)
+
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    def test_attention_backend_conversion_local(
+        self, mock_load_tokenizer, mock_build_model, mock_init_megatron, mock_load_config, mock_torch_dist
+    ):
+        """Test that attention_backend string 'AttnBackend.local' is converted to enum."""
+        from megatron.core.transformer.enums import AttnBackend
+
+        # Setup model config with string attention_backend
+        mock_config = MagicMock()
+        mock_config.attention_backend = "AttnBackend.local"
+        mock_config.tensor_model_parallel_size = 1
+        mock_config.pipeline_model_parallel_size = 1
+        mock_config.context_parallel_size = 1
+        mock_config.expert_model_parallel_size = 1
+
+        mock_mlm_args = MagicMock()
+        mock_load_config.return_value = (mock_config, mock_mlm_args)
+
+        mock_model = MagicMock()
+        mock_build_model.return_value = [mock_model]
+        mock_tokenizer = MagicMock()
+        mock_load_tokenizer.return_value = mock_tokenizer
+
+        # Call the function
+        setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tensor_model_parallel_size=1,
+            pipeline_model_parallel_size=1,
+        )
+
+        # Verify that attention_backend was converted to enum
+        self.assertEqual(mock_config.attention_backend, AttnBackend.local)
+
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    def test_attention_backend_conversion_auto(
+        self, mock_load_tokenizer, mock_build_model, mock_init_megatron, mock_load_config, mock_torch_dist
+    ):
+        """Test that attention_backend string 'AttnBackend.auto' is converted to enum."""
+        from megatron.core.transformer.enums import AttnBackend
+
+        # Setup model config with string attention_backend
+        mock_config = MagicMock()
+        mock_config.attention_backend = "AttnBackend.auto"
+        mock_config.tensor_model_parallel_size = 1
+        mock_config.pipeline_model_parallel_size = 1
+        mock_config.context_parallel_size = 1
+        mock_config.expert_model_parallel_size = 1
+
+        mock_mlm_args = MagicMock()
+        mock_load_config.return_value = (mock_config, mock_mlm_args)
+
+        mock_model = MagicMock()
+        mock_build_model.return_value = [mock_model]
+        mock_tokenizer = MagicMock()
+        mock_load_tokenizer.return_value = mock_tokenizer
+
+        # Call the function
+        setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tensor_model_parallel_size=1,
+            pipeline_model_parallel_size=1,
+        )
+
+        # Verify that attention_backend was converted to enum
+        self.assertEqual(mock_config.attention_backend, AttnBackend.auto)
+
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    def test_attention_backend_already_enum(
+        self, mock_load_tokenizer, mock_build_model, mock_init_megatron, mock_load_config, mock_torch_dist
+    ):
+        """Test that attention_backend enum is not modified if already an enum."""
+        from megatron.core.transformer.enums import AttnBackend
+
+        # Setup model config with enum attention_backend (already converted)
+        mock_config = MagicMock()
+        mock_config.attention_backend = AttnBackend.flash
+        mock_config.tensor_model_parallel_size = 1
+        mock_config.pipeline_model_parallel_size = 1
+        mock_config.context_parallel_size = 1
+        mock_config.expert_model_parallel_size = 1
+
+        mock_mlm_args = MagicMock()
+        mock_load_config.return_value = (mock_config, mock_mlm_args)
+
+        mock_model = MagicMock()
+        mock_build_model.return_value = [mock_model]
+        mock_tokenizer = MagicMock()
+        mock_load_tokenizer.return_value = mock_tokenizer
+
+        # Call the function
+        setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tensor_model_parallel_size=1,
+            pipeline_model_parallel_size=1,
+        )
+
+        # Verify that attention_backend remains the same enum
+        self.assertEqual(mock_config.attention_backend, AttnBackend.flash)
+
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    def test_attention_backend_missing_attribute(
+        self, mock_load_tokenizer, mock_build_model, mock_init_megatron, mock_load_config, mock_torch_dist
+    ):
+        """Test that missing attention_backend attribute doesn't cause an error."""
+        # Setup model config WITHOUT attention_backend attribute
+        mock_config = MagicMock(spec=[])  # spec=[] means no attributes
+        mock_config.tensor_model_parallel_size = 1
+        mock_config.pipeline_model_parallel_size = 1
+        mock_config.context_parallel_size = 1
+        mock_config.expert_model_parallel_size = 1
+
+        # Remove the attention_backend attribute explicitly
+        if hasattr(mock_config, "attention_backend"):
+            delattr(mock_config, "attention_backend")
+
+        mock_mlm_args = MagicMock()
+        mock_load_config.return_value = (mock_config, mock_mlm_args)
+
+        mock_model = MagicMock()
+        mock_build_model.return_value = [mock_model]
+        mock_tokenizer = MagicMock()
+        mock_load_tokenizer.return_value = mock_tokenizer
+
+        # Call the function - should not raise an error
+        result = setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tensor_model_parallel_size=1,
+            pipeline_model_parallel_size=1,
+        )
+
+        # Verify function completed successfully
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result), 3)  # Returns (model, tokenizer, mlm_args)
 
 
 if __name__ == "__main__":

@@ -171,13 +171,13 @@ class DeployRay:
 
     def deploy_inframework_model(
         self,
-        nemo_checkpoint: str,
+        megatron_checkpoint: str,
         num_gpus: int = 1,
         tensor_model_parallel_size: int = 1,
         pipeline_model_parallel_size: int = 1,
         expert_model_parallel_size: int = 1,
         context_parallel_size: int = 1,
-        model_id: str = "nemo-model",
+        model_id: str = "megatron-model",
         num_cpus_per_replica: float = 8,
         num_replicas: int = 1,
         enable_cuda_graphs: bool = False,
@@ -186,13 +186,11 @@ class DeployRay:
         max_batch_size: int = 32,
         random_seed: Optional[int] = None,
         test_mode: bool = False,
-        megatron_checkpoint_filepath: str = None,
         model_type: str = "gpt",
-        model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
         **model_config_kwargs,
     ):
-        """Deploy an inframework NeMo/Megatron model using Ray Serve.
+        """Deploy an inframework Megatron model using Ray Serve.
 
         This method handles the complete deployment lifecycle including:
         - Starting Ray Serve
@@ -201,22 +199,20 @@ class DeployRay:
         - Keeping the deployment running until interrupted
 
         Args:
-            nemo_checkpoint (str): Path to the .nemo checkpoint file.
+            megatron_checkpoint (str): Path to the Megatron checkpoint directory.
             num_gpus (int, optional): Number of GPUs per node. Defaults to 1.
             tensor_model_parallel_size (int, optional): Tensor model parallel size. Defaults to 1.
             pipeline_model_parallel_size (int, optional): Pipeline model parallel size. Defaults to 1.
             expert_model_parallel_size (int, optional): Expert model parallel size. Defaults to 1.
             context_parallel_size (int, optional): Context parallel size. Defaults to 1.
-            model_id (str, optional): Model identifier for API responses. Defaults to "nemo-model".
+            model_id (str, optional): Model identifier for API responses. Defaults to "megatron-model".
             num_cpus_per_replica (float, optional): CPUs per model replica. Defaults to 8.
             num_replicas (int, optional): Number of replicas for deployment. Defaults to 1.
             enable_cuda_graphs (bool, optional): Enable CUDA graphs. Defaults to False.
             enable_flash_decode (bool, optional): Enable Flash Attention decode. Defaults to False.
             legacy_ckpt (bool, optional): Use legacy checkpoint format. Defaults to False.
             test_mode (bool, optional): Enable test mode. Defaults to False.
-            megatron_checkpoint_filepath (str, optional): Path to the Megatron checkpoint file. Defaults to None.
             model_type (str, optional): Type of model to load. Defaults to "gpt".
-            model_format (str, optional): Format of model to load. Defaults to "nemo".
             micro_batch_size (Optional[int], optional): Micro batch size for model execution. Defaults to None.
 
         Raises:
@@ -244,7 +240,7 @@ class DeployRay:
                 num_replicas=num_replicas,
                 ray_actor_options={"num_cpus": num_cpus_per_replica},
             ).bind(
-                nemo_checkpoint_filepath=nemo_checkpoint,
+                megatron_checkpoint_filepath=megatron_checkpoint,
                 num_gpus=gpus_per_replica,
                 tensor_model_parallel_size=tensor_model_parallel_size,
                 pipeline_model_parallel_size=pipeline_model_parallel_size,
@@ -256,9 +252,7 @@ class DeployRay:
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
                 random_seed=random_seed,
-                megatron_checkpoint_filepath=megatron_checkpoint_filepath,
                 model_type=model_type,
-                model_format=model_format,
                 micro_batch_size=micro_batch_size,
                 **model_config_kwargs,
             )

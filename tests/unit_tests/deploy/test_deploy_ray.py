@@ -13,10 +13,16 @@
 # limitations under the License.
 
 
+import argparse
 import unittest
 from unittest.mock import MagicMock, patch
 
 from nemo_deploy.deploy_ray import DeployRay
+
+# Import the functions from the deploy script
+from scripts.deploy.nlp.deploy_ray_inframework import (
+    json_type,
+)
 
 
 class TestDeployRay(unittest.TestCase):
@@ -172,19 +178,19 @@ class TestDeployRay(unittest.TestCase):
         mock_megatron.options.return_value = mock_options
 
         deploy.deploy_inframework_model(
-            nemo_checkpoint="/path/to/model.nemo",
+            megatron_checkpoint="/path/to/model.megatron",
             num_gpus=4,
             tensor_model_parallel_size=2,
             pipeline_model_parallel_size=1,
             context_parallel_size=1,
             num_replicas=2,
             num_cpus_per_replica=4,
-            model_id="nemo-model",
+            model_id="megatron-model",
             test_mode=True,
         )
 
         mock_start.assert_called_once()
-        mock_serve.run.assert_called_once_with(mock_app, name="nemo-model")
+        mock_serve.run.assert_called_once_with(mock_app, name="megatron-model")
         mock_megatron.options.assert_called_once()
         # Ensure actor options include provided CPUs
         _, kwargs = mock_megatron.options.call_args
@@ -295,6 +301,43 @@ class TestDeployRay(unittest.TestCase):
         assert mock_logger.warning.call_count == 2
         mock_logger.warning.assert_any_call("Error during serve.shutdown(): Serve shutdown error")
         mock_logger.warning.assert_any_call("Error during ray.shutdown(): Ray shutdown error")
+
+
+class TestDeployRayInFrameworkScriptJsonType(unittest.TestCase):
+    """Test suite for deploy_ray_inframework.py script's json_type function."""
+
+    def test_json_type_valid_json(self):
+        """Test json_type with valid JSON strings."""
+        # Test valid dictionary
+        result = json_type('{"key": "value", "number": 42}')
+        self.assertEqual(result, {"key": "value", "number": 42})
+
+        # Test valid list
+        result = json_type("[1, 2, 3]")
+        self.assertEqual(result, [1, 2, 3])
+
+        # Test nested structure
+        result = json_type('{"pip": ["numpy", "pandas"], "env_vars": {"PATH": "/usr/bin"}}')
+        expected = {"pip": ["numpy", "pandas"], "env_vars": {"PATH": "/usr/bin"}}
+        self.assertEqual(result, expected)
+
+    def test_json_type_invalid_json(self):
+        """Test json_type with invalid JSON strings."""
+        with self.assertRaises(argparse.ArgumentTypeError) as context:
+            json_type("not a valid json")
+        self.assertIn("Invalid JSON", str(context.exception))
+
+        with self.assertRaises(argparse.ArgumentTypeError) as context:
+            json_type('{"incomplete": ')
+        self.assertIn("Invalid JSON", str(context.exception))
+
+    def test_json_type_empty_json(self):
+        """Test json_type with empty JSON objects."""
+        result = json_type("{}")
+        self.assertEqual(result, {})
+
+        result = json_type("[]")
+        self.assertEqual(result, [])
 
 
 if __name__ == "__main__":

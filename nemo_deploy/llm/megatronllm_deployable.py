@@ -27,10 +27,8 @@ from megatron.core.inference.inference_request import InferenceRequest
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.llm.inference.inference_base import create_mcore_engine
 from nemo_deploy.utils import (
-    NEMO2,
     broadcast_list,
     cast_output,
-    nemo_checkpoint_version,
     str_ndarray2list,
 )
 from nemo_export_deploy_common.import_utils import MISSING_TRITON_MSG, UnavailableError, null_decorator
@@ -54,73 +52,16 @@ except (ImportError, ModuleNotFoundError):
 LOGGER = logging.getLogger("NeMo")
 
 
-class MegatronLLMDeploy:
-    """A factory class for creating deployable instances of Megatron LLM models.
-
-    This class provides a method to get the appropriate deployable instance
-    based on the version of the NeMo checkpoint model used.
-    """
-
-    @staticmethod
-    def get_deployable(
-        nemo_checkpoint_filepath: str,
-        num_devices: int = None,
-        num_nodes: int = None,
-        tensor_model_parallel_size: int = 1,
-        pipeline_model_parallel_size: int = 1,
-        expert_model_parallel_size: int = 1,
-        context_parallel_size: int = 1,
-        max_batch_size: int = 32,
-        random_seed: Optional[int] = None,
-        enable_flash_decode: bool = False,
-        enable_cuda_graphs: bool = False,
-        legacy_ckpt: bool = False,
-    ):
-        """Returns the appropriate deployable instance for the given NeMo checkpoint.
-
-        Args:
-            nemo_checkpoint_filepath (str): Path to the .nemo checkpoint file.
-            num_devices (int): Number of devices to use for deployment.
-            num_nodes (int): Number of nodes to use for deployment.
-            tensor_model_parallel_size (int): Size of the tensor model parallelism.
-            pipeline_model_parallel_size (int): Size of the pipeline model parallelism.
-            context_parallel_size (int): Size of the context parallelism.
-            enable_flash_decode (bool): Whether to enable flash decode for inference.
-            enable_cuda_graphs (bool): Whether to enable CUDA graphs for inference.
-            legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
-
-        Returns:
-            ITritonDeployable: An instance of a deployable class compatible with Triton inference server.
-        """
-        if nemo_checkpoint_version(nemo_checkpoint_filepath) == NEMO2:
-            return MegatronLLMDeployableNemo2(
-                num_devices=num_devices,
-                num_nodes=num_nodes,
-                nemo_checkpoint_filepath=nemo_checkpoint_filepath,
-                tensor_model_parallel_size=tensor_model_parallel_size,
-                pipeline_model_parallel_size=pipeline_model_parallel_size,
-                context_parallel_size=context_parallel_size,
-                expert_model_parallel_size=expert_model_parallel_size,
-                max_batch_size=max_batch_size,
-                random_seed=random_seed,
-                enable_flash_decode=enable_flash_decode,
-                enable_cuda_graphs=enable_cuda_graphs,
-                legacy_ckpt=legacy_ckpt,
-            )
-        else:
-            raise Exception("Only NeMo 2.0 checkpoint is supported.")
-
-
 def dict_to_str(messages):
     """Serializes dict to str."""
     return json.dumps(messages)
 
 
-class MegatronLLMDeployableNemo2(ITritonDeployable):
-    """Triton inference server compatible deploy class for a .nemo model file.
+class MegatronLLMDeployable(ITritonDeployable):
+    """Triton inference server compatible deploy class for a Megatron model checkpoint.
 
     Args:
-        nemo_checkpoint_filepath (str): path for the nemo checkpoint.
+        megatron_checkpoint_filepath (str): path for the megatron checkpoint.
         num_devices (int): number of GPUs.
         num_nodes (int): number of nodes.
         tensor_model_parallel_size (int): tensor parallelism.
@@ -136,17 +77,15 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         enable_flash_decode (bool): enable flash decode for inference. Defaults to False.
         enable_cuda_graphs (bool): enable CUDA graphs for inference. Defaults to False.`
         legacy_ckpt (bool): use legacy checkpoint format. Defaults to False.
-        megatron_checkpoint_filepath (str): path for the megatron checkpoint.
-        model_type (str): type of model to load. Defaults to "gpt".(Only for Megatron models)
-        model_format (str): format of model to load. Defaults to "nemo".
-        micro_batch_size (Optional[int]): micro batch size for model execution. Defaults to None.(Only for Megatron models)
+        model_type (str): type of model to load. Defaults to "gpt".
+        micro_batch_size (Optional[int]): micro batch size for model execution. Defaults to None.
     """
 
     def __init__(
         self,
+        megatron_checkpoint_filepath: str,
         num_devices: int = None,
         num_nodes: int = None,
-        nemo_checkpoint_filepath: str = None,
         tensor_model_parallel_size: int = 1,
         pipeline_model_parallel_size: int = 1,
         context_parallel_size: int = 1,
@@ -159,28 +98,20 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         max_batch_size: int = 8,
         random_seed: Optional[int] = None,
         legacy_ckpt: bool = False,
-        megatron_checkpoint_filepath: str = None,
         model_type: str = "gpt",
-        model_format: str = "nemo",
         micro_batch_size: Optional[int] = None,
         **model_config_kwargs,
     ):
         if not HAVE_TRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
 
-        if model_format == "nemo":
-            checkpoint_filepath = nemo_checkpoint_filepath
-        elif model_format == "megatron":
-            if model_type not in ["gpt", "mamba"]:
-                raise ValueError(f"Model type {model_type} not supported for Megatron models.")
-            checkpoint_filepath = megatron_checkpoint_filepath
-        else:
-            raise ValueError(f"Model format {model_format} not supported.")
+        if model_type not in ["gpt", "mamba"]:
+            raise ValueError(f"Model type {model_type} not supported for Megatron models.")
 
         self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = create_mcore_engine(
             num_devices=num_devices,
             num_nodes=num_nodes,
-            path=Path(checkpoint_filepath),
+            path=Path(megatron_checkpoint_filepath),
             params_dtype=params_dtype,
             inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
             inference_max_seq_length=inference_max_seq_length,
@@ -194,7 +125,7 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
             enable_cuda_graphs=enable_cuda_graphs,
             legacy_ckpt=legacy_ckpt,
             model_type=model_type,
-            model_format=model_format,
+            model_format="megatron",
             micro_batch_size=micro_batch_size,
             **model_config_kwargs,
         )
@@ -470,6 +401,10 @@ class MegatronLLMDeployableNemo2(ITritonDeployable):
         )
 
         results = self.generate(prompts, inference_params)
+        # Handle DynamicInferenceRequestRecord objects by merging them into a single request
+        results = [
+            r.merge(self.mcore_tokenizer) if type(r).__name__ == "DynamicInferenceRequestRecord" else r for r in results
+        ]
         if echo:
             output_texts = [r.prompt + r.generated_text if text_only else r for r in results]
         else:

@@ -12,14 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import typing
-from pathlib import Path
 
 import numpy as np
 import torch
 
-from nemo_export.tarutils import TarPath
 from nemo_export_deploy_common.import_utils import MISSING_PIL_MSG, MISSING_TRITON_MSG, UnavailableError
 
 try:
@@ -40,10 +37,6 @@ try:
     HAVE_TRITON = True
 except (ImportError, ModuleNotFoundError):
     HAVE_TRITON = False
-
-
-NEMO2 = "NEMO 2.0"
-NEMO1 = "NEMO 1.0"
 
 
 def typedict2tensor(
@@ -96,29 +89,6 @@ def typedict2tensor(
         Tensor(name=name, **_get_tensor_params(type_), **overwrite_kwargs)
         for name, type_ in typing.get_type_hints(typedict_class).items()
     )
-
-
-def nemo_checkpoint_version(path: str) -> str:
-    """Determines the version of a NeMo checkpoint from its file structure.
-
-    Examines the provided checkpoint path to determine if it follows the NeMo 2.0
-    or NeMo 1.0 format based on the presence of 'context' and 'weights' directories.
-
-    Args:
-        path (str): Path to the NeMo checkpoint file or directory
-
-    Returns:
-        str: Version string - either NEMO2 or NEMO1 constant indicating the checkpoint version
-    """
-    if os.path.isdir(path):
-        path = Path(path)
-    else:
-        path = TarPath(path)
-
-    if (path / "context").exists() and (path / "weights").exists():
-        return NEMO2
-    else:
-        return NEMO1
 
 
 def str_list2numpy(str_list: typing.List[str]) -> np.ndarray:

@@ -31,17 +31,24 @@ permissions:
 
 jobs:
   pre-flight:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@v0.64.2
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@v0.69.1
+    with:
+      default_runner_prefix: ${{ vars.DEFAULT_RUNNER_PREFIX }}
+      non_nvidia_runner_prefix: ${{ vars.NON_NVIDIA_RUNNER_PREFIX }}
+      default_test_data_path: ${{ vars.DEFAULT_TEST_DATA_PATH }}
+      non_nvidia_test_data_path: ${{ vars.NON_NVIDIA_TEST_DATA_PATH }}
+    secrets:
+      NVIDIA_MANAGEMENT_ORG_PAT: ${{ secrets.NVIDIA_MANAGEMENT_ORG_PAT }}
 
   linting:
     runs-on: ubuntu-latest
     needs: [pre-flight]
     if: |
       (
-        needs.pre-flight.outputs.is_deployment_workflow == 'false' 
+        needs.pre-flight.outputs.is_deployment_workflow == 'false'
           && needs.pre-flight.outputs.is_ci_workload == 'true'
       ) || (
-        needs.pre-flight.outputs.is_deployment_workflow == 'false' 
+        needs.pre-flight.outputs.is_deployment_workflow == 'false'
           && needs.pre-flight.outputs.is_ci_workload == 'false'
           && needs.pre-flight.outputs.docs_only == 'false'
       )
@@ -80,14 +87,14 @@ jobs:
       matrix:
         include:
           - script: L0_Unit_Tests_GPU
-            runner: self-hosted-nemo
+            runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
           - script: L0_Unit_Tests_CPU
             runner: linux-amd64-cpu16
             cpu-only: true
     needs: [pre-flight, cicd-wait-in-queue]
     if: |
       (
-        success() 
+        success()
         || needs.pre-flight.outputs.is_ci_workload == 'true'
         || needs.pre-flight.outputs.force_run_all == 'true'
       )
@@ -111,6 +118,8 @@ jobs:
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           PAT: ${{ secrets.PAT }}
           inference-framework: trtllm
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ matrix.runner }}
 
   cicd-unit-tests-vllm:
     strategy:
@@ -118,14 +127,14 @@ jobs:
       matrix:
         include:
           - script: L0_Unit_Tests_GPU
-            runner: self-hosted-nemo
+            runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
           - script: L0_Unit_Tests_CPU
             runner: linux-amd64-cpu16
             cpu-only: true
     needs: [pre-flight, cicd-wait-in-queue]
     if: |
       (
-        success() 
+        success()
         || needs.pre-flight.outputs.is_ci_workload == 'true'
         || needs.pre-flight.outputs.force_run_all == 'true'
       )
@@ -149,6 +158,8 @@ jobs:
           azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           PAT: ${{ secrets.PAT }}
           inference-framework: vllm
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ matrix.runner }}
 
   cicd-e2e-tests-trtllm:
     strategy:
@@ -156,15 +167,15 @@ jobs:
       matrix:
         include:
           - script: L2_Launch_TRTLLM
-            runner: self-hosted-nemo
+            runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
           - script: L2_TRTLLM_API_Deploy_Query
-            runner: self-hosted-nemo
-    needs: [cicd-unit-tests-trtllm]
+            runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+    needs: [pre-flight, cicd-unit-tests-trtllm]
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     if: |
       (
-        success() 
+        success()
         || needs.pre-flight.outputs.is_ci_workload == 'true'
         || needs.pre-flight.outputs.force_run_all == 'true'
       )
@@ -186,15 +197,17 @@ jobs:
           timeout: 60
           PAT: ${{ secrets.PAT }}
           inference-framework: trtllm
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ matrix.runner }}
 
   cicd-e2e-tests-trt-onnx:
-    needs: [cicd-unit-tests-trtllm]
-    runs-on: self-hosted-nemo
+    needs: [cicd-unit-tests-trtllm, pre-flight]
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     if: |
       (
-        success() 
+        success()
         || (
           needs.cicd-wait-in-queue.result == 'skipped'
           && needs.pre-flight.outputs.is_ci_workload == 'true'
@@ -217,15 +230,17 @@ jobs:
           timeout: 60
           PAT: ${{ secrets.PAT }}
           inference-framework: trt-onnx
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
 
   cicd-e2e-tests-vllm:
-    needs: [cicd-unit-tests-vllm]
-    runs-on: self-hosted-nemo
+    needs: [cicd-unit-tests-vllm, pre-flight]
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     if: |
       (
-        success() 
+        success()
         || needs.pre-flight.outputs.is_ci_workload == 'true'
         || needs.pre-flight.outputs.force_run_all == 'true'
       )
@@ -246,15 +261,17 @@ jobs:
           timeout: 60
           PAT: ${{ secrets.PAT }}
           inference-framework: vllm
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
 
   cicd-e2e-tests-inframework:
-    needs: [cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
-    runs-on: self-hosted-nemo
+    needs: [pre-flight, cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     if: |
       (
-        success() 
+        success()
         || needs.pre-flight.outputs.is_ci_workload == 'true'
         || needs.pre-flight.outputs.force_run_all == 'true'
       )
@@ -275,6 +292,8 @@ jobs:
           timeout: 60
           PAT: ${{ secrets.PAT }}
           inference-framework: inframework
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
 
   Nemo_CICD_Test:
     needs:
@@ -283,6 +302,7 @@ jobs:
       - cicd-unit-tests-vllm
       - cicd-e2e-tests-trtllm
       - cicd-e2e-tests-vllm
+      - cicd-e2e-tests-inframework
     if: |
       (
         needs.pre-flight.outputs.docs_only == 'true'
@@ -336,7 +356,7 @@ jobs:
           script: |
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
-              repo: context.repo.repo, 
+              repo: context.repo.repo,
               sha: context.sha,
               state: 'success',
               description: 'No code changes - coverage check skipped',

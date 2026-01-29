@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import json
 import logging
 import multiprocessing
 
@@ -26,15 +27,17 @@ def get_available_cpus():
     return multiprocessing.cpu_count()
 
 
+def json_type(string):
+    """Parse JSON string into a dictionary."""
+    try:
+        return json.loads(string)
+    except json.JSONDecodeError as e:
+        raise argparse.ArgumentTypeError(f"Invalid JSON: {e}")
+
+
 def parse_args():
     """Parse command-line arguments for the Ray deployment script."""
     parser = argparse.ArgumentParser(description="Deploy a Megatron model using Ray")
-    parser.add_argument(
-        "--nemo_checkpoint",
-        type=str,
-        default=None,
-        help="Path to the .nemo checkpoint file",
-    )
     parser.add_argument(
         "--num_gpus",
         type=int,
@@ -187,9 +190,9 @@ def parse_args():
     )
     parser.add_argument(
         "--runtime_env",
-        type=dict,
+        type=json_type,
         default={},
-        help="Runtime environment for the deployment",
+        help="Runtime environment for the deployment (JSON string)",
     )
     return parser.parse_args()
 
@@ -212,12 +215,8 @@ def main():
         port=args.port,
         runtime_env=runtime_env,
     )
-    if args.nemo_checkpoint:
-        model_format = "nemo"
-    elif args.megatron_checkpoint:
-        model_format = "megatron"
-    else:
-        raise ValueError("Either --nemo_checkpoint or --megatron_checkpoint must be provided")
+    if not args.megatron_checkpoint:
+        raise ValueError("--megatron_checkpoint must be provided")
 
     model_config_kwargs = {
         "account_for_embedding_in_pipeline_split": args.account_for_embedding_in_pipeline_split,
@@ -232,7 +231,7 @@ def main():
 
     # Deploy the inframework model using the updated API
     ray_deployer.deploy_inframework_model(
-        nemo_checkpoint=args.nemo_checkpoint,
+        megatron_checkpoint=args.megatron_checkpoint,
         num_gpus=args.num_gpus,
         tensor_model_parallel_size=args.tensor_model_parallel_size,
         pipeline_model_parallel_size=args.pipeline_model_parallel_size,
@@ -246,9 +245,7 @@ def main():
         legacy_ckpt=args.legacy_ckpt,
         max_batch_size=args.max_batch_size,
         random_seed=args.random_seed,
-        megatron_checkpoint_filepath=args.megatron_checkpoint,
         model_type=args.model_type,
-        model_format=model_format,
         micro_batch_size=args.micro_batch_size,
         **model_config_kwargs,
     )

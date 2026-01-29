@@ -246,6 +246,20 @@ def setup_megatron_model_and_tokenizer_for_inference(
     dist_config = DistributedInitConfig(distributed_backend="nccl")
     torch_distributed_init(dist_config)
     model_config, mlm_args = load_model_config(checkpoint_path)
+
+    # Convert attention_backend from string to enum if needed
+    if hasattr(model_config, "attention_backend") and isinstance(model_config.attention_backend, str):
+        if model_config.attention_backend == "AttnBackend.fused":
+            model_config.attention_backend = AttnBackend.fused
+        elif model_config.attention_backend == "AttnBackend.flash":
+            model_config.attention_backend = AttnBackend.flash
+        elif model_config.attention_backend == "AttnBackend.unfused":
+            model_config.attention_backend = AttnBackend.unfused
+        elif model_config.attention_backend == "AttnBackend.local":
+            model_config.attention_backend = AttnBackend.local
+        elif model_config.attention_backend == "AttnBackend.auto":
+            model_config.attention_backend = AttnBackend.auto
+
     if tensor_model_parallel_size is not None:
         model_config.tensor_model_parallel_size = tensor_model_parallel_size
     if pipeline_model_parallel_size is not None:

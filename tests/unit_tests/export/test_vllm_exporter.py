@@ -54,7 +54,7 @@ def test_init(exporter):
 def test_export(exporter, mock_llm):
     """Test export method"""
     model_path = "/path/to/model"
-    exporter.export(model_path_id=model_path)
+    exporter.export(model_path_id=model_path, model_format="hf")
 
     assert exporter.model is not None
     mock_llm.assert_called_once_with(
@@ -80,7 +80,7 @@ def test_export(exporter, mock_llm):
 def test_export_with_lora(exporter, mock_llm):
     """Test export method with LoRA enabled"""
     model_path = "/path/to/model"
-    exporter.export(model_path_id=model_path, enable_lora=True)
+    exporter.export(model_path_id=model_path, enable_lora=True, model_format="hf")
 
     assert exporter.model is not None
     mock_llm.assert_called_once_with(
@@ -106,7 +106,13 @@ def test_export_with_lora(exporter, mock_llm):
 def test_export_with_custom_params(exporter, mock_llm):
     """Test export method with custom parameters"""
     model_path = "/path/to/model"
-    exporter.export(model_path_id=model_path, trust_remote_code=True, tensor_parallel_size=2, dtype="float16")
+    exporter.export(
+        model_path_id=model_path,
+        trust_remote_code=True,
+        tensor_parallel_size=2,
+        dtype="float16",
+        model_format="hf",
+    )
 
     assert exporter.model is not None
     mock_llm.assert_called_once_with(
@@ -207,7 +213,7 @@ def test_forward_without_model(exporter):
 @pytest.mark.run_only_on("GPU")
 def test_forward_with_lora_not_added(exporter, mock_llm):
     """Test forward method with non-existent LoRA model"""
-    exporter.export(model_path_id="/path/to/model")
+    exporter.export(model_path_id="/path/to/model", model_format="hf")
 
     with pytest.raises(Exception, match="No lora models are available"):
         exporter.forward(["test prompt"], lora_model_name="non_existent_lora")
@@ -217,7 +223,7 @@ def test_forward_with_lora_not_added(exporter, mock_llm):
 @pytest.mark.run_only_on("GPU")
 def test_forward_with_invalid_lora(exporter, mock_llm):
     """Test forward method with invalid LoRA model name"""
-    exporter.export(model_path_id="/path/to/model")
+    exporter.export(model_path_id="/path/to/model", model_format="hf")
     exporter.add_lora_models("valid_lora", "path/to/lora")
 
     with pytest.raises(AssertionError, match="Lora model was not added before"):
@@ -234,7 +240,7 @@ def test_forward_basic_usage(exporter, mock_llm):
     mock_output.prompt_logprobs = None
     mock_llm.return_value.generate.return_value = [mock_output]
 
-    exporter.export(model_path_id="/path/to/model")
+    exporter.export(model_path_id="/path/to/model", model_format="hf")
 
     result = exporter.forward(["test prompt"])
 
@@ -274,7 +280,7 @@ def test_forward_with_all_params(exporter, mock_llm):
         mock_llm.return_value.generate.return_value = [mock_output]
 
         # Setup LoRA model
-        exporter.export(model_path_id="/path/to/model")
+        exporter.export(model_path_id="/path/to/model", model_format="hf")
         exporter.add_lora_models("test_lora", "/path/to/lora")
 
         # Call forward with all parameters
@@ -358,7 +364,7 @@ def test_forward_with_multiple_outputs_and_logprobs(exporter, mock_llm):
 
         mock_llm.return_value.generate.return_value = [mock_output1, mock_output2]
 
-        exporter.export(model_path_id="/path/to/model")
+        exporter.export(model_path_id="/path/to/model", model_format="hf")
 
         result = exporter.forward(
             input_texts=["Prompt 1", "Prompt 2"], max_tokens=30, n_log_probs=2, n_prompt_log_probs=2
@@ -386,7 +392,7 @@ def test_forward_no_logprobs(exporter, mock_llm):
 
         mock_llm.return_value.generate.return_value = [mock_output]
 
-        exporter.export(model_path_id="/path/to/model")
+        exporter.export(model_path_id="/path/to/model", model_format="hf")
 
         result = exporter.forward(
             input_texts=["Test prompt"],
@@ -489,3 +495,457 @@ def test_ray_infer_fn_with_error_handling(exporter, mock_llm):
     assert "error" in result
     assert result["error"] == "An error occurred: Forward error"
     assert result["sentences"] == ["An error occurred: Forward error"]
+
+
+# ============================================================================
+# NeMo2 Checkpoint Tests
+# ============================================================================
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_nemo2_success(exporter, mock_llm):
+    """Test export with nemo2 format - successful conversion"""
+    with (
+        patch("nemo_export.vllm_exporter.export_ckpt") as mock_export_ckpt,
+        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
+        patch("nemo_export.vllm_exporter.Path") as mock_path,
+    ):
+        # Mock temp directory
+        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
+        mock_path_instance = MagicMock()
+        mock_path_instance.iterdir.return_value = ["model.safetensors", "config.json"]  # Non-empty
+        mock_path.return_value = mock_path_instance
+
+        # Test export with nemo2 format
+        exporter.export(model_path_id="/path/to/nemo2/checkpoint", model_format="nemo2")
+
+        # Verify export_ckpt was called
+        mock_export_ckpt.assert_called_once_with(
+            path="/path/to/nemo2/checkpoint",
+            target="hf",
+            output_path="/tmp/test_hf_export",
+            overwrite=True,
+        )
+
+        # Verify LLM was initialized with temp directory
+        assert exporter.model is not None
+        mock_llm.assert_called_once()
+        call_kwargs = mock_llm.call_args[1]
+        assert call_kwargs["model"] == "/tmp/test_hf_export"
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_nemo2_conversion_error(exporter, mock_llm):
+    """Test export with nemo2 format when conversion fails"""
+    with (
+        patch("nemo_export.vllm_exporter.export_ckpt") as mock_export_ckpt,
+        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
+    ):
+        # Mock temp directory
+        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
+
+        # Mock export_ckpt to raise an exception
+        mock_export_ckpt.side_effect = Exception("Conversion failed")
+
+        with pytest.raises(
+            Exception,
+            match="NeMo checkpoint is not supported.*Error occured during Hugging Face conversion.*Conversion failed",
+        ):
+            exporter.export(model_path_id="/path/to/nemo2/checkpoint", model_format="nemo2")
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_nemo2_empty_output_dir(exporter, mock_llm):
+    """Test export with nemo2 format when conversion results in empty directory"""
+    with (
+        patch("nemo_export.vllm_exporter.export_ckpt") as mock_export_ckpt,
+        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
+        patch("nemo_export.vllm_exporter.Path") as mock_path,
+    ):
+        # Mock temp directory - empty after conversion
+        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
+        mock_path_instance = MagicMock()
+        mock_path_instance.iterdir.return_value = []  # Empty directory
+        mock_path.return_value = mock_path_instance
+
+        with pytest.raises(
+            Exception,
+            match="NeMo checkpoint is not supported.*Error occured during Hugging Face conversion",
+        ):
+            exporter.export(model_path_id="/path/to/nemo2/checkpoint", model_format="nemo2")
+
+        # Verify export_ckpt was called before the empty directory check
+        mock_export_ckpt.assert_called_once()
+
+
+# ============================================================================
+# Megatron Checkpoint Tests
+# ============================================================================
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_megatron_bridge_not_available(exporter):
+    """Test export with megatron_bridge format when megatron.bridge is not installed"""
+    with patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", False):
+        with pytest.raises(Exception, match="Megatron-Bridge is not available"):
+            exporter.export(model_path_id="/path/to/megatron/checkpoint", model_format="megatron_bridge")
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_megatron_bridge_no_hf_model_id(exporter, mock_llm):
+    """Test export with megatron_bridge when hf_model_id cannot be extracted and not provided"""
+    # Create mock AutoBridge class
+    mock_auto_bridge = MagicMock()
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = None
+
+    with (
+        patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+    ):
+        with pytest.raises(
+            Exception,
+            match="Could not find HuggingFace model ID in Megatron-Bridge checkpoint metadata",
+        ):
+            exporter.export(model_path_id="/path/to/megatron/checkpoint", model_format="megatron_bridge")
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_megatron_bridge_with_explicit_hf_model_id(exporter, mock_llm):
+    """Test export with megatron_bridge when hf_model_id is provided explicitly"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = None
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
+    with (
+        patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
+        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
+        patch("nemo_export.vllm_exporter.Path") as mock_path,
+    ):
+        # Mock temp directory
+        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
+        mock_path_instance = MagicMock()
+        mock_path_instance.iterdir.return_value = ["model.safetensors", "config.json"]  # Non-empty
+        mock_path.return_value = mock_path_instance
+
+        # Test export with explicit hf_model_id
+        exporter.export(
+            model_path_id="/path/to/megatron/checkpoint",
+            model_format="megatron_bridge",
+            hf_model_id="meta-llama/Llama-3-8B",
+        )
+
+        # Verify AutoConfig was called with provided hf_model_id
+        mock_auto_config.from_pretrained.assert_called_once_with("meta-llama/Llama-3-8B", trust_remote_code=False)
+
+        # Verify AutoBridge.from_hf_pretrained was called
+        mock_auto_bridge.from_hf_pretrained.assert_called_once_with("meta-llama/Llama-3-8B", trust_remote_code=False)
+
+        # Verify export_ckpt was called
+        mock_bridge_instance.export_ckpt.assert_called_once()
+        call_kwargs = mock_bridge_instance.export_ckpt.call_args[1]
+        assert call_kwargs["megatron_path"] == "/path/to/megatron/checkpoint"
+        assert call_kwargs["hf_path"] == "/tmp/test_hf_export"
+        assert call_kwargs["show_progress"] is True
+        assert call_kwargs["source_path"] == "meta-llama/Llama-3-8B"
+
+        # Verify LLM was initialized with temp directory
+        assert exporter.model is not None
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_megatron_bridge_with_extracted_hf_model_id(exporter, mock_llm):
+    """Test export with megatron_bridge when hf_model_id is extracted from checkpoint"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks - AutoBridge extracts model ID from checkpoint
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
+    with (
+        patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
+        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
+        patch("nemo_export.vllm_exporter.Path") as mock_path,
+    ):
+        # Mock temp directory
+        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
+        mock_path_instance = MagicMock()
+        mock_path_instance.iterdir.return_value = ["model.safetensors", "config.json"]  # Non-empty
+        mock_path.return_value = mock_path_instance
+
+        # Test export without explicit hf_model_id (will be extracted)
+        exporter.export(model_path_id="/path/to/megatron/checkpoint", model_format="megatron_bridge")
+
+        # Verify hf_model_id was extracted from checkpoint
+        mock_auto_bridge.get_hf_model_id_from_checkpoint.assert_called_once_with("/path/to/megatron/checkpoint")
+
+        # Verify AutoConfig was called with extracted hf_model_id
+        mock_auto_config.from_pretrained.assert_called_once_with("meta-llama/Llama-3-8B", trust_remote_code=False)
+
+        # Verify AutoBridge.from_hf_pretrained was called with extracted ID
+        mock_auto_bridge.from_hf_pretrained.assert_called_once_with("meta-llama/Llama-3-8B", trust_remote_code=False)
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_megatron_bridge_model_not_supported(exporter, mock_llm):
+    """Test export with megatron_bridge when model is not supported by AutoBridge"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "unsupported/model"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = False
+    mock_auto_bridge.list_supported_models.return_value = [
+        "LlamaForCausalLM",
+        "MistralForCausalLM",
+        "GPT2ForCausalLM",
+    ]
+
+    with (
+        patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
+    ):
+        with pytest.raises(Exception, match="Model 'unsupported/model' is not supported by AutoBridge"):
+            exporter.export(model_path_id="/path/to/megatron/checkpoint", model_format="megatron_bridge")
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_megatron_bridge_conversion_failed_empty_dir(exporter, mock_llm):
+    """Test export with megatron_bridge when checkpoint conversion results in empty directory"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
+    with (
+        patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
+        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
+        patch("nemo_export.vllm_exporter.Path") as mock_path,
+    ):
+        # Mock temp directory - but empty after conversion
+        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
+        mock_path_instance = MagicMock()
+        mock_path_instance.iterdir.return_value = []  # Empty directory
+        mock_path.return_value = mock_path_instance
+
+        with pytest.raises(
+            Exception,
+            match="Megatron-Bridge checkpoint conversion failed.*Error occurred during Hugging Face conversion",
+        ):
+            exporter.export(model_path_id="/path/to/megatron/checkpoint", model_format="megatron_bridge")
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_megatron_bridge_with_trust_remote_code(exporter, mock_llm):
+    """Test export with megatron_bridge using trust_remote_code option"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
+    with (
+        patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
+        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
+        patch("nemo_export.vllm_exporter.Path") as mock_path,
+    ):
+        # Mock temp directory
+        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
+        mock_path_instance = MagicMock()
+        mock_path_instance.iterdir.return_value = ["model.safetensors"]
+        mock_path.return_value = mock_path_instance
+
+        # Test export with trust_remote_code=True
+        exporter.export(
+            model_path_id="/path/to/megatron/checkpoint",
+            model_format="megatron_bridge",
+            trust_remote_code=True,
+        )
+
+        # Verify AutoConfig was called with trust_remote_code=True
+        mock_auto_config.from_pretrained.assert_called_once_with("meta-llama/Llama-3-8B", trust_remote_code=True)
+
+        # Verify AutoBridge.from_hf_pretrained was called with trust_remote_code=True
+        mock_auto_bridge.from_hf_pretrained.assert_called_once_with("meta-llama/Llama-3-8B", trust_remote_code=True)
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_megatron_bridge_full_success_path(exporter, mock_llm):
+    """Test complete successful export path for megatron_bridge checkpoint"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
+    with (
+        patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
+        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
+        patch("nemo_export.vllm_exporter.Path") as mock_path,
+    ):
+        # Mock temp directory with successful conversion
+        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
+        mock_path_instance = MagicMock()
+        mock_path_instance.iterdir.return_value = [
+            "model.safetensors",
+            "config.json",
+            "tokenizer.json",
+            "tokenizer_config.json",
+        ]
+        mock_path.return_value = mock_path_instance
+
+        # Test complete export with all parameters
+        exporter.export(
+            model_path_id="/path/to/megatron/checkpoint",
+            model_format="megatron_bridge",
+            tensor_parallel_size=2,
+            dtype="bfloat16",
+            gpu_memory_utilization=0.8,
+        )
+
+        # Verify complete flow
+        mock_auto_bridge.get_hf_model_id_from_checkpoint.assert_called_once_with("/path/to/megatron/checkpoint")
+        mock_auto_config.from_pretrained.assert_called_once()
+        mock_auto_bridge.supports.assert_called_once_with(mock_config)
+        mock_auto_bridge.from_hf_pretrained.assert_called_once()
+        mock_bridge_instance.export_ckpt.assert_called_once()
+
+        # Verify LLM was initialized with correct parameters
+        mock_llm.assert_called_once()
+        call_kwargs = mock_llm.call_args[1]
+        assert call_kwargs["model"] == "/tmp/test_hf_export"
+        assert call_kwargs["tensor_parallel_size"] == 2
+        assert call_kwargs["dtype"] == "bfloat16"
+        assert call_kwargs["gpu_memory_utilization"] == 0.8
+
+        # Verify model was set
+        assert exporter.model is not None
+
+
+@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
+@pytest.mark.run_only_on("GPU")
+def test_export_megatron_bridge_with_all_vllm_params(exporter, mock_llm):
+    """Test export with megatron_bridge passing all vLLM parameters"""
+    # Create mock classes
+    mock_auto_bridge = MagicMock()
+    mock_auto_config = MagicMock()
+
+    # Setup mocks
+    mock_auto_bridge.get_hf_model_id_from_checkpoint.return_value = "meta-llama/Llama-3-8B"
+    mock_config = MagicMock()
+    mock_auto_config.from_pretrained.return_value = mock_config
+    mock_auto_bridge.supports.return_value = True
+
+    mock_bridge_instance = MagicMock()
+    mock_auto_bridge.from_hf_pretrained.return_value = mock_bridge_instance
+
+    with (
+        patch("nemo_export.vllm_exporter.HAVE_MEGATRON_BRIDGE", True),
+        patch("nemo_export.vllm_exporter.AutoBridge", mock_auto_bridge, create=True),
+        patch("nemo_export.vllm_exporter.AutoConfig", mock_auto_config, create=True),
+        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
+        patch("nemo_export.vllm_exporter.Path") as mock_path,
+    ):
+        # Mock temp directory
+        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
+        mock_path_instance = MagicMock()
+        mock_path_instance.iterdir.return_value = ["model.safetensors"]
+        mock_path.return_value = mock_path_instance
+
+        # Test with all vLLM parameters
+        exporter.export(
+            model_path_id="/path/to/megatron/checkpoint",
+            model_format="megatron_bridge",
+            tokenizer="/path/to/tokenizer",
+            trust_remote_code=True,
+            enable_lora=True,
+            tensor_parallel_size=4,
+            dtype="float16",
+            quantization="awq",
+            seed=42,
+            gpu_memory_utilization=0.85,
+            swap_space=8,
+            cpu_offload_gb=2,
+            enforce_eager=True,
+            max_seq_len_to_capture=4096,
+            task="generate",
+        )
+
+        # Verify LLM was called with all parameters
+        mock_llm.assert_called_once()
+        call_kwargs = mock_llm.call_args[1]
+        assert call_kwargs["model"] == "/tmp/test_hf_export"
+        assert call_kwargs["tokenizer"] == "/path/to/tokenizer"
+        assert call_kwargs["trust_remote_code"] is True
+        assert call_kwargs["enable_lora"] is True
+        assert call_kwargs["tensor_parallel_size"] == 4
+        assert call_kwargs["dtype"] == "float16"
+        assert call_kwargs["quantization"] == "awq"
+        assert call_kwargs["seed"] == 42
+        assert call_kwargs["gpu_memory_utilization"] == 0.85
+        assert call_kwargs["swap_space"] == 8
+        assert call_kwargs["cpu_offload_gb"] == 2
+        assert call_kwargs["enforce_eager"] is True
+        assert call_kwargs["max_seq_len_to_capture"] == 4096
+        assert call_kwargs["task"] == "generate"
