@@ -569,9 +569,9 @@ class TestMegatronMultimodalDeployable:
         image_source = "https://example.com/image.jpg"
         expected_image = Image.new("RGB", (100, 100))
 
-        with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
             # Make isinstance return True for our mock
-            with patch("nemo_deploy.multimodal.nemo_multimodal_deployable.isinstance") as mock_isinstance:
+            with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.isinstance") as mock_isinstance:
                 mock_isinstance.return_value = True
 
                 with patch("qwen_vl_utils.process_vision_info") as mock_process:
