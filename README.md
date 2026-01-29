@@ -409,16 +409,16 @@ nm.deploy()
 nm.serve()
 ```
 
-### Deploy NeMo Multimodal Models Directly with Triton Inference Server
+### Deploy Megatron Multimodal Models Directly with Triton Inference Server
 
-You can also deploy NeMo multimodal models directly using Triton Inference Server without exporting to TensorRT-LLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
+You can also deploy Megatron multimodal models directly using Triton Inference Server without exporting to TensorRT-LLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
 
 ```python
 from nemo_deploy import DeployPyTriton
-from nemo_deploy.multimodal import NeMoMultimodalDeployable
+from nemo_deploy.multimodal import MegatronMultimodalDeployable
 
-model = NeMoMultimodalDeployable(
-    nemo_checkpoint_filepath="/path/to/model.nemo",
+model = MegatronMultimodalDeployable(
+    megatron_checkpoint_filepath="/path/to/model.nemo",
     tensor_parallel_size=1,
     pipeline_parallel_size=1,
 )
@@ -458,18 +458,17 @@ output = nq.query(
 print(output)
 ```
 
-### Query Directly Deployed NeMo Multimodal Models
+### Query Directly Deployed Megatron Multimodal Models
 
-For multimodal models deployed directly with `NeMoMultimodalDeployable`, use the `NemoQueryMultimodalPytorch` class:
+For multimodal models deployed directly with `MegatronMultimodalDeployable`, use the `NemoQueryMultimodalPytorch` class:
 
 ```python
 from nemo_deploy.multimodal import NemoQueryMultimodalPytorch
-from PIL import Image
 
 nq = NemoQueryMultimodalPytorch(url="localhost:8000", model_name="qwen")
 output = nq.query_multimodal(
     prompts=["What is in this image?"],
-    images=[Image.open("/path/to/image.jpg")],
+    images=["https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"],
     max_length=100,
     top_k=1,
     top_p=0.0,
