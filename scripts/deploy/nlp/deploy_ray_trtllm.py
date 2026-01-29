@@ -329,7 +329,6 @@ def main():
         runtime_env={
             "env_vars": {
                 "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
-                "RAY_EXPERIMENTAL_NOSET_CUDA_VISIBLE_DEVICES": "1",
             }
         },
     )

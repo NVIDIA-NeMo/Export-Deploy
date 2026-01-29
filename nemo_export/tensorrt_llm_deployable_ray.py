@@ -18,7 +18,6 @@ from typing import Any, Dict, List
 import numpy as np
 from fastapi import FastAPI, HTTPException
 
-from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export_deploy_common.import_utils import MISSING_RAY_MSG, UnavailableError
 
 try:
@@ -93,6 +92,8 @@ class TensorRTLLMRayDeployable:
             raise UnavailableError(MISSING_RAY_MSG)
 
         try:
+            from nemo_export.tensorrt_llm import TensorRTLLM
+
             self.model = TensorRTLLM(
                 model_dir=trt_llm_path,
                 lora_ckpt_list=lora_ckpt_list,
