@@ -59,6 +59,12 @@ inputs:
   runner:
     description: "The GHA runner to use"
     required: true
+  ngc-api-user:
+    description: "NGC API User"
+    required: false
+  ngc-api-key:
+    description: "NGC API Key"
+    required: false
 
 runs:
   using: "composite"
@@ -98,6 +104,14 @@ runs:
       with:
         path: cache-mount
         key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}
+
+    - name: Login to NGC
+      if: ${{ inputs.ngc-api-user != '' && inputs.ngc-api-key != '' }}
+      shell: bash
+      run: |
+        echo ::group::Use credentials
+        echo ${{ inputs.ngc-api-key }} | docker login -u '${{ inputs.ngc-api-user }}' --password-stdin nvcr.io
+        echo ::endgroup::
 
     - name: Restore Docker cache mounts
       uses: reproducible-containers/buildkit-cache-dance@5b81f4d29dc8397a7d341dba3aeecc7ec54d6361

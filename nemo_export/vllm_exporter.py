@@ -126,7 +126,7 @@ class vLLMExporter(ITritonDeployable):
         gpu_memory_utilization: float = 0.9,
         swap_space: float = 4,
         cpu_offload_gb: float = 0,
-        enforce_eager: bool = False,
+        enforce_eager: bool = True,
         max_seq_len_to_capture: int = 8192,
         task: Literal["auto", "generate", "embedding"] = "auto",
         model_format: Literal["hf", "nemo2", "megatron_bridge"] = "nemo2",
@@ -221,7 +221,6 @@ class vLLMExporter(ITritonDeployable):
                     swap_space=swap_space,
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
-                    max_seq_len_to_capture=max_seq_len_to_capture,
                     task=task,
                 )
         elif model_format == "nemo2":
@@ -254,7 +253,6 @@ class vLLMExporter(ITritonDeployable):
                     swap_space=swap_space,
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
-                    max_seq_len_to_capture=max_seq_len_to_capture,
                     task=task,
                 )
         else:
@@ -271,7 +269,6 @@ class vLLMExporter(ITritonDeployable):
                 swap_space=swap_space,
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
-                max_seq_len_to_capture=max_seq_len_to_capture,
                 task=task,
             )
 

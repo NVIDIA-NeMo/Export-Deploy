@@ -109,6 +109,7 @@ class DeployRay:
         self.num_gpus = num_gpus
         self.host = host
         self.port = port
+        self.runtime_env = runtime_env
 
         try:
             # Try to connect to existing Ray cluster
@@ -450,6 +451,7 @@ class DeployRay:
                 ray_actor_options={
                     "num_cpus": num_cpus_per_replica,
                     "num_gpus": num_gpus_per_replica,
+                    "runtime_env": self.runtime_env,
                 },
                 max_ongoing_requests=max_ongoing_requests,
             ).bind(**deployment_kwargs)
