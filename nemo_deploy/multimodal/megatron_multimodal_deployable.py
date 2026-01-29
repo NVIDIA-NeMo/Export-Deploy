@@ -24,6 +24,7 @@ from PIL import Image
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
 from nemo_export_deploy_common.import_utils import (
+    MISSING_MBRIDGE_MSG,
     MISSING_NEMO_MSG,
     MISSING_TRITON_MSG,
     UnavailableError,
@@ -31,12 +32,12 @@ from nemo_export_deploy_common.import_utils import (
 )
 
 try:
-    from nemo.collections.vlm.inference.base import generate, setup_model_and_tokenizer
-    from nemo.collections.vlm.inference.qwenvl_inference_wrapper import QwenVLInferenceWrapper
+    from megatron.bridge.inference.vlm.base import generate, setup_model_and_tokenizer
+    from megatron.bridge.inference.vlm.qwenvl_inference_wrapper import QwenVLInferenceWrapper
 
-    HAVE_NEMO = True
+    HAVE_MBRIDGE = True
 except (ImportError, ModuleNotFoundError):
-    HAVE_NEMO = False
+    HAVE_MBRIDGE = False
     from typing import Any
 
     generate = Any
@@ -67,42 +68,46 @@ def dict_to_str(messages):
     return json.dumps(messages)
 
 
-class NeMoMultimodalDeployable(ITritonDeployable):
-    """Triton inference server compatible deploy class for a NeMo multimodal model file.
+class MegatronMultimodalDeployable(ITritonDeployable):
+    """Triton inference server compatible deploy class for a Megatron multimodal model file.
 
     Args:
-        nemo_checkpoint_filepath (str): path for the nemo checkpoint.
-        tensor_parallel_size (int): tensor parallelism.
-        pipeline_parallel_size (int): pipeline parallelism.
+        megatron_checkpoint_filepath (str): path for the megatron checkpoint.
+        tensor_model_parallel_size (int): tensor parallelism.
+        pipeline_model_parallel_size (int): pipeline parallelism.
         params_dtype (torch.dtype): data type for model parameters.
         inference_batch_times_seqlen_threshold (int): sequence threshold.
+        inference_max_seq_length (int): maximum sequence length for inference.
     """
 
     def __init__(
         self,
-        nemo_checkpoint_filepath: str = None,
-        tensor_parallel_size: int = 1,
-        pipeline_parallel_size: int = 1,
+        megatron_checkpoint_filepath: str,
+        tensor_model_parallel_size: int = 1,
+        pipeline_model_parallel_size: int = 1,
         params_dtype: torch.dtype = torch.bfloat16,
         inference_batch_times_seqlen_threshold: int = 1000,
+        inference_max_seq_length: int = 8192,
     ):
         if not HAVE_TRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
-        if not HAVE_NEMO:
-            raise UnavailableError(MISSING_NEMO_MSG)
+        if not HAVE_MBRIDGE:
+            raise UnavailableError(MISSING_MBRIDGE_MSG)
 
-        self.nemo_checkpoint_filepath = nemo_checkpoint_filepath
-        self.tensor_parallel_size = tensor_parallel_size
-        self.pipeline_parallel_size = pipeline_parallel_size
+        self.megatron_checkpoint_filepath = megatron_checkpoint_filepath
+        self.tensor_model_parallel_size = tensor_model_parallel_size
+        self.pipeline_model_parallel_size = pipeline_model_parallel_size
         self.params_dtype = params_dtype
         self.inference_batch_times_seqlen_threshold = inference_batch_times_seqlen_threshold
+        self.inference_max_seq_length = inference_max_seq_length
 
         self.inference_wrapped_model, self.processor = setup_model_and_tokenizer(
-            path=nemo_checkpoint_filepath,
-            tp_size=tensor_parallel_size,
-            pp_size=pipeline_parallel_size,
+            megatron_model_path=megatron_checkpoint_filepath,
+            tp=tensor_model_parallel_size,
+            pp=pipeline_model_parallel_size,
             params_dtype=params_dtype,
             inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
+            inference_max_seq_length=inference_max_seq_length,
         )
 
     def generate(
