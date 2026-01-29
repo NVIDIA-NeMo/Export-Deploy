@@ -110,6 +110,13 @@ def get_args(argv):
         help="GPU memory utilization percentage for vLLM.",
     )
     parser.add_argument(
+        "-mml",
+        "--max_model_len",
+        default=8192,
+        type=int,
+        help="Max model length for vLLM.",
+    )
+    parser.add_argument(
         "-sp",
         "--swap_space",
         default=4,
@@ -212,6 +219,7 @@ def nemo_deploy(argv):
             cpu_offload_gb=args.cpu_offload_gb,
             enforce_eager=args.enforce_eager,
             max_seq_len_to_capture=args.max_seq_len_to_capture,
+            max_model_len=args.max_model_len,
             task="generate",
             model_format=args.model_format,
             hf_model_id=args.hf_model_id_path,

@@ -71,6 +71,7 @@ def test_export(exporter, mock_llm):
         cpu_offload_gb=0,
         enforce_eager=False,
         max_seq_len_to_capture=8192,
+        max_model_len=8192,
         task="auto",
     )
 
@@ -97,6 +98,7 @@ def test_export_with_lora(exporter, mock_llm):
         cpu_offload_gb=0,
         enforce_eager=False,
         max_seq_len_to_capture=8192,
+        max_model_len=8192,
         task="auto",
     )
 
@@ -129,6 +131,7 @@ def test_export_with_custom_params(exporter, mock_llm):
         cpu_offload_gb=0,
         enforce_eager=False,
         max_seq_len_to_capture=8192,
+        max_model_len=8192,
         task="auto",
     )
 
