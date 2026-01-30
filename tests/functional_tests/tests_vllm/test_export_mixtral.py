@@ -94,6 +94,8 @@ class TestVLLMExportMixtral:
                 "tests/functional_tests/data/lambada.json",
                 "--accuracy_threshold",
                 "0.0",
+                "--vllm_model_format",
+                "hf",
             ],
             check=True,
         )

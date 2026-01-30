@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM nvcr.io/nvidia/pytorch:25.06-py3
+FROM nvcr.io/nvidian/nemo:export-deploy-25.11-py3-48b7b5d-v0.11.2
 WORKDIR /workspace
 COPY . .
 ARG INFERENCE_FRAMEWORK

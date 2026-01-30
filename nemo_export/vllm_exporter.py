@@ -114,7 +114,7 @@ class vLLMExporter(ITritonDeployable):
         gpu_memory_utilization: float = 0.9,
         swap_space: float = 4,
         cpu_offload_gb: float = 0,
-        enforce_eager: bool = False,
+        enforce_eager: bool = True,
         task: Literal["auto", "generate", "embedding"] = "auto",
         model_format: Literal["hf", "megatron_bridge"] = "megatron_bridge",
         hf_model_id: str = None,

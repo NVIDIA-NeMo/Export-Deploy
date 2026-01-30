@@ -69,7 +69,7 @@ def test_export(exporter, mock_llm):
         gpu_memory_utilization=0.9,
         swap_space=4,
         cpu_offload_gb=0,
-        enforce_eager=False,
+        enforce_eager=True,
         task="auto",
     )
 
@@ -94,7 +94,7 @@ def test_export_with_lora(exporter, mock_llm):
         gpu_memory_utilization=0.9,
         swap_space=4,
         cpu_offload_gb=0,
-        enforce_eager=False,
+        enforce_eager=True,
         task="auto",
     )
 
@@ -125,7 +125,7 @@ def test_export_with_custom_params(exporter, mock_llm):
         gpu_memory_utilization=0.9,
         swap_space=4,
         cpu_offload_gb=0,
-        enforce_eager=False,
+        enforce_eager=True,
         task="auto",
     )
 
