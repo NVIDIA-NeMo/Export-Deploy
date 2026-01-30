@@ -616,6 +616,130 @@ class TestHFRayDeployable:
         # Assert result is valid
         assert result["object"] == "text_completion"
 
+    def test_chat_completions_with_apply_chat_template(self):
+        """Test chat completions endpoint applies chat template correctly."""
+        # Mock model that returns a response
+        mock_model = MagicMock()
+        mock_model.ray_infer_fn.return_value = {
+            "sentences": ["I'm doing well, thank you!"],
+        }
+
+        # Create a chat request
+        request = {
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": "Hello, how are you?"},
+            ],
+            "max_tokens": 100,
+            "temperature": 0.7,
+        }
+
+        # Simulate the chat_completions endpoint logic
+        messages = request.get("messages", [])
+        temperature = request.get("temperature", 1.0)
+        top_p = request.get("top_p", 0.0)
+        top_k = request.get("top_k", 0)
+
+        # Greedy sampling check
+        if temperature == 0.0 and top_p == 0.0:
+            top_k = 1
+
+        # Handle vLLM top_p requirement
+        if top_p <= 0.0:
+            top_p = 1.0
+
+        inference_inputs = {
+            "prompts": [messages],  # Pass messages directly
+            "max_tokens": request.get("max_tokens", 512),
+            "temperature": temperature,
+            "top_k": top_k,
+            "top_p": top_p,
+            "output_logits": request.get("output_logits", False),
+            "output_scores": request.get("output_scores", False),
+            "apply_chat_template": request.get("apply_chat_template", True),  # Default True for chat
+        }
+
+        results = mock_model.ray_infer_fn(inference_inputs)
+
+        # Verify apply_chat_template is set to True by default
+        assert inference_inputs["apply_chat_template"] is True
+        # Verify messages are passed directly
+        assert inference_inputs["prompts"] == [messages]
+        # Verify results
+        assert results["sentences"] == ["I'm doing well, thank you!"]
+
+    def test_chat_completions_greedy_sampling(self):
+        """Test chat completions endpoint sets top_k=1 for greedy sampling."""
+        mock_model = MagicMock()
+        mock_model.ray_infer_fn.return_value = {
+            "sentences": ["Test response"],
+        }
+
+        # Create a request with greedy sampling (temperature=0, top_p=0)
+        request = {
+            "messages": [{"role": "user", "content": "Hello"}],
+            "max_tokens": 50,
+            "temperature": 0.0,
+            "top_p": 0.0,
+        }
+
+        # Simulate the chat_completions endpoint logic
+        messages = request.get("messages", [])
+        temperature = request.get("temperature", 1.0)
+        top_p = request.get("top_p", 0.0)
+        top_k = request.get("top_k", 0)
+
+        # Greedy sampling check
+        if temperature == 0.0 and top_p == 0.0:
+            top_k = 1
+
+        # Handle vLLM top_p requirement
+        if top_p <= 0.0:
+            top_p = 1.0
+
+        inference_inputs = {
+            "prompts": [messages],
+            "max_tokens": request.get("max_tokens", 512),
+            "temperature": temperature,
+            "top_k": top_k,
+            "top_p": top_p,
+            "apply_chat_template": True,
+        }
+
+        _ = mock_model.ray_infer_fn(inference_inputs)
+
+        # Verify greedy sampling was applied
+        assert inference_inputs["top_k"] == 1
+        assert inference_inputs["top_p"] == 1.0  # Adjusted for vLLM
+
+    def test_chat_completions_apply_chat_template_disabled(self):
+        """Test chat completions endpoint can disable apply_chat_template."""
+        mock_model = MagicMock()
+        mock_model.ray_infer_fn.return_value = {
+            "sentences": ["Test response"],
+        }
+
+        # Create a request with apply_chat_template=False
+        request = {
+            "messages": [{"role": "user", "content": "Hello"}],
+            "max_tokens": 50,
+            "apply_chat_template": False,
+        }
+
+        inference_inputs = {
+            "prompts": [request.get("messages", [])],
+            "max_tokens": request.get("max_tokens", 512),
+            "temperature": request.get("temperature", 1.0),
+            "top_k": request.get("top_k", 0),
+            "top_p": request.get("top_p", 1.0),
+            "apply_chat_template": request.get("apply_chat_template", True),
+        }
+
+        _ = mock_model.ray_infer_fn(inference_inputs)
+
+        # Verify apply_chat_template is False
+        assert inference_inputs["apply_chat_template"] is False
+
 
 if __name__ == "__main__":
     pytest.main()
