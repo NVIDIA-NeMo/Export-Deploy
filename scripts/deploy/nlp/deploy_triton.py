@@ -40,7 +40,6 @@ except Exception as e:
 
 trt_llm_supported = True
 try:
-    from nemo_export.tensorrt_llm import TensorRTLLM
     from nemo_export.tensorrt_llm_hf import TensorRTLLMHF
 except Exception as e:
     LOGGER.warning(f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}")
@@ -52,7 +51,6 @@ def get_args(argv):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Deploy nemo models to Triton",
     )
-    parser.add_argument("-nc", "--nemo_checkpoint", type=str, help="Source .nemo file")
     parser.add_argument("-hfp", "--hf_model_id_path", type=str, help="Huggingface model path or id")
     parser.add_argument(
         "-mt",
@@ -401,70 +399,28 @@ def get_trtllm_deployable(args):
             except Exception as e:
                 raise RuntimeError(f"Error downloading from HuggingFace: {str(e)}")
 
-    checkpoint_missing = args.nemo_checkpoint is None and args.hf_model_id_path is None
+    checkpoint_missing = args.hf_model_id_path is None
     if checkpoint_missing and args.triton_model_repository is None:
         raise ValueError(
-            "The provided model repository is not a valid TensorRT-LLM model "
-            "directory. Please provide a --nemo_checkpoint."
+            "Please provide either --hf_model_id_path or --triton_model_repository with a valid TensorRT-LLM model."
         )
 
     if checkpoint_missing and not os.path.isdir(args.triton_model_repository):
         raise ValueError(
             "The provided model repository is not a valid TensorRT-LLM model "
-            "directory. Please provide a --nemo_checkpoint."
+            "directory. Please provide a --hf_model_id_path or a valid --triton_model_repository."
         )
 
-    if not checkpoint_missing and args.model_type is None:
-        raise ValueError("Model type is required to be defined if a nemo checkpoint is provided.")
+    # Use TensorRTLLMHF for HuggingFace models
+    trt_llm_exporter = TensorRTLLMHF(
+        model_dir=trt_llm_path,
+        lora_ckpt_list=args.lora_ckpt,
+        load_model=(args.hf_model_id_path is None),
+        use_python_runtime=(not args.use_cpp_runtime),
+        multi_block_mode=args.multi_block_mode,
+    )
 
-    # Use TensorRTLLMHF for HuggingFace models, TensorRTLLM for NeMo models
     if args.hf_model_id_path is not None:
-        trt_llm_exporter = TensorRTLLMHF(
-            model_dir=trt_llm_path,
-            lora_ckpt_list=args.lora_ckpt,
-            load_model=(args.nemo_checkpoint is None and args.hf_model_id_path is None),
-            use_python_runtime=(not args.use_cpp_runtime),
-            multi_block_mode=args.multi_block_mode,
-        )
-    else:
-        trt_llm_exporter = TensorRTLLM(
-            model_dir=trt_llm_path,
-            lora_ckpt_list=args.lora_ckpt,
-            load_model=(args.nemo_checkpoint is None and args.hf_model_id_path is None),
-            use_python_runtime=(not args.use_cpp_runtime),
-            multi_block_mode=args.multi_block_mode,
-        )
-
-    if args.nemo_checkpoint is not None:
-        try:
-            LOGGER.info("Export operation will be started to export the nemo checkpoint to TensorRT-LLM.")
-            trt_llm_exporter.export(
-                nemo_checkpoint_path=args.nemo_checkpoint,
-                model_type=args.model_type,
-                tensor_parallelism_size=args.tensor_parallelism_size,
-                pipeline_parallelism_size=args.pipeline_parallelism_size,
-                max_input_len=args.max_input_len,
-                max_output_len=args.max_output_len,
-                max_batch_size=args.max_batch_size,
-                max_num_tokens=args.max_num_tokens,
-                opt_num_tokens=args.opt_num_tokens,
-                max_seq_len=args.max_seq_len,
-                use_parallel_embedding=args.use_parallel_embedding,
-                paged_kv_cache=(not args.no_paged_kv_cache),
-                remove_input_padding=(not args.disable_remove_input_padding),
-                dtype=args.dtype,
-                use_lora_plugin=args.use_lora_plugin,
-                lora_target_modules=args.lora_target_modules,
-                max_lora_rank=args.max_lora_rank,
-                multiple_profiles=args.multiple_profiles,
-                gpt_attention_plugin=args.gpt_attention_plugin,
-                gemm_plugin=args.gemm_plugin,
-                fp8_quantized=args.export_fp8_quantized,
-                fp8_kvcache=args.use_fp8_kv_cache,
-            )
-        except Exception as error:
-            raise RuntimeError("An error has occurred during the model export. Error message: " + str(error))
-    elif args.hf_model_id_path is not None:
         LOGGER.info("Export operation will be started to export the hugging face checkpoint to TensorRT-LLM.")
         try:
             trt_llm_exporter.export_hf_model(
