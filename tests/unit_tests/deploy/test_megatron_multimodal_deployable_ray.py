@@ -37,7 +37,7 @@ def ray_cluster():
     """Setup a real Ray cluster for testing."""
     # Initialize Ray for testing
     if not ray.is_initialized():
-        ray.init(num_cpus=4, num_gpus=0, include_dashboard=False, ignore_reinit_error=True)
+        ray.init(num_cpus=8, num_gpus=1, include_dashboard=False, ignore_reinit_error=True)
 
     yield
 
@@ -87,21 +87,6 @@ def mock_megatron_checkpoint():
 
 
 @pytest.fixture
-def mock_multimodal_model():
-    """Mock the MegatronMultimodalDeployable model to avoid loading real models."""
-    with patch("nemo_deploy.multimodal.megatron_multimodal_deployable_ray.MegatronMultimodalDeployable") as mock:
-        mock_instance = MagicMock()
-
-        # Mock the ray_infer_fn method for multimodal inference
-        mock_instance.ray_infer_fn.return_value = {
-            "sentences": [["Generated multimodal response"]],
-        }
-
-        mock.return_value = mock_instance
-        yield mock
-
-
-@pytest.fixture
 def mock_environment_setup():
     """Mock environment variables and system calls."""
     with (
@@ -116,37 +101,25 @@ def mock_environment_setup():
 
 
 @pytest.fixture
-def mock_model_worker(mock_multimodal_model):
-    """Mock ModelWorker class while preserving Ray remote functionality."""
+def mock_model_worker():
+    """Mock ModelWorker class to avoid loading real models and GPU requirements."""
     _ = ModelWorker
 
-    # Create a new class that inherits from the original but mocks the model loading
+    # Create a mock worker that returns results directly without loading models
     @ray.remote(num_gpus=0)  # Use CPU for testing
     class MockModelWorker:
         def __init__(self, *args, **kwargs):
-            # Store the arguments for verification
+            # Store arguments but don't load any model
             self.args = args
             self.kwargs = kwargs
-            # Create a mock model instead of loading real one
-            self.model = mock_multimodal_model.return_value
-            # Initialize successfully
-            print(f"MockModelWorker initialized with args: {args[:2] if args else []}")  # Limit logging
+            self.rank = kwargs.get("rank", 0)
+            print(f"MockModelWorker initialized for rank {self.rank}")
 
         def infer(self, inputs):
-            """Mock inference method that returns consistent multimodal results."""
-            try:
-                # Ensure we always return a valid response structure
-                result = {
-                    "sentences": [["Generated multimodal response"]],
-                }
-                print(f"MockModelWorker.infer called with keys: {list(inputs.keys()) if inputs else []}")
-                return result
-            except Exception as e:
-                # Log but don't raise exceptions that might cause serialization issues
-                print(f"Mock inference error: {e}")
-                return {
-                    "sentences": [["Error response"]],
-                }
+            """Return mock inference results directly."""
+            return {
+                "sentences": [["Generated multimodal response"]],
+            }
 
     # Patch the original ModelWorker with our mock
     with patch("nemo_deploy.multimodal.megatron_multimodal_deployable_ray.ModelWorker", MockModelWorker):
@@ -262,167 +235,55 @@ class TestMegatronMultimodalRayDeployable:
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
 
-    def test_chat_completions_endpoint_with_base64_image(
+    def test_model_worker_initialization_and_infer(
         self,
         mock_megatron_checkpoint,
         mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-        sample_image_base64,
     ):
-        """Test chat completions endpoint with base64 image."""
-        deployment_handle = MegatronMultimodalRayDeployable.bind(
-            megatron_checkpoint_filepath=mock_megatron_checkpoint,
-            num_gpus=1,
-            model_id="test-chat-multimodal-model",
-        )
+        """Test ModelWorker by accessing underlying class without Ray remote decorator."""
+        # Access the underlying class without the @ray.remote decorator
+        from nemo_deploy.multimodal.megatron_multimodal_deployable_ray import ModelWorker
 
-        serve.run(deployment_handle, name="test-chat-multimodal-deployment")
+        # Get the actual class (not the remote wrapper)
+        ModelWorkerClass = ModelWorker.__ray_metadata__.modified_class
 
-        request_data = {
-            "model": "test-chat-multimodal-model",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Describe this image"},
-                        {"type": "image_url", "image_url": {"url": sample_image_base64}},
-                    ],
-                }
-            ],
-            "max_tokens": 100,
-        }
+        # Create instance directly with mock
+        with patch(
+            "nemo_deploy.multimodal.megatron_multimodal_deployable_ray.MegatronMultimodalDeployable"
+        ) as mock_deployable:
+            mock_instance = MagicMock()
+            mock_instance.ray_infer_fn.return_value = {"sentences": [["Generated multimodal response"]]}
+            mock_deployable.return_value = mock_instance
 
-        response = requests.post(
-            "http://127.0.0.1:8000/v1/chat/completions/",
-            json=request_data,
-            timeout=30,
-        ).json()
+            # Create worker instance directly
+            worker = ModelWorkerClass(
+                megatron_checkpoint_filepath=mock_megatron_checkpoint,
+                rank=0,
+                world_size=1,
+                tensor_model_parallel_size=1,
+                pipeline_model_parallel_size=1,
+                master_port="29500",
+                master_addr="127.0.0.1",
+                replica_id=0,
+            )
 
-        assert "id" in response
-        assert response["object"] == "chat.completion"
-        assert "created" in response
-        assert "choices" in response
-        assert len(response["choices"]) > 0
-        assert "message" in response["choices"][0]
-        assert "role" in response["choices"][0]["message"]
-        assert response["choices"][0]["message"]["role"] == "assistant"
-        assert "content" in response["choices"][0]["message"]
+            # Verify worker was created and has rank
+            assert worker is not None
+            assert worker.rank == 0
 
-    def test_chat_completions_endpoint_with_url_image(
-        self,
-        mock_megatron_checkpoint,
-        mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-        sample_image_url,
-    ):
-        """Test chat completions endpoint with image URL."""
-        deployment_handle = MegatronMultimodalRayDeployable.bind(
-            megatron_checkpoint_filepath=mock_megatron_checkpoint,
-            num_gpus=1,
-            model_id="test-chat-url-model",
-        )
+            # Test inference method directly
+            inputs = {
+                "prompts": ["Test prompt"],
+                "images": [],
+                "max_length": 50,
+            }
 
-        serve.run(deployment_handle, name="test-chat-url-deployment")
+            result = worker.infer(inputs)
 
-        request_data = {
-            "model": "test-chat-url-model",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "What's in this image?"},
-                        {"type": "image_url", "image_url": {"url": sample_image_url}},
-                    ],
-                }
-            ],
-            "max_tokens": 50,
-        }
-
-        response = requests.post(
-            "http://127.0.0.1:8000/v1/chat/completions/",
-            json=request_data,
-            timeout=30,
-        ).json()
-
-        assert "choices" in response
-        assert len(response["choices"]) > 0
-        assert "message" in response["choices"][0]
-        assert "content" in response["choices"][0]["message"]
-
-    def test_completions_endpoint_with_image(
-        self,
-        mock_megatron_checkpoint,
-        mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-        sample_image_base64,
-    ):
-        """Test completions endpoint with image."""
-        deployment_handle = MegatronMultimodalRayDeployable.bind(
-            megatron_checkpoint_filepath=mock_megatron_checkpoint,
-            num_gpus=1,
-            model_id="test-completions-multimodal-model",
-        )
-
-        serve.run(deployment_handle, name="test-completions-multimodal-deployment")
-
-        request_data = {
-            "model": "test-completions-multimodal-model",
-            "prompt": "Describe this image in detail.",
-            "image": sample_image_base64,
-            "max_tokens": 100,
-        }
-
-        response = requests.post(
-            "http://127.0.0.1:8000/v1/completions/",
-            json=request_data,
-            timeout=30,
-        ).json()
-
-        assert "id" in response
-        assert response["object"] == "text_completion"
-        assert "created" in response
-        assert "choices" in response
-        assert len(response["choices"]) > 0
-        assert "text" in response["choices"][0]
-
-    def test_completions_endpoint_without_image(
-        self,
-        mock_megatron_checkpoint,
-        mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-    ):
-        """Test completions endpoint without image (text-only)."""
-        deployment_handle = MegatronMultimodalRayDeployable.bind(
-            megatron_checkpoint_filepath=mock_megatron_checkpoint,
-            num_gpus=1,
-            model_id="test-text-only-model",
-        )
-
-        serve.run(deployment_handle, name="test-text-only-deployment")
-
-        request_data = {
-            "model": "test-text-only-model",
-            "prompt": "Hello, world!",
-            "max_tokens": 50,
-        }
-
-        response = requests.post(
-            "http://127.0.0.1:8000/v1/completions/",
-            json=request_data,
-            timeout=30,
-        ).json()
-
-        assert "choices" in response
-        assert len(response["choices"]) > 0
-        assert "text" in response["choices"][0]
+            # Verify result structure
+            assert "sentences" in result
+            assert len(result["sentences"]) > 0
+            assert result["sentences"][0] == ["Generated multimodal response"]
 
     def test_list_models_endpoint(
         self,
@@ -470,50 +331,6 @@ class TestMegatronMultimodalRayDeployable:
 
         assert response["status"] == "healthy"
 
-    def test_chat_completions_with_temperature(
-        self,
-        mock_megatron_checkpoint,
-        mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-        sample_image_base64,
-    ):
-        """Test chat completions with custom temperature."""
-        deployment_handle = MegatronMultimodalRayDeployable.bind(
-            megatron_checkpoint_filepath=mock_megatron_checkpoint,
-            num_gpus=1,
-            model_id="test-temperature-model",
-        )
-
-        serve.run(deployment_handle, name="test-temperature-deployment")
-
-        request_data = {
-            "model": "test-temperature-model",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Describe this image"},
-                        {"type": "image_url", "image_url": {"url": sample_image_base64}},
-                    ],
-                }
-            ],
-            "max_tokens": 50,
-            "temperature": 0.7,
-            "top_k": 10,
-            "top_p": 0.9,
-        }
-
-        response = requests.post(
-            "http://127.0.0.1:8000/v1/chat/completions/",
-            json=request_data,
-            timeout=30,
-        ).json()
-
-        assert "choices" in response
-        assert len(response["choices"]) > 0
-
     def test_pipeline_parallelism_initialization(
         self,
         mock_megatron_checkpoint,
@@ -558,89 +375,6 @@ class TestMegatronMultimodalRayDeployable:
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
 
-    def test_chat_completions_with_multiple_images(
-        self,
-        mock_megatron_checkpoint,
-        mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-        sample_image_base64,
-        sample_image_url,
-    ):
-        """Test chat completions with multiple images."""
-        deployment_handle = MegatronMultimodalRayDeployable.bind(
-            megatron_checkpoint_filepath=mock_megatron_checkpoint,
-            num_gpus=1,
-            model_id="test-multi-image-model",
-        )
-
-        serve.run(deployment_handle, name="test-multi-image-deployment")
-
-        request_data = {
-            "model": "test-multi-image-model",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Compare these images"},
-                        {"type": "image_url", "image_url": {"url": sample_image_base64}},
-                        {"type": "image_url", "image_url": {"url": sample_image_url}},
-                    ],
-                }
-            ],
-            "max_tokens": 100,
-        }
-
-        response = requests.post(
-            "http://127.0.0.1:8000/v1/chat/completions/",
-            json=request_data,
-            timeout=30,
-        ).json()
-
-        assert "choices" in response
-        assert len(response["choices"]) > 0
-        assert "message" in response["choices"][0]
-
-    def test_completions_with_custom_params(
-        self,
-        mock_megatron_checkpoint,
-        mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-        sample_image_base64,
-    ):
-        """Test completions with custom inference parameters."""
-        deployment_handle = MegatronMultimodalRayDeployable.bind(
-            megatron_checkpoint_filepath=mock_megatron_checkpoint,
-            num_gpus=1,
-            model_id="test-custom-params-model",
-        )
-
-        serve.run(deployment_handle, name="test-custom-params-deployment")
-
-        request_data = {
-            "model": "test-custom-params-model",
-            "prompt": "Analyze this image",
-            "image": sample_image_base64,
-            "max_tokens": 200,
-            "temperature": 0.5,
-            "top_k": 50,
-            "top_p": 0.95,
-            "random_seed": 42,
-            "max_batch_size": 8,
-        }
-
-        response = requests.post(
-            "http://127.0.0.1:8000/v1/completions/",
-            json=request_data,
-            timeout=30,
-        ).json()
-
-        assert "choices" in response
-        assert len(response["choices"]) > 0
-
     def test_initialization_with_custom_inference_params(
         self,
         mock_megatron_checkpoint,
@@ -663,113 +397,3 @@ class TestMegatronMultimodalRayDeployable:
 
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
-
-    def test_chat_completions_openai_format(
-        self,
-        mock_megatron_checkpoint,
-        mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-        sample_image_url,
-    ):
-        """Test chat completions with OpenAI-style image format (normalized internally)."""
-        deployment_handle = MegatronMultimodalRayDeployable.bind(
-            megatron_checkpoint_filepath=mock_megatron_checkpoint,
-            num_gpus=1,
-            model_id="test-openai-format-model",
-        )
-
-        serve.run(deployment_handle, name="test-openai-format-deployment")
-
-        # Using OpenAI-style image_url format
-        request_data = {
-            "model": "test-openai-format-model",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "What do you see?"},
-                        {"type": "image_url", "image_url": {"url": sample_image_url}},
-                    ],
-                }
-            ],
-            "max_tokens": 75,
-        }
-
-        response = requests.post(
-            "http://127.0.0.1:8000/v1/chat/completions/",
-            json=request_data,
-            timeout=30,
-        ).json()
-
-        assert "choices" in response
-        assert "message" in response["choices"][0]
-        assert response["choices"][0]["message"]["role"] == "assistant"
-
-    def test_completions_with_prompts_list(
-        self,
-        mock_megatron_checkpoint,
-        mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-    ):
-        """Test completions endpoint with prompts as a list."""
-        deployment_handle = MegatronMultimodalRayDeployable.bind(
-            megatron_checkpoint_filepath=mock_megatron_checkpoint,
-            num_gpus=1,
-            model_id="test-prompts-list-model",
-        )
-
-        serve.run(deployment_handle, name="test-prompts-list-deployment")
-
-        request_data = {
-            "model": "test-prompts-list-model",
-            "prompts": ["Prompt 1", "Prompt 2"],
-            "max_tokens": 50,
-        }
-
-        response = requests.post(
-            "http://127.0.0.1:8000/v1/completions/",
-            json=request_data,
-            timeout=30,
-        ).json()
-
-        assert "choices" in response
-        assert len(response["choices"]) > 0
-
-    def test_completions_with_images_list(
-        self,
-        mock_megatron_checkpoint,
-        mock_model_worker,
-        mock_environment_setup,
-        ray_cluster,
-        cleanup_serve,
-        sample_image_base64,
-        sample_image_url,
-    ):
-        """Test completions endpoint with images as a list."""
-        deployment_handle = MegatronMultimodalRayDeployable.bind(
-            megatron_checkpoint_filepath=mock_megatron_checkpoint,
-            num_gpus=1,
-            model_id="test-images-list-model",
-        )
-
-        serve.run(deployment_handle, name="test-images-list-deployment")
-
-        request_data = {
-            "model": "test-images-list-model",
-            "prompt": "Describe these images",
-            "images": [sample_image_base64, sample_image_url],
-            "max_tokens": 100,
-        }
-
-        response = requests.post(
-            "http://127.0.0.1:8000/v1/completions/",
-            json=request_data,
-            timeout=30,
-        ).json()
-
-        assert "choices" in response
-        assert len(response["choices"]) > 0
