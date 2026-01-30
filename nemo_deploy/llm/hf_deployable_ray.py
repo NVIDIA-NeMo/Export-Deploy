@@ -307,7 +307,6 @@ class HFRayDeployable:
                     LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
                     request["top_k"] = 1
 
-
             # Prepare inference parameters using the formatted prompt
             inference_inputs = {
                 "prompts": [messages],  # Pass messages list, will be formatted by apply_chat_template

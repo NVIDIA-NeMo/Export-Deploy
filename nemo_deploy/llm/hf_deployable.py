@@ -179,7 +179,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             messages = json.loads(messages)
 
         # Check if tokenizer has chat_template
-        if not hasattr(self.tokenizer, 'chat_template') or self.tokenizer.chat_template is None:
+        if not hasattr(self.tokenizer, "chat_template") or self.tokenizer.chat_template is None:
             raise ValueError(
                 "The tokenizer does not have a chat template defined. "
                 "If you would like to evaluate a chat model, ensure your model's tokenizer has a chat template."
