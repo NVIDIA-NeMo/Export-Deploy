@@ -31,18 +31,18 @@ if not LOGGER.hasHandlers():
 
 multimodal_supported = True
 try:
-    from nemo_deploy.multimodal.nemo_multimodal_deployable import NeMoMultimodalDeployable
+    from nemo_deploy.multimodal.megatron_multimodal_deployable import MegatronMultimodalDeployable
 except Exception as e:
-    LOGGER.warning(f"Cannot import NeMoMultimodalDeployable, it will not be available. {type(e).__name__}: {e}")
+    LOGGER.warning(f"Cannot import MegatronMultimodalDeployable, it will not be available. {type(e).__name__}: {e}")
     multimodal_supported = False
 
 
 def get_args(argv):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Deploy nemo multimodal models to Triton",
+        description="Deploy megatron multimodal models to Triton",
     )
-    parser.add_argument("-nc", "--nemo_checkpoint", type=str, help="Source .nemo file")
+    parser.add_argument("-mc", "--megatron_checkpoint", type=str, help="Source megatron checkpoint path")
     parser.add_argument(
         "-tmn",
         "--triton_model_name",
@@ -88,14 +88,14 @@ def get_args(argv):
 
     parser.add_argument(
         "-tps",
-        "--tensor_parallel_size",
+        "--tensor_model_parallel_size",
         default=1,
         type=int,
         help="Tensor parallelism size",
     )
     parser.add_argument(
         "-pps",
-        "--pipeline_parallel_size",
+        "--pipeline_model_parallel_size",
         default=1,
         type=int,
         help="Pipeline parallelism size",
@@ -130,6 +130,13 @@ def get_args(argv):
         type=int,
         help="Inference batch times sequence length threshold",
     )
+    parser.add_argument(
+        "-imsl",
+        "--inference_max_seq_length",
+        default=8192,
+        type=int,
+        help="Maximum sequence length for inference",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -147,9 +154,9 @@ def nemo_deploy(argv):
     LOGGER.info(args)
 
     if not multimodal_supported:
-        raise ValueError("NeMoMultimodalDeployable is not supported in this environment.")
+        raise ValueError("MegatronMultimodalDeployable is not supported in this environment.")
 
-    if args.nemo_checkpoint is None:
+    if args.megatron_checkpoint is None:
         raise ValueError("In-Framework deployment requires a checkpoint folder.")
 
     # Convert dtype string to torch dtype
@@ -160,12 +167,13 @@ def nemo_deploy(argv):
     }
     params_dtype = dtype_map[args.params_dtype]
 
-    model = NeMoMultimodalDeployable(
-        nemo_checkpoint_filepath=args.nemo_checkpoint,
-        tensor_parallel_size=args.tensor_parallel_size,
-        pipeline_parallel_size=args.pipeline_parallel_size,
+    model = MegatronMultimodalDeployable(
+        megatron_checkpoint_filepath=args.megatron_checkpoint,
+        tensor_model_parallel_size=args.tensor_model_parallel_size,
+        pipeline_model_parallel_size=args.pipeline_model_parallel_size,
         params_dtype=params_dtype,
         inference_batch_times_seqlen_threshold=args.inference_batch_times_seqlen_threshold,
+        inference_max_seq_length=args.inference_max_seq_length,
     )
 
     if torch.distributed.is_initialized():

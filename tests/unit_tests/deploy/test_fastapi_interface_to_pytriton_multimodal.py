@@ -89,7 +89,7 @@ class TestPydanticModels:
         assert request.max_tokens == 50
         assert request.temperature == 1.0
         assert request.top_p == 0.0
-        assert request.top_k == 1
+        assert request.top_k == 0
         assert request.random_seed is None
         assert request.max_batch_size == 4
 
@@ -111,11 +111,6 @@ class TestPydanticModels:
         assert request.top_k == 50
         assert request.random_seed == 42
         assert request.max_batch_size == 8
-
-    def test_base_multimodal_request_greedy_validation(self):
-        """Test BaseMultimodalRequest validator for greedy sampling."""
-        request = BaseMultimodalRequest(model="test-model", temperature=0, top_p=0, top_k=5)
-        assert request.top_k == 1
 
     def test_multimodal_completion_request(self):
         """Test MultimodalCompletionRequest."""
@@ -274,7 +269,7 @@ class TestCompletionsEndpoint:
         request_data = {
             "model": "test-model",
             "prompt": "Describe this image",
-            "image": "base64_encoded_image_data",
+            "image": "data:image;base64,base64_encoded_image_data",
             "temperature": 0.7,
         }
 
@@ -291,7 +286,7 @@ class TestCompletionsEndpoint:
 
             mock_query.assert_called_once()
             call_kwargs = mock_query.call_args[1]
-            assert call_kwargs["images"] == ["base64_encoded_image_data"]
+            assert call_kwargs["images"] == ["data:image;base64,base64_encoded_image_data"]
             assert call_kwargs["temperature"] == 0.7
 
     def test_completions_with_custom_params(self, client, mock_triton_settings):
@@ -357,7 +352,7 @@ class TestChatCompletionsEndpoint:
                 "role": "user",
                 "content": [
                     {"type": "text", "text": "What's in this image?"},
-                    {"type": "image", "image": "base64_image_data"},
+                    {"type": "image", "image": "data:image;base64,base64_image_data"},
                 ],
             }
         ]
@@ -376,7 +371,7 @@ class TestChatCompletionsEndpoint:
 
             mock_query.assert_called_once()
             call_kwargs = mock_query.call_args[1]
-            assert call_kwargs["images"] == ["base64_image_data"]
+            assert call_kwargs["images"] == ["data:image;base64,base64_image_data"]
 
     def test_chat_completions_multiple_images(self, client, mock_triton_settings):
         """Test /v1/chat/completions/ endpoint with multiple images."""
@@ -385,8 +380,8 @@ class TestChatCompletionsEndpoint:
                 "role": "user",
                 "content": [
                     {"type": "text", "text": "Compare these images"},
-                    {"type": "image", "image": "base64_image_1"},
-                    {"type": "image", "image": "base64_image_2"},
+                    {"type": "image", "image": "data:image;base64,base64_image_1"},
+                    {"type": "image", "image": "data:image;base64,base64_image_2"},
                 ],
             }
         ]
@@ -403,8 +398,63 @@ class TestChatCompletionsEndpoint:
 
             mock_query.assert_called_once()
             call_kwargs = mock_query.call_args[1]
-            assert call_kwargs["images"] == ["base64_image_1", "base64_image_2"]
+            assert call_kwargs["images"] == ["data:image;base64,base64_image_1", "data:image;base64,base64_image_2"]
             assert call_kwargs["max_length"] == 200
+
+    def test_chat_completions_with_image_url_format(self, client, mock_triton_settings):
+        """Test /v1/chat/completions/ endpoint with OpenAI-style image_url format."""
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "What's in this image?"},
+                    {"type": "image_url", "image_url": {"url": "https://example.com/image.jpg"}},
+                ],
+            }
+        ]
+        request_data = {"model": "test-model", "messages": messages}
+
+        mock_output = {"choices": [{"text": [["I see a cat"]]}], "model": "test-model"}
+
+        with patch("nemo_deploy.service.fastapi_interface_to_pytriton_multimodal.query_multimodal_async") as mock_query:
+            mock_query.return_value = mock_output
+
+            response = client.post("/v1/chat/completions/", json=request_data)
+
+            assert response.status_code == 200
+            result = response.json()
+            assert result["choices"][0]["message"]["content"] == "I see a cat"
+
+            mock_query.assert_called_once()
+            call_kwargs = mock_query.call_args[1]
+            assert call_kwargs["images"] == ["https://example.com/image.jpg"]
+
+    def test_chat_completions_with_mixed_image_formats(self, client, mock_triton_settings):
+        """Test /v1/chat/completions/ endpoint with mixed image and image_url formats."""
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Compare these images"},
+                    {"type": "image", "image": "data:image;base64,base64_data"},
+                    {"type": "image_url", "image_url": {"url": "https://example.com/image.jpg"}},
+                ],
+            }
+        ]
+        request_data = {"model": "test-model", "messages": messages}
+
+        mock_output = {"choices": [{"text": [["Comparison"]]}], "model": "test-model"}
+
+        with patch("nemo_deploy.service.fastapi_interface_to_pytriton_multimodal.query_multimodal_async") as mock_query:
+            mock_query.return_value = mock_output
+
+            response = client.post("/v1/chat/completions/", json=request_data)
+
+            assert response.status_code == 200
+
+            mock_query.assert_called_once()
+            call_kwargs = mock_query.call_args[1]
+            assert call_kwargs["images"] == ["data:image;base64,base64_data", "https://example.com/image.jpg"]
 
     def test_chat_completions_with_params(self, client, mock_triton_settings):
         """Test /v1/chat/completions/ endpoint with custom parameters."""
@@ -452,7 +502,7 @@ class TestQueryMultimodalAsync:
                 url="http://localhost:8000",
                 model="test-model",
                 prompts=["test prompt"],
-                images=["image_data"],
+                images=["data:image;base64,image_data"],
                 temperature=0.7,
                 top_k=10,
                 top_p=0.9,
@@ -465,7 +515,7 @@ class TestQueryMultimodalAsync:
             mock_nq_class.assert_called_once_with(url="http://localhost:8000", model_name="test-model")
             mock_nq.query_multimodal.assert_called_once_with(
                 prompts=["test prompt"],
-                images=["image_data"],
+                images=["data:image;base64,image_data"],
                 temperature=0.7,
                 top_k=10,
                 top_p=0.9,
