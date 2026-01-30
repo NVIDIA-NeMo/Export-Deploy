@@ -294,6 +294,8 @@ class HFRayDeployable:
             # Extract parameters from the request dictionary
             messages = request.get("messages", [])
 
+            # Get sampling parameters
+            temperature = request.get("temperature", 0.0)
             # vLLM requires top_p to be in (0, 1], so handle invalid values
             top_p = request.get("top_p", None)
             if top_p is not None and top_p <= 0.0:
@@ -301,20 +303,21 @@ class HFRayDeployable:
                     f"top_p must be in (0, 1] for vLLM, got {top_p}. Setting to 0.1 for greedy-like sampling."
                 )
                 request["top_p"] = 0.1
+                if temperature == 0.0:
+                    LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
+                    request["top_k"] = 1
 
-            # Convert messages to a single prompt
-            prompt = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages])
-            prompt += "\nassistant:"
 
             # Prepare inference parameters using the formatted prompt
             inference_inputs = {
-                "prompts": [prompt],  # Use formatted prompt string instead of raw messages
+                "prompts": [messages],  # Pass messages list, will be formatted by apply_chat_template
                 "max_tokens": request.get("max_tokens", 256),
-                "temperature": request.get("temperature", 1.0),
+                "temperature": temperature,
                 "top_k": request.get("top_k", 0),
                 "top_p": request.get("top_p", 1.0),  # vLLM requires top_p in (0, 1], use 1.0 as default
                 "output_logits": request.get("output_logits", False),
                 "output_scores": request.get("output_scores", False),
+                "apply_chat_template": request.get("apply_chat_template", True),
             }
 
             # Run model inference in the thread pool
@@ -353,12 +356,7 @@ class HFRayDeployable:
                                 "scores": scores,
                             }
                             if scores is not None
-                            else None,
-                            {
-                                "logits": logits,
-                            }
-                            if logits is not None
-                            else None,
+                            else None
                         ),
                         "finish_reason": (
                             "length"

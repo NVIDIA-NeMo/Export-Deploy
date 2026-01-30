@@ -155,6 +155,45 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
+    def apply_chat_template(self, messages, add_generation_prompt=True):
+        """Apply the chat template to messages using the tokenizer.
+
+        This method uses the HuggingFace tokenizer's built-in apply_chat_template method
+        to format messages according to the model's expected chat format.
+
+        Args:
+            messages: List of message dictionaries with 'role' and 'content' keys,
+                     or a JSON string representation of messages.
+            add_generation_prompt (bool): Whether to add the generation prompt. Defaults to True.
+
+        Returns:
+            str: The formatted prompt string.
+
+        Raises:
+            ValueError: If the tokenizer does not have a chat template.
+        """
+        import json
+
+        # Handle JSON string input
+        if isinstance(messages, str):
+            messages = json.loads(messages)
+
+        # Check if tokenizer has chat_template
+        if not hasattr(self.tokenizer, 'chat_template') or self.tokenizer.chat_template is None:
+            raise ValueError(
+                "The tokenizer does not have a chat template defined. "
+                "If you would like to evaluate a chat model, ensure your model's tokenizer has a chat template."
+            )
+
+        # Use tokenizer's apply_chat_template method
+        formatted_prompt = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=add_generation_prompt,
+        )
+
+        return formatted_prompt
+
     def generate(
         self,
         **kwargs: Any,
@@ -529,6 +568,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 - compute_logprob: Whether to compute log probabilities (optional)
                 - n_top_logprobs: Number of top log probabilities to return (optional)
                 - echo: Whether to echo the prompt in output (optional)
+                - apply_chat_template: Whether to apply chat template to prompts (optional)
 
         Returns:
             Dict[str, Any]: Dictionary containing:
@@ -549,6 +589,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             compute_logprob = inputs.pop("compute_logprob", False)
             n_top_logprobs = inputs.pop("n_top_logprobs", 0)
             echo = inputs.pop("echo", False)
+            apply_chat_template = inputs.pop("apply_chat_template", False)
 
             output_infer = self._infer_fn_ray(
                 prompts=prompts,
@@ -561,6 +602,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
                 compute_logprob=compute_logprob,
                 n_top_logprobs=n_top_logprobs,
                 echo=echo,
+                apply_chat_template=apply_chat_template,
             )
             # Code to get logprobs (required in OAI API format for eval) from the scores in output_infer.
             if (compute_logprob or n_top_logprobs > 0) and "scores" in output_infer and output_infer["scores"]:
@@ -600,6 +642,7 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
         compute_logprob=False,
         n_top_logprobs=0,
         echo=False,
+        apply_chat_template=False,
         cast_output_func=None,
     ):
         """Common internal function for inference operations.
@@ -615,11 +658,16 @@ class HuggingFaceLLMDeploy(ITritonDeployable):
             compute_logprob: Whether to compute log probabilities
             n_top_logprobs: Number of top log probabilities to return
             echo: Whether to echo the prompt in output
+            apply_chat_template: Whether to apply chat template to prompts
             cast_output_func: Optional function to cast output values
 
         Returns:
             Dict containing inference results with raw outputs
         """
+        # Apply chat template if requested (for Ray inference only)
+        if apply_chat_template:
+            prompts = [self.apply_chat_template(prompt) for prompt in prompts]
+
         # Enable return_dict if we need scores for logprobs or if output_logits/scores are requested
         return_dict_in_generate = output_logits or output_scores or compute_logprob or n_top_logprobs > 0
         # Enable output_scores if we need to compute logprobs. scores and logits from generate are both identical in
