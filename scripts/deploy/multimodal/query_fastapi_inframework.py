@@ -64,19 +64,16 @@ def load_image_from_path(image_path: str) -> str:
         image_path: Path to local image file or URL
 
     Returns:
-        Base64-encoded image string
+        Image string - HTTP URL directly or base64-encoded string for local files
     """
     if image_path.startswith(("http://", "https://")):
-        LOGGER.info(f"Loading image from URL: {image_path}")
-        response = requests.get(image_path, timeout=30)
-        response.raise_for_status()
-        image_content = response.content
+        LOGGER.info(f"Using image URL directly: {image_path}")
+        return image_path
     else:
-        LOGGER.info(f"Loading image from local path: {image_path}")
+        LOGGER.info(f"Loading and encoding image from local path: {image_path}")
         with open(image_path, "rb") as f:
             image_content = f.read()
-
-    return base64.b64encode(image_content).decode("utf-8")
+        return "data:image;base64," + base64.b64encode(image_content).decode("utf-8")
 
 
 def test_completions_endpoint(base_url: str, model_id: str, prompt: str = None, image_source: str = None) -> None:
@@ -114,8 +111,8 @@ def test_completions_endpoint(base_url: str, model_id: str, prompt: str = None, 
     payload["prompt"] = text
 
     try:
-        image_base64 = load_image_from_path(image_source)
-        payload["image"] = image_base64
+        image_data = load_image_from_path(image_source)
+        payload["image"] = image_data
     except Exception as e:
         LOGGER.error(f"Failed to load image: {e}")
         return
@@ -130,7 +127,12 @@ def test_completions_endpoint(base_url: str, model_id: str, prompt: str = None, 
 
 
 def test_chat_completions_endpoint(base_url: str, model_id: str, prompt: str = None, image_source: str = None) -> None:
-    """Test the chat completions endpoint for multimodal models."""
+    """Test the chat completions endpoint for multimodal models.
+
+    Supports two image content formats:
+    1. {"type": "image", "image": "url_or_base64"}
+    2. {"type": "image_url", "image_url": {"url": "url_or_base64"}} (OpenAI-style)
+    """
     url = f"{base_url}/v1/chat/completions/"
 
     # Use provided prompt or default
@@ -141,8 +143,10 @@ def test_chat_completions_endpoint(base_url: str, model_id: str, prompt: str = N
 
     content = []
     try:
-        image_base64 = load_image_from_path(image_source)
-        content.append({"type": "image", "image": image_base64})
+        image_data = load_image_from_path(image_source)
+        # Using format 1: {"type": "image", "image": "url_or_base64"}
+        # Alternative format 2: {"type": "image_url", "image_url": {"url": "url_or_base64"}}
+        content.append({"type": "image", "image": image_data})
     except Exception as e:
         LOGGER.error(f"Failed to load image: {e}")
         return
@@ -160,19 +164,6 @@ def test_chat_completions_endpoint(base_url: str, model_id: str, prompt: str = N
 
     LOGGER.info(f"Testing chat completions endpoint at {url}")
     response = requests.post(url, json=payload)
-    LOGGER.info(f"Response status code: {response.status_code}")
-    if response.status_code == 200:
-        LOGGER.info(f"Response: {json.dumps(response.json(), indent=2)}")
-    else:
-        LOGGER.error(f"Error: {response.text}")
-
-
-def test_models_endpoint(base_url: str) -> None:
-    """Test the models endpoint."""
-    url = f"{base_url}/v1/models"
-
-    LOGGER.info(f"Testing models endpoint at {url}")
-    response = requests.get(url)
     LOGGER.info(f"Response status code: {response.status_code}")
     if response.status_code == 200:
         LOGGER.info(f"Response: {json.dumps(response.json(), indent=2)}")
@@ -218,7 +209,6 @@ def main():
     test_completions_endpoint(base_url, args.model_id, args.prompt, args.image)
     test_chat_completions_endpoint(base_url, args.model_id, args.prompt, args.image)
     test_health_endpoint(base_url)
-    test_models_endpoint(base_url)
 
 
 if __name__ == "__main__":

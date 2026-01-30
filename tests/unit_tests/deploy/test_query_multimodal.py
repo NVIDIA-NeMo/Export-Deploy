@@ -138,7 +138,7 @@ class TestNemoQueryMultimodalPytorch:
     @pytest.fixture
     def mock_images(self):
         # Create sample base64-encoded image strings for testing
-        return ["mock_base64_image_1", "mock_base64_image_2"]
+        return ["data:image;base64,mock_base64_image_1", "data:image;base64,mock_base64_image_2"]
 
     @pytest.fixture
     def mock_prompts(self):
@@ -305,7 +305,7 @@ class TestNemoQueryMultimodalPytorch:
         mock_model_client.return_value.__enter__.return_value = mock_client_instance
 
         # Use mock base64 image string
-        base64_image = "mock_base64_single_image"
+        base64_image = "data:image;base64,mock_base64_single_image"
 
         result = query_multimodal_pytorch.query_multimodal(prompts=["Single prompt"], images=[base64_image])
 
