@@ -198,6 +198,80 @@ class TestDeployRay(unittest.TestCase):
 
     @patch("nemo_deploy.deploy_ray.ray")
     @patch("nemo_deploy.deploy_ray.serve")
+    @patch("nemo_deploy.deploy_ray.MegatronMultimodalRayDeployable")
+    @patch("nemo_deploy.deploy_ray.signal.signal")
+    @patch.object(DeployRay, "_start")
+    def test_deploy_vlm_inframework_model_runs(self, mock_start, mock_signal, mock_multimodal, mock_serve, mock_ray):
+        # Test deploying VLM (multimodal) inframework model
+        deploy = DeployRay()
+
+        mock_app = MagicMock()
+        mock_options = MagicMock()
+        mock_options.bind.return_value = mock_app
+        mock_multimodal.options.return_value = mock_options
+
+        deploy.deploy_vlm_inframework_model(
+            megatron_checkpoint="/path/to/multimodal-model.megatron",
+            num_gpus=2,
+            tensor_model_parallel_size=2,
+            pipeline_model_parallel_size=1,
+            model_id="multimodal-model",
+            num_cpus_per_replica=8,
+            num_replicas=1,
+            test_mode=True,
+        )
+
+        mock_start.assert_called_once()
+        mock_serve.run.assert_called_once_with(mock_app, name="multimodal-model")
+        mock_multimodal.options.assert_called_once()
+        # Ensure actor options include provided CPUs
+        _, kwargs = mock_multimodal.options.call_args
+        assert kwargs["ray_actor_options"]["num_cpus"] == 8
+        assert kwargs["num_replicas"] == 1
+
+    @patch("nemo_deploy.deploy_ray.ray")
+    @patch("nemo_deploy.deploy_ray.serve")
+    @patch("nemo_deploy.deploy_ray.MegatronMultimodalRayDeployable")
+    @patch("nemo_deploy.deploy_ray.signal.signal")
+    @patch.object(DeployRay, "_start")
+    def test_deploy_vlm_inframework_model_with_custom_params(
+        self, mock_start, mock_signal, mock_multimodal, mock_serve, mock_ray
+    ):
+        # Test deploying VLM model with custom inference parameters
+        deploy = DeployRay()
+
+        mock_app = MagicMock()
+        mock_options = MagicMock()
+        mock_options.bind.return_value = mock_app
+        mock_multimodal.options.return_value = mock_options
+
+        deploy.deploy_vlm_inframework_model(
+            megatron_checkpoint="/path/to/multimodal-model.megatron",
+            num_gpus=4,
+            tensor_model_parallel_size=2,
+            pipeline_model_parallel_size=2,
+            model_id="custom-vlm-model",
+            params_dtype="bfloat16",
+            inference_batch_times_seqlen_threshold=2000,
+            inference_max_seq_length=4096,
+            test_mode=True,
+        )
+
+        mock_start.assert_called_once()
+        mock_serve.run.assert_called_once_with(mock_app, name="custom-vlm-model")
+
+        # Verify custom parameters were passed in bind call
+        _, bind_kwargs = mock_options.bind.call_args
+        assert bind_kwargs["megatron_checkpoint_filepath"] == "/path/to/multimodal-model.megatron"
+        assert bind_kwargs["tensor_model_parallel_size"] == 2
+        assert bind_kwargs["pipeline_model_parallel_size"] == 2
+        assert bind_kwargs["model_id"] == "custom-vlm-model"
+        assert bind_kwargs["params_dtype"] == "bfloat16"
+        assert bind_kwargs["inference_batch_times_seqlen_threshold"] == 2000
+        assert bind_kwargs["inference_max_seq_length"] == 4096
+
+    @patch("nemo_deploy.deploy_ray.ray")
+    @patch("nemo_deploy.deploy_ray.serve")
     @patch("nemo_deploy.deploy_ray.TensorRTLLMRayDeployable")
     @patch("nemo_deploy.deploy_ray.signal.signal")
     @patch.object(DeployRay, "_start")
