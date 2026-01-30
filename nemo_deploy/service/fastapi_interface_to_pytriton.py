@@ -9,6 +9,7 @@
 # limitations under the License.
 
 import json
+import logging
 import os
 
 import numpy as np
@@ -19,12 +20,7 @@ from pydantic_settings import BaseSettings
 
 from nemo_deploy.llm import NemoQueryLLMPyTorch
 
-try:
-    from nemo.utils import logging
-except (ImportError, ModuleNotFoundError):
-    import logging
-
-    logging = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class TritonSettings(BaseSettings):
@@ -39,10 +35,7 @@ class TritonSettings(BaseSettings):
             self._triton_service_port = int(os.environ.get("TRITON_PORT", 8000))
             self._triton_service_ip = os.environ.get("TRITON_HTTP_ADDRESS", "0.0.0.0")
         except Exception as error:
-            logging.error(
-                "An exception occurred trying to retrieve set args in TritonSettings class. Error:",
-                error,
-            )
+            logger.error(f"An exception occurred trying to retrieve set args in TritonSettings class. Error: {error}")
             return
 
     @property
@@ -81,7 +74,7 @@ class BaseRequest(BaseModel):
     def set_greedy_params(self):
         """Validate parameters for greedy decoding."""
         if self.temperature == 0 and self.top_p == 0:
-            logging.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
+            logger.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
             self.top_k = 1
         return self
 
@@ -134,7 +127,7 @@ async def check_triton_health():
     triton_url = (
         f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
     )
-    logging.info(f"Attempting to connect to Triton server at: {triton_url}")
+    logger.info(f"Attempting to connect to Triton server at: {triton_url}")
     try:
         response = requests.get(triton_url, timeout=5)
         if response.status_code == 200:
@@ -233,7 +226,7 @@ async def query_llm_async(
 async def completions_v1(request: CompletionRequest):
     """Defines the completions endpoint and queries the model deployed on PyTriton server."""
     url = f"http://{triton_settings.triton_service_ip}:{triton_settings.triton_service_port}"
-    logging.info(f"Request: {request}")
+    logger.info(f"Request: {request}")
     prompts = request.prompt
     if not isinstance(request.prompt, list):
         prompts = [request.prompt]
@@ -266,7 +259,7 @@ async def completions_v1(request: CompletionRequest):
             output_serializable["choices"][0]["logprobs"]["token_logprobs"].insert(0, None)
     else:
         output_serializable["choices"][0]["logprobs"] = None
-    logging.info(f"Output: {output_serializable}")
+    logger.info(f"Output: {output_serializable}")
     return output_serializable
 
 
@@ -279,7 +272,7 @@ def dict_to_str(messages):
 async def chat_completions_v1(request: ChatCompletionRequest):
     """Defines the chat completions endpoint and queries the model deployed on PyTriton server."""
     url = f"http://{triton_settings.triton_service_ip}:{triton_settings.triton_service_port}"
-    logging.info(f"Request: {request}")
+    logger.info(f"Request: {request}")
     prompts = request.messages
     if not isinstance(request.messages, list):
         prompts = [request.messages]
@@ -315,5 +308,5 @@ async def chat_completions_v1(request: ChatCompletionRequest):
         0
     ][0]
 
-    logging.info(f"Output: {output_serializable}")
+    logger.info(f"Output: {output_serializable}")
     return output_serializable

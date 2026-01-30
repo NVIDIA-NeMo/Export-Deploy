@@ -21,7 +21,6 @@ import sys
 from pathlib import Path
 
 from nemo_deploy.deploy_ray import DeployRay
-from nemo_export.tensorrt_llm import TensorRTLLM
 from nemo_export.tensorrt_llm_hf import TensorRTLLMHF
 
 LOGGER = logging.getLogger("NeMo")
@@ -64,12 +63,6 @@ def parse_args():
         help="Path to the TensorRT-LLM model directory with pre-built engines",
     )
     model_group.add_argument(
-        "--nemo_checkpoint_path",
-        type=str,
-        default=None,
-        help="Path to the NeMo checkpoint file to be exported to TensorRT-LLM",
-    )
-    model_group.add_argument(
         "--hf_model_path",
         type=str,
         default=None,
@@ -77,12 +70,6 @@ def parse_args():
     )
 
     # Model configuration
-    parser.add_argument(
-        "--model_type",
-        type=str,
-        default="llama",
-        help="Model type/architecture (e.g., 'llama', 'gpt')",
-    )
     parser.add_argument(
         "--tensor_parallelism_size",
         type=int,
@@ -234,20 +221,18 @@ def main():
         sys.exit(1)
 
     try:
-        if not args.nemo_checkpoint_path and not args.hf_model_path and not args.trt_llm_path:
-            raise ValueError(
-                "Either nemo_checkpoint_path or hf_model_path or trt_llm_path must be provided for deployment"
-            )
+        if not args.hf_model_path and not args.trt_llm_path:
+            raise ValueError("Either hf_model_path or trt_llm_path must be provided for deployment")
         if not args.trt_llm_path:
             args.trt_llm_path = "/tmp/trt_llm_model_dir/"
             LOGGER.info(
                 "/tmp/trt_llm_model_dir/ path will be used as the TensorRT LLM folder. "
-                "Please set the --triton_model_repository parameter if you'd like to use a path that already "
+                "Please set the --trt_llm_path parameter if you'd like to use a path that already "
                 "includes the TensorRT LLM model files."
             )
             Path(args.trt_llm_path).mkdir(parents=True, exist_ok=True)
 
-            # Prepare TensorRTLLM constructor arguments
+            # Prepare TensorRTLLMHF constructor arguments
             trtllm_kwargs = {
                 "model_dir": args.trt_llm_path,
                 "lora_ckpt_list": args.lora_ckpt_list,
@@ -261,31 +246,10 @@ def main():
                 trtllm_kwargs["enable_chunked_context"] = args.enable_chunked_context
                 trtllm_kwargs["max_tokens_in_paged_kv_cache"] = args.max_tokens_in_paged_kv_cache
 
-            # Use TensorRTLLMHF for HuggingFace models, TensorRTLLM for NeMo models
+            # Export HuggingFace model
             if args.hf_model_path:
-                trtllmConverter = TensorRTLLMHF(**trtllm_kwargs)
-            else:
-                trtllmConverter = TensorRTLLM(**trtllm_kwargs)
-
-            if args.nemo_checkpoint_path:
-                LOGGER.info("Exporting Nemo checkpoint to TensorRT-LLM")
-                try:
-                    trtllmConverter.export(
-                        nemo_checkpoint_path=args.nemo_checkpoint_path,
-                        model_type=args.model_type,
-                        tensor_parallelism_size=args.tensor_parallelism_size,
-                        pipeline_parallelism_size=args.pipeline_parallelism_size,
-                        max_input_len=args.max_input_len,
-                        max_output_len=args.max_output_len,
-                        max_batch_size=args.max_batch_size,
-                        delete_existing_files=True,
-                        max_seq_len=args.max_input_len + args.max_output_len,
-                    )
-                except Exception as e:
-                    LOGGER.error(f"Error exporting Nemo checkpoint to TensorRT-LLM: {str(e)}")
-                    raise RuntimeError(f"Error exporting Nemo checkpoint to TensorRT-LLM: {str(e)}")
-            elif args.hf_model_path:
                 LOGGER.info("Exporting HF model to TensorRT-LLM")
+                trtllmConverter = TensorRTLLMHF(**trtllm_kwargs)
                 try:
                     trtllmConverter.export_hf_model(
                         hf_model_path=args.hf_model_path,
@@ -299,7 +263,7 @@ def main():
                 except Exception as e:
                     LOGGER.error(f"Error exporting HF model to TensorRT-LLM: {str(e)}")
                     raise RuntimeError(f"Error exporting HF model to TensorRT-LLM: {str(e)}")
-            del trtllmConverter
+                del trtllmConverter
     except Exception as e:
         LOGGER.error(f"Error during TRTLLM model export: {str(e)}")
         sys.exit(1)

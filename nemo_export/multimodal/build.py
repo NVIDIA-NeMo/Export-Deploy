@@ -17,7 +17,6 @@ import os
 import shutil
 import tarfile
 import tempfile
-from pathlib import Path
 from time import time
 from types import SimpleNamespace
 from typing import List
@@ -26,11 +25,8 @@ import torch
 import yaml
 from packaging import version
 
-from nemo_export.tensorrt_llm import TensorRTLLM
-from nemo_export.trt_llm.nemo_ckpt_loader.nemo_file import load_nemo_model
 from nemo_export_deploy_common.import_utils import (
     MISSING_NEMO_MSG,
-    MISSING_TENSORRT_LLM_MSG,
     MISSING_TENSORRT_MSG,
     MISSING_TRANSFORMERS_MSG,
     UnavailableError,
@@ -108,24 +104,12 @@ def build_trtllm_engine(
     max_lora_rank: int = 64,
     lora_ckpt_list: List[str] = None,
 ):
-    """Build TRTLLM engine by nemo export."""
-    if not HAVE_TRT_LLM:
-        raise UnavailableError(MISSING_TENSORRT_LLM_MSG)
+    """Build TRTLLM engine by nemo export.
 
-    trt_llm_exporter = TensorRTLLM(model_dir=model_dir, lora_ckpt_list=lora_ckpt_list, load_model=False)
-    trt_llm_exporter.export(
-        nemo_checkpoint_path=visual_checkpoint_path if llm_checkpoint_path is None else llm_checkpoint_path,
-        model_type=llm_model_type,
-        tensor_parallelism_size=tensor_parallelism_size,
-        max_input_len=max_input_len,
-        max_output_len=max_output_len,
-        max_seq_len=max_input_len + max_output_len,
-        max_batch_size=max_batch_size,
-        dtype=dtype,
-        load_model=False,
-        use_lora_plugin=use_lora_plugin,
-        lora_target_modules=lora_target_modules,
-        max_lora_rank=max_lora_rank,
+    Note: TensorRT-LLM export support has been removed.
+    """
+    raise NotImplementedError(
+        "TensorRT-LLM export support has been removed from this codebase. This function is no longer available."
     )
 
 
@@ -350,9 +334,10 @@ def build_neva_engine(
             mp0_weights = torch.load(weights_path, map_location=device)
     else:
         # extract NeMo checkpoint
-        with tempfile.TemporaryDirectory() as temp:
-            temp_path = Path(temp)
-            mp0_weights, nemo_config, _ = load_nemo_model(visual_checkpoint_path, temp_path)
+        raise NotImplementedError(
+            "Loading NeMo checkpoints via trt_llm utilities has been removed. "
+            "Please extract the checkpoint manually or use an earlier version."
+        )
 
     vision_config = nemo_config["mm_cfg"]["vision_encoder"]
 

@@ -14,15 +14,19 @@
 
 
 import argparse
+import json
 import unittest
 from unittest.mock import MagicMock, patch
 
 from nemo_deploy.deploy_ray import DeployRay
 
-# Import the functions from the deploy script
-from scripts.deploy.nlp.deploy_ray_inframework import (
-    json_type,
-)
+
+def json_type(value):
+    """Convert a JSON string to a Python object for argparse."""
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError as e:
+        raise argparse.ArgumentTypeError(f"Invalid JSON: {e}")
 
 
 class TestDeployRay(unittest.TestCase):
