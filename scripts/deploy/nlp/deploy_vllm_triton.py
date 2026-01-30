@@ -35,14 +35,14 @@ except Exception as e:
 def get_args(argv):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description="Export NeMo, Megatron-Bridge, or Hugging Face models to vLLM and deploy them on Triton",
+        description="Export Megatron-Bridge or Hugging Face models to vLLM and deploy them on Triton",
     )
     parser.add_argument(
         "-mpi",
         "--model_path_id",
         required=True,
         type=str,
-        help="Path of a NeMo checkpoint, Megatron-Bridge checkpoint, or Hugging Face model ID or path.",
+        help="Path of a Megatron-Bridge checkpoint or Hugging Face model ID or path.",
     )
     parser.add_argument(
         "-hfp",
@@ -53,10 +53,10 @@ def get_args(argv):
     parser.add_argument(
         "-mf",
         "--model_format",
-        choices=["hf", "nemo2", "megatron_bridge"],
-        default="nemo2",
+        choices=["hf", "megatron_bridge"],
+        default="megatron_bridge",
         type=str,
-        help="Format of the input checkpoint: 'hf' for Hugging Face, 'nemo2' for NeMo2, 'megatron_bridge' for Megatron-Bridge.",
+        help="Format of the input checkpoint: 'hf' for Hugging Face, 'megatron_bridge' for Megatron-Bridge.",
     )
     parser.add_argument(
         "-t",
@@ -130,13 +130,8 @@ def get_args(argv):
         action="store_true",
         help="Whether to enforce eager execution.",
     )
-    parser.add_argument(
-        "-mslc",
-        "--max_seq_len_to_capture",
-        default=8192,
-        type=int,
-        help="Maximum sequence len covered by CUDA graphs.",
-    )
+    # Removed max_seq_len_to_capture as it's no longer supported in newer vLLM versions
+    # CUDA graph capture is now controlled via compilation config
     parser.add_argument(
         "-tmn",
         "--triton_model_name",
@@ -211,7 +206,6 @@ def nemo_deploy(argv):
             swap_space=args.swap_space,
             cpu_offload_gb=args.cpu_offload_gb,
             enforce_eager=args.enforce_eager,
-            max_seq_len_to_capture=args.max_seq_len_to_capture,
             task="generate",
             model_format=args.model_format,
             hf_model_id=args.hf_model_id_path,
