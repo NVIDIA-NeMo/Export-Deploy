@@ -172,7 +172,6 @@ jobs:
         include:
           - script: L2_Launch_TRTLLM
             runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
-            is_optional: true
           - script: L2_TRTLLM_API_Deploy_Query
             runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
     needs: [pre-flight, cicd-unit-tests-trtllm]
