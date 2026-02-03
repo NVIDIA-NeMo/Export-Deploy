@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ import argparse
 import base64
 import json
 import logging
+from pathlib import Path
 
 import requests
 
@@ -23,7 +24,7 @@ LOGGER = logging.getLogger("NeMo")
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Query a deployed multimodal model using Ray")
+    parser = argparse.ArgumentParser(description="Query a deployed Megatron multimodal model using Ray")
     parser.add_argument(
         "--host",
         type=str,
@@ -33,138 +34,141 @@ def parse_args():
     parser.add_argument(
         "--port",
         type=int,
-        default=8080,
+        default=1024,
         help="Port number of the Ray Serve server",
     )
     parser.add_argument(
         "--model_id",
         type=str,
-        default="nemo-multimodal-model",
+        default="megatron-multimodal-model",
         help="Identifier for the model in the API responses",
     )
     parser.add_argument(
         "--prompt",
         type=str,
-        default=None,
-        help="Custom prompt to use for testing. If not provided, default prompt will be used.",
+        default="Describe this image in detail.",
+        help="Text prompt to use for testing",
     )
     parser.add_argument(
-        "--image",
+        "--image_path",
         type=str,
         default=None,
-        help="Path or URL to input image file",
+        help="Path to an image file to use for testing. If not provided, a sample URL will be used.",
+    )
+    parser.add_argument(
+        "--image_url",
+        type=str,
+        default="https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg",
+        help="URL of an image to use for testing (used if --image_path is not provided)",
+    )
+    parser.add_argument(
+        "--max_tokens",
+        type=int,
+        default=100,
+        help="Maximum number of tokens to generate",
     )
     return parser.parse_args()
 
 
-def load_image_from_path(image_path: str) -> str:
-    """Load an image from a file path or URL.
+def encode_image_to_base64(image_path: str) -> str:
+    """Encode a local image file to base64 string with data URI prefix."""
+    with open(image_path, "rb") as image_file:
+        image_data = base64.b64encode(image_file.read()).decode("utf-8")
 
-    Args:
-        image_path: Path to local image file or URL
+    # Determine image format from file extension
+    ext = Path(image_path).suffix.lower()
+    mime_type = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".gif": "image/gif",
+        ".webp": "image/webp",
+    }.get(ext, "image/jpeg")
 
-    Returns:
-        Base64-encoded image string
-    """
-    if image_path.startswith(("http://", "https://")):
-        LOGGER.info(f"Loading image from URL: {image_path}")
-        response = requests.get(image_path, timeout=30)
-        response.raise_for_status()
-        image_content = response.content
-    else:
-        LOGGER.info(f"Loading image from local path: {image_path}")
-        with open(image_path, "rb") as f:
-            image_content = f.read()
-
-    return base64.b64encode(image_content).decode("utf-8")
+    return f"data:{mime_type};base64,{image_data}"
 
 
-def test_completions_endpoint(base_url: str, model_id: str, prompt: str = None, image_source: str = None) -> None:
-    """Test the completions endpoint for multimodal models."""
-    url = f"{base_url}/v1/completions/"
-
-    # Use provided prompt or default
-    default_prompt = "Describe this image in detail."
-    default_image = "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
-    prompt_text = prompt if prompt is not None else default_prompt
-    image_source = image_source if image_source is not None else default_image
-
-    # Prepare payload
-    payload = {
-        "model": model_id,
-        "max_tokens": 100,
-        "temperature": 1.0,
-        "top_p": 0.0,
-        "top_k": 1,
-    }
-
-    from transformers import AutoProcessor
-
-    processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-3B-Instruct")
-    text = processor.apply_chat_template(
-        [
-            {
-                "role": "user",
-                "content": [{"type": "image", "image": image_source}, {"type": "text", "text": prompt_text}],
-            }
-        ],
-        tokenizer=False,
-        add_generation_prompt=True,
-    )
-    payload["prompt"] = text
-
-    try:
-        image_base64 = load_image_from_path(image_source)
-        payload["image"] = image_base64
-    except Exception as e:
-        LOGGER.error(f"Failed to load image: {e}")
-        return
-
-    LOGGER.info(f"Testing completions endpoint at {url}")
-    response = requests.post(url, json=payload)
-    LOGGER.info(f"Response status code: {response.status_code}")
-    if response.status_code == 200:
-        LOGGER.info(f"Response: {json.dumps(response.json(), indent=2)}")
-    else:
-        LOGGER.error(f"Error: {response.text}")
-
-
-def test_chat_completions_endpoint(base_url: str, model_id: str, prompt: str = None, image_source: str = None) -> None:
-    """Test the chat completions endpoint for multimodal models."""
+def test_chat_completions_endpoint(
+    base_url: str,
+    model_id: str,
+    prompt: str,
+    image_source: str,
+    max_tokens: int = 100,
+) -> None:
+    """Test the multimodal chat completions endpoint."""
     url = f"{base_url}/v1/chat/completions/"
 
-    # Use provided prompt or default
-    default_message = "What do you see in this image?"
-    default_image = "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
-    message_content = prompt if prompt is not None else default_message
-    image_source = image_source if image_source is not None else default_image
+    payload = {
+        "model": model_id,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": image_source}},
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ],
+        "max_tokens": max_tokens,
+    }
 
-    content = []
+    LOGGER.info(f"Testing multimodal chat completions endpoint at {url}")
+    LOGGER.info(f"Prompt: {prompt}")
+    LOGGER.info(
+        f"Image source: {image_source[:100]}..." if len(image_source) > 100 else f"Image source: {image_source}"
+    )
+
     try:
-        image_base64 = load_image_from_path(image_source)
-        content.append({"type": "image", "image": image_base64})
-    except Exception as e:
-        LOGGER.error(f"Failed to load image: {e}")
-        return
+        response = requests.post(url, json=payload, timeout=120)
+        LOGGER.info(f"Response status code: {response.status_code}")
+        if response.status_code == 200:
+            result = response.json()
+            LOGGER.info(f"Response: {json.dumps(result, indent=2)}")
+            if "choices" in result and len(result["choices"]) > 0:
+                generated_text = result["choices"][0]["message"]["content"]
+                LOGGER.info(f"\nGenerated text: {generated_text}")
+        else:
+            LOGGER.error(f"Error: {response.text}")
+    except requests.exceptions.RequestException as e:
+        LOGGER.error(f"Request failed: {str(e)}")
 
-    content.append({"type": "text", "text": message_content})
+
+def test_completions_endpoint(
+    base_url: str,
+    model_id: str,
+    prompt: str,
+    image_source: str,
+    max_tokens: int = 100,
+) -> None:
+    """Test the multimodal completions endpoint."""
+    url = f"{base_url}/v1/completions/"
 
     payload = {
         "model": model_id,
-        "messages": [{"role": "user", "content": content}],
-        "max_tokens": 100,
-        "temperature": 1.0,
-        "top_p": 0.0,
-        "top_k": 1,
+        "prompt": prompt,
+        "image": image_source,
+        "max_tokens": max_tokens,
     }
 
-    LOGGER.info(f"Testing chat completions endpoint at {url}")
-    response = requests.post(url, json=payload)
-    LOGGER.info(f"Response status code: {response.status_code}")
-    if response.status_code == 200:
-        LOGGER.info(f"Response: {json.dumps(response.json(), indent=2)}")
-    else:
-        LOGGER.error(f"Error: {response.text}")
+    LOGGER.info(f"Testing multimodal completions endpoint at {url}")
+    LOGGER.info(f"Prompt: {prompt}")
+    LOGGER.info(
+        f"Image source: {image_source[:100]}..." if len(image_source) > 100 else f"Image source: {image_source}"
+    )
+
+    try:
+        response = requests.post(url, json=payload, timeout=120)
+        LOGGER.info(f"Response status code: {response.status_code}")
+        if response.status_code == 200:
+            result = response.json()
+            LOGGER.info(f"Response: {json.dumps(result, indent=2)}")
+            if "choices" in result and len(result["choices"]) > 0:
+                generated_text = result["choices"][0]["text"]
+                LOGGER.info(f"\nGenerated text: {generated_text}")
+        else:
+            LOGGER.error(f"Error: {response.text}")
+    except requests.exceptions.RequestException as e:
+        LOGGER.error(f"Request failed: {str(e)}")
 
 
 def test_models_endpoint(base_url: str) -> None:
@@ -172,12 +176,15 @@ def test_models_endpoint(base_url: str) -> None:
     url = f"{base_url}/v1/models"
 
     LOGGER.info(f"Testing models endpoint at {url}")
-    response = requests.get(url)
-    LOGGER.info(f"Response status code: {response.status_code}")
-    if response.status_code == 200:
-        LOGGER.info(f"Response: {json.dumps(response.json(), indent=2)}")
-    else:
-        LOGGER.error(f"Error: {response.text}")
+    try:
+        response = requests.get(url, timeout=30)
+        LOGGER.info(f"Response status code: {response.status_code}")
+        if response.status_code == 200:
+            LOGGER.info(f"Response: {json.dumps(response.json(), indent=2)}")
+        else:
+            LOGGER.error(f"Error: {response.text}")
+    except requests.exceptions.RequestException as e:
+        LOGGER.error(f"Request failed: {str(e)}")
 
 
 def test_health_endpoint(base_url: str) -> None:
@@ -185,12 +192,15 @@ def test_health_endpoint(base_url: str) -> None:
     url = f"{base_url}/v1/health"
 
     LOGGER.info(f"Testing health endpoint at {url}")
-    response = requests.get(url)
-    LOGGER.info(f"Response status code: {response.status_code}")
-    if response.status_code == 200:
-        LOGGER.info(f"Response: {json.dumps(response.json(), indent=2)}")
-    else:
-        LOGGER.error(f"Error: {response.text}")
+    try:
+        response = requests.get(url, timeout=30)
+        LOGGER.info(f"Response status code: {response.status_code}")
+        if response.status_code == 200:
+            LOGGER.info(f"Response: {json.dumps(response.json(), indent=2)}")
+        else:
+            LOGGER.error(f"Error: {response.text}")
+    except requests.exceptions.RequestException as e:
+        LOGGER.error(f"Request failed: {str(e)}")
 
 
 def main():
@@ -203,22 +213,48 @@ def main():
     args = parse_args()
     base_url = f"http://{args.host}:{args.port}"
 
-    LOGGER.info(f"Testing endpoints for multimodal model {args.model_id} at {base_url}")
-    if args.prompt:
-        LOGGER.info(f"Using custom prompt: {args.prompt[:100]}{'...' if len(args.prompt) > 100 else ''}")
-    else:
-        LOGGER.info("Using default prompts")
+    LOGGER.info(f"Testing multimodal endpoints for model {args.model_id} at {base_url}")
 
-    if args.image:
-        LOGGER.info(f"Using image: {args.image}")
+    # Determine image source
+    if args.image_path:
+        LOGGER.info(f"Using local image: {args.image_path}")
+        image_source = encode_image_to_base64(args.image_path)
     else:
-        LOGGER.warning("No image provided. Multimodal endpoints may not work properly.")
+        LOGGER.info(f"Using image URL: {args.image_url}")
+        image_source = args.image_url
 
     # Test all endpoints
-    test_completions_endpoint(base_url, args.model_id, args.prompt, args.image)
-    test_chat_completions_endpoint(base_url, args.model_id, args.prompt, args.image)
+    LOGGER.info("\n" + "=" * 80)
+    LOGGER.info("Testing Health Endpoint")
+    LOGGER.info("=" * 80)
     test_health_endpoint(base_url)
+
+    LOGGER.info("\n" + "=" * 80)
+    LOGGER.info("Testing Models Endpoint")
+    LOGGER.info("=" * 80)
     test_models_endpoint(base_url)
+
+    LOGGER.info("\n" + "=" * 80)
+    LOGGER.info("Testing Chat Completions Endpoint")
+    LOGGER.info("=" * 80)
+    test_chat_completions_endpoint(
+        base_url,
+        args.model_id,
+        args.prompt,
+        image_source,
+        args.max_tokens,
+    )
+
+    LOGGER.info("\n" + "=" * 80)
+    LOGGER.info("Testing Completions Endpoint")
+    LOGGER.info("=" * 80)
+    test_completions_endpoint(
+        base_url,
+        args.model_id,
+        args.prompt,
+        image_source,
+        args.max_tokens,
+    )
 
 
 if __name__ == "__main__":

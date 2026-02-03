@@ -378,6 +378,131 @@ class TestHuggingFaceLLMDeploy:
         assert "sentences" in output
 
 
+class TestHFDeployableApplyChatTemplate:
+    """Tests for apply_chat_template functionality added to HuggingFaceLLMDeploy."""
+
+    @pytest.fixture
+    def mock_tokenizer_with_chat_template(self):
+        """Create a mock tokenizer with chat template support."""
+        tokenizer = MagicMock(spec=AutoTokenizer)
+        tokenizer.pad_token = "[PAD]"
+        tokenizer.eos_token = "[EOS]"
+        tokenizer.chat_template = "{% for message in messages %}{{ message.role }}: {{ message.content }}\n{% endfor %}"
+        tokenizer.apply_chat_template = MagicMock(return_value="<|begin_of_text|>user: Hello\nassistant:")
+        return tokenizer
+
+    @pytest.fixture
+    def mock_tokenizer_without_chat_template(self):
+        """Create a mock tokenizer without chat template support."""
+        tokenizer = MagicMock(spec=AutoTokenizer)
+        tokenizer.pad_token = "[PAD]"
+        tokenizer.eos_token = "[EOS]"
+        tokenizer.chat_template = None
+        return tokenizer
+
+    @pytest.fixture
+    def hf_deployable_with_chat_template(self, mock_model, mock_tokenizer_with_chat_template):
+        """Create HuggingFaceLLMDeploy instance with chat template support."""
+        deployer = HuggingFaceLLMDeploy(
+            model=mock_model, tokenizer=mock_tokenizer_with_chat_template, task="text-generation"
+        )
+        return deployer
+
+    @pytest.fixture
+    def hf_deployable_without_chat_template(self, mock_model, mock_tokenizer_without_chat_template):
+        """Create HuggingFaceLLMDeploy instance without chat template support."""
+        deployer = HuggingFaceLLMDeploy(
+            model=mock_model, tokenizer=mock_tokenizer_without_chat_template, task="text-generation"
+        )
+        return deployer
+
+    def test_apply_chat_template_with_messages_list(self, hf_deployable_with_chat_template):
+        """Test apply_chat_template with a list of message dictionaries."""
+        messages = [{"role": "user", "content": "Hello, how are you?"}]
+
+        result = hf_deployable_with_chat_template.apply_chat_template(messages)
+
+        assert result == "<|begin_of_text|>user: Hello\nassistant:"
+        hf_deployable_with_chat_template.tokenizer.apply_chat_template.assert_called_once_with(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+
+    def test_apply_chat_template_with_json_string(self, hf_deployable_with_chat_template):
+        """Test apply_chat_template with JSON string input."""
+        import json
+
+        messages = [{"role": "user", "content": "Hello"}]
+        messages_json = json.dumps(messages)
+
+        result = hf_deployable_with_chat_template.apply_chat_template(messages_json)
+
+        assert result == "<|begin_of_text|>user: Hello\nassistant:"
+        # Verify it was called with the parsed list
+        hf_deployable_with_chat_template.tokenizer.apply_chat_template.assert_called_once()
+
+    def test_apply_chat_template_without_generation_prompt(self, hf_deployable_with_chat_template):
+        """Test apply_chat_template with add_generation_prompt=False."""
+        messages = [{"role": "user", "content": "Hello"}]
+
+        hf_deployable_with_chat_template.apply_chat_template(messages, add_generation_prompt=False)
+
+        hf_deployable_with_chat_template.tokenizer.apply_chat_template.assert_called_once_with(
+            messages,
+            tokenize=False,
+            add_generation_prompt=False,
+        )
+
+    def test_apply_chat_template_raises_error_when_no_template(self, hf_deployable_without_chat_template):
+        """Test apply_chat_template raises ValueError when tokenizer has no chat template."""
+        messages = [{"role": "user", "content": "Hello"}]
+
+        with pytest.raises(ValueError, match="The tokenizer does not have a chat template defined"):
+            hf_deployable_without_chat_template.apply_chat_template(messages)
+
+    def test_ray_infer_fn_with_apply_chat_template(
+        self, mock_model, mock_tokenizer_with_chat_template, mock_torch_cuda
+    ):
+        """Test ray_infer_fn correctly applies chat template when requested."""
+        deployer = HuggingFaceLLMDeploy(
+            model=mock_model, tokenizer=mock_tokenizer_with_chat_template, task="text-generation"
+        )
+
+        messages = [{"role": "user", "content": "Hello"}]
+        inputs = {
+            "prompts": [messages],
+            "max_tokens": 100,
+            "apply_chat_template": True,
+        }
+
+        result = deployer.ray_infer_fn(inputs)
+
+        assert "sentences" in result
+        # Verify apply_chat_template was called
+        mock_tokenizer_with_chat_template.apply_chat_template.assert_called()
+
+    def test_ray_infer_fn_without_apply_chat_template(
+        self, mock_model, mock_tokenizer_with_chat_template, mock_torch_cuda
+    ):
+        """Test ray_infer_fn does not apply chat template when not requested."""
+        deployer = HuggingFaceLLMDeploy(
+            model=mock_model, tokenizer=mock_tokenizer_with_chat_template, task="text-generation"
+        )
+
+        inputs = {
+            "prompts": ["plain text prompt"],
+            "max_tokens": 100,
+            "apply_chat_template": False,
+        }
+
+        result = deployer.ray_infer_fn(inputs)
+
+        assert "sentences" in result
+        # Verify apply_chat_template was NOT called
+        mock_tokenizer_with_chat_template.apply_chat_template.assert_not_called()
+
+
 class TestHFDeployableEchoAndLogprobs:
     """Tests for echo parameter and logprobs functionality added to HuggingFaceLLMDeploy."""
 
