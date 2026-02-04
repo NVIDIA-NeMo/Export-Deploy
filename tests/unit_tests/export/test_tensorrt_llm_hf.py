@@ -584,9 +584,9 @@ def test_tensorrt_llm_hf_export_copies_tokenizer_files():
         patch("nemo_export.tensorrt_llm_hf.LLaMAForCausalLM.from_hugging_face", return_value=mock_model),
         patch(
             "glob.glob",
-            side_effect=lambda x: ["/tmp/hf_model/tokenizer.json"]
-            if "*.json" in x
-            else ["/tmp/hf_model/tokenizer.model"],
+            side_effect=lambda x: (
+                ["/tmp/hf_model/tokenizer.json"] if "*.json" in x else ["/tmp/hf_model/tokenizer.model"]
+            ),
         ),
         patch("shutil.copy"),
         patch.object(trt_llm_hf, "_load"),
