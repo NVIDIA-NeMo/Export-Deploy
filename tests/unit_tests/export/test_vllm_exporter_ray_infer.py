@@ -814,7 +814,9 @@ class TestVLLMExporterApplyChatTemplate:
 
     @pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
     @pytest.mark.run_only_on("GPU")
-    def test_apply_chat_template_with_messages_list(self, exporter_with_chat_template, mock_tokenizer_with_chat_template):
+    def test_apply_chat_template_with_messages_list(
+        self, exporter_with_chat_template, mock_tokenizer_with_chat_template
+    ):
         """Test apply_chat_template with a list of message dictionaries."""
         messages = [{"role": "user", "content": "Hello, how are you?"}]
 
@@ -846,7 +848,9 @@ class TestVLLMExporterApplyChatTemplate:
 
     @pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
     @pytest.mark.run_only_on("GPU")
-    def test_apply_chat_template_without_generation_prompt(self, exporter_with_chat_template, mock_tokenizer_with_chat_template):
+    def test_apply_chat_template_without_generation_prompt(
+        self, exporter_with_chat_template, mock_tokenizer_with_chat_template
+    ):
         """Test apply_chat_template with add_generation_prompt=False."""
         messages = [{"role": "user", "content": "Hello"}]
 
@@ -869,7 +873,9 @@ class TestVLLMExporterApplyChatTemplate:
 
     @pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
     @pytest.mark.run_only_on("GPU")
-    def test_apply_chat_template_with_multi_turn_conversation(self, exporter_with_chat_template, mock_tokenizer_with_chat_template):
+    def test_apply_chat_template_with_multi_turn_conversation(
+        self, exporter_with_chat_template, mock_tokenizer_with_chat_template
+    ):
         """Test apply_chat_template with multi-turn conversation."""
         messages = [
             {"role": "user", "content": "Hello"},
@@ -887,7 +893,9 @@ class TestVLLMExporterApplyChatTemplate:
 
     @pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
     @pytest.mark.run_only_on("GPU")
-    def test_ray_infer_fn_with_apply_chat_template(self, exporter_with_chat_template, mock_tokenizer_with_chat_template):
+    def test_ray_infer_fn_with_apply_chat_template(
+        self, exporter_with_chat_template, mock_tokenizer_with_chat_template
+    ):
         """Test ray_infer_fn correctly applies chat template when requested."""
         exporter_with_chat_template.forward = MagicMock(return_value={"sentences": ["I'm doing well, thank you!"]})
 
@@ -911,7 +919,9 @@ class TestVLLMExporterApplyChatTemplate:
 
     @pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
     @pytest.mark.run_only_on("GPU")
-    def test_ray_infer_fn_without_apply_chat_template(self, exporter_with_chat_template, mock_tokenizer_with_chat_template):
+    def test_ray_infer_fn_without_apply_chat_template(
+        self, exporter_with_chat_template, mock_tokenizer_with_chat_template
+    ):
         """Test ray_infer_fn does not apply chat template when not requested."""
         exporter_with_chat_template.forward = MagicMock(return_value={"sentences": ["Generated text"]})
 
@@ -933,7 +943,9 @@ class TestVLLMExporterApplyChatTemplate:
 
     @pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
     @pytest.mark.run_only_on("GPU")
-    def test_ray_infer_fn_with_apply_chat_template_default_false(self, exporter_with_chat_template, mock_tokenizer_with_chat_template):
+    def test_ray_infer_fn_with_apply_chat_template_default_false(
+        self, exporter_with_chat_template, mock_tokenizer_with_chat_template
+    ):
         """Test ray_infer_fn defaults to not applying chat template."""
         exporter_with_chat_template.forward = MagicMock(return_value={"sentences": ["Generated text"]})
 
@@ -951,15 +963,15 @@ class TestVLLMExporterApplyChatTemplate:
 
     @pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
     @pytest.mark.run_only_on("GPU")
-    def test_ray_infer_fn_with_multiple_chat_prompts(self, exporter_with_chat_template, mock_tokenizer_with_chat_template):
+    def test_ray_infer_fn_with_multiple_chat_prompts(
+        self, exporter_with_chat_template, mock_tokenizer_with_chat_template
+    ):
         """Test ray_infer_fn with multiple chat prompts applies template to each."""
         mock_tokenizer_with_chat_template.apply_chat_template.side_effect = [
             "<|begin_of_text|>user: Hello\nassistant:",
             "<|begin_of_text|>user: Goodbye\nassistant:",
         ]
-        exporter_with_chat_template.forward = MagicMock(
-            return_value={"sentences": ["Hi there!", "See you later!"]}
-        )
+        exporter_with_chat_template.forward = MagicMock(return_value={"sentences": ["Hi there!", "See you later!"]})
 
         messages1 = [{"role": "user", "content": "Hello"}]
         messages2 = [{"role": "user", "content": "Goodbye"}]
