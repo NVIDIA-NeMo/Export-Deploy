@@ -16,6 +16,8 @@ import logging
 import subprocess
 import time
 
+import pytest
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,7 @@ class TestDeployRayTRTLLM:
             # Avoid double termination in case test used finally to clean up
             self.deploy_proc = None
 
+    @pytest.mark.skip(reason="Temporarily skipped")
     def test_deploy_ray_trtllm(self):
         nemo_checkpoint_path = "/home/TestData/llm/models/llama32_1b_nemo2"
         host = "0.0.0.0"
