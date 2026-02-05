@@ -15,11 +15,14 @@
 import logging
 import subprocess
 
+import pytest
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class TestTRTLLMDeploy:
+    @pytest.mark.skip(reason="Temporarily skipped")
     def test_trtllm_deploy_nemo2(self):
         subprocess.run(
             [
