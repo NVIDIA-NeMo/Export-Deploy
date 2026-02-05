@@ -548,6 +548,11 @@ class vLLMExporter(ITritonDeployable):
         compute_logprob = inputs.pop("compute_logprob", False)
         n_top_logprobs = inputs.pop("n_top_logprobs", 0)
         echo = inputs.pop("echo", False)
+        apply_chat_template = inputs.pop("apply_chat_template", False)
+
+        # Apply chat template if requested (for Ray inference only)
+        if apply_chat_template:
+            prompts = [self.apply_chat_template(prompt) for prompt in prompts]
 
         # Map HF-style parameters to vLLM parameters
         if compute_logprob and n_top_logprobs > 0:
@@ -569,6 +574,47 @@ class vLLMExporter(ITritonDeployable):
             output_dict["error"] = err_msg
 
         return output_dict
+
+    def apply_chat_template(self, messages, add_generation_prompt=True):
+        """Apply the chat template to messages using the tokenizer.
+
+        This method uses the vLLM tokenizer's built-in apply_chat_template method
+        to format messages according to the model's expected chat format.
+
+        Args:
+            messages: List of message dictionaries with 'role' and 'content' keys,
+                     or a JSON string representation of messages.
+            add_generation_prompt (bool): Whether to add the generation prompt. Defaults to True.
+
+        Returns:
+            str: The formatted prompt string.
+
+        Raises:
+            ValueError: If the tokenizer does not have a chat template.
+        """
+        import json
+
+        # Handle JSON string input
+        if isinstance(messages, str):
+            messages = json.loads(messages)
+
+        tokenizer = self.model.get_tokenizer()
+
+        # Check if tokenizer has chat_template
+        if not hasattr(tokenizer, "chat_template") or tokenizer.chat_template is None:
+            raise ValueError(
+                "The tokenizer does not have a chat template defined. "
+                "If you would like to evaluate a chat model, ensure your model's tokenizer has a chat template."
+            )
+
+        # Use tokenizer's apply_chat_template method
+        formatted_prompt = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=add_generation_prompt,
+        )
+
+        return formatted_prompt
 
     def _dict_to_str(self, messages):
         """Serializes dict to str."""
