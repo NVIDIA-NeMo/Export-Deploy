@@ -16,7 +16,6 @@ deploy:
 - docs/mm/**/in-framework*.md
 
 multimodal:
-- nemo_export/multimodal/**/*
 - nemo_deploy/multimodal/**/*
 - scripts/deploy/multimodal/**/*
 - docs/mm/**/*
