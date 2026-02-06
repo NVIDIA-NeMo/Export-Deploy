@@ -18,15 +18,7 @@ This section shows how to use scripts and APIs to export a NeMo 2.0 LLM to Tenso
        nvcr.io/nvidia/nemo:vr
    ```
 
-3. Install TensorRT-LLM by executing the following command inside the container:
-
-   ```shell
-   cd /opt/Export-Deploy
-   uv sync --inexact --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
-
-   ```
-
-4. Run the following deployment script to verify that everything is working correctly. The script exports the Llama NeMo checkpoint to TensorRT-LLM and subsequently serves it on the Triton server:
+3. Run the following deployment script to verify that everything is working correctly. The script exports the Llama NeMo checkpoint to TensorRT-LLM and subsequently serves it on the Triton server:
 
     ```shell
     python /opt/Export-Deploy/scripts/deploy/nlp/deploy_triton.py \
@@ -36,15 +28,15 @@ This section shows how to use scripts and APIs to export a NeMo 2.0 LLM to Tenso
         --tensor_parallelism_size 1
    ```
 
-5. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
+4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
 
-6. In a separate terminal, access the running container as follows:
+5. In a separate terminal, access the running container as follows:
 
    ```shell
    docker exec -it nemo-fw bash
    ```
 
-7. To send a query to the Triton server, run the following script:
+6. To send a query to the Triton server, run the following script:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5
