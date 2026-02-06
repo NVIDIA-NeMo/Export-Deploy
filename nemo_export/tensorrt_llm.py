@@ -49,10 +49,7 @@ from nemo_export.trt_llm.tensorrt_llm_run import (
     unload_engine,
 )
 from nemo_export.trt_llm.utils import determine_quantization_settings, is_rank
-from nemo_export.utils import (
-    is_nemo2_checkpoint,
-    prepare_directory_for_export,
-)
+from nemo_export.utils import prepare_directory_for_export
 from nemo_export.utils.constants import TRTLLM_ENGINE_DIR
 from nemo_export_deploy_common.import_utils import (
     MISSING_TENSORRT_LLM_MSG,
@@ -704,7 +701,7 @@ class TensorRTLLM(ITritonDeployable):
                 )
 
             # Check if it's a NeMo2 checkpoint
-            if not (Path(nemo_checkpoint_path).exists() and is_nemo2_checkpoint(nemo_checkpoint_path)):
+            if not (Path(nemo_checkpoint_path).exists() and (Path(nemo_checkpoint_path) / "context").is_dir()):
                 raise Exception(
                     f"Standard NeMo export failed and checkpoint is not a NeMo2 checkpoint. "
                     f"HF fallback only works with NeMo2 checkpoints. "
