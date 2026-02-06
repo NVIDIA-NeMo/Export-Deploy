@@ -26,7 +26,6 @@ from nemo_deploy import ITritonDeployable
 from nemo_export.utils import (
     get_example_inputs,
     get_model_device_type,
-    is_nemo2_checkpoint,
     validate_fp8_network,
 )
 from nemo_export_deploy_common.import_utils import (
@@ -157,10 +156,9 @@ class OnnxLLMExporter(ITritonDeployable):
                 raise ValueError("A model was also passed but it will be overridden.")
 
             if Path(self.model_name_or_path).is_dir():
-                if is_nemo2_checkpoint(self.model_name_or_path):
-                    raise NotImplementedError("NeMo 2.0 checkpoint will be supported later.")
-                else:
-                    self._load_hf_model()
+                self._load_hf_model()
+            else:
+                raise ValueError("The model_name_or_path is not a valid directory.")
 
         self.model.to(self.device)
 

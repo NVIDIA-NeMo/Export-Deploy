@@ -32,21 +32,6 @@ class TestUtils:
         shutil.rmtree(temp_dir)
 
     @pytest.mark.run_only_on("GPU")
-    def test_is_nemo2_checkpoint(self, temp_dir):
-        from nemo_export.utils.utils import is_nemo2_checkpoint
-
-        # Test with non-existent path
-        assert not is_nemo2_checkpoint("/non/existent/path")
-
-        # Test with directory without context folder
-        os.makedirs(os.path.join(temp_dir, "no_context"))
-        assert not is_nemo2_checkpoint(os.path.join(temp_dir, "no_context"))
-
-        # Test with valid NeMo 2.0 checkpoint
-        os.makedirs(os.path.join(temp_dir, "valid_ckpt", "context"))
-        assert is_nemo2_checkpoint(os.path.join(temp_dir, "valid_ckpt"))
-
-    @pytest.mark.run_only_on("GPU")
     def test_prepare_directory_for_export(self, temp_dir):
         from nemo_export.utils.utils import prepare_directory_for_export
 
@@ -75,25 +60,6 @@ class TestUtils:
         # Test with subdir
         prepare_directory_for_export(model_dir, delete_existing_files=False, subdir="subdir")
         assert os.path.exists(os.path.join(model_dir, "subdir"))
-
-    @pytest.mark.run_only_on("GPU")
-    def test_is_nemo_tarfile(self, temp_dir):
-        from nemo_export.utils.utils import is_nemo_tarfile
-
-        # Test with non-existent file
-        assert not is_nemo_tarfile("/non/existent/file.nemo")
-
-        # Test with non-nemo file
-        test_file = os.path.join(temp_dir, "test.txt")
-        with open(test_file, "w") as f:
-            f.write("test")
-        assert not is_nemo_tarfile(test_file)
-
-        # Test with .nemo file
-        nemo_file = os.path.join(temp_dir, "test.nemo")
-        with open(nemo_file, "w") as f:
-            f.write("test")
-        assert is_nemo_tarfile(nemo_file)
 
     @pytest.mark.run_only_on("GPU")
     def test_torch_dtype_from_precision(self):
