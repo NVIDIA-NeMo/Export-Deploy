@@ -165,6 +165,13 @@ def parse_args():
         help="Maximum batch size for inference",
     )
     parser.add_argument(
+        "-imsl",
+        "--inference_max_seq_length",
+        default=4096,
+        type=int,
+        help="Max sequence length for inference",
+    )
+    parser.add_argument(
         "--random_seed",
         type=int,
         default=None,
@@ -244,6 +251,7 @@ def main():
         enable_flash_decode=args.enable_flash_decode,
         legacy_ckpt=args.legacy_ckpt,
         max_batch_size=args.max_batch_size,
+        inference_max_seq_length=args.inference_max_seq_length,
         random_seed=args.random_seed,
         model_type=args.model_type,
         micro_batch_size=args.micro_batch_size,
