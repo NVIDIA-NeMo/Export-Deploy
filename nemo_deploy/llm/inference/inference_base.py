@@ -22,7 +22,6 @@ import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
 from megatron.bridge.training.model_load_save import build_and_load_model, load_model_config, load_tokenizer
 from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
-from megatron.bridge.utils.vocab_utils import calculate_padded_vocab_size
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
 from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
@@ -498,7 +497,6 @@ def create_mcore_engine(
             **model_config_kwargs,
         )
         model = modelList[0]
-        padded_vocab_size = model.vocab_size
     elif model_format == "megatron":
         modelList, tokenizer, mlm_args = setup_megatron_model_and_tokenizer_for_inference(
             checkpoint_path=path,
@@ -510,14 +508,6 @@ def create_mcore_engine(
             model_type=model_type,
         )
         model = modelList[0]
-        if mlm_args is not None:
-            padded_vocab_size = getattr(mlm_args, "padded_vocab_size", None)
-        else:
-            padded_vocab_size = calculate_padded_vocab_size(
-                model.config.vocab_size,
-                model.config.make_vocab_size_divisible_by,
-                model.config.tensor_model_parallel_size,
-            )
     else:
         raise ValueError(f"Model format {model_format} not supported.")
 
