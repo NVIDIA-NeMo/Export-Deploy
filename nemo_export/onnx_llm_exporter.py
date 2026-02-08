@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import contextlib
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -100,6 +101,40 @@ try:
 except Exception:
     logging.warning("onnxruntime is not available.")
     use_onnxruntime = False
+
+
+@contextlib.contextmanager
+def _patch_transformers_masking_for_export():
+    """
+    Context manager to patch transformers masking logic for torch.export compatibility.
+
+    Transformers commit 163138a911 introduced a new masking implementation that uses
+    TransformGetItemToIndex() context manager and vmap operations. These are incompatible
+    with torch.export. This patch temporarily replaces the masking implementation with
+    the older, export-compatible version during ONNX export.
+    """
+    try:
+        from transformers import masking_utils
+
+        # Check if the module has the sdpa_mask_older_torch function
+        if hasattr(masking_utils, "sdpa_mask_older_torch"):
+            # Save the original masking function
+            original_sdpa_mask = masking_utils.sdpa_mask
+
+            # Replace with the older, torch.export-compatible version
+            masking_utils.sdpa_mask = masking_utils.sdpa_mask_older_torch
+
+            try:
+                yield
+            finally:
+                # Restore the original function
+                masking_utils.sdpa_mask = original_sdpa_mask
+        else:
+            # If the module structure is different, just proceed without patching
+            yield
+    except (ImportError, AttributeError):
+        # If masking_utils doesn't exist or has different structure, just proceed
+        yield
 
 
 # pylint: disable=line-too-long
@@ -245,16 +280,17 @@ class OnnxLLMExporter(ITritonDeployable):
         Path(self.onnx_model_dir).mkdir(parents=True, exist_ok=True)
 
         with torch.autocast(device_type=get_model_device_type(self.model), dtype=export_dtype):
-            torch.onnx.export(
-                model=self.model,
-                args=(example_inputs,),
-                f=self.onnx_model_path,
-                input_names=input_names,
-                output_names=output_names,
-                dynamic_axes={**dynamic_axes_input, **dynamic_axes_output},
-                verbose=verbose,
-                opset_version=opset,
-            )
+            with _patch_transformers_masking_for_export():
+                torch.onnx.export(
+                    model=self.model,
+                    args=(example_inputs,),
+                    f=self.onnx_model_path,
+                    input_names=input_names,
+                    output_names=output_names,
+                    dynamic_axes={**dynamic_axes_input, **dynamic_axes_output},
+                    verbose=verbose,
+                    opset_version=opset,
+                )
         logging.info(f"Successfully exported PyTorch model to ONNX model {self.onnx_model_path}")
 
         existing_directory_path = Path(self.onnx_model_dir) / "tokenizer"
