@@ -307,7 +307,7 @@ class TestInferenceBase(unittest.TestCase):
         mock_gpt_wrapper_class,
         mock_calc_pad_vocab,
     ):
-        # Prepare model.config used by InferenceWrapperConfig
+        # Prepare model.config
         mock_model = MagicMock()
         mock_model.config = MagicMock()
         mock_model.config.hidden_size = 256
@@ -331,11 +331,9 @@ class TestInferenceBase(unittest.TestCase):
         # Ensure we did NOT compute padded vocab when mlm_args provides it
         mock_calc_pad_vocab.assert_not_called()
 
-        # Validate padded_vocab_size flowed into GPTInferenceWrapper config
-        args, kwargs = mock_gpt_wrapper_class.call_args
-        inference_wrapper_config = args[1]
-        self.assertEqual(inference_wrapper_config.padded_vocab_size, 1234)
-        self.assertEqual(inference_wrapper_config.hidden_size, 256)
+        # Validate GPTInferenceWrapper config
+        mock_gpt_wrapper_class.assert_called_once_with(mock_model, mock_static_ctx.return_value)
+        mock_static_ctx.assert_called_once_with(8, 4096)
 
     @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.calculate_padded_vocab_size")
@@ -353,7 +351,7 @@ class TestInferenceBase(unittest.TestCase):
         mock_gpt_wrapper_class,
         mock_calc_pad_vocab,
     ):
-        # Prepare model.config used by InferenceWrapperConfig and pad calculation
+        # Prepare model.config
         mock_model = MagicMock()
         mock_model.config = MagicMock()
         mock_model.config.hidden_size = 512
@@ -378,11 +376,9 @@ class TestInferenceBase(unittest.TestCase):
             mock_model.config.tensor_model_parallel_size,
         )
 
-        # Validate padded_vocab_size flowed into GPTInferenceWrapper config
-        args, kwargs = mock_gpt_wrapper_class.call_args
-        inference_wrapper_config = args[1]
-        self.assertEqual(inference_wrapper_config.padded_vocab_size, 24576)
-        self.assertEqual(inference_wrapper_config.hidden_size, 512)
+        # Validate GPTInferenceWrapper config
+        mock_gpt_wrapper_class.assert_called_once_with(mock_model, mock_static_ctx.return_value)
+        mock_static_ctx.assert_called_once_with(8, 4096)
 
     @patch("nemo_deploy.llm.inference.inference_base.check_is_distributed_checkpoint")
     @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_weights_subdir")

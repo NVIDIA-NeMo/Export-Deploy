@@ -33,9 +33,6 @@ from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
 )
-from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
-    InferenceWrapperConfig,
-)
 from megatron.core.inference.text_generation_controllers.text_generation_controller import (
     TextGenerationController,
 )
@@ -523,17 +520,9 @@ def create_mcore_engine(
             )
     else:
         raise ValueError(f"Model format {model_format} not supported.")
-    inference_wrapper_config = InferenceWrapperConfig(
-        hidden_size=model.config.hidden_size,
-        params_dtype=params_dtype,
-        inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
-        padded_vocab_size=padded_vocab_size,
-        inference_max_seq_length=inference_max_seq_length,
-        inference_max_requests=max_batch_size,
-    )
-    inference_context = StaticInferenceContext.from_config(inference_wrapper_config)
 
-    model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config, inference_context)
+    inference_context = StaticInferenceContext(max_batch_size, inference_max_seq_length)
+    model_inference_wrapper = GPTInferenceWrapper(model, inference_context)
     text_generation_controller = TextGenerationController(
         inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
     )
