@@ -58,6 +58,7 @@ class ModelWorker:
         enable_flash_decode: bool = False,
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
+        inference_max_seq_length: int = 4096,
         random_seed: Optional[int] = None,
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
@@ -93,6 +94,7 @@ class ModelWorker:
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
+                inference_max_seq_length=inference_max_seq_length,
                 random_seed=random_seed,
                 model_type=model_type,
                 micro_batch_size=micro_batch_size,
@@ -135,6 +137,7 @@ class MegatronRayDeployable:
         enable_flash_decode: bool = False,
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
+        inference_max_seq_length: int = 4096,
         random_seed: Optional[int] = None,
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
@@ -152,12 +155,10 @@ class MegatronRayDeployable:
             enable_cuda_graphs (bool): Whether to enable CUDA graphs for faster inference.
             enable_flash_decode (bool): Whether to enable Flash Attention decode.
             max_batch_size (int): Maximum batch size for request batching.
-            batch_wait_timeout_s (float): Maximum time to wait for batching requests.
+            inference_max_seq_length (int): Maximum sequence length for inference.
             legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
             random_seed (int): Random seed for model initialization.
-            megatron_checkpoint_filepath (str): Path to the Megatron checkpoint file.
             model_type (str): Type of model to load.
-            model_format (str): Format of model to load.
             micro_batch_size (Optional[int]): Micro batch size for model execution.
         """
         try:
@@ -202,6 +203,7 @@ class MegatronRayDeployable:
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
+                inference_max_seq_length=inference_max_seq_length,
                 random_seed=random_seed,
                 model_type=model_type,
                 micro_batch_size=micro_batch_size,
@@ -238,6 +240,7 @@ class MegatronRayDeployable:
                     enable_cuda_graphs=enable_cuda_graphs,
                     enable_flash_decode=enable_flash_decode,
                     max_batch_size=max_batch_size,
+                    inference_max_seq_length=inference_max_seq_length,
                     random_seed=random_seed,
                     model_type=model_type,
                     micro_batch_size=micro_batch_size,
