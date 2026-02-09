@@ -53,7 +53,6 @@ jobs:
       custom-container: nvcr.io/nvidia/pytorch:25.11-py3
       no-build-isolation: true
       runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2-container
-      no-build-isolation: true
       container-options: "--gpus all --runtime=nvidia"
     secrets:
       TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
