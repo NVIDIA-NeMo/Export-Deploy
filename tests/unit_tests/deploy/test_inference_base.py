@@ -23,8 +23,14 @@ from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper 
     GPTInferenceWrapper,
 )
 from megatron.core.transformer.module import MegatronModule
-from nemo.collections.llm.gpt.model.base import GPTConfig
-from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
+
+try:
+    from nemo.collections.llm.gpt.model.base import GPTConfig
+    from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
+
+    HAVE_NEMO = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_NEMO = False
 
 from nemo_deploy.llm.inference.inference_base import (
     MCoreEngineWithCleanup,
@@ -41,6 +47,7 @@ from nemo_deploy.llm.inference.tron_utils import DistributedInitConfig, RNGConfi
 from nemo_export_deploy_common.import_utils import UnavailableError
 
 
+@pytest.mark.skipif(not HAVE_NEMO, reason="NeMo is not installed")
 @pytest.mark.run_only_on("GPU")
 class TestInferenceBase(unittest.TestCase):
     def setUp(self):
