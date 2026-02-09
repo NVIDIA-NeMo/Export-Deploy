@@ -97,32 +97,6 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
   nvcr.io/nvidia/nemo:${TAG}
 ```
 
-<a id="install-tensorrt-llm-vllm-or-trt-onnx-backend"></a>
-#### Install TensorRT-LLM, vLLM, or TRT-ONNX backend
-
-Starting with version 25.07, the NeMo FW container no longer includes TensorRT-LLM and vLLM pre-installed. Please run the following command inside the container:
-
-For TensorRT-LLM:
-
-```bash
-cd /opt/Export-Deploy
-uv sync --inexact --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
-```
-
-For vLLM:
-
-```bash
-cd /opt/Export-Deploy
-uv sync --inexact --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
-```
-
-For TRT-ONNX:
-
-```bash
-cd /opt/Export-Deploy
-uv sync --inexact --link-mode symlink --locked --extra trt-onnx $(cat /opt/uv_args.txt)
-```
-
 ### Build with Dockerfile
 
 For containerized development, use our Dockerfile for building your own container. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
