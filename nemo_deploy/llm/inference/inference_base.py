@@ -22,7 +22,6 @@ import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
 from megatron.bridge.training.model_load_save import build_and_load_model, load_model_config, load_tokenizer
 from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
-from megatron.bridge.utils.vocab_utils import calculate_padded_vocab_size
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
 from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
@@ -32,9 +31,6 @@ from megatron.core.inference.contexts import StaticInferenceContext
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
-)
-from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
-    InferenceWrapperConfig,
 )
 from megatron.core.inference.text_generation_controllers.text_generation_controller import (
     TextGenerationController,
@@ -478,7 +474,7 @@ def create_mcore_engine(
             - GPTInferenceWrapper: Inference-wrapped model
             - Union[MCoreTokenizerWrappper, MegatronTokenizer]: Tokenizer instance
     """
-    if not HAVE_NEMO:
+    if not HAVE_NEMO and model_format == "nemo":
         raise UnavailableError(MISSING_NEMO_MSG)
 
     # Default to 1 for any parallelism dimension that's None
@@ -501,7 +497,6 @@ def create_mcore_engine(
             **model_config_kwargs,
         )
         model = modelList[0]
-        padded_vocab_size = model.vocab_size
     elif model_format == "megatron":
         modelList, tokenizer, mlm_args = setup_megatron_model_and_tokenizer_for_inference(
             checkpoint_path=path,
@@ -513,27 +508,11 @@ def create_mcore_engine(
             model_type=model_type,
         )
         model = modelList[0]
-        if mlm_args is not None:
-            padded_vocab_size = getattr(mlm_args, "padded_vocab_size", None)
-        else:
-            padded_vocab_size = calculate_padded_vocab_size(
-                model.config.vocab_size,
-                model.config.make_vocab_size_divisible_by,
-                model.config.tensor_model_parallel_size,
-            )
     else:
         raise ValueError(f"Model format {model_format} not supported.")
-    inference_wrapper_config = InferenceWrapperConfig(
-        hidden_size=model.config.hidden_size,
-        params_dtype=params_dtype,
-        inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
-        padded_vocab_size=padded_vocab_size,
-        inference_max_seq_length=inference_max_seq_length,
-        inference_max_requests=max_batch_size,
-    )
-    inference_context = StaticInferenceContext.from_config(inference_wrapper_config)
 
-    model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config, inference_context)
+    inference_context = StaticInferenceContext(max_batch_size, inference_max_seq_length)
+    model_inference_wrapper = GPTInferenceWrapper(model, inference_context)
     text_generation_controller = TextGenerationController(
         inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
     )
