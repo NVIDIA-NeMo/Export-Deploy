@@ -474,7 +474,7 @@ def create_mcore_engine(
             - GPTInferenceWrapper: Inference-wrapped model
             - Union[MCoreTokenizerWrappper, MegatronTokenizer]: Tokenizer instance
     """
-    if not HAVE_NEMO:
+    if not HAVE_NEMO and model_format == "nemo":
         raise UnavailableError(MISSING_NEMO_MSG)
 
     # Default to 1 for any parallelism dimension that's None
