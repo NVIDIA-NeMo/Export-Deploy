@@ -1,6 +1,5 @@
 export:
 - nemo_export/**/*
-- scripts/export/**/*
 - tests/functional_tests/tests_trtllm/test_export.py
 - tests/functional_tests/tests_onnx_trt/test_export.py
 - tests/unit_tests/export/**/*
@@ -33,7 +32,6 @@ TensorRT-LLM:
 - nemo_export/trt_llm/**/*
 - nemo_export/tensorrt_llm*.py
 - tests/functional_tests/tests_trtllm/**/*
-- scripts/export/export_hf_to_nemo2.py
 - docs/llm/**/optimized/**/*
 - docs/mm/**/optimized/**/*
 
