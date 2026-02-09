@@ -16,6 +16,7 @@
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
 export CUDA_VISIBLE_DEVICES="0,1"
+export HF_MODULES_CACHE=/tmp/hf_modules_cache
 
 coverage run \
     --data-file=/workspace/.coverage \
