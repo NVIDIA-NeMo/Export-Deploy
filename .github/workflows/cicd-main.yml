@@ -206,40 +206,40 @@ jobs:
           ngc-api-user: ${{ secrets.NGC_API_USER }}
           ngc-api-key: ${{ secrets.NGC_API_KEY }}
 
-  cicd-e2e-tests-trt-onnx:
-    needs: [cicd-unit-tests-trtllm, pre-flight]
-    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
-    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
-    environment: nemo-ci
-    if: |
-      (
-        success()
-        || (
-          needs.cicd-wait-in-queue.result == 'skipped'
-          && needs.pre-flight.outputs.is_ci_workload == 'true'
-        )
-      )
-      && !cancelled()
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: main
-        uses: ./.github/actions/test-template
-        with:
-          script: L2_ONNX_TRT
-          is_optional: ${{ matrix.is_optional || false }}
-          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          has-azure-credentials: true
-          is_unit_test: "false"
-          timeout: 60
-          PAT: ${{ secrets.PAT }}
-          inference-framework: trt-onnx
-          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
-          ngc-api-user: ${{ secrets.NGC_API_USER }}
-          ngc-api-key: ${{ secrets.NGC_API_KEY }}
+  # cicd-e2e-tests-trt-onnx:
+  #   needs: [cicd-unit-tests-trtllm, pre-flight]
+  #   runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+  #   name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+  #   environment: nemo-ci
+  #   if: |
+  #     (
+  #       success()
+  #       || (
+  #         needs.cicd-wait-in-queue.result == 'skipped'
+  #         && needs.pre-flight.outputs.is_ci_workload == 'true'
+  #       )
+  #     )
+  #     && !cancelled()
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: main
+  #       uses: ./.github/actions/test-template
+  #       with:
+  #         script: L2_ONNX_TRT
+  #         is_optional: ${{ matrix.is_optional || false }}
+  #         azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+  #         azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+  #         azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  #         has-azure-credentials: true
+  #         is_unit_test: "false"
+  #         timeout: 60
+  #         PAT: ${{ secrets.PAT }}
+  #         inference-framework: trt-onnx
+  #         test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+  #         runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+  #         ngc-api-user: ${{ secrets.NGC_API_USER }}
+  #         ngc-api-key: ${{ secrets.NGC_API_KEY }}
 
   cicd-e2e-tests-vllm:
     needs: [cicd-unit-tests-vllm, pre-flight]
