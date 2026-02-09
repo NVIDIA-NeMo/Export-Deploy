@@ -45,12 +45,14 @@ except (ImportError, ModuleNotFoundError):
 
 try:
     import modelopt.torch.quantization as mtq
+    from modelopt.torch.quantization.export_onnx import configure_linear_module_onnx_quantizers
 
     HAVE_MODELOPT = True
 except (ImportError, ModuleNotFoundError):
     from unittest.mock import MagicMock
 
     mtq = MagicMock()
+    configure_linear_module_onnx_quantizers = MagicMock()
     HAVE_MODELOPT = False
 
 
@@ -185,6 +187,8 @@ class OnnxLLMExporter(ITritonDeployable):
         self.model_output_names = None
         self.onnx_runtime_session = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self._is_quantized = False
+        self._quant_cfg = None  # Store quantization config to determine export behavior
 
         if self.model_name_or_path is not None:
             if model is not None:
@@ -279,18 +283,53 @@ class OnnxLLMExporter(ITritonDeployable):
 
         Path(self.onnx_model_dir).mkdir(parents=True, exist_ok=True)
 
-        with torch.autocast(device_type=get_model_device_type(self.model), dtype=export_dtype):
-            with _patch_transformers_masking_for_export():
-                torch.onnx.export(
-                    model=self.model,
-                    args=(example_inputs,),
-                    f=self.onnx_model_path,
-                    input_names=input_names,
-                    output_names=output_names,
-                    dynamic_axes={**dynamic_axes_input, **dynamic_axes_output},
-                    verbose=verbose,
-                    opset_version=opset,
-                )
+        # Follow ModelOpt's ONNX export pattern (see torch_onnx.py in ModelOpt):
+        # - Only use configure_linear_module_onnx_quantizers context for FP4/MXFP8
+        # - Disable dynamo for all quantized models (incompatible with fake tensors)
+        # - Only pass dynamic_axes when NOT using dynamo on PyTorch 2.8+
+
+        # Check if we need the special quantizer context (only for FP4/MXFP8)
+        use_quantizer_context = False
+        if self._is_quantized and HAVE_MODELOPT and self._quant_cfg:
+            # FP4/MXFP8 configs have "fp4" or "mxfp" in their name
+            quant_cfg_str = str(self._quant_cfg) if isinstance(self._quant_cfg, str) else ""
+            use_quantizer_context = "fp4" in quant_cfg_str.lower() or "mxfp" in quant_cfg_str.lower()
+
+        onnx_export_context = (
+            configure_linear_module_onnx_quantizers(self.model) if use_quantizer_context else contextlib.nullcontext()
+        )
+
+        if self._is_quantized:
+            logging.info(
+                "Exporting quantized model to ONNX with Q/DQ nodes. "
+                "Quantization scales from calibration will be preserved in the ONNX graph."
+            )
+
+        # Disable dynamo for quantized models (PyTorch 2.8+ dynamo uses torch.export which can't handle fake tensors)
+        use_dynamo = not self._is_quantized
+
+        # Build export kwargs
+        export_kwargs = {
+            "model": self.model,
+            "args": (example_inputs,),
+            "f": self.onnx_model_path,
+            "input_names": input_names,
+            "output_names": output_names,
+            "verbose": verbose,
+            "opset_version": opset,
+            "dynamo": use_dynamo,
+        }
+
+        # Only pass dynamic_axes when NOT using dynamo on PyTorch 2.8+ (follows ModelOpt pattern)
+        from packaging.version import Version
+
+        if not use_dynamo and Version(torch.__version__) >= Version("2.8"):
+            export_kwargs["dynamic_axes"] = {**dynamic_axes_input, **dynamic_axes_output}
+
+        with onnx_export_context:
+            with torch.autocast(device_type=get_model_device_type(self.model), dtype=export_dtype):
+                with _patch_transformers_masking_for_export():
+                    torch.onnx.export(**export_kwargs)
         logging.info(f"Successfully exported PyTorch model to ONNX model {self.onnx_model_path}")
 
         existing_directory_path = Path(self.onnx_model_dir) / "tokenizer"
@@ -536,6 +575,9 @@ class OnnxLLMExporter(ITritonDeployable):
         if not HAVE_MODELOPT:
             raise UnavailableError(MISSING_MODELOPT_MSG)
 
+        # Store the quantization config for later export decisions
+        self._quant_cfg = quant_cfg
+
         if isinstance(quant_cfg, str):
             assert quant_cfg in QUANT_CFG_CHOICES, (
                 f"Quantization config {quant_cfg} is not supported. Supported configs: {list(QUANT_CFG_CHOICES)}"
@@ -545,6 +587,9 @@ class OnnxLLMExporter(ITritonDeployable):
         logging.info("Starting quantization...")
         mtq.quantize(self.model, quant_cfg, forward_loop=forward_loop)
         logging.info("Quantization is completed.")
+
+        # Mark that the model has been quantized
+        self._is_quantized = True
 
     @property
     def get_model(self):
