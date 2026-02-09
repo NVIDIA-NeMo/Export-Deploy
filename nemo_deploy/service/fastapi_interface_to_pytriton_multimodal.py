@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import logging
 import os
 from typing import List, Optional
 
@@ -24,12 +25,7 @@ from pydantic_settings import BaseSettings
 
 from nemo_deploy.multimodal.query_multimodal import NemoQueryMultimodalPytorch
 
-try:
-    from nemo.utils import logging
-except (ImportError, ModuleNotFoundError):
-    import logging
-
-    logging = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class TritonSettings(BaseSettings):
@@ -44,7 +40,7 @@ class TritonSettings(BaseSettings):
             self._triton_service_port = int(os.environ.get("TRITON_PORT", 8000))
             self._triton_service_ip = os.environ.get("TRITON_HTTP_ADDRESS", "0.0.0.0")
         except Exception as error:
-            logging.error(
+            logger.error(
                 "An exception occurred trying to retrieve set args in TritonSettings class. Error:",
                 error,
             )
@@ -146,7 +142,7 @@ async def check_triton_health():
     triton_url = (
         f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
     )
-    logging.info(f"Attempting to connect to Triton server at: {triton_url}")
+    logger.info(f"Attempting to connect to Triton server at: {triton_url}")
     try:
         response = requests.get(triton_url, timeout=5)
         if response.status_code == 200:
@@ -271,7 +267,7 @@ async def completions_v1(request: MultimodalCompletionRequest):
 
     output_serializable = convert_numpy(output)
     output_serializable["choices"][0]["text"] = output_serializable["choices"][0]["text"][0][0]
-    logging.info(f"Output: {output_serializable}")
+    logger.info(f"Output: {output_serializable}")
     return output_serializable
 
 
@@ -349,5 +345,5 @@ async def chat_completions_v1(request: MultimodalChatCompletionRequest):
         0
     ][0]
 
-    logging.info(f"Output: {output_serializable}")
+    logger.info(f"Output: {output_serializable}")
     return output_serializable

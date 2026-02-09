@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import logging
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -35,12 +36,7 @@ from nemo_export_deploy_common.import_utils import (
     UnavailableError,
 )
 
-try:
-    from nemo.utils import logging
-except (ImportError, ModuleNotFoundError):
-    import logging
-
-    logging = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 try:
     import modelopt.torch.quantization as mtq
@@ -90,7 +86,7 @@ batch = noop_decorator
 try:
     from pytriton.decorators import batch
 except Exception:
-    logging.warning("PyTriton is not available.")
+    logger.warning("PyTriton is not available.")
     use_pytriton = False
 
 
@@ -98,7 +94,7 @@ use_onnxruntime = True
 try:
     import onnxruntime
 except Exception:
-    logging.warning("onnxruntime is not available.")
+    logger.warning("onnxruntime is not available.")
     use_onnxruntime = False
 
 
@@ -255,7 +251,7 @@ class OnnxLLMExporter(ITritonDeployable):
                 verbose=verbose,
                 opset_version=opset,
             )
-        logging.info(f"Successfully exported PyTorch model to ONNX model {self.onnx_model_path}")
+        logger.info(f"Successfully exported PyTorch model to ONNX model {self.onnx_model_path}")
 
         existing_directory_path = Path(self.onnx_model_dir) / "tokenizer"
         existing_directory_path.mkdir(exist_ok=True)
@@ -285,7 +281,7 @@ class OnnxLLMExporter(ITritonDeployable):
         if not HAVE_TENSORRT:
             raise UnavailableError(MISSING_TENSORRT_MSG)
 
-        logging.info(f"Building TRT engine from ONNX model ({self.onnx_model_path})")
+        logger.info(f"Building TRT engine from ONNX model ({self.onnx_model_path})")
         trt_logger = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(trt_logger)
         network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
@@ -295,9 +291,9 @@ class OnnxLLMExporter(ITritonDeployable):
         # we use parse_from_file() instead of parse() because it can be used for both single
         # file models as well as externally stored models (required when model >2GiB)
         if not parser.parse_from_file(self.onnx_model_path):
-            logging.warning("ONNX model could not be parsed")
+            logger.warning("ONNX model could not be parsed")
             for error in range(parser.num_errors):
-                logging.error(parser.get_error(error))
+                logger.error(parser.get_error(error))
             return
 
         if profiles:
@@ -316,22 +312,22 @@ class OnnxLLMExporter(ITritonDeployable):
                 config.add_optimization_profile(optimization_profile)
 
         if trt_dtype == "fp16":
-            logging.info("Setting Build Flag FP16")
+            logger.info("Setting Build Flag FP16")
             config.set_flag(trt.BuilderFlag.FP16)
         elif trt_dtype == "fp8":
             # With FP8 export we want to also enable FP16 layers as a fallback instead of FP32
-            logging.info("Setting Build Flag FP8 and FP16")
+            logger.info("Setting Build Flag FP8 and FP16")
             config.set_flag(trt.BuilderFlag.FP8)
             config.set_flag(trt.BuilderFlag.FP16)
             validate_fp8_network(network)
 
         # patch network
         if override_layernorm_precision_to_fp32:
-            logging.info("Overriding TensorRT network LayerNorm precision to float32.")
+            logger.info("Overriding TensorRT network LayerNorm precision to float32.")
             self._override_layernorm_precision_to_fp32(network)
 
         if override_layers_to_fp32:
-            logging.info("Overriding some layers to float32.")
+            logger.info("Overriding some layers to float32.")
             self._override_layers_to_fp32(network, override_layers_to_fp32)
 
         try:
@@ -343,7 +339,7 @@ class OnnxLLMExporter(ITritonDeployable):
         except KeyError:
             error_msg = "Unknown profiling verbosity value."
             raise ValueError(error_msg)
-        logging.info(f"Setting Profiling Verbosity to {config.profiling_verbosity}")
+        logger.info(f"Setting Profiling Verbosity to {config.profiling_verbosity}")
 
         if trt_builder_flags is not None:
             for flag in trt_builder_flags:
@@ -357,7 +353,7 @@ class OnnxLLMExporter(ITritonDeployable):
         trt_model_path.mkdir(parents=True, exist_ok=True)
         trt_model_path = trt_model_path / "model.plan"
         trt_model_path.write_bytes(engine_string)
-        logging.info(f"Successfully exported ONNX model ({self.onnx_model_path}) to TRT engine ({trt_model_path})")
+        logger.info(f"Successfully exported ONNX model ({self.onnx_model_path}) to TRT engine ({trt_model_path})")
 
     def _override_layer_precision_to_fp32(self, layer: trt.ILayer) -> None:
         if not HAVE_TENSORRT:
@@ -378,7 +374,7 @@ class OnnxLLMExporter(ITritonDeployable):
                 trt.float16,
             }:
                 if layer.type in {trt.LayerType.CAST}:
-                    logging.info(f"Skipping overriding {layer.type} layer {i} {layer_name} dtype")
+                    logger.info(f"Skipping overriding {layer.type} layer {i} {layer_name} dtype")
                     continue
                 if any(
                     layer.get_input(input_idx).dtype in {trt.float32, trt.float16}
@@ -387,11 +383,11 @@ class OnnxLLMExporter(ITritonDeployable):
                     # Note: Assigning to layer.precision (even the same value) sets precision_is_set=True,
                     # which prevents TensorRT from changing this layer's precision
                     layer.precision = trt.float32
-                    logging.info(f"Setting layer {i} {layer_name} (type: {layer.type}) precision to FP32")
+                    logger.info(f"Setting layer {i} {layer_name} (type: {layer.type}) precision to FP32")
                 for j in range(layer.num_outputs):
                     if layer.get_output_type(j) in {trt.float32, trt.float16}:
                         layer.set_output_type(j, trt.float32)
-                        logging.info(f"Setting layer {i} {layer_name} (type: {layer.type}) output type {j} to FP32")
+                        logger.info(f"Setting layer {i} {layer_name} (type: {layer.type}) output type {j} to FP32")
 
     def _override_layernorm_precision_to_fp32(self, network: trt.INetworkDefinition) -> None:
         """Set the precision of LayerNorm subgraphs to FP32 to preserve accuracy.
@@ -506,9 +502,9 @@ class OnnxLLMExporter(ITritonDeployable):
             )
             quant_cfg = QUANT_CFG_CHOICES[quant_cfg]
 
-        logging.info("Starting quantization...")
+        logger.info("Starting quantization...")
         mtq.quantize(self.model, quant_cfg, forward_loop=forward_loop)
-        logging.info("Quantization is completed.")
+        logger.info("Quantization is completed.")
 
     @property
     def get_model(self):

@@ -15,8 +15,6 @@
 
 import argparse
 
-from nemo.collections import llm, vlm
-
 from nemo_deploy import DeployPyTriton
 from nemo_deploy.multimodal import NemoQueryMultimodal
 from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
@@ -44,15 +42,7 @@ def get_args():
 
 
 def import_hf_model(args):
-    if args.model_type == "mllama":
-        model = vlm.MLlamaModel(vlm.MLlamaConfig11BInstruct())
-
-    llm.import_ckpt(
-        model=model,
-        source=f"hf://{args.hf_model}",
-        output_path="/tmp/nemo2_ckpt",
-        overwrite=True,
-    )
+    raise NotImplementedError("To be implemented")
 
 
 def run_inference_tests(args):

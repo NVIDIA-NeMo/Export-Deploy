@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import logging
 import os
 from functools import partial
 
@@ -22,7 +23,6 @@ from nemo.collections.llm.gpt.model.hf_llama_embedding import (
     get_llama_bidirectional_hf_model,
 )
 from nemo.collections.llm.modelopt.quantization.quantizer import get_calib_data_iter
-from nemo.utils import logging
 from tqdm import tqdm
 
 from nemo_export.onnx_llm_exporter import OnnxLLMExporter

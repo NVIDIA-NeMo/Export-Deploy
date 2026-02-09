@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import argparse
+import logging
 import os
 
 import tensorrt as trt
-from nemo.utils import logging
 
 from nemo_export.model_adapters.reranker import get_llama_reranker_hf_model
 from nemo_export.onnx_llm_exporter import OnnxLLMExporter
