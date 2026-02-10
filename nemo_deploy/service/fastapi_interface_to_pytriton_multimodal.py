@@ -41,7 +41,7 @@ class TritonSettings(BaseSettings):
             self._triton_service_ip = os.environ.get("TRITON_HTTP_ADDRESS", "0.0.0.0")
         except Exception as error:
             logger.error(
-                "An exception occurred trying to retrieve set args in TritonSettings class. Error:",
+                "An exception occurred trying to retrieve set args in TritonSettings class. Error: %s",
                 error,
             )
             return
