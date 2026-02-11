@@ -65,12 +65,12 @@ class TestTritonSettings:
     def test_initialization_with_invalid_port(self):
         """Test TritonSettings initialization with invalid port logs error but doesn't raise."""
         with patch.dict("os.environ", {"TRITON_PORT": "invalid"}):
-            with patch("nemo_deploy.service.fastapi_interface_to_pytriton_multimodal.logging") as mock_logging:
+            with patch("nemo_deploy.service.fastapi_interface_to_pytriton_multimodal.logger") as mock_logger:
                 TritonSettings()
                 # The exception is caught and logged, not raised
-                mock_logging.error.assert_called_once()
+                mock_logger.error.assert_called_once()
                 # Verify error was called with the expected message prefix
-                call_args = mock_logging.error.call_args[0]
+                call_args = mock_logger.error.call_args[0]
                 assert "An exception occurred trying to retrieve set args in TritonSettings class" in call_args[0]
 
     def test_properties(self):

@@ -13,10 +13,17 @@
 # limitations under the License.
 import os
 import os.path
+import sys
 from pathlib import Path
 from shutil import rmtree
 
 import pytest
+
+# Add project root to sys.path so nemo_deploy / nemo_export are importable when
+# tests are run without installing the package (e.g. in container with -v mount).
+_project_root = Path(__file__).resolve().parent.parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
 
 # Those variables probably should go to main NeMo configuration file (config.yaml).
 __TEST_DATA_FILENAME = "test_data.tar.gz"

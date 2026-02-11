@@ -51,7 +51,6 @@ def prepare_directory_for_export(
     model_path.mkdir(parents=True, exist_ok=True)
 
 
-# Copied from nemo.collections.nlp.parts.utils_funcs to avoid introducing extra NeMo dependencies:
 def torch_dtype_from_precision(precision: Union[int, str], megatron_amp_O2: bool = True) -> torch.dtype:
     """Mapping from PyTorch Lighthing (PTL) precision types to corresponding PyTorch parameter data type.
 
