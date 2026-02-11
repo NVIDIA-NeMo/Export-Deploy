@@ -21,7 +21,7 @@ This section explains how to deploy [Megatron-Bridge](https://github.com/NVIDIA-
 3. Using a Megatron-Bridge model, run the following deployment script to verify that everything is working correctly. The script directly serves the Megatron-Bridge model on the Triton server:
 
    ```shell
-   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge --triton_model_name llama
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge/iter_0000000/ --triton_model_name llama
    ```
 
 4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (for example, gradually by 50%).
@@ -56,7 +56,7 @@ Executing the script will directly deploy the Megatron-Bridge LLM model and star
 2. To begin serving the downloaded model, run the following script:
 
    ```shell
-   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge --triton_model_name llama
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge/iter_0000000/ --triton_model_name llama
    ```
 
    The following parameters are defined in the ``deploy_inframework_triton.py`` script:
