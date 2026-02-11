@@ -27,23 +27,15 @@ This section shows how to use scripts and APIs to export a [NeMo AutoModel](http
       --tensor_parallelism_size 1
    ```
 
-3. Install TensorRT-LLM by executing the following command inside the container:
+3. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
 
-   ```shell
-   cd /opt/Export-Deploy
-   uv sync --inexact --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
-
-   ```
-
-4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
-
-5. In a separate terminal, access the running container as follows:
+4. In a separate terminal, access the running container as follows:
 
    ```shell
    docker exec -it nemo-fw bash
    ```
 
-6. To send a query to the Triton server, run the following script:
+5. To send a query to the Triton server, run the following script:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/query.py -mn llama -p "What is the color of a banana?" -mol 5

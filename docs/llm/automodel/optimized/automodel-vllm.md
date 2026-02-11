@@ -15,14 +15,7 @@ This section shows how to use scripts and APIs to export a [NeMo AutoModel](http
       nvcr.io/nvidia/nemo:vr
    ```
 
-2. Install vLLM by executing the following command inside the container:
-
-   ```shell
-   cd /opt/Export-Deploy
-   uv sync --inexact --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
-   ```
-
-3. Run the following deployment script to verify that everything is working correctly. The script exports the Llama NeMo checkpoint to vLLM and subsequently serves it on the Triton server:
+2. Run the following deployment script to verify that everything is working correctly. The script exports the Llama NeMo checkpoint to vLLM and subsequently serves it on the Triton server:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
@@ -30,15 +23,15 @@ This section shows how to use scripts and APIs to export a [NeMo AutoModel](http
        --triton_model_name llama   
    ```
 
-5. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
+3. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
 
-6. In a separate terminal, access the running container as follows:
+4. In a separate terminal, access the running container as follows:
 
    ```shell
    docker exec -it nemo-fw bash
    ```
 
-7. To send a query to the Triton server, run the following script:
+5. To send a query to the Triton server, run the following script:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/query_vllm.py -mn llama -p "The capital of Canada is" -mat 50
