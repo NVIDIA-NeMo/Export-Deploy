@@ -15,10 +15,13 @@
 
 import os
 from typing import Literal, Optional, Union
+import json
+import importlib.util
+import sys
 
 import torch
 import torch.nn.functional as F
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoConfig, AutoModel, AutoTokenizer
 
 
 class LlamaBidirectionalHFAdapter(torch.nn.Module):
@@ -234,6 +237,28 @@ def get_llama_bidirectional_hf_model(
         pooling_mode = "last__right"  # type: ignore
     if pooling_mode == "cls" and tokenizer.padding_side == "left":
         pooling_mode = "cls__left"  # type: ignore
+
+    cfg = AutoConfig.from_pretrained(model_name_or_path, trust_remote_code=trust_remote_code)
+    ConfigCls = cfg.__class__
+
+    config_path = os.path.join(model_name_or_path, "config.json")
+    with open(config_path, "r", encoding="utf-8") as f:
+        config_json = json.load(f)
+
+    class_name = config_json["auto_map"]["AutoModel"]
+
+    module_path, class_basename = class_name.rsplit('.', 1)
+    module_file = os.path.join(model_name_or_path, *module_path.split('.')) + ".py"
+
+    spec = importlib.util.spec_from_file_location(module_path, module_file)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_path] = module
+    spec.loader.exec_module(module)
+    ModelClass = getattr(module, class_basename)
+
+    
+    AutoConfig.register(cfg.model_type, ConfigCls)
+    AutoModel.register(ConfigCls, ModelClass)
 
     # load the model
     model = AutoModel.from_pretrained(
