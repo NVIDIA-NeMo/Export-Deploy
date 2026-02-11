@@ -123,7 +123,7 @@ You can use the APIs in the export module to export a Megatron-Bridge checkpoint
 ```python
 from nemo_export.vllm_exporter import vLLMExporter
 
-checkpoint_file = "/opt/checkpoints/hf_llama31_8B_mbridge"
+checkpoint_file = "/opt/checkpoints/hf_llama31_8B_mbridge/iter_0000000/"
 
 exporter = vLLMExporter()
 exporter.export(
