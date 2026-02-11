@@ -31,7 +31,6 @@ This section shows how to use scripts and APIs to export a Megatron-Bridge LLM t
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
        --model_path_id /opt/checkpoints/hf_llama31_8B_mbridge/iter_0000000/  \
-       --model_format megatron_bridge \
        --triton_model_name llama \
        --tensor_parallelism_size 1
    ```
