@@ -121,25 +121,31 @@ Up until now, we have used scripts for exporting and deploying LLM models. Howev
 You can use the APIs in the export module to export a Megatron-Bridge checkpoint to vLLM. The following code example assumes the ``hf_llama31_8B_mbridge`` checkpoint has already been downloaded and generated at the ``/opt/checkpoints/`` path.
 
 ```python
-from nemo_export.vllm_exporter import vLLMExporter
+def run_test():
+    from nemo_export.vllm_exporter import vLLMExporter
 
-checkpoint_file = "/opt/checkpoints/hf_llama31_8B_mbridge/iter_0000000/"
+    checkpoint_file = "/opt/checkpoints/hf_llama31_8B_mbridge/iter_0000000/"
 
-exporter = vLLMExporter()
-exporter.export(
-    model_path_id=checkpoint_file,
-    tensor_parallel_size=1,
-)
+    exporter = vLLMExporter()
+    exporter.export(
+        model_path_id=checkpoint_file,
+        tensor_parallel_size=1,
+    )
 
-# The correct argument for output length is 'max_tokens', not 'max_output_len'
-output = exporter.forward(
-    ["What is the best city in the world?"],
-    max_tokens=50,
-    top_k=1,
-    top_p=0.0,
-    temperature=1.0,
-)
-print("output: ", output)
+    # The correct argument for output length is 'max_tokens', not 'max_output_len'
+    output = exporter.forward(
+        ["What is the best city in the world?"],
+        max_tokens=50,
+        top_k=1,
+        top_p=0.1,
+        temperature=1.0,
+    )
+    print("output: ", output)
+
+
+
+if __name__ == "__main__":
+    run_test()
 ```
 
 Be sure to check the vLLMExporter class docstrings for details.
