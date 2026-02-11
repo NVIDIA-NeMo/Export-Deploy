@@ -21,7 +21,7 @@ This section explains how to deploy [Megatron-Bridge](https://github.com/NVIDIA-
 3. Using a Megatron-Bridge model, run the following deployment script to verify that everything is working correctly. The script directly serves the Megatron-Bridge model on the Triton server:
 
    ```shell
-   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge --triton_model_name llama --model_format megatron
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge --triton_model_name llama
    ```
 
 4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (for example, gradually by 50%).
@@ -47,7 +47,6 @@ You can deploy an LLM from a Megatron-Bridge checkpoint on Triton using the prov
 The following instructions are very similar to those for [deploying NeMo 2.0 models](../nemo_2/in-framework.md), with only a few key differences specific to Megatron-Bridge highlighted below.
 
 - Use the `--megatron_checkpoint` argument to specify your Megatron-Bridge checkpoint file.
-- Set `--model_format megatron` to indicate the model type.
 
 
 Executing the script will directly deploy the Megatron-Bridge LLM model and start the service on Triton.
@@ -57,13 +56,12 @@ Executing the script will directly deploy the Megatron-Bridge LLM model and star
 2. To begin serving the downloaded model, run the following script:
 
    ```shell
-   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge --triton_model_name llama --model_format megatron
+   python /opt/Export-Deploy/scripts/deploy/nlp/deploy_inframework_triton.py --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge --triton_model_name llama
    ```
 
    The following parameters are defined in the ``deploy_inframework_triton.py`` script:
 
    - ``-nc``, ``--megatron_checkpoint``: Path to the Megatron-Bridge checkpoint file to deploy. (Required)
-   - ``-mf``, ``--model_format``: Whether to load megatron-bridge or nemo 2 model. This should be set to megatron.
    - ``-tmn``, ``--triton_model_name``: Name to register the model under in Triton. (Required)
    - ``-tmv``, ``--triton_model_version``: Version number for the model in Triton. Default: 1
    - ``-sp``, ``--server_port``: Port for the REST server to listen for requests. Default: 8080
