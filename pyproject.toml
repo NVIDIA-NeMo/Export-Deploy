@@ -13,7 +13,7 @@
 # limitations under the License.
 
 [build-system]
-requires = ["setuptools>=42", "wheel", "cython>=3.0.0"]
+requires = ["setuptools>=42", "wheel", "cython>=3.0.0", "torch"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -136,6 +136,9 @@ default-groups = ["linting", "build", "test"]
 link-mode = "copy"
 conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }, { extra = "trt-onnx" }]]
 override-dependencies = [
+    "torch; sys_platform == 'never'",
+    "torchvision; sys_platform == 'never'",
+    "triton; sys_platform == 'never'",
     "urllib3>1.27.0",
     "tiktoken>=0.9.0",                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
