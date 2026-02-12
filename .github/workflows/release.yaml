@@ -54,7 +54,7 @@ jobs:
       skip-test-wheel: true
       custom-container: nvcr.io/nvidia/pytorch:25.11-py3
       no-build-isolation: true
-      runner: linux-amd64-cpu16
+      runner: nemo-ci-aws-gpu-x2-container
     secrets:
       TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
