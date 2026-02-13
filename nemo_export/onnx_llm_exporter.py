@@ -21,6 +21,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import numpy as np
 import torch
 import wrapt
+from datasets import load_dataset
 from transformers import AutoModel, AutoTokenizer
 
 from nemo_deploy import ITritonDeployable
@@ -535,3 +536,25 @@ class OnnxLLMExporter(ITritonDeployable):
     def triton_infer_fn(self, **inputs: np.ndarray):
         """PyTriton inference function."""
         raise NotImplementedError("This function will be implemented later.")
+
+
+def get_calib_data_iter(
+    data: str = "cnn_dailymail", batch_size: int = 64, calib_size: int = 512, max_sequence_length: int = 512
+):
+    """Creates a sample data iterator for calibration."""
+    if data == "wikitext":
+        dataset = load_dataset("wikitext", "wikitext-103-v1", split="train")
+        text_column = "text"
+    elif data == "cnn_dailymail":
+        dataset = load_dataset("cnn_dailymail", name="3.0.0", split="train")
+        text_column = "article"
+    else:
+        # Assume a local JSON dataset with a column named "text"
+        dataset = load_dataset("json", data_files=data, split="train")
+        text_column = "text"
+    calib_size = max(min(len(dataset), calib_size), batch_size)
+    for i in range(calib_size // batch_size):
+        batch = dataset[i * batch_size : (i + 1) * batch_size][text_column]
+        for j in range(len(batch)):
+            batch[j] = batch[j][:max_sequence_length]
+        yield batch
