@@ -19,12 +19,12 @@ from functools import partial
 
 import tensorrt as trt
 import torch
+from tqdm import tqdm
+
 from nemo_export.model_adapters.embedding.embedding_adapter import (
     get_llama_bidirectional_hf_model,
 )
-from tqdm import tqdm
-
-from nemo_export.onnx_llm_exporter import get_calib_data_iter, OnnxLLMExporter
+from nemo_export.onnx_llm_exporter import OnnxLLMExporter, get_calib_data_iter
 
 
 def get_args():
