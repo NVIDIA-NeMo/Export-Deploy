@@ -32,7 +32,6 @@ from nemo_export.utils import (
 )
 from nemo_export_deploy_common.import_utils import (
     MISSING_MODELOPT_MSG,
-    MISSING_NEMO_MSG,
     MISSING_TENSORRT_MSG,
     UnavailableError,
 )
