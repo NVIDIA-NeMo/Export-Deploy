@@ -15,6 +15,9 @@
 #!/bin/bash
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
+# onnx export only works with an older transformers version
+pushd .. && uv pip install transformers==4.51.3 && popd
+
 export CUDA_VISIBLE_DEVICES="0,1"
 
 coverage run \
