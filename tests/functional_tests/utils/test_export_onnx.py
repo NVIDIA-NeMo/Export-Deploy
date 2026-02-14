@@ -13,19 +13,18 @@
 # limitations under the License.
 
 import argparse
+import logging
 import os
 from functools import partial
 
 import tensorrt as trt
 import torch
-from nemo.collections.llm.gpt.model.hf_llama_embedding import (
-    get_llama_bidirectional_hf_model,
-)
-from nemo.collections.llm.modelopt.quantization.quantizer import get_calib_data_iter
-from nemo.utils import logging
 from tqdm import tqdm
 
-from nemo_export.onnx_llm_exporter import OnnxLLMExporter
+from nemo_export.model_adapters.embedding.embedding_adapter import (
+    get_llama_bidirectional_hf_model,
+)
+from nemo_export.onnx_llm_exporter import OnnxLLMExporter, get_calib_data_iter
 
 
 def get_args():
