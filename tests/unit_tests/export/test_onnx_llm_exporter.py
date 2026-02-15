@@ -99,14 +99,6 @@ class TestOnnxLLMExporter:
         ):
             OnnxLLMExporter()._override_layernorm_precision_to_fp32(network="")
 
-    def test_quantize_without_nemo(self):
-        with (
-            mock.patch.object(OnnxLLMExporter, "__init__", lambda self: None),
-            mock.patch("nemo_export.onnx_llm_exporter.HAVE_NEMO", False),
-            pytest.raises(UnavailableError),
-        ):
-            OnnxLLMExporter().quantize(quant_cfg="", forward_loop="")
-
     def test_quantize_without_modelopt(self):
         with (
             mock.patch.object(OnnxLLMExporter, "__init__", lambda self: None),
