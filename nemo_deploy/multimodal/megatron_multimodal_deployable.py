@@ -18,7 +18,7 @@ from typing import List, Optional
 
 import numpy as np
 import torch
-from megatron.core.inference.common_inference_params import CommonInferenceParams
+from megatron.core.inference.sampling_params import SamplingParams
 from PIL import Image
 
 from nemo_deploy import ITritonDeployable
@@ -113,7 +113,7 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         self,
         prompts: List[str],
         images: List[Image],
-        inference_params: Optional[CommonInferenceParams] = None,
+        inference_params: Optional[SamplingParams] = None,
         max_batch_size: int = 4,
         random_seed: Optional[int] = None,
         apply_chat_template: bool = False,
@@ -123,7 +123,7 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         Args:
             prompts (List[str]): A list of input strings.
             images (List[Union[Image, List[Image]]]): A list of input images.
-            inference_params (Optional[CommonInferenceParams]): Parameters for controlling the inference process.
+            inference_params (Optional[SamplingParams]): Parameters for controlling the inference process.
             max_batch_size (int): max batch size for inference. Defaults to 4.
             random_seed (Optional[int]): random seed for inference. Defaults to None.
             apply_chat_template (bool): Whether to apply chat template. Defaults to False.
@@ -143,7 +143,7 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             processor=self.processor,
             max_batch_size=max_batch_size,
             random_seed=random_seed,
-            inference_params=inference_params,
+            sampling_params=inference_params,
         )
 
         return results
@@ -277,7 +277,7 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             top_k = 1
             top_p = 0.0
 
-        inference_params = CommonInferenceParams(
+        inference_params = SamplingParams(
             temperature=float(temperature),
             top_k=int(top_k),
             top_p=float(top_p),
