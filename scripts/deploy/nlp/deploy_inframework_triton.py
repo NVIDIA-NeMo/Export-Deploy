@@ -141,6 +141,18 @@ def get_args(argv):
         help="Distributes MoE Experts across sub data parallel dimension.",
     )
     parser.add_argument(
+        "--expert_tensor_parallel_size",
+        type=int,
+        default=1,
+        help="Size of the expert tensor model parallelism",
+    )
+    parser.add_argument(
+        "--sequence_parallel",
+        default=False,
+        action=argparse.BooleanOptionalAction,
+        help="Enable sequence parallelism",
+    )
+    parser.add_argument(
         "-eps",
         "--account_for_embedding_in_pipeline_split",
         default=False,
@@ -257,6 +269,8 @@ def nemo_deploy(argv):
         pipeline_model_parallel_size=args.pipeline_model_parallel_size,
         inference_max_seq_length=args.inference_max_seq_length,
         context_parallel_size=args.context_parallel_size,
+        expert_tensor_parallel_size=args.expert_tensor_parallel_size,
+        sequence_parallel=args.sequence_parallel,
         max_batch_size=args.max_batch_size,
         enable_flash_decode=args.enable_flash_decode,
         enable_cuda_graphs=args.enable_cuda_graphs,
