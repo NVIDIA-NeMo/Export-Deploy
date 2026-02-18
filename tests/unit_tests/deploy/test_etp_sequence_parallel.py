@@ -30,7 +30,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -122,9 +121,7 @@ class TestDeployRayETPSequenceParallel(unittest.TestCase):
     @patch("nemo_deploy.deploy_ray.MegatronRayDeployable")
     @patch("nemo_deploy.deploy_ray.signal.signal")
     @patch("nemo_deploy.deploy_ray.DeployRay._start")
-    def test_deploy_inframework_default_etp_and_sp(
-        self, mock_start, mock_signal, mock_megatron, mock_serve, mock_ray
-    ):
+    def test_deploy_inframework_default_etp_and_sp(self, mock_start, mock_signal, mock_megatron, mock_serve, mock_ray):
         """Defaults: expert_tensor_parallel_size=1, sequence_parallel=False."""
         from nemo_deploy.deploy_ray import DeployRay
 
