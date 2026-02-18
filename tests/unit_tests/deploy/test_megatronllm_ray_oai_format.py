@@ -41,7 +41,14 @@ def mock_ray_deployment():
         # Call the actual completions method with self=deployment
         return await actual_class.completions(deployment, request)
 
+    async def mock_chat_completions(request):
+        from nemo_deploy.llm.megatronllm_deployable_ray import MegatronRayDeployable
+
+        actual_class = MegatronRayDeployable.func_or_class
+        return await actual_class.chat_completions(deployment, request)
+
     deployment.completions = mock_completions
+    deployment.chat_completions = mock_chat_completions
     yield deployment
 
 
@@ -526,3 +533,138 @@ def test_completions_usage_token_counts(mock_ray_deployment):
         assert usage["prompt_tokens"] > 0
         assert usage["completion_tokens"] > 0
         assert usage["total_tokens"] > 0
+
+
+# --- Stop words tests for completions endpoint ---
+@pytest.mark.run_only_on("GPU")
+def test_completions_stop_words_list_passed_to_inference(mock_ray_deployment):
+    """Test that a list of stop words from the request is forwarded to inference inputs."""
+    request = {
+        "prompt": "Hello world",
+        "max_tokens": 10,
+        "stop": ["foo", "bar"],
+    }
+
+    mock_results = {"sentences": ["Generated text"]}
+
+    with patch("ray.get", return_value=mock_results):
+        asyncio.run(mock_ray_deployment.completions(request))
+
+        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
+        assert inference_inputs["stop_words"] == ["foo", "bar"]
+
+
+@pytest.mark.run_only_on("GPU")
+def test_completions_stop_words_string_converted_to_list(mock_ray_deployment):
+    """Test that a single stop word string is converted to a list."""
+    request = {
+        "prompt": "Hello world",
+        "max_tokens": 10,
+        "stop": "end_token",
+    }
+
+    mock_results = {"sentences": ["Generated text"]}
+
+    with patch("ray.get", return_value=mock_results):
+        asyncio.run(mock_ray_deployment.completions(request))
+
+        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
+        assert inference_inputs["stop_words"] == ["end_token"]
+
+
+@pytest.mark.run_only_on("GPU")
+def test_completions_stop_words_none_when_absent(mock_ray_deployment):
+    """Test that stop_words is None when not provided in the request."""
+    request = {
+        "prompt": "Hello world",
+        "max_tokens": 10,
+    }
+
+    mock_results = {"sentences": ["Generated text"]}
+
+    with patch("ray.get", return_value=mock_results):
+        asyncio.run(mock_ray_deployment.completions(request))
+
+        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
+        assert inference_inputs["stop_words"] is None
+
+
+# --- Stop words tests for chat completions endpoint ---
+@pytest.mark.run_only_on("GPU")
+def test_chat_completions_stop_words_list_passed_to_inference(mock_ray_deployment):
+    """Test that a list of stop words from the chat request is forwarded to inference inputs."""
+    request = {
+        "messages": [{"role": "user", "content": "Hello"}],
+        "max_tokens": 10,
+        "stop": ["foo", "bar"],
+    }
+
+    mock_results = {"sentences": ["Generated reply"]}
+
+    with patch("ray.get", return_value=mock_results):
+        asyncio.run(mock_ray_deployment.chat_completions(request))
+
+        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
+        assert inference_inputs["stop_words"] == ["foo", "bar"]
+
+
+@pytest.mark.run_only_on("GPU")
+def test_chat_completions_stop_words_string_converted_to_list(mock_ray_deployment):
+    """Test that a single stop word string is converted to a list in chat completions."""
+    request = {
+        "messages": [{"role": "user", "content": "Hello"}],
+        "max_tokens": 10,
+        "stop": "end_token",
+    }
+
+    mock_results = {"sentences": ["Generated reply"]}
+
+    with patch("ray.get", return_value=mock_results):
+        asyncio.run(mock_ray_deployment.chat_completions(request))
+
+        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
+        assert inference_inputs["stop_words"] == ["end_token"]
+
+
+@pytest.mark.run_only_on("GPU")
+def test_chat_completions_stop_words_none_when_absent(mock_ray_deployment):
+    """Test that stop_words is None when not provided in the chat request."""
+    request = {
+        "messages": [{"role": "user", "content": "Hello"}],
+        "max_tokens": 10,
+    }
+
+    mock_results = {"sentences": ["Generated reply"]}
+
+    with patch("ray.get", return_value=mock_results):
+        asyncio.run(mock_ray_deployment.chat_completions(request))
+
+        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
+        assert inference_inputs["stop_words"] is None
+
+
+@pytest.mark.run_only_on("GPU")
+def test_chat_completions_output_format_with_stop_words(mock_ray_deployment):
+    """Test that chat completions output format is correct when stop words are provided."""
+    request = {
+        "messages": [{"role": "user", "content": "Hello"}],
+        "max_tokens": 50,
+        "stop": ["<|end|>"],
+    }
+
+    mock_results = {"sentences": ["Hi there! How can I help?"]}
+
+    with patch("ray.get", return_value=mock_results):
+        output = asyncio.run(mock_ray_deployment.chat_completions(request))
+
+        assert output["object"] == "chat.completion"
+        assert output["model"] == "megatron-model"
+        assert output["id"].startswith("chatcmpl-")
+
+        choice = output["choices"][0]
+        assert choice["message"]["role"] == "assistant"
+        assert isinstance(choice["message"]["content"], str)
+        assert choice["index"] == 0
+        assert choice["finish_reason"] in ["stop", "length"]
+
+        assert "usage" in output
