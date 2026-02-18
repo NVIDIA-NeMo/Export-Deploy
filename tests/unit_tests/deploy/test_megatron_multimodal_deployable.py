@@ -179,7 +179,7 @@ class TestMegatronMultimodalDeployable:
                     processor=deployable.processor,
                     max_batch_size=2,
                     random_seed=42,
-                    inference_params=inference_params,
+                    sampling_params=inference_params,
                 )
 
                 assert len(results) == 2
@@ -205,7 +205,7 @@ class TestMegatronMultimodalDeployable:
                 processor=deployable.processor,
                 max_batch_size=4,
                 random_seed=None,
-                inference_params=None,
+                sampling_params=None,
             )
 
     def test_get_triton_input(self, deployable):
