@@ -81,6 +81,7 @@ except (ImportError, ModuleNotFoundError):
     GPTConfig = Any
     T5Config = Any
     MCoreTokenizerWrappper = Any
+    set_modelopt_spec_if_exists_in_ckpt = None
 
 LOGGER = logging.getLogger("NeMo")
 
