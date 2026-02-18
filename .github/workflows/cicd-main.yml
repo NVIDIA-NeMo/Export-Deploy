@@ -101,7 +101,6 @@ jobs:
       && !cancelled()
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.script }}
-    environment: nemo-ci
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -143,7 +142,6 @@ jobs:
       && !cancelled()
     runs-on: ${{ matrix.runner }}
     name: ${{ matrix.script }}
-    environment: nemo-ci
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -184,7 +182,6 @@ jobs:
         || needs.pre-flight.outputs.force_run_all == 'true'
       )
       && !cancelled()
-    environment: nemo-ci
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -210,7 +207,6 @@ jobs:
     needs: [cicd-unit-tests-trtllm, pre-flight]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
-    environment: nemo-ci
     if: |
       (
         success()
@@ -245,7 +241,6 @@ jobs:
     needs: [cicd-unit-tests-vllm, pre-flight]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
-    environment: nemo-ci
     if: |
       (
         success()
@@ -278,7 +273,6 @@ jobs:
     needs: [pre-flight, cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
-    environment: nemo-ci
     if: |
       (
         success()
@@ -359,7 +353,6 @@ jobs:
       )
       && needs.pre-flight.outputs.is_ci_workload == 'false'
       && !cancelled()
-    environment: nemo-ci
     steps:
       - name: Generate fake coverage report
         uses: actions/github-script@v6
