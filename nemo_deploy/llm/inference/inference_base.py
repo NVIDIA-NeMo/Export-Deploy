@@ -78,6 +78,7 @@ except (ImportError, ModuleNotFoundError):
     HAVE_NEMO = False
     from typing import Any
 
+    io = None
     GPTConfig = Any
     T5Config = Any
     MCoreTokenizerWrappper = Any
