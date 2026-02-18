@@ -83,6 +83,8 @@ except (ImportError, ModuleNotFoundError):
     T5Config = Any
     MCoreTokenizerWrappper = Any
     set_modelopt_spec_if_exists_in_ckpt = None
+    ckpt_to_weights_subdir = None
+    ckpt_to_context_subdir = None
 
 LOGGER = logging.getLogger("NeMo")
 

@@ -286,7 +286,7 @@ class TestSetupModelETPSequenceParallel(unittest.TestCase):
             patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True),
             patch("nemo_deploy.llm.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt"),
             patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init"),
-            patch("nemo_deploy.llm.inference.inference_base.io.load_context"),
+            patch("nemo_deploy.llm.inference.inference_base.io", new_callable=MagicMock),
             patch("nemo_deploy.llm.inference.inference_base.check_is_distributed_checkpoint"),
             patch("nemo_deploy.llm.inference.inference_base.ckpt_to_weights_subdir"),
             patch("nemo_deploy.llm.inference.inference_base.ckpt_to_context_subdir"),
@@ -318,7 +318,7 @@ class TestSetupModelETPSequenceParallel(unittest.TestCase):
             _have_nemo,
             _set_modelopt,
             _torch_dist,
-            mock_load_ctx,
+            mock_io,
             mock_check_dist,
             _weights,
             _context,
@@ -330,7 +330,7 @@ class TestSetupModelETPSequenceParallel(unittest.TestCase):
         ) = mocks
 
         ctx, cfg = self._build_context()
-        mock_load_ctx.return_value = ctx
+        mock_io.load_context.return_value = ctx
         mock_check_dist.return_value = True
         mock_get_model.return_value = [MagicMock()]
         mock_peel.return_value = MagicMock()
@@ -355,7 +355,7 @@ class TestSetupModelETPSequenceParallel(unittest.TestCase):
             _have_nemo,
             _set_modelopt,
             _torch_dist,
-            mock_load_ctx,
+            mock_io,
             mock_check_dist,
             _weights,
             _context,
@@ -367,7 +367,7 @@ class TestSetupModelETPSequenceParallel(unittest.TestCase):
         ) = mocks
 
         ctx, cfg = self._build_context()
-        mock_load_ctx.return_value = ctx
+        mock_io.load_context.return_value = ctx
         mock_check_dist.return_value = True
         mock_get_model.return_value = [MagicMock()]
         mock_peel.return_value = MagicMock()
@@ -394,12 +394,19 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
     @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
-    def test_etp_defaults_to_1_when_none(self, mock_engine_cls, mock_setup):
+    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
+    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
+    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
+    def test_etp_defaults_to_1_when_none(
+        self, mock_tgc, mock_ctx, mock_wrapper, mock_cleanup, mock_engine_cls, mock_setup
+    ):
         """expert_tensor_parallel_size=None is normalised to 1 before forwarding."""
         from nemo_deploy.llm.inference.inference_base import create_mcore_engine
 
         mock_setup.return_value = ([MagicMock()], MagicMock())
         mock_engine_cls.return_value = MagicMock()
+        mock_cleanup.return_value = MagicMock()
 
         create_mcore_engine(path=Path("/fake"), model_format="nemo", expert_tensor_parallel_size=None)
 
@@ -409,12 +416,19 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
     @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
-    def test_sp_defaults_to_1_when_none(self, mock_engine_cls, mock_setup):
+    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
+    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
+    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
+    def test_sp_defaults_to_1_when_none(
+        self, mock_tgc, mock_ctx, mock_wrapper, mock_cleanup, mock_engine_cls, mock_setup
+    ):
         """sequence_parallel=None is normalised to 1 before forwarding."""
         from nemo_deploy.llm.inference.inference_base import create_mcore_engine
 
         mock_setup.return_value = ([MagicMock()], MagicMock())
         mock_engine_cls.return_value = MagicMock()
+        mock_cleanup.return_value = MagicMock()
 
         create_mcore_engine(path=Path("/fake"), model_format="nemo", sequence_parallel=None)
 
@@ -424,12 +438,19 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
     @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
-    def test_explicit_etp_passed_through(self, mock_engine_cls, mock_setup):
+    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
+    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
+    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
+    def test_explicit_etp_passed_through(
+        self, mock_tgc, mock_ctx, mock_wrapper, mock_cleanup, mock_engine_cls, mock_setup
+    ):
         """An explicit expert_tensor_parallel_size value is forwarded unchanged."""
         from nemo_deploy.llm.inference.inference_base import create_mcore_engine
 
         mock_setup.return_value = ([MagicMock()], MagicMock())
         mock_engine_cls.return_value = MagicMock()
+        mock_cleanup.return_value = MagicMock()
 
         create_mcore_engine(path=Path("/fake"), model_format="nemo", expert_tensor_parallel_size=4)
 
@@ -439,12 +460,19 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
     @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
-    def test_explicit_sp_passed_through(self, mock_engine_cls, mock_setup):
+    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
+    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
+    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
+    def test_explicit_sp_passed_through(
+        self, mock_tgc, mock_ctx, mock_wrapper, mock_cleanup, mock_engine_cls, mock_setup
+    ):
         """An explicit sequence_parallel=True value is forwarded unchanged."""
         from nemo_deploy.llm.inference.inference_base import create_mcore_engine
 
         mock_setup.return_value = ([MagicMock()], MagicMock())
         mock_engine_cls.return_value = MagicMock()
+        mock_cleanup.return_value = MagicMock()
 
         create_mcore_engine(path=Path("/fake"), model_format="nemo", sequence_parallel=True)
 
