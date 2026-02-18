@@ -166,7 +166,7 @@ def test_generate_other_ranks_continue_processing(deployable):
         # Mock broadcast_list returns
         mock_broadcast_list.side_effect = [
             ["test prompt"],  # prompts
-            [1.0, 1, 0.0, 256, False],  # inference parameters
+            [1.0, 1, 0.0, 256, False, None],  # inference parameters (incl. stop_words)
         ]
 
         deployable.generate_other_ranks()
@@ -843,6 +843,7 @@ def test_ray_infer_fn_basic(deployable):
             text_only=True,
             top_logprobs=0,
             echo=False,
+            stop_words=None,
         )
 
 
@@ -871,6 +872,7 @@ def test_ray_infer_fn_with_defaults(deployable):
             text_only=True,
             top_logprobs=0,
             echo=False,
+            stop_words=None,
         )
 
 
@@ -979,4 +981,5 @@ def test_ray_infer_fn_all_parameters(deployable):
             text_only=True,
             top_logprobs=0,
             echo=False,
+            stop_words=None,
         )
