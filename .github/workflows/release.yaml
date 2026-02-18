@@ -30,6 +30,16 @@ on:
         required: true
         default: true
         type: boolean
+      generate-changelog:
+        description: Generate changelog
+        required: false
+        default: true
+        type: boolean
+      publish-docs:
+        description: Publish docs
+        required: false
+        default: true
+        type: boolean
       version-bump-branch:
         description: Branch for version bump
         required: true
@@ -55,6 +65,9 @@ jobs:
       custom-container: nvcr.io/nvidia/pytorch:25.11-py3
       no-build-isolation: true
       runner: nemo-ci-aws-gpu-x2-container
+      gh-release-use-changelog-builder: ${{ inputs.generate-changelog }}
+      publish-docs: ${{ inputs.publish-docs }}
+      docs-target-path: nemo/export-deploy
     secrets:
       TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
