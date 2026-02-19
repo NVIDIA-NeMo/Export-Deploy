@@ -4,21 +4,11 @@ The Export-Deploy library provides comprehensive tools and APIs for exporting an
 
 ## Overview
 
-The Export-Deploy library enables seamless conversion of LLMs from various checkpoint formats into optimized inference engines, supporting both single-GPU, multi-GPU and multi-node deployments. Whether you're working with NeMo 2.0 models, Megatron Bridge, Hugging Face models, or other formats, the library provides unified APIs for model export and deployment.
+The Export-Deploy library enables seamless conversion of LLMs from various checkpoint formats into optimized inference engines, supporting both single-GPU, multi-GPU and multi-node deployments. Whether you're working with Megatron Bridge, Hugging Face models, or other formats, the library provides unified APIs for model export and deployment.
 
 ## Supported Model/Checkpoint Formats
 
 The library supports several checkpoint formats, each with specific capabilities and deployment options:
-
-
-### NeMo 2.0 Model/Checkpoints
-
-[NeMo 2.0](https://github.com/NVIDIA-NeMo/NeMo) represents the current checkpoint format from the NeMo Framework, storing all model-related files in a directory structure rather than a single archive file. NeMo 2.0 model format will be deprecated soon.
-
-**Supported Export and Deployment Paths:**
-- Model deployment with Triton and Ray Serve
-- TensorRT-LLM export and deployment with Triton and Ray Serve
-- vLLM export and deployment with Triton
 
 
 ### Megatron Bridge Model/Checkpoints

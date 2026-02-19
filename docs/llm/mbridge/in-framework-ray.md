@@ -50,12 +50,3 @@ This section demonstrates how to deploy [Megatron-Bridge](https://github.com/NVI
       --host 0.0.0.0 \
       --port 1024
    ```
-
-## Detailed Deployment Guide
-
-Deploying Megatron-Bridge models with Ray Serve closely follows the same process as deploying NeMo 2.0 models. The primary differences are:
-
-- Use the `--megatron_checkpoint` argument to specify your Megatron-Bridge checkpoint file.
-- Set `--model_format megatron` to indicate the model type.
-
-All other deployment steps, parameters, and Ray Serve features remain the same as for NeMo 2.0 LLMs. For a comprehensive walkthrough of advanced options, scaling, and troubleshooting, refer to the [Deploy NeMo 2.0 LLMs with Ray Serve](../nemo_2/in-framework-ray.md) documentation.
