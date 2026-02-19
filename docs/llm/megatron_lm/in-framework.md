@@ -42,11 +42,4 @@ You can deploy an LLM from a Megatron-Bridge checkpoint on Triton using the prov
 
 ### Deploy a Megatron-Bridge LLM Model
 
-The following instructions are very similar to those for [deploying NeMo 2.0 models](../nemo_2/in-framework.md), with only a few key differences specific to Megatron-Bridge highlighted below.
-
-- Use the `--megatron_checkpoint` argument to specify your Megatron-Bridge checkpoint file.
-- Set `--model_format megatron` to indicate the model type.
-- Set `--model_type` to gpt.
-
-
-For more detailed instructions and additional information, please consult the [Megatron-Bridge documentation](../mbridge/in-framework.md).
+The following instructions are very similar to those for [deploying Megatron Bridge models](../mbridge/in-framework.md), with only a few key differences specific to Megatron-Bridge highlighted below.

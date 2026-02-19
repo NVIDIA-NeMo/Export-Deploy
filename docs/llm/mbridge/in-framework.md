@@ -127,7 +127,7 @@ python /opt/Export-Deploy/scripts/deploy/nlp/query_inframework.py -mn llama -p "
 Please see the below if you would like to use APIs to send a query.
 
 ```python
-from nemo_deploy.nlp import NemoQueryLLMPyTorch
+from nemo_deploy.llm import NemoQueryLLMPyTorch
 
 nq = NemoQueryLLMPyTorch(url="localhost:8000", model_name="llama")
 output = nq.query_llm(

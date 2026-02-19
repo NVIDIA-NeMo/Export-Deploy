@@ -9,7 +9,6 @@
 :maxdepth: 5
 
 Export and Deploy LLMs <llm/index.md>
-NeMo 2.0 <llm/nemo_2/index.md>
 Megatron Bridge <llm/mbridge/index.md>
 Automodel (Hugging Face) <llm/automodel/index.md>
 Megatron LM <llm/megatron_lm/index.md>
@@ -21,7 +20,6 @@ Megatron LM <llm/megatron_lm/index.md>
 :maxdepth: 4
 
 Export and Deploy MMs <mm/index.md>
-NeMo 2.0 <mm/nemo_2/index.md>
 ```
 
 ```{toctree}

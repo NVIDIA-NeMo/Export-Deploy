@@ -28,9 +28,8 @@ The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for
 ## 🚀 Key Features
 
 - Support for Large Language Models (LLMs) and Multimodal Models (MMs)
-- Export NeMo and Hugging Face models to optimized inference formats including TensorRT-LLM and vLLM
-- Deploy NeMo and Hugging Face models using Ray Serve or NVIDIA Triton Inference Server
-- Export quantized NeMo models (FP8, etc)
+- Export Megatron-Brdige and Hugging Face models to optimized inference formats including TensorRT-LLM and vLLM
+- Deploy Megatron-Brdige and Hugging Face models using Ray Serve or NVIDIA Triton Inference Server
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
@@ -40,9 +39,6 @@ The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for
 
 | Model / Checkpoint                                                                              | TensorRT-LLM                                   | vLLM      | ONNX                        | TensorRT               |
 |-------------------------------------------------------------------------------------------------|:----------------------------------------------:|:---------:|:--------------------------:|:----------------------:|
-| [NeMo Framework - LLMs](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)              | bf16, fp8, int8 (PTQ, QAT), fp4 (Coming Soon)  | bf16      | N/A                        | N/A                    |
-| [NeMo Framework - MMs](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)       | bf16                                           | N/A       | N/A                        | N/A                    |
-| [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                            | Coming Soon                                    | Coming Soon | N/A                      | N/A                    |
 | [Hugging Face](https://huggingface.co/docs/transformers/en/index)                               | bf16                                           | bf16      | N/A                      | N/A                    |
 | [NIM Embedding](https://docs.nvidia.com/nim/nemo-retriever/text-embedding/latest/overview.html) | N/A                                            | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
 | [NIM Reranking](https://docs.nvidia.com/nim/nemo-retriever/text-reranking/latest/overview.html) | N/A                                            | N/A       | Coming Soon                | Coming Soon            |
@@ -57,9 +53,7 @@ Please note that not all large language models (LLMs) and multimodal models (MMs
 
 | Model / Checkpoint                                                                        | RayServe                                 | PyTriton                |
 |-------------------------------------------------------------------------------------------|------------------------------------------|-------------------------|
-| [NeMo Framework - LLMs](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html)        | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
-| [NeMo Framework - MMs](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html) | Coming Soon                              | Coming Soon             |
-| [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                      | Coming Soon                              | Coming Soon             |
+| [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                      | Limited                                  | Limited              |
 | [Hugging Face](https://huggingface.co/docs/transformers/en/index)                         | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
 | [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM)                                    | Single-Node Multi-GPU,<br>Multi-instance | Multi-Node Multi-GPU    |
 | [vLLM](https://github.com/vllm-project/vllm)                                              | N/A                                      | Single-Node Multi-GPU   |
@@ -70,8 +64,6 @@ Refer to the table below for an overview of optimized inference and deployment s
 
 | Model / Checkpoint           | TensorRT-LLM + Triton Inference Server | vLLM + Triton Inference Server | Direct Triton Inference Server |
 |------------------------------|:--------------------------------------:|:------------------------------:|:------------------------------:|
-| NeMo Framework - LLMs        | &#x2611;                              | &#x2611;                      | &#x2611;                      |
-| NeMo Framework - MMs         | &#x2611;                              | &#x2612;                      | &#x2612;                      |
 | Hugging Face                 | &#x2611;                              | &#x2611;                      | &#x2611;                      |
 
 ## 🔧 Install
@@ -188,282 +180,8 @@ Now proceed with the main installation:
 pip install --no-build-isolation .[trt-onnx]
 ```
 
-## 🚀 Get Started Quickly
 
-The following steps are based on a self-built [container](#build-with-dockerfile).
 
-### Generate a NeMo Checkpoint
-
-In order to run examples with NeMo models, a NeMo checkpoint is required. Please follow the steps below to generate a NeMo checkpoint.
-
-1. To access the Llama models, please visit the [Llama 3.2 Hugging Face page](https://huggingface.co/meta-llama/Llama-3.2-1B).
-
-2. Pull down and run the NeMo Framework Docker container image using the command shown below:
-
-   ```shell
-   docker run --gpus all -it --rm -p 8000:8000 \
-    --entrypoint bash \
-    --workdir /opt/Export-Deploy \
-    --shm-size=4g \
-    --gpus all \
-    -v ${PWD}:/opt/Export-Deploy \
-    nemo-export-deploy
-   ```
-
-3. Run the following command in the terminal and enter your Hugging Face access token to log in to Hugging Face:
-
-   ```shell
-   huggingface-cli login
-   ```
-
-4. Run the following Python code to generate the NeMo checkpoint:
-
-   ```python
-   from nemo.collections import llm
-   
-   # Example: Converting Hugging Face model to NeMo format
-   # See NeMo documentation for detailed instructions
-   ```
-
-## 🚀 Export and Deploy Examples
-
-The following examples demonstrate how to export and deploy Large Language Models (LLMs) using NeMo Export-Deploy. These examples cover both Hugging Face and NeMo model formats, showing how to export them to TensorRT-LLM and deploy using NVIDIA Triton Inference Server for high-performance inference.
-
-### Export and Deploy Hugging Face Models to TensorRT-LLM and Triton Inference Server
-
-Please note that Llama models require special access permissions from Meta. To use Llama models, you must first accept Meta's license agreement and obtain access credentials. For instructions on obtaining access, please refer to the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) below.
-
-```python
-from nemo_export.tensorrt_llm import TensorRTLLM
-from nemo_deploy import DeployPyTriton
-
-# Export model to TensorRT-LLM
-exporter = TensorRTLLM(model_dir="/tmp/hf_llama32_1B_hf")
-exporter.export_hf_model(
-    hf_model_path="/opt/checkpoints/hf_llama32_1B_hf",
-    tensor_parallelism_size=1,
-)
-
-# Generate output
-output = exporter.forward(
-    input_texts=["What is the color of a banana?"],
-    top_k=1,
-    top_p=0.0,
-    temperature=1.0,
-    max_output_len=20,
-)
-print("output: ", output)
-
-# Deploy to Triton
-nm = DeployPyTriton(model=exporter, triton_model_name="llama", http_port=8000)
-nm.deploy()
-nm.serve()
-```
-
-After running the code above, Triton Inference Server will start and begin serving the model. For instructions on how to query the deployed model and make inference requests, please refer to [Query Deployed Models](#-query-deployed-models).
-
-### Export and Deploy NeMo LLM Models to TensorRT-LLM and Triton Inference Server
-
-Before running the example below, ensure you have a NeMo checkpoint file. If you don't have a checkpoint yet, see the [section on generating NeMo checkpoints](#generate-a-nemo-checkpoint) for step-by-step instructions on creating one.
-
-```python
-from nemo_export.tensorrt_llm import TensorRTLLM
-from nemo_deploy import DeployPyTriton
-
-# Export model to TensorRT-LLM
-exporter = TensorRTLLM(model_dir="/tmp/llama32_1B_nemo")
-exporter.export(
-    nemo_checkpoint_path="/opt/checkpoints/llama32_1B_nemo",
-    tensor_parallelism_size=1,
-)
-
-# Generate output
-output = exporter.forward(
-    input_texts=["What is the color of a banana?"],
-    top_k=1,
-    top_p=0.0,
-    temperature=1.0,
-    max_output_len=20,
-)
-print("output: ", output)
-
-# Deploy to Triton
-nm = DeployPyTriton(model=exporter, triton_model_name="llama", http_port=8000)
-nm.deploy()
-nm.serve()
-```
-
-### Export and Deploy NeMo Models to vLLM and Triton Inference Server
-
-```python
-from nemo_export.vllm_exporter import vLLMExporter
-from nemo_deploy import DeployPyTriton
-
-# Export model to vLLM
-exporter = vLLMExporter()
-exporter.export(
-    nemo_checkpoint="/opt/checkpoints/llama32_1B_nemo",
-    model_dir="/tmp/llama32_1B_nemo",
-    tensor_parallel_size=1,
-)
-
-# Generate output
-output = exporter.forward(
-    input_texts=["What is the color of a banana?"],
-    top_k=1,
-    top_p=0.0,
-    temperature=1.0,
-    max_output_len=20,
-)
-print("output: ", output)
-
-# Deploy to Triton
-nm = DeployPyTriton(model=exporter, triton_model_name="llama", http_port=8000)
-nm.deploy()
-nm.serve()
-```
-
-### Deploy NeMo Models Directly with Triton Inference Server
-
-You can also deploy NeMo and Hugging Face models directly using Triton Inference Server without exporting to inference optimized libraries like TensorRT-LLM or vLLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
-
-```python
-from nemo_deploy import DeployPyTriton
-from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
-
-model = MegatronLLMDeployable(
-    nemo_checkpoint_filepath="/opt/checkpoints/llama32_1B_nemo",
-    num_devices=1,
-    num_nodes=1,
-)
-
-# Deploy to Triton
-nm = DeployPyTriton(model=model, triton_model_name="llama", http_port=8000)
-nm.deploy()
-nm.serve()
-```
-
-### Deploy Hugging Face Models Directly with Triton Inference Server
-
-You can also deploy NeMo and Hugging Face models directly using Triton Inference Server without exporting to inference optimized libraries like TensorRT-LLM or vLLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
-
-```python
-from nemo_deploy import DeployPyTriton
-from nemo_deploy.nlp.hf_deployable import HuggingFaceLLMDeploy
-
-model = HuggingFaceLLMDeploy(
-    hf_model_id_path="hf://meta-llama/Llama-3.2-1B",
-    device_map="auto",
-)
-
-# Deploy to Triton
-nm = DeployPyTriton(model=model, triton_model_name="llama", http_port=8000)
-nm.deploy()
-nm.serve()
-```
-
-### Export and Deploy Multimodal Models to TensorRT-LLM and Triton Inference Server
-
-```python
-from nemo_deploy import DeployPyTriton
-from nemo_export.tensorrt_mm_exporter import TensorRTMMExporter
-
-# Export multimodal model
-exporter = TensorRTMMExporter(model_dir="/path/to/export/dir", modality="vision")
-exporter.export(
-    visual_checkpoint_path="/path/to/model.nemo",
-    model_type="mllama",
-    llm_model_type="mllama",
-    tensor_parallel_size=1,
-)
-
-# Deploy to Triton
-nm = DeployPyTriton(model=exporter, triton_model_name="mllama", port=8000)
-nm.deploy()
-nm.serve()
-```
-
-### Deploy Megatron Multimodal Models Directly with Triton Inference Server
-
-You can also deploy Megatron multimodal models directly using Triton Inference Server without exporting to TensorRT-LLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
-
-```python
-from nemo_deploy import DeployPyTriton
-from nemo_deploy.multimodal import MegatronMultimodalDeployable
-
-model = MegatronMultimodalDeployable(
-    megatron_checkpoint_filepath="/path/to/model.nemo",
-    tensor_parallel_size=1,
-    pipeline_parallel_size=1,
-)
-
-# Deploy to Triton
-nm = DeployPyTriton(model=model, triton_model_name="qwen", http_port=8000)
-nm.deploy()
-nm.serve()
-```
-
-## 🔍 Query Deployed Models
-
-### Query TensorRT-LLM Models
-
-```python
-from nemo_deploy.nlp import NemoQueryLLM
-
-nq = NemoQueryLLM(url="localhost:8000", model_name="llama")
-output = nq.query_llm(
-    prompts=["What is the capital of France?"],
-    max_output_len=100,
-)
-print(output)
-```
-
-### Query TensorRT-LLM Multimodal Model
-
-```python
-from nemo_deploy.multimodal import NemoQueryMultimodal
-
-nq = NemoQueryMultimodal(url="localhost:8000", model_name="mllama", model_type="mllama")
-output = nq.query(
-    input_text="What is in this image?",
-    input_media="/path/to/image.jpg",
-    max_output_len=30,
-)
-print(output)
-```
-
-### Query Directly Deployed Megatron Multimodal Models
-
-For multimodal models deployed directly with `MegatronMultimodalDeployable`, use the `NemoQueryMultimodalPytorch` class:
-
-```python
-from nemo_deploy.multimodal import NemoQueryMultimodalPytorch
-
-nq = NemoQueryMultimodalPytorch(url="localhost:8000", model_name="qwen")
-output = nq.query_multimodal(
-    prompts=["What is in this image?"],
-    images=["https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"],
-    max_length=100,
-    top_k=1,
-    top_p=0.0,
-    temperature=1.0,
-)
-print(output)
-```
-
-You can also use the command-line script for querying:
-
-```bash
-python scripts/deploy/multimodal/query_inframework.py \
-    --url localhost:8000 \
-    --model_name qwen \
-    --processor_name Qwen/Qwen2.5-VL-7B-Instruct \
-    --prompt "What is in this image?" \
-    --image /path/to/image.jpg \
-    --max_output_len 100
-```
-
-Note that each model groups such as LLMs and Multimodals have its own dedicated query class. For further details, please consult the documentation.
 
 ## 🤝 Contributing
 
