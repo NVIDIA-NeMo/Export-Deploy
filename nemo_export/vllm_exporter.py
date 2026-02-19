@@ -147,10 +147,6 @@ class vLLMExporter(ITritonDeployable):
         Raises:
             Exception: If Megatron-Bridge checkpoint conversion to Hugging Face format fails.
         """
-        # 'task' is deprecated in vllm 0.13.0. Use 'runner' and its options instead.
-        if task == "embedding":
-            task = "pooling"
-
         if model_format == "megatron_bridge":
             if not HAVE_MEGATRON_BRIDGE:
                 raise Exception(
