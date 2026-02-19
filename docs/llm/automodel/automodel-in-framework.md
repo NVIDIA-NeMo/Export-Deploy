@@ -146,7 +146,7 @@ For HuggingFace models deployed with in-framework backend using the [deployment 
 For HuggingFace model deployments:
 
 ```python
-from nemo_deploy.nlp import NemoQueryLLMHF
+from nemo_deploy.llm import NemoQueryLLMHF
 
 nq = NemoQueryLLMHF(url="localhost:8000", model_name="llama")
 output = nq.query_llm(
