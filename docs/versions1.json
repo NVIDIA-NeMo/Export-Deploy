@@ -4,6 +4,10 @@
         "url": "https://docs.nvidia.com/nemo/export-deploy/latest/"
     },
     {
+        "version": "0.4.0",
+        "url": "https://docs.nvidia.com/nemo/export-deploy/0.4.0/"
+    },
+    {
         "version": "0.3.0",
         "url": "https://docs.nvidia.com/nemo/export-deploy/0.3.0/"
     },
