@@ -4175,7 +4175,6 @@ dependencies = [
     { name = "tensorstore" },
     { name = "tiktoken" },
     { name = "torch", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torchao" },
     { name = "torchmetrics" },
     { name = "torchvision", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "transformer-engine", extra = ["core-cu13"], marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-trtllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trtllm' and extra == 'extra-18-nemo-export-deploy-vllm')" },
@@ -4278,7 +4277,6 @@ requires-dist = [
     { name = "tiktoken" },
     { name = "timm", marker = "extra == 'vllm'" },
     { name = "torch", specifier = ">=2.6.0", index = "https://download.pytorch.org/whl/cu130" },
-    { name = "torchao", specifier = ">=0.14.1" },
     { name = "torchmetrics", specifier = ">=0.11.0" },
     { name = "torchvision" },
     { name = "transformer-engine", extras = ["core-cu13", "pytorch"], marker = "sys_platform != 'darwin'" },
@@ -8404,15 +8402,6 @@ wheels = [
     { url = "https://download.pytorch.org/whl/cu130/torch-2.9.0%2Bcu130-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:3aef05b6247261f4a7c440be9a052c4be36c673c6721920181a4ac9a66d6c2a2" },
     { url = "https://download.pytorch.org/whl/cu130/torch-2.9.0%2Bcu130-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:cc241ffb20428f6a44c299ca06b934445606cf1fa48f3b68ef3af0a04c86bc3b" },
     { url = "https://download.pytorch.org/whl/cu130/torch-2.9.0%2Bcu130-cp312-cp312-win_amd64.whl", hash = "sha256:b9979a7c0a1c9544a857fc2390ebc89938f116eaaf6a359a0d46597402ca51da" },
-]
-
-[[package]]
-name = "torchao"
-version = "0.15.0"
-source = { registry = "https://pypi.org/simple" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/57/2d/472b9362dceae05a4599e2b94f86e69a29c0e20964a6af84f34f6ead5938/torchao-0.15.0-cp310-abi3-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:1cbe813201314ba6329a650a76944502f3e8ec4b1b44523f3f48676810d8d1f6", size = 7163930, upload-time = "2025-12-18T23:14:41.876Z" },
-    { url = "https://files.pythonhosted.org/packages/f6/3b/6b9d5618720f63dbc2e2509cd6b57aae9c0d61b738d1d2172f4d5d9efaab/torchao-0.15.0-py3-none-any.whl", hash = "sha256:3f3812676048ef8a2a0e9d492d12d8971ba7a7ebb16f54aa56f690414e130d2c", size = 1080679, upload-time = "2025-12-18T23:14:43.807Z" },
 ]
 
 [[package]]
