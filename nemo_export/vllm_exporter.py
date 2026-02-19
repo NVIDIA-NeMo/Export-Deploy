@@ -206,7 +206,7 @@ class vLLMExporter(ITritonDeployable):
                     swap_space=swap_space,
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
-                    task=task,
+                    runner=task,
                 )
         else:
             self.model = LLM(
@@ -222,7 +222,7 @@ class vLLMExporter(ITritonDeployable):
                 swap_space=swap_space,
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
-                task=task,
+                runner=task,
             )
 
     def add_lora_models(self, lora_model_name, lora_model):

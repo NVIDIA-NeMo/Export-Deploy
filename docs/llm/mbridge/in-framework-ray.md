@@ -26,8 +26,7 @@ This section demonstrates how to deploy [Megatron-Bridge](https://github.com/NVI
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
-      --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge \
-      --model_format megatron \
+      --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge/iter_0000000/ \
       --model_id llama \
       --num_replicas 1 \
       --num_gpus 1 \

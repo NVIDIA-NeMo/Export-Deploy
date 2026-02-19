@@ -189,7 +189,9 @@ class MegatronLLMDeployable(ITritonDeployable):
             torch.distributed.broadcast(message, src=0)
             if message == 0:
                 prompts = broadcast_list(data=[None], src=0)
-                temperature, top_k, top_p, num_tokens_to_generate, log_probs = broadcast_list(data=[None], src=0)
+                temperature, top_k, top_p, num_tokens_to_generate, log_probs, stop_words = broadcast_list(
+                    data=[None], src=0
+                )
 
                 inference_params = CommonInferenceParams(
                     temperature=temperature,
@@ -197,6 +199,7 @@ class MegatronLLMDeployable(ITritonDeployable):
                     top_p=float(top_p),
                     num_tokens_to_generate=num_tokens_to_generate,
                     return_log_probs=log_probs,
+                    stop_words=stop_words,
                 )
 
                 self.generate(prompts, inference_params)
@@ -353,6 +356,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         text_only=True,
         top_logprobs=0,
         echo=False,
+        stop_words=None,
     ):
         """Private helper function that handles the core inference logic shared between triton and ray inference.
 
@@ -370,6 +374,7 @@ class MegatronLLMDeployable(ITritonDeployable):
             top_logprobs (int): Number of top logprobs to return
             echo (bool): If True, returns the prompt and generated text. If log_probs is True, returns the prompt and
             generated log_probs. If top_logprobs is > 0, returns the prompt and generated top_logprobs.
+            stop_words (Optional[List[str]]): List of strings that will stop generation when produced.
 
         Returns:
             dict: sentences and required log probs.
@@ -388,6 +393,7 @@ class MegatronLLMDeployable(ITritonDeployable):
                         top_p,
                         num_tokens_to_generate,
                         log_probs,
+                        stop_words,
                     ],
                     src=0,
                 )
@@ -402,6 +408,7 @@ class MegatronLLMDeployable(ITritonDeployable):
             return_log_probs=log_probs,
             top_n_logprobs=top_logprobs,
             return_prompt_top_n_logprobs=bool(top_logprobs),
+            stop_words=stop_words,
         )
 
         results = self.generate(prompts, inference_params)
@@ -489,6 +496,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         top_logprobs = inputs.pop("n_top_logprobs", 0)
         echo = inputs.pop("echo", False)
         text_only = inputs.pop("text_only", True)
+        stop_words = inputs.get("stop_words", None)
 
         return self._infer_fn(
             prompts=prompts,
@@ -501,4 +509,5 @@ class MegatronLLMDeployable(ITritonDeployable):
             text_only=text_only,
             top_logprobs=top_logprobs,
             echo=echo,
+            stop_words=stop_words,
         )
