@@ -147,6 +147,10 @@ class vLLMExporter(ITritonDeployable):
         Raises:
             Exception: If Megatron-Bridge checkpoint conversion to Hugging Face format fails.
         """
+        # 'task' is deprecated in vllm 0.13.0. Use 'runner' and its options instead.
+        if task == "embedding":
+            task = "pooling"
+
         if model_format == "megatron_bridge":
             if not HAVE_MEGATRON_BRIDGE:
                 raise Exception(
@@ -206,7 +210,7 @@ class vLLMExporter(ITritonDeployable):
                     swap_space=swap_space,
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
-                    task=task,
+                    runner=task,
                 )
         else:
             self.model = LLM(
@@ -222,7 +226,7 @@ class vLLMExporter(ITritonDeployable):
                 swap_space=swap_space,
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
-                task=task,
+                runner=task,
             )
 
     def add_lora_models(self, lora_model_name, lora_model):

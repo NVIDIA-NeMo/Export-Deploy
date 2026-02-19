@@ -155,7 +155,7 @@ override-dependencies = [
     "transformer-engine-cu12; sys_platform == 'never'",
     "mamba-ssm>=2.3.0,<2.4.0",
     "transformers>=4.57.1",
-    "protobuf>=6.30.0",
+    "protobuf~=6.33.5",
     "opencv-python-headless; sys_platform == 'never'",
 ]
 prerelease = "allow"
