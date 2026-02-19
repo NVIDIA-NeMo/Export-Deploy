@@ -251,6 +251,7 @@ def run_inference(
     fp8_kvcache=False,
     trt_llm_export_kwargs=None,
     vllm_export_kwargs=None,
+    vllm_model_format="megatron_bridge",
 ) -> Tuple[Optional[FunctionalResult], Optional[AccuracyResult]]:
     if trt_llm_export_kwargs is None:
         trt_llm_export_kwargs = {}
@@ -305,6 +306,7 @@ def run_inference(
                 model_path_id=checkpoint_path,
                 trust_remote_code=True,
                 tensor_parallel_size=tp_size,
+                model_format=vllm_model_format,
                 **vllm_export_kwargs,
             )
 
@@ -740,6 +742,13 @@ def get_args():
         type=json.loads,
         help="Extra keyword arguments passed to vLLMExporter.export",
     )
+    parser.add_argument(
+        "--vllm_model_format",
+        type=str,
+        default="megatron_bridge",
+        choices=["hf", "megatron_bridge"],
+        help="Model format for vLLM export: 'hf' for HuggingFace or 'megatron_bridge' for Megatron-Bridge checkpoints",
+    )
 
     args = parser.parse_args()
 
@@ -868,6 +877,7 @@ def run_inference_tests(args):
                 fp8_kvcache=args.use_fp8_kv_cache,
                 trt_llm_export_kwargs=args.trt_llm_export_kwargs,
                 vllm_export_kwargs=args.vllm_export_kwargs,
+                vllm_model_format=args.vllm_model_format,
             )
 
         tps = tps * 2

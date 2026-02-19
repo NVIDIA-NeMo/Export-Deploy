@@ -22,7 +22,6 @@ import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
 from megatron.bridge.training.model_load_save import build_and_load_model, load_model_config, load_tokenizer
 from megatron.bridge.training.tokenizers.tokenizer import MegatronTokenizer
-from megatron.bridge.utils.vocab_utils import calculate_padded_vocab_size
 from megatron.core.dist_checkpointing.core import check_is_distributed_checkpoint
 from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
@@ -32,9 +31,6 @@ from megatron.core.inference.contexts import StaticInferenceContext
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
-)
-from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
-    InferenceWrapperConfig,
 )
 from megatron.core.inference.text_generation_controllers.text_generation_controller import (
     TextGenerationController,
@@ -82,9 +78,13 @@ except (ImportError, ModuleNotFoundError):
     HAVE_NEMO = False
     from typing import Any
 
+    io = None
     GPTConfig = Any
     T5Config = Any
     MCoreTokenizerWrappper = Any
+    set_modelopt_spec_if_exists_in_ckpt = None
+    ckpt_to_weights_subdir = None
+    ckpt_to_context_subdir = None
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -215,6 +215,8 @@ def setup_megatron_model_and_tokenizer_for_inference(
     pipeline_model_parallel_size: Optional[int] = None,
     context_parallel_size: Optional[int] = None,
     expert_model_parallel_size: Optional[int] = None,
+    expert_tensor_parallel_size: Optional[int] = None,
+    sequence_parallel: Optional[bool] = None,
     micro_batch_size: Optional[int] = None,
     model_type: str = "gpt",
 ) -> Tuple[List[MegatronModule], MegatronTokenizer]:
@@ -268,6 +270,10 @@ def setup_megatron_model_and_tokenizer_for_inference(
         model_config.context_parallel_size = context_parallel_size
     if expert_model_parallel_size is not None:
         model_config.expert_model_parallel_size = expert_model_parallel_size
+    if expert_tensor_parallel_size is not None:
+        model_config.expert_tensor_parallel_size = expert_tensor_parallel_size
+    if sequence_parallel is not None:
+        model_config.sequence_parallel = sequence_parallel
     # Initialize Megatron for inference
     rng_config = RNGConfig(inference_rng_tracker=True)
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
@@ -288,6 +294,8 @@ def setup_model_and_tokenizer_for_inference(
     pipeline_model_parallel_size: Optional[int] = None,
     context_parallel_size: Optional[int] = None,
     expert_model_parallel_size: Optional[int] = None,
+    expert_tensor_parallel_size: Optional[int] = None,
+    sequence_parallel: Optional[int] = None,
     params_dtype: Optional[torch.dtype] = None,
     micro_batch_size: Optional[int] = None,
     enable_flash_decode: bool = False,
@@ -347,6 +355,10 @@ def setup_model_and_tokenizer_for_inference(
         model_config.context_parallel_size = context_parallel_size
     if expert_model_parallel_size is not None:
         model_config.expert_model_parallel_size = expert_model_parallel_size
+    if expert_tensor_parallel_size is not None:
+        model_config.expert_tensor_parallel_size = expert_tensor_parallel_size
+    if sequence_parallel is not None:
+        model_config.sequence_parallel = sequence_parallel
 
     if params_dtype is None:
         params_dtype = model_config.params_dtype
@@ -445,6 +457,8 @@ def create_mcore_engine(
     pipeline_model_parallel_size: Optional[int] = None,
     context_parallel_size: Optional[int] = None,
     expert_model_parallel_size: Optional[int] = None,
+    expert_tensor_parallel_size: Optional[int] = None,
+    sequence_parallel: Optional[int] = None,
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
     legacy_ckpt: bool = False,
@@ -478,7 +492,7 @@ def create_mcore_engine(
             - GPTInferenceWrapper: Inference-wrapped model
             - Union[MCoreTokenizerWrappper, MegatronTokenizer]: Tokenizer instance
     """
-    if not HAVE_NEMO:
+    if not HAVE_NEMO and model_format == "nemo":
         raise UnavailableError(MISSING_NEMO_MSG)
 
     # Default to 1 for any parallelism dimension that's None
@@ -486,7 +500,8 @@ def create_mcore_engine(
     pipeline_model_parallel_size = pipeline_model_parallel_size if pipeline_model_parallel_size is not None else 1
     context_parallel_size = context_parallel_size if context_parallel_size is not None else 1
     expert_model_parallel_size = expert_model_parallel_size if expert_model_parallel_size is not None else 1
-
+    expert_tensor_parallel_size = expert_tensor_parallel_size if expert_tensor_parallel_size is not None else 1
+    sequence_parallel = sequence_parallel if sequence_parallel is not None else 1
     if model_format == "nemo":
         modelList, tokenizer = setup_model_and_tokenizer_for_inference(
             checkpoint_path=path,
@@ -494,6 +509,8 @@ def create_mcore_engine(
             pipeline_model_parallel_size=pipeline_model_parallel_size,
             context_parallel_size=context_parallel_size,
             expert_model_parallel_size=expert_model_parallel_size,
+            expert_tensor_parallel_size=expert_tensor_parallel_size,
+            sequence_parallel=sequence_parallel,
             params_dtype=params_dtype,
             enable_flash_decode=enable_flash_decode,
             enable_cuda_graphs=enable_cuda_graphs,
@@ -501,7 +518,6 @@ def create_mcore_engine(
             **model_config_kwargs,
         )
         model = modelList[0]
-        padded_vocab_size = model.vocab_size
     elif model_format == "megatron":
         modelList, tokenizer, mlm_args = setup_megatron_model_and_tokenizer_for_inference(
             checkpoint_path=path,
@@ -509,31 +525,17 @@ def create_mcore_engine(
             pipeline_model_parallel_size=pipeline_model_parallel_size,
             context_parallel_size=context_parallel_size,
             expert_model_parallel_size=expert_model_parallel_size,
+            expert_tensor_parallel_size=expert_tensor_parallel_size,
+            sequence_parallel=sequence_parallel,
             micro_batch_size=micro_batch_size,
             model_type=model_type,
         )
         model = modelList[0]
-        if mlm_args is not None:
-            padded_vocab_size = getattr(mlm_args, "padded_vocab_size", None)
-        else:
-            padded_vocab_size = calculate_padded_vocab_size(
-                model.config.vocab_size,
-                model.config.make_vocab_size_divisible_by,
-                model.config.tensor_model_parallel_size,
-            )
     else:
         raise ValueError(f"Model format {model_format} not supported.")
-    inference_wrapper_config = InferenceWrapperConfig(
-        hidden_size=model.config.hidden_size,
-        params_dtype=params_dtype,
-        inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
-        padded_vocab_size=padded_vocab_size,
-        inference_max_seq_length=inference_max_seq_length,
-        inference_max_requests=max_batch_size,
-    )
-    inference_context = StaticInferenceContext.from_config(inference_wrapper_config)
 
-    model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config, inference_context)
+    inference_context = StaticInferenceContext(max_batch_size, inference_max_seq_length)
+    model_inference_wrapper = GPTInferenceWrapper(model, inference_context)
     text_generation_controller = TextGenerationController(
         inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
     )

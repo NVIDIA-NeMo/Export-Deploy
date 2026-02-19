@@ -18,15 +18,7 @@ This section shows how to use scripts and APIs to export a NeMo LLM to vLLM and 
        nvcr.io/nvidia/nemo:vr
    ```
 
-3. Install vLLM by executing the following command inside the container:
-
-   ```shell
-   cd /opt/Export-Deploy
-   uv sync --inexact --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
-
-   ```
-
-4. Run the following deployment script to verify that everything is working correctly. The script exports the Llama NeMo checkpoint to vLLM and subsequently serves it on the Triton server:
+3. Run the following deployment script to verify that everything is working correctly. The script exports the Llama NeMo checkpoint to vLLM and subsequently serves it on the Triton server:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
@@ -35,15 +27,15 @@ This section shows how to use scripts and APIs to export a NeMo LLM to vLLM and 
        --tensor_parallelism_size 1
    ```
 
-5. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
+4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
 
-6. In a separate terminal, access the running container as follows:
+5. In a separate terminal, access the running container as follows:
 
    ```shell
    docker exec -it nemo-fw bash
    ```
 
-7. To send a query to the Triton server, run the following script:
+6. To send a query to the Triton server, run the following script:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/query_vllm.py -mn llama -p "The capital of Canada is" -mat 50
@@ -81,7 +73,6 @@ After executing the script, it will export the model to vLLM and then initiate t
    - ``--swap_space``: Size (GiB) of CPU memory per GPU to use as swap space. Default is 4.
    - ``--cpu_offload_gb``: Size (GiB) of CPU memory to use for offloading model weights. Default is 0.
    - ``--enforce_eager``: Whether to enforce eager execution. Default is False.
-   - ``--max_seq_len_to_capture``: Maximum sequence length covered by CUDA graphs. Default is 8192.
    - ``--triton_model_name``: Name for the service/model on Triton. (Required)
    - ``--triton_model_version``: Version for the service/model. Default is 1.
    - ``--triton_port``: Port for the Triton server to listen for requests. Default is 8000.

@@ -580,8 +580,8 @@ class TestRayInferFnLogprobProcessing:
                     "input_ids": torch.tensor([[1, 2, 3, 4]]),
                     "attention_mask": torch.tensor([[1, 1, 1, 1]]),
                 }
-                mock_tokenizer.decode.side_effect = (
-                    lambda ids: f"token_{ids[0] if isinstance(ids, list) and len(ids) > 0 else 'unknown'}"
+                mock_tokenizer.decode.side_effect = lambda ids: (
+                    f"token_{ids[0] if isinstance(ids, list) and len(ids) > 0 else 'unknown'}"
                 )
                 mock_tokenizer.eos_token = "</s>"
                 mock_tokenizer.pad_token = "</s>"

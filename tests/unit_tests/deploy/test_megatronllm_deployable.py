@@ -28,10 +28,11 @@ def mock_engine_and_tokenizer():
     mock_engine = MagicMock()
     mock_model = MagicMock()
     mock_tokenizer = MagicMock()
-    mock_tokenizer.tokenizer.tokenizer = MagicMock()
-    mock_tokenizer.tokenizer.tokenizer.chat_template = "{{messages}}"
-    mock_tokenizer.tokenizer.tokenizer.bos_token = "<bos>"
-    mock_tokenizer.tokenizer.tokenizer.eos_token = "<eos>"
+    # MBridge tokenizer uses _tokenizer to access the underlying HF tokenizer
+    mock_tokenizer._tokenizer = MagicMock()
+    mock_tokenizer._tokenizer.chat_template = "{{messages}}"
+    mock_tokenizer._tokenizer.bos_token = "<bos>"
+    mock_tokenizer._tokenizer.eos_token = "<eos>"
 
     return mock_engine, mock_model, mock_tokenizer
 
@@ -70,7 +71,7 @@ def test_dict_to_str():
 @pytest.mark.run_only_on("GPU")
 def test_apply_chat_template_none_template(deployable):
     """Test chat template application when tokenizer has no chat template."""
-    deployable.mcore_tokenizer.tokenizer.tokenizer.chat_template = None
+    deployable.mcore_tokenizer._tokenizer.chat_template = None
     messages = [{"role": "user", "content": "Hello"}]
 
     with pytest.raises(ValueError, match="The tokenizer does not have a chat template defined"):
@@ -81,7 +82,7 @@ def test_apply_chat_template_none_template(deployable):
 def test_apply_chat_template_attribute_error(deployable):
     """Test chat template application when tokenizer raises AttributeError."""
     # Remove the chat_template attribute to trigger AttributeError
-    del deployable.mcore_tokenizer.tokenizer.tokenizer.chat_template
+    del deployable.mcore_tokenizer._tokenizer.chat_template
     messages = [{"role": "user", "content": "Hello"}]
 
     with pytest.raises(ValueError, match="The tokenizer does not have chat template"):
@@ -441,7 +442,7 @@ def test_apply_chat_template(deployable):
 @pytest.mark.run_only_on("GPU")
 def test_remove_eos_token(deployable):
     """Test EOS token removal covering all code paths."""
-    # Test normal case - eos_token accessible via self.mcore_tokenizer.tokenizer.tokenizer.eos_token
+    # Test normal case - eos_token accessible via self.mcore_tokenizer._tokenizer.eos_token
     texts = ["Hello<eos>", "World", "Test<eos>"]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["Hello", "World", "Test"]
@@ -452,7 +453,7 @@ def test_remove_eos_token_comprehensive(deployable):
     """Test remove_eos_token method covering all code paths and edge cases."""
 
     # Test case 1: Normal case - eos_token accessible
-    deployable.mcore_tokenizer.tokenizer.tokenizer.eos_token = "<eos>"
+    deployable.mcore_tokenizer._tokenizer.eos_token = "<eos>"
     texts = ["Hello<eos>", "World", "Test<eos>"]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["Hello", "World", "Test"]
@@ -477,10 +478,10 @@ def test_remove_eos_token_comprehensive(deployable):
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["", "Hello", ""]
 
-    # Test case 6: Fallback case 1 - AttributeError on eos_token, but eos_id and special_tokens work
-    del deployable.mcore_tokenizer.tokenizer.tokenizer.eos_token
-    deployable.mcore_tokenizer.tokenizer.tokenizer.eos_id = 2
-    deployable.mcore_tokenizer.tokenizer.tokenizer.special_tokens = {2: "</s>"}
+    # Test case 6: Fallback case 1 - AttributeError on eos_token, but eos_id and inv_vocab work
+    del deployable.mcore_tokenizer._tokenizer.eos_token
+    deployable.mcore_tokenizer._tokenizer.eos_id = 2
+    deployable.mcore_tokenizer._tokenizer.inv_vocab = {2: "</s>"}
 
     texts = ["Hello</s>", "World", "Test</s>"]
     cleaned_texts = deployable.remove_eos_token(texts)
@@ -492,16 +493,16 @@ def test_remove_eos_token_comprehensive(deployable):
     assert cleaned_texts == ["Hello</s>World"]
 
     # Test case 8: Fallback case 2 - Both AttributeErrors, return unchanged
-    del deployable.mcore_tokenizer.tokenizer.tokenizer.eos_id
+    del deployable.mcore_tokenizer._tokenizer.eos_id
 
     texts = ["Hello<eos>", "World</s>", "Test"]
     cleaned_texts = deployable.remove_eos_token(texts)
     assert cleaned_texts == ["Hello<eos>", "World</s>", "Test"]  # Should return unchanged
 
     # Test case 9: Fallback case 2 - AttributeError on eos_id but not on eos_token access
-    # First delete the special_tokens to trigger AttributeError in second try block
-    deployable.mcore_tokenizer.tokenizer.tokenizer.eos_id = 2
-    del deployable.mcore_tokenizer.tokenizer.tokenizer.special_tokens
+    # First delete the inv_vocab to trigger AttributeError in second try block
+    deployable.mcore_tokenizer._tokenizer.eos_id = 2
+    del deployable.mcore_tokenizer._tokenizer.inv_vocab
 
     texts = ["Hello<eos>", "World"]
     cleaned_texts = deployable.remove_eos_token(texts)

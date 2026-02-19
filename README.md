@@ -97,32 +97,6 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
   nvcr.io/nvidia/nemo:${TAG}
 ```
 
-<a id="install-tensorrt-llm-vllm-or-trt-onnx-backend"></a>
-#### Install TensorRT-LLM, vLLM, or TRT-ONNX backend
-
-Starting with version 25.07, the NeMo FW container no longer includes TensorRT-LLM and vLLM pre-installed. Please run the following command inside the container:
-
-For TensorRT-LLM:
-
-```bash
-cd /opt/Export-Deploy
-uv sync --inexact --link-mode symlink --locked --extra trtllm $(cat /opt/uv_args.txt)
-```
-
-For vLLM:
-
-```bash
-cd /opt/Export-Deploy
-uv sync --inexact --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
-```
-
-For TRT-ONNX:
-
-```bash
-cd /opt/Export-Deploy
-uv sync --inexact --link-mode symlink --locked --extra trt-onnx $(cat /opt/uv_args.txt)
-```
-
 ### Build with Dockerfile
 
 For containerized development, use our Dockerfile for building your own container. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
@@ -409,16 +383,16 @@ nm.deploy()
 nm.serve()
 ```
 
-### Deploy NeMo Multimodal Models Directly with Triton Inference Server
+### Deploy Megatron Multimodal Models Directly with Triton Inference Server
 
-You can also deploy NeMo multimodal models directly using Triton Inference Server without exporting to TensorRT-LLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
+You can also deploy Megatron multimodal models directly using Triton Inference Server without exporting to TensorRT-LLM. This provides a simpler deployment path while still leveraging Triton's scalable serving capabilities.
 
 ```python
 from nemo_deploy import DeployPyTriton
-from nemo_deploy.multimodal import NeMoMultimodalDeployable
+from nemo_deploy.multimodal import MegatronMultimodalDeployable
 
-model = NeMoMultimodalDeployable(
-    nemo_checkpoint_filepath="/path/to/model.nemo",
+model = MegatronMultimodalDeployable(
+    megatron_checkpoint_filepath="/path/to/model.nemo",
     tensor_parallel_size=1,
     pipeline_parallel_size=1,
 )
@@ -458,18 +432,17 @@ output = nq.query(
 print(output)
 ```
 
-### Query Directly Deployed NeMo Multimodal Models
+### Query Directly Deployed Megatron Multimodal Models
 
-For multimodal models deployed directly with `NeMoMultimodalDeployable`, use the `NemoQueryMultimodalPytorch` class:
+For multimodal models deployed directly with `MegatronMultimodalDeployable`, use the `NemoQueryMultimodalPytorch` class:
 
 ```python
 from nemo_deploy.multimodal import NemoQueryMultimodalPytorch
-from PIL import Image
 
 nq = NemoQueryMultimodalPytorch(url="localhost:8000", model_name="qwen")
 output = nq.query_multimodal(
     prompts=["What is in this image?"],
-    images=[Image.open("/path/to/image.jpg")],
+    images=["https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"],
     max_length=100,
     top_k=1,
     top_p=0.0,

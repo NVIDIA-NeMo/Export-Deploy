@@ -90,6 +90,8 @@ class MegatronLLMDeployable(ITritonDeployable):
         pipeline_model_parallel_size: int = 1,
         context_parallel_size: int = 1,
         expert_model_parallel_size: int = 1,
+        expert_tensor_parallel_size: int = 1,
+        sequence_parallel: bool = False,
         params_dtype: torch.dtype = torch.bfloat16,
         inference_batch_times_seqlen_threshold: int = 32768,
         inference_max_seq_length: int = 4096,
@@ -119,8 +121,10 @@ class MegatronLLMDeployable(ITritonDeployable):
             random_seed=random_seed,
             tensor_model_parallel_size=tensor_model_parallel_size,
             expert_model_parallel_size=expert_model_parallel_size,
+            expert_tensor_parallel_size=expert_tensor_parallel_size,
             pipeline_model_parallel_size=pipeline_model_parallel_size,
             context_parallel_size=context_parallel_size,
+            sequence_parallel=sequence_parallel,
             enable_flash_decode=enable_flash_decode,
             enable_cuda_graphs=enable_cuda_graphs,
             legacy_ckpt=legacy_ckpt,
@@ -205,12 +209,12 @@ class MegatronLLMDeployable(ITritonDeployable):
         Works when model's tokenizer has chat template (typically chat models).
         """
         try:
-            tokenizer_chat_template = self.mcore_tokenizer.tokenizer.tokenizer.chat_template
+            tokenizer_chat_template = self.mcore_tokenizer._tokenizer.chat_template
 
-            # Try to get bos_token, handle different tokenizer types
+            # Try to get bos_token
             bos_token = None
             try:
-                bos_token = self.mcore_tokenizer.tokenizer.tokenizer.bos_token
+                bos_token = self.mcore_tokenizer._tokenizer.bos_token
             except AttributeError:
                 # Some tokenizers might not have bos_token, use empty string as fallback
                 bos_token = ""
@@ -223,11 +227,11 @@ class MegatronLLMDeployable(ITritonDeployable):
                 )
 
             template = Template(tokenizer_chat_template)
-        except AttributeError:
+        except AttributeError as e:
             # If the tokenizer does not have chat_template
             raise ValueError(
-                "The tokenizer does not have chat template, if you would like to evaluate chat model \
-                             ensure your model's tokenizer has a chat template"
+                f"The tokenizer does not have chat template ({e}), if you would like to evaluate chat model "
+                "ensure your model's tokenizer has a chat template"
             )
         # Render the template with the provided messages
         rendered_output = template.render(
@@ -240,14 +244,14 @@ class MegatronLLMDeployable(ITritonDeployable):
 
     def remove_eos_token(self, text):
         """Removes eos token if it exists in the output, otherwise does nothing."""
-        # Handle different tokenizer types
+        # MBridge tokenizer: access underlying HF tokenizer via _tokenizer
         try:
-            eos_token = self.mcore_tokenizer.tokenizer.tokenizer.eos_token
+            eos_token = self.mcore_tokenizer._tokenizer.eos_token
         except AttributeError:
             # Fallback for TiktokenTokenizer and similar tokenizers
             try:
-                eos_id = self.mcore_tokenizer.tokenizer.tokenizer.eos_id
-                eos_token = self.mcore_tokenizer.tokenizer.tokenizer.special_tokens[eos_id]
+                eos_id = self.mcore_tokenizer._tokenizer.eos_id
+                eos_token = self.mcore_tokenizer._tokenizer.inv_vocab[eos_id]
             except AttributeError:
                 # If neither approach works, return text unchanged
                 return text

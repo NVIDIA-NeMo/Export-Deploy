@@ -13,23 +13,19 @@
 # limitations under the License.
 
 import json
+import logging
 import os
 from typing import List, Optional
 
 import numpy as np
 import requests
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
 from nemo_deploy.multimodal.query_multimodal import NemoQueryMultimodalPytorch
 
-try:
-    from nemo.utils import logging
-except (ImportError, ModuleNotFoundError):
-    import logging
-
-    logging = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class TritonSettings(BaseSettings):
@@ -44,8 +40,8 @@ class TritonSettings(BaseSettings):
             self._triton_service_port = int(os.environ.get("TRITON_PORT", 8000))
             self._triton_service_ip = os.environ.get("TRITON_HTTP_ADDRESS", "0.0.0.0")
         except Exception as error:
-            logging.error(
-                "An exception occurred trying to retrieve set args in TritonSettings class. Error:",
+            logger.error(
+                "An exception occurred trying to retrieve set args in TritonSettings class. Error: %s",
                 error,
             )
             return
@@ -82,17 +78,9 @@ class BaseMultimodalRequest(BaseModel):
     max_tokens: int = 50
     temperature: float = 1.0
     top_p: float = 0.0
-    top_k: int = 1
+    top_k: int = 0
     random_seed: Optional[int] = None
     max_batch_size: int = 4
-
-    @model_validator(mode="after")
-    def set_greedy_params(self):
-        """Validate parameters for greedy decoding."""
-        if self.temperature == 0 and self.top_p == 0:
-            logging.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
-            self.top_k = 1
-        return self
 
 
 class MultimodalCompletionRequest(BaseMultimodalRequest):
@@ -154,7 +142,7 @@ async def check_triton_health():
     triton_url = (
         f"http://{triton_settings.triton_service_ip}:{str(triton_settings.triton_service_port)}/v2/health/ready"
     )
-    logging.info(f"Attempting to connect to Triton server at: {triton_url}")
+    logger.info(f"Attempting to connect to Triton server at: {triton_url}")
     try:
         response = requests.get(triton_url, timeout=5)
         if response.status_code == 200:
@@ -279,7 +267,7 @@ async def completions_v1(request: MultimodalCompletionRequest):
 
     output_serializable = convert_numpy(output)
     output_serializable["choices"][0]["text"] = output_serializable["choices"][0]["text"][0][0]
-    logging.info(f"Output: {output_serializable}")
+    logger.info(f"Output: {output_serializable}")
     return output_serializable
 
 
@@ -290,12 +278,33 @@ def dict_to_str(messages):
 
 @app.post("/v1/chat/completions/")
 async def chat_completions_v1(request: MultimodalChatCompletionRequest):
-    """Defines the multimodal chat completions endpoint and queries the model deployed on PyTriton server."""
+    """Defines the multimodal chat completions endpoint and queries the model deployed on PyTriton server.
+
+    Supports two image content formats (normalized internally to format 1):
+    1. {"type": "image", "image": "url_or_base64"}
+    2. {"type": "image_url", "image_url": {"url": "url_or_base64"}} (OpenAI-style, converted to format 1)
+    """
     url = f"http://{triton_settings.triton_service_ip}:{triton_settings.triton_service_port}"
 
     prompts = request.messages
     if not isinstance(request.messages, list):
         prompts = [request.messages]
+
+    # Normalize image_url format to image format for consistent processing
+    for message in prompts:
+        for content in message["content"]:
+            if content["type"] == "image_url":
+                # Convert OpenAI-style image_url to standard image format
+                if isinstance(content.get("image_url"), dict):
+                    image_data = content["image_url"]["url"]
+                else:
+                    image_data = content["image_url"]
+                # Transform to image format
+                content["type"] = "image"
+                content["image"] = image_data
+                # Remove image_url field
+                content.pop("image_url", None)
+
     # Serialize the dictionary to a JSON string represnetation to be able to convert to numpy array
     # (str_list2numpy) and back to list (str_ndarray2list) as required by PyTriton. Using the dictionaries directly
     # with these methods is not possible as they expect string type.
@@ -336,5 +345,5 @@ async def chat_completions_v1(request: MultimodalChatCompletionRequest):
         0
     ][0]
 
-    logging.info(f"Output: {output_serializable}")
+    logger.info(f"Output: {output_serializable}")
     return output_serializable

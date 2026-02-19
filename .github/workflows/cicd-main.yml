@@ -120,6 +120,8 @@ jobs:
           inference-framework: trtllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ matrix.runner }}
+          ngc-api-user: ${{ secrets.NGC_API_USER }}
+          ngc-api-key: ${{ secrets.NGC_API_KEY }}
 
   cicd-unit-tests-vllm:
     strategy:
@@ -160,6 +162,8 @@ jobs:
           inference-framework: vllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ matrix.runner }}
+          ngc-api-user: ${{ secrets.NGC_API_USER }}
+          ngc-api-key: ${{ secrets.NGC_API_KEY }}
 
   cicd-e2e-tests-trtllm:
     strategy:
@@ -199,6 +203,8 @@ jobs:
           inference-framework: trtllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ matrix.runner }}
+          ngc-api-user: ${{ secrets.NGC_API_USER }}
+          ngc-api-key: ${{ secrets.NGC_API_KEY }}
 
   cicd-e2e-tests-trt-onnx:
     needs: [cicd-unit-tests-trtllm, pre-flight]
@@ -232,6 +238,8 @@ jobs:
           inference-framework: trt-onnx
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+          ngc-api-user: ${{ secrets.NGC_API_USER }}
+          ngc-api-key: ${{ secrets.NGC_API_KEY }}
 
   cicd-e2e-tests-vllm:
     needs: [cicd-unit-tests-vllm, pre-flight]
@@ -263,6 +271,8 @@ jobs:
           inference-framework: vllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+          ngc-api-user: ${{ secrets.NGC_API_USER }}
+          ngc-api-key: ${{ secrets.NGC_API_KEY }}
 
   cicd-e2e-tests-inframework:
     needs: [pre-flight, cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
@@ -294,6 +304,8 @@ jobs:
           inference-framework: inframework
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+          ngc-api-user: ${{ secrets.NGC_API_USER }}
+          ngc-api-key: ${{ secrets.NGC_API_KEY }}
 
   Nemo_CICD_Test:
     needs:

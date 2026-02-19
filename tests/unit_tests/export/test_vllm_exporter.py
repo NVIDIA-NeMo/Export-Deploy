@@ -69,8 +69,7 @@ def test_export(exporter, mock_llm):
         gpu_memory_utilization=0.9,
         swap_space=4,
         cpu_offload_gb=0,
-        enforce_eager=False,
-        max_seq_len_to_capture=8192,
+        enforce_eager=True,
         task="auto",
     )
 
@@ -95,8 +94,7 @@ def test_export_with_lora(exporter, mock_llm):
         gpu_memory_utilization=0.9,
         swap_space=4,
         cpu_offload_gb=0,
-        enforce_eager=False,
-        max_seq_len_to_capture=8192,
+        enforce_eager=True,
         task="auto",
     )
 
@@ -127,8 +125,7 @@ def test_export_with_custom_params(exporter, mock_llm):
         gpu_memory_utilization=0.9,
         swap_space=4,
         cpu_offload_gb=0,
-        enforce_eager=False,
-        max_seq_len_to_capture=8192,
+        enforce_eager=True,
         task="auto",
     )
 
@@ -498,90 +495,6 @@ def test_ray_infer_fn_with_error_handling(exporter, mock_llm):
 
 
 # ============================================================================
-# NeMo2 Checkpoint Tests
-# ============================================================================
-
-
-@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
-@pytest.mark.run_only_on("GPU")
-def test_export_nemo2_success(exporter, mock_llm):
-    """Test export with nemo2 format - successful conversion"""
-    with (
-        patch("nemo_export.vllm_exporter.export_ckpt") as mock_export_ckpt,
-        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
-        patch("nemo_export.vllm_exporter.Path") as mock_path,
-    ):
-        # Mock temp directory
-        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
-        mock_path_instance = MagicMock()
-        mock_path_instance.iterdir.return_value = ["model.safetensors", "config.json"]  # Non-empty
-        mock_path.return_value = mock_path_instance
-
-        # Test export with nemo2 format
-        exporter.export(model_path_id="/path/to/nemo2/checkpoint", model_format="nemo2")
-
-        # Verify export_ckpt was called
-        mock_export_ckpt.assert_called_once_with(
-            path="/path/to/nemo2/checkpoint",
-            target="hf",
-            output_path="/tmp/test_hf_export",
-            overwrite=True,
-        )
-
-        # Verify LLM was initialized with temp directory
-        assert exporter.model is not None
-        mock_llm.assert_called_once()
-        call_kwargs = mock_llm.call_args[1]
-        assert call_kwargs["model"] == "/tmp/test_hf_export"
-
-
-@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
-@pytest.mark.run_only_on("GPU")
-def test_export_nemo2_conversion_error(exporter, mock_llm):
-    """Test export with nemo2 format when conversion fails"""
-    with (
-        patch("nemo_export.vllm_exporter.export_ckpt") as mock_export_ckpt,
-        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
-    ):
-        # Mock temp directory
-        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
-
-        # Mock export_ckpt to raise an exception
-        mock_export_ckpt.side_effect = Exception("Conversion failed")
-
-        with pytest.raises(
-            Exception,
-            match="NeMo checkpoint is not supported.*Error occured during Hugging Face conversion.*Conversion failed",
-        ):
-            exporter.export(model_path_id="/path/to/nemo2/checkpoint", model_format="nemo2")
-
-
-@pytest.mark.skipif(not HAVE_VLLM, reason="Need to enable virtual environment for vLLM")
-@pytest.mark.run_only_on("GPU")
-def test_export_nemo2_empty_output_dir(exporter, mock_llm):
-    """Test export with nemo2 format when conversion results in empty directory"""
-    with (
-        patch("nemo_export.vllm_exporter.export_ckpt") as mock_export_ckpt,
-        patch("nemo_export.vllm_exporter.tempfile.TemporaryDirectory") as mock_temp_dir,
-        patch("nemo_export.vllm_exporter.Path") as mock_path,
-    ):
-        # Mock temp directory - empty after conversion
-        mock_temp_dir.return_value.__enter__.return_value = "/tmp/test_hf_export"
-        mock_path_instance = MagicMock()
-        mock_path_instance.iterdir.return_value = []  # Empty directory
-        mock_path.return_value = mock_path_instance
-
-        with pytest.raises(
-            Exception,
-            match="NeMo checkpoint is not supported.*Error occured during Hugging Face conversion",
-        ):
-            exporter.export(model_path_id="/path/to/nemo2/checkpoint", model_format="nemo2")
-
-        # Verify export_ckpt was called before the empty directory check
-        mock_export_ckpt.assert_called_once()
-
-
-# ============================================================================
 # Megatron Checkpoint Tests
 # ============================================================================
 
@@ -928,7 +841,6 @@ def test_export_megatron_bridge_with_all_vllm_params(exporter, mock_llm):
             swap_space=8,
             cpu_offload_gb=2,
             enforce_eager=True,
-            max_seq_len_to_capture=4096,
             task="generate",
         )
 
@@ -947,5 +859,4 @@ def test_export_megatron_bridge_with_all_vllm_params(exporter, mock_llm):
         assert call_kwargs["swap_space"] == 8
         assert call_kwargs["cpu_offload_gb"] == 2
         assert call_kwargs["enforce_eager"] is True
-        assert call_kwargs["max_seq_len_to_capture"] == 4096
         assert call_kwargs["task"] == "generate"

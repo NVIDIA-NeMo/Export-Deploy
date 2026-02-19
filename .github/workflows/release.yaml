@@ -30,6 +30,16 @@ on:
         required: true
         default: true
         type: boolean
+      generate-changelog:
+        description: Generate changelog
+        required: false
+        default: true
+        type: boolean
+      publish-docs:
+        description: Publish docs
+        required: false
+        default: true
+        type: boolean
       version-bump-branch:
         description: Branch for version bump
         required: true
@@ -41,7 +51,7 @@ permissions:
 
 jobs:
   release:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_release_library.yml@v0.54.3
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_release_library.yml@v0.73.0
     with:
       release-ref: ${{ inputs.release-ref || github.sha }}
       python-package: nemo_export_deploy_common
@@ -52,9 +62,12 @@ jobs:
       packaging: uv
       app-id: ${{ vars.BOT_ID }}
       skip-test-wheel: true
-      custom-container: nvcr.io/nvidia/pytorch:25.05-py3
+      custom-container: nvcr.io/nvidia/pytorch:25.11-py3
       no-build-isolation: true
-      runner: linux-amd64-cpu16
+      runner: nemo-ci-aws-gpu-x2-container
+      gh-release-use-changelog-builder: ${{ inputs.generate-changelog }}
+      publish-docs: ${{ inputs.publish-docs }}
+      docs-target-path: nemo/export-deploy
     secrets:
       TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}

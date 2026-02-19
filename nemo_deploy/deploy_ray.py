@@ -27,6 +27,7 @@ try:
 
     from nemo_deploy.llm.hf_deployable_ray import HFRayDeployable
     from nemo_deploy.llm.megatronllm_deployable_ray import MegatronRayDeployable
+    from nemo_deploy.multimodal.megatron_multimodal_deployable_ray import MegatronMultimodalRayDeployable
     from nemo_export.tensorrt_llm_deployable_ray import TensorRTLLMRayDeployable
 
     HAVE_RAY = True
@@ -39,6 +40,7 @@ except (ImportError, ModuleNotFoundError):
     MegatronRayDeployable = MagicMock()
     HFRayDeployable = MagicMock()
     TensorRTLLMRayDeployable = MagicMock()
+    MegatronMultimodalRayDeployable = MagicMock()
     HAVE_RAY = False
 
 LOGGER = logging.getLogger("NeMo")
@@ -109,6 +111,7 @@ class DeployRay:
         self.num_gpus = num_gpus
         self.host = host
         self.port = port
+        self.runtime_env = runtime_env
 
         try:
             # Try to connect to existing Ray cluster
@@ -176,7 +179,9 @@ class DeployRay:
         tensor_model_parallel_size: int = 1,
         pipeline_model_parallel_size: int = 1,
         expert_model_parallel_size: int = 1,
+        expert_tensor_parallel_size: int = 1,
         context_parallel_size: int = 1,
+        sequence_parallel: bool = False,
         model_id: str = "megatron-model",
         num_cpus_per_replica: float = 8,
         num_replicas: int = 1,
@@ -184,6 +189,7 @@ class DeployRay:
         enable_flash_decode: bool = False,
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
+        inference_max_seq_length: int = 4096,
         random_seed: Optional[int] = None,
         test_mode: bool = False,
         model_type: str = "gpt",
@@ -245,12 +251,15 @@ class DeployRay:
                 tensor_model_parallel_size=tensor_model_parallel_size,
                 pipeline_model_parallel_size=pipeline_model_parallel_size,
                 expert_model_parallel_size=expert_model_parallel_size,
+                expert_tensor_parallel_size=expert_tensor_parallel_size,
                 context_parallel_size=context_parallel_size,
+                sequence_parallel=sequence_parallel,
                 model_id=model_id,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
+                inference_max_seq_length=inference_max_seq_length,
                 random_seed=random_seed,
                 model_type=model_type,
                 micro_batch_size=micro_batch_size,
@@ -450,6 +459,7 @@ class DeployRay:
                 ray_actor_options={
                     "num_cpus": num_cpus_per_replica,
                     "num_gpus": num_gpus_per_replica,
+                    "runtime_env": self.runtime_env,
                 },
                 max_ongoing_requests=max_ongoing_requests,
             ).bind(**deployment_kwargs)
@@ -466,5 +476,85 @@ class DeployRay:
 
         except Exception as e:
             LOGGER.error(f"Error during TensorRT-LLM model deployment: {str(e)}")
+            self._stop()
+            sys.exit(1)
+
+    def deploy_vlm_inframework_model(
+        self,
+        megatron_checkpoint: str,
+        num_gpus: int = 1,
+        tensor_model_parallel_size: int = 1,
+        pipeline_model_parallel_size: int = 1,
+        model_id: str = "megatron-multimodal-model",
+        num_cpus_per_replica: float = 8,
+        num_replicas: int = 1,
+        test_mode: bool = False,
+        **model_config_kwargs,
+    ):
+        """Deploy an inframework Megatron multimodal (VLM) model using Ray Serve.
+
+        This method handles the complete deployment lifecycle for multimodal models including:
+        - Starting Ray Serve
+        - Creating and deploying the MegatronMultimodalRayDeployable
+        - Setting up signal handlers for graceful shutdown
+        - Keeping the deployment running until interrupted
+
+        Args:
+            megatron_checkpoint (str): Path to the Megatron checkpoint directory.
+            num_gpus (int, optional): Number of GPUs per node. Defaults to 1.
+            tensor_model_parallel_size (int, optional): Tensor model parallel size. Defaults to 1.
+            pipeline_model_parallel_size (int, optional): Pipeline model parallel size. Defaults to 1.
+            model_id (str, optional): Model identifier for API responses. Defaults to "megatron-multimodal-model".
+            num_cpus_per_replica (float, optional): CPUs per model replica. Defaults to 8.
+            num_replicas (int, optional): Number of replicas for deployment. Defaults to 1.
+            test_mode (bool, optional): Enable test mode. Defaults to False.
+            **model_config_kwargs: Additional model configuration arguments (e.g., params_dtype,
+                inference_batch_times_seqlen_threshold, inference_max_seq_length).
+
+        Raises:
+            SystemExit: If parallelism configuration is invalid.
+            Exception: If deployment fails.
+        """
+        if not HAVE_RAY:
+            raise UnavailableError(MISSING_RAY_MSG)
+
+        # Calculate total GPUs and GPUs per replica
+        gpus_per_replica = num_gpus // num_replicas
+
+        LOGGER.info(f"Configuration: {num_replicas} replicas, {gpus_per_replica} GPUs per replica")
+
+        # Set up signal handlers for graceful shutdown
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
+
+        try:
+            # Start Ray Serve
+            self._start()
+
+            # Create the Multi-Rank Megatron multimodal model deployment
+            app = MegatronMultimodalRayDeployable.options(
+                num_replicas=num_replicas,
+                ray_actor_options={"num_cpus": num_cpus_per_replica},
+            ).bind(
+                megatron_checkpoint_filepath=megatron_checkpoint,
+                num_gpus=gpus_per_replica,
+                tensor_model_parallel_size=tensor_model_parallel_size,
+                pipeline_model_parallel_size=pipeline_model_parallel_size,
+                model_id=model_id,
+                **model_config_kwargs,
+            )
+
+            # Deploy the model
+            serve.run(app, name=model_id)
+
+            LOGGER.info(f"Megatron multimodal model deployed successfully at {self.host}:{self.port}")
+            LOGGER.info("Press Ctrl+C to stop the deployment")
+
+            # Keep the deployment running
+            while not test_mode:
+                signal.pause()
+
+        except Exception as e:
+            LOGGER.error(f"Error during multimodal model deployment: {str(e)}")
             self._stop()
             sys.exit(1)

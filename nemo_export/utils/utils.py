@@ -21,19 +21,6 @@ import torch
 from transformers import PreTrainedTokenizerBase
 
 
-def is_nemo2_checkpoint(checkpoint_path: str) -> bool:
-    """Checks if the checkpoint is in NeMo 2.0 format.
-
-    Args:
-        checkpoint_path (str): Path to a checkpoint.
-
-    Returns:
-        bool: True if the path points to a NeMo 2.0 checkpoint; otherwise false.
-    """
-    ckpt_path = Path(checkpoint_path)
-    return (ckpt_path / "context").is_dir()
-
-
 def prepare_directory_for_export(
     model_dir: Union[str, Path],
     delete_existing_files: bool,
@@ -64,20 +51,6 @@ def prepare_directory_for_export(
     model_path.mkdir(parents=True, exist_ok=True)
 
 
-def is_nemo_tarfile(path: str) -> bool:
-    """Checks if the path exists and points to packed NeMo 1 checkpoint.
-
-    Args:
-        path (str): Path to possible checkpoint.
-
-    Returns:
-        bool: NeMo 1 checkpoint exists and is in '.nemo' format.
-    """
-    checkpoint_path = Path(path)
-    return checkpoint_path.exists() and checkpoint_path.suffix == ".nemo"
-
-
-# Copied from nemo.collections.nlp.parts.utils_funcs to avoid introducing extra NeMo dependencies:
 def torch_dtype_from_precision(precision: Union[int, str], megatron_amp_O2: bool = True) -> torch.dtype:
     """Mapping from PyTorch Lighthing (PTL) precision types to corresponding PyTorch parameter data type.
 

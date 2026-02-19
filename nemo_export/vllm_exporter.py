@@ -25,18 +25,10 @@ LOGGER = logging.getLogger("NeMo")
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.utils import cast_output, str_ndarray2list
 from nemo_export_deploy_common.import_utils import (
-    MISSING_NEMO_MSG,
     MISSING_TRITON_MSG,
     MISSING_VLLM_MSG,
     UnavailableError,
 )
-
-try:
-    from nemo.collections.llm.api import export_ckpt
-
-    HAVE_NeMo2 = True
-except (ImportError, ModuleNotFoundError):
-    HAVE_NeMo2 = False
 
 try:
     from megatron.bridge.models.conversion.auto_bridge import AutoBridge
@@ -69,10 +61,10 @@ except (ImportError, ModuleNotFoundError):
 
 class vLLMExporter(ITritonDeployable):
     """
-    vLLMExporter enables deployment of Hugging Face, NeMo2, or Megatron-Bridge models using vLLM and Triton.
+    vLLMExporter enables deployment of Hugging Face or Megatron-Bridge models using vLLM and Triton.
 
     This class wraps vLLM APIs to load a model and make it deployable with Triton Inference Server.
-    It supports exporting NeMo2 and Megatron-Bridge checkpoints to Hugging Face format if needed,
+    It supports exporting Megatron-Bridge checkpoints to Hugging Face format if needed,
     and then loads the model with vLLM for fast inference.
 
     Example:
@@ -82,9 +74,7 @@ class vLLMExporter(ITritonDeployable):
         exporter = vLLMExporter()
         # For Megatron-Bridge checkpoint:
         exporter.export(model_path_id="/path/to/megatron/checkpoint/", model_format="megatron_bridge")
-        # For NeMo2 checkpoint (default):
-        exporter.export(model_path_id="/path/to/nemo2/checkpoint/")
-        # For HuggingFace checkpoint:
+        # For HuggingFace checkpoint (default):
         exporter.export(model_path_id="/path/to/hf/model/", model_format="hf")
 
         server = DeployPyTriton(
@@ -101,7 +91,7 @@ class vLLMExporter(ITritonDeployable):
         Initializes the vLLMExporter instance.
 
         This constructor sets up the exporter by initializing model and LoRA model attributes.
-        It also checks for the availability of required dependencies (vLLM, PyTriton, NeMo2)
+        It also checks for the availability of required dependencies (vLLM, PyTriton)
         and raises an UnavailableError if any are missing.
         """
         self.model = None
@@ -110,8 +100,6 @@ class vLLMExporter(ITritonDeployable):
             raise UnavailableError(MISSING_VLLM_MSG)
         if not HAVE_PYTRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
-        if not HAVE_NeMo2:
-            raise UnavailableError(MISSING_NEMO_MSG)
 
     def export(
         self,
@@ -126,17 +114,16 @@ class vLLMExporter(ITritonDeployable):
         gpu_memory_utilization: float = 0.9,
         swap_space: float = 4,
         cpu_offload_gb: float = 0,
-        enforce_eager: bool = False,
-        max_seq_len_to_capture: int = 8192,
+        enforce_eager: bool = True,
         task: Literal["auto", "generate", "embedding"] = "auto",
-        model_format: Literal["hf", "nemo2", "megatron_bridge"] = "nemo2",
+        model_format: Literal["hf", "megatron_bridge"] = "megatron_bridge",
         hf_model_id: str = None,
     ):
         """
-        Exports a Hugging Face, NeMo2, or Megatron-Bridge checkpoint to vLLM and initializes the engine.
+        Exports a Hugging Face or Megatron-Bridge checkpoint to vLLM and initializes the engine.
 
         Args:
-            model_path_id (str): Model name or path to the checkpoint directory. Can be a Hugging Face, NeMo2, or Megatron-Bridge checkpoint.
+            model_path_id (str): Model name or path to the checkpoint directory. Can be a Hugging Face or Megatron-Bridge checkpoint.
             tokenizer (str, optional): Path to the tokenizer or tokenizer name. Defaults to None.
             trust_remote_code (bool, optional): Whether to trust remote code from Hugging Face Hub. Defaults to False.
             enable_lora (bool, optional): Whether to enable LoRA support. Defaults to False.
@@ -148,19 +135,17 @@ class vLLMExporter(ITritonDeployable):
             swap_space (float, optional): Amount of swap space (in GB) to use. Defaults to 4.
             cpu_offload_gb (float, optional): Amount of CPU offload memory (in GB). Defaults to 0.
             enforce_eager (bool, optional): Whether to enforce eager execution. Defaults to False.
-            max_seq_len_to_capture (int, optional): Maximum sequence length to capture. Defaults to 8192.
             task (Literal["auto", "generate", "embedding"], optional): Task type for vLLM. Defaults to "auto".
-            model_format (Literal["hf", "nemo2", "megatron_bridge"], optional): Format of the input checkpoint.
-                - "hf": Hugging Face format
-                - "nemo2": NeMo2 checkpoint format (default)
+            model_format (Literal["hf", "megatron_bridge"], optional): Format of the input checkpoint.
+                - "hf": Hugging Face format (default)
                 - "megatron_bridge": Megatron-Bridge checkpoint format
-                Defaults to "nemo2".
+                Defaults to "megatron_bridge".
             hf_model_id (str, optional): Hugging Face model ID to use for Megatron-Bridge checkpoints.
                 If not provided, will attempt to extract from checkpoint metadata using AutoBridge.get_hf_model_id_from_checkpoint.
                 Defaults to None.
 
         Raises:
-            Exception: If NeMo or Megatron-Bridge checkpoint conversion to Hugging Face format fails.
+            Exception: If Megatron-Bridge checkpoint conversion to Hugging Face format fails.
         """
         if model_format == "megatron_bridge":
             if not HAVE_MEGATRON_BRIDGE:
@@ -221,40 +206,6 @@ class vLLMExporter(ITritonDeployable):
                     swap_space=swap_space,
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
-                    max_seq_len_to_capture=max_seq_len_to_capture,
-                    task=task,
-                )
-        elif model_format == "nemo2":
-            with tempfile.TemporaryDirectory() as tmp_hf_export_dir:
-                try:
-                    export_ckpt(
-                        path=model_path_id,
-                        target="hf",
-                        output_path=tmp_hf_export_dir,
-                        overwrite=True,
-                    )
-                except Exception as e:
-                    raise Exception(
-                        f"NeMo checkpoint is not supported. Error occured during Hugging Face conversion. Error message: {e}"
-                    )
-
-                if not any(Path(tmp_hf_export_dir).iterdir()):
-                    raise Exception("NeMo checkpoint is not supported. Error occured during Hugging Face conversion.")
-
-                self.model = LLM(
-                    model=tmp_hf_export_dir,
-                    tokenizer=tokenizer,
-                    trust_remote_code=trust_remote_code,
-                    enable_lora=enable_lora,
-                    tensor_parallel_size=tensor_parallel_size,
-                    dtype=dtype,
-                    quantization=quantization,
-                    seed=seed,
-                    gpu_memory_utilization=gpu_memory_utilization,
-                    swap_space=swap_space,
-                    cpu_offload_gb=cpu_offload_gb,
-                    enforce_eager=enforce_eager,
-                    max_seq_len_to_capture=max_seq_len_to_capture,
                     task=task,
                 )
         else:
@@ -271,7 +222,6 @@ class vLLMExporter(ITritonDeployable):
                 swap_space=swap_space,
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
-                max_seq_len_to_capture=max_seq_len_to_capture,
                 task=task,
             )
 
@@ -598,6 +548,11 @@ class vLLMExporter(ITritonDeployable):
         compute_logprob = inputs.pop("compute_logprob", False)
         n_top_logprobs = inputs.pop("n_top_logprobs", 0)
         echo = inputs.pop("echo", False)
+        apply_chat_template = inputs.pop("apply_chat_template", False)
+
+        # Apply chat template if requested (for Ray inference only)
+        if apply_chat_template:
+            prompts = [self.apply_chat_template(prompt) for prompt in prompts]
 
         # Map HF-style parameters to vLLM parameters
         if compute_logprob and n_top_logprobs > 0:
@@ -619,6 +574,47 @@ class vLLMExporter(ITritonDeployable):
             output_dict["error"] = err_msg
 
         return output_dict
+
+    def apply_chat_template(self, messages, add_generation_prompt=True):
+        """Apply the chat template to messages using the tokenizer.
+
+        This method uses the vLLM tokenizer's built-in apply_chat_template method
+        to format messages according to the model's expected chat format.
+
+        Args:
+            messages: List of message dictionaries with 'role' and 'content' keys,
+                     or a JSON string representation of messages.
+            add_generation_prompt (bool): Whether to add the generation prompt. Defaults to True.
+
+        Returns:
+            str: The formatted prompt string.
+
+        Raises:
+            ValueError: If the tokenizer does not have a chat template.
+        """
+        import json
+
+        # Handle JSON string input
+        if isinstance(messages, str):
+            messages = json.loads(messages)
+
+        tokenizer = self.model.get_tokenizer()
+
+        # Check if tokenizer has chat_template
+        if not hasattr(tokenizer, "chat_template") or tokenizer.chat_template is None:
+            raise ValueError(
+                "The tokenizer does not have a chat template defined. "
+                "If you would like to evaluate a chat model, ensure your model's tokenizer has a chat template."
+            )
+
+        # Use tokenizer's apply_chat_template method
+        formatted_prompt = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=add_generation_prompt,
+        )
+
+        return formatted_prompt
 
     def _dict_to_str(self, messages):
         """Serializes dict to str."""

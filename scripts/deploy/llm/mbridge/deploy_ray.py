@@ -80,6 +80,18 @@ def parse_args():
         help="Size of the context parallelism",
     )
     parser.add_argument(
+        "--expert_tensor_parallel_size",
+        type=int,
+        default=1,
+        help="Size of the expert tensor model parallelism",
+    )
+    parser.add_argument(
+        "--sequence_parallel",
+        default=False,
+        action=argparse.BooleanOptionalAction,
+        help="Enable sequence parallelism",
+    )
+    parser.add_argument(
         "-eps",
         "--account_for_embedding_in_pipeline_split",
         default=False,
@@ -162,6 +174,12 @@ def parse_args():
         help="Maximum batch size for inference",
     )
     parser.add_argument(
+        "--inference_max_seq_length",
+        type=int,
+        default=4096,
+        help="Maximum sequence length for inference",
+    )
+    parser.add_argument(
         "--random_seed",
         type=int,
         default=None,
@@ -219,7 +237,9 @@ def main():
         tensor_model_parallel_size=args.tensor_model_parallel_size,
         pipeline_model_parallel_size=args.pipeline_model_parallel_size,
         expert_model_parallel_size=args.expert_model_parallel_size,
+        expert_tensor_parallel_size=args.expert_tensor_parallel_size,
         context_parallel_size=args.context_parallel_size,
+        sequence_parallel=args.sequence_parallel,
         model_id=args.model_id,
         num_cpus_per_replica=args.num_cpus_per_replica,
         num_replicas=args.num_replicas,
@@ -227,6 +247,7 @@ def main():
         enable_flash_decode=args.enable_flash_decode,
         legacy_ckpt=args.legacy_ckpt,
         max_batch_size=args.max_batch_size,
+        inference_max_seq_length=args.inference_max_seq_length,
         random_seed=args.random_seed,
         model_type=args.model_type,
         micro_batch_size=args.micro_batch_size,

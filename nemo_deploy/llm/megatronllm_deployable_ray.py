@@ -51,6 +51,7 @@ class ModelWorker:
         pipeline_model_parallel_size: int,
         context_parallel_size: int,
         expert_model_parallel_size: int,
+        sequence_parallel: bool,
         master_port: str,
         master_addr: Optional[str] = None,
         replica_id: int = 0,
@@ -58,6 +59,7 @@ class ModelWorker:
         enable_flash_decode: bool = False,
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
+        inference_max_seq_length: int = 4096,
         random_seed: Optional[int] = None,
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
@@ -89,10 +91,12 @@ class ModelWorker:
                 pipeline_model_parallel_size=pipeline_model_parallel_size,
                 expert_model_parallel_size=expert_model_parallel_size,
                 context_parallel_size=context_parallel_size,
+                sequence_parallel=sequence_parallel,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
+                inference_max_seq_length=inference_max_seq_length,
                 random_seed=random_seed,
                 model_type=model_type,
                 micro_batch_size=micro_batch_size,
@@ -130,11 +134,14 @@ class MegatronRayDeployable:
         pipeline_model_parallel_size: int = 1,
         context_parallel_size: int = 1,
         expert_model_parallel_size: int = 1,
+        expert_tensor_parallel_size: int = 1,
+        sequence_parallel: bool = False,
         model_id: str = "megatron-model",
         enable_cuda_graphs: bool = False,
         enable_flash_decode: bool = False,
         legacy_ckpt: bool = False,
         max_batch_size: int = 32,
+        inference_max_seq_length: int = 4096,
         random_seed: Optional[int] = None,
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
@@ -152,12 +159,10 @@ class MegatronRayDeployable:
             enable_cuda_graphs (bool): Whether to enable CUDA graphs for faster inference.
             enable_flash_decode (bool): Whether to enable Flash Attention decode.
             max_batch_size (int): Maximum batch size for request batching.
-            batch_wait_timeout_s (float): Maximum time to wait for batching requests.
+            inference_max_seq_length (int): Maximum sequence length for inference.
             legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
             random_seed (int): Random seed for model initialization.
-            megatron_checkpoint_filepath (str): Path to the Megatron checkpoint file.
             model_type (str): Type of model to load.
-            model_format (str): Format of model to load.
             micro_batch_size (Optional[int]): Micro batch size for model execution.
         """
         try:
@@ -195,6 +200,8 @@ class MegatronRayDeployable:
                 pipeline_model_parallel_size=pipeline_model_parallel_size,
                 context_parallel_size=context_parallel_size,
                 expert_model_parallel_size=expert_model_parallel_size,
+                expert_tensor_parallel_size=expert_tensor_parallel_size,
+                sequence_parallel=sequence_parallel,
                 master_port=master_port,
                 master_addr=deploy_node_ip,
                 replica_id=replica_id,
@@ -202,6 +209,7 @@ class MegatronRayDeployable:
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
+                inference_max_seq_length=inference_max_seq_length,
                 random_seed=random_seed,
                 model_type=model_type,
                 micro_batch_size=micro_batch_size,
@@ -232,12 +240,15 @@ class MegatronRayDeployable:
                     pipeline_model_parallel_size=pipeline_model_parallel_size,
                     context_parallel_size=context_parallel_size,
                     expert_model_parallel_size=expert_model_parallel_size,
+                    expert_tensor_parallel_size=expert_tensor_parallel_size,
+                    sequence_parallel=sequence_parallel,
                     master_port=master_port,
                     master_addr=deploy_node_ip,
                     replica_id=replica_id,
                     enable_cuda_graphs=enable_cuda_graphs,
                     enable_flash_decode=enable_flash_decode,
                     max_batch_size=max_batch_size,
+                    inference_max_seq_length=inference_max_seq_length,
                     random_seed=random_seed,
                     model_type=model_type,
                     micro_batch_size=micro_batch_size,
@@ -352,15 +363,25 @@ class MegatronRayDeployable:
             # Extract parameters from the request dictionary
             messages = request.get("messages", [])
 
+            # Get sampling parameters
+            temperature = request.get("temperature", 0.0)
+            top_p = request.get("top_p", 0.0)
+            top_k = request.get("top_k", 0)
+
+            # Greedy sampling check: when both temperature and top_p are 0, set top_k to 1
+            if temperature == 0.0 and top_p == 0.0:
+                LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
+                top_k = 1
+
             # Prepare inference parameters
             # For chat templates, we need to pass the entire messages list as a single prompt
             # so that apply_chat_template receives the full conversation context
             inference_inputs = {
-                "prompts": [messages],  # Wrap messages in a list so apply_chat_template gets the full conversation
-                "max_length": request.get("max_tokens", 256),
-                "temperature": request.get("temperature", 1.0),
-                "top_k": request.get("top_k", 0),
-                "top_p": request.get("top_p", 0.0),
+                "prompts": [messages],
+                "max_length": request.get("max_tokens", 512),
+                "temperature": temperature,
+                "top_k": top_k,
+                "top_p": top_p,
                 "compute_logprob": True if request.get("logprobs") == 1 else False,
                 "apply_chat_template": request.get("apply_chat_template", True),
             }
@@ -370,7 +391,6 @@ class MegatronRayDeployable:
 
             # Extract generated texts from results
             generated_texts = results["sentences"]
-
             # Calculate token counts
             prompt_tokens = sum(len(str(msg).split()) for msg in messages)
             completion_tokens = sum(len(r.split()) for r in generated_texts)

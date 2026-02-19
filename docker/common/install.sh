@@ -82,12 +82,12 @@ main() {
         dpkg -i cuda-keyring_1.1-1_all.deb
         rm cuda-keyring_1.1-1_all.deb
         apt-get update
-        apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 libcutlass-dev 
+        apt-get install -y cuda-toolkit-12-8 cudnn-cuda-12 libcudnn9-cuda-12 libcutlass-dev
 
         # Install OpenMPI and nvinfer
         apt-get install -y libopenmpi-dev libnvinfer-lean-dev
     fi
-    
+
     # Clean up
     apt-get clean
 
@@ -121,6 +121,20 @@ main() {
                 "--no-install-package" "nvidia-cusparse-cu12"
                 "--no-install-package" "nvidia-cusparselt-cu12"
                 "--no-install-package" "nvidia-nccl-cu12"
+                "--no-install-package" "nvidia-cublas"
+                "--no-install-package" "nvidia-cuda-cupti"
+                "--no-install-package" "nvidia-cuda-nvrtc"
+                "--no-install-package" "nvidia-cuda-runtime"
+                "--no-install-package" "nvidia-cudnn-cu13"
+                "--no-install-package" "nvidia-cufft"
+                "--no-install-package" "nvidia-cufile"
+                "--no-install-package" "nvidia-curand"
+                "--no-install-package" "nvidia-cusolver"
+                "--no-install-package" "nvidia-cusparse"
+                "--no-install-package" "nvidia-cusparselt-cu13"
+                "--no-install-package" "nvidia-nccl-cu13"
+                "--no-install-package" "tensorrt-llm"
+                "--no-install-package" "vllm"
             )
         else
             UV_ARGS=()
@@ -152,7 +166,7 @@ main() {
         pip install --pre --no-cache-dir --upgrade pip
         pip install --pre --no-cache-dir 'torch>=2.7.0,<2.8.0' pybind11 wheel_stub ninja wheel packaging
 
- 
+
         pip install --pre --no-cache-dir --no-build-isolation .$EXTRA
     fi
 

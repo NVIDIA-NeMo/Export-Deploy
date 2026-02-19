@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import argparse
-import json
 import logging
 import multiprocessing
 
@@ -27,22 +26,20 @@ def get_available_cpus():
     return multiprocessing.cpu_count()
 
 
-def json_type(string):
-    """Parse JSON string into a dictionary."""
-    try:
-        return json.loads(string)
-    except json.JSONDecodeError as e:
-        raise argparse.ArgumentTypeError(f"Invalid JSON: {e}")
-
-
 def parse_args():
     """Parse command-line arguments for the Ray deployment script."""
     parser = argparse.ArgumentParser(description="Deploy a Megatron model using Ray")
     parser.add_argument(
+        "--megatron_checkpoint",
+        type=str,
+        default=None,
+        help="Path to the Megatron checkpoint directory",
+    )
+    parser.add_argument(
         "--num_gpus",
         type=int,
         default=1,
-        help="Number of GPUs per node in case of single node. In case of multinode total number of GPUs across all nodes",
+        help="Number of GPUs to use per node",
     )
     parser.add_argument(
         "--tensor_model_parallel_size",
@@ -77,22 +74,10 @@ def parse_args():
         help="Size of the expert model parallelism",
     )
     parser.add_argument(
-        "--expert_tensor_parallel_size",
-        type=int,
-        default=1,
-        help="Size of the expert tensor model parallelism",
-    )
-    parser.add_argument(
         "--context_parallel_size",
         type=int,
         default=1,
         help="Size of the context parallelism",
-    )
-    parser.add_argument(
-        "--sequence_parallel",
-        default=False,
-        action=argparse.BooleanOptionalAction,
-        help="Enable sequence parallelism",
     )
     parser.add_argument(
         "-eps",
@@ -111,7 +96,7 @@ def parse_args():
     parser.add_argument(
         "--model_id",
         type=str,
-        default="nemo-model",
+        default="megatron-model",
         help="Identifier for the model in the API responses",
     )
     parser.add_argument(
@@ -177,23 +162,10 @@ def parse_args():
         help="Maximum batch size for inference",
     )
     parser.add_argument(
-        "-imsl",
-        "--inference_max_seq_length",
-        default=4096,
-        type=int,
-        help="Max sequence length for inference",
-    )
-    parser.add_argument(
         "--random_seed",
         type=int,
         default=None,
         help="Random seed for reproducible inference",
-    )
-    parser.add_argument(
-        "--megatron_checkpoint",
-        type=str,
-        default=None,
-        help="Path to the Megatron checkpoint file",
     )
     parser.add_argument(
         "--model_type",
@@ -207,12 +179,6 @@ def parse_args():
         default=None,
         help="Micro batch size for model execution",
     )
-    parser.add_argument(
-        "--runtime_env",
-        type=json_type,
-        default={},
-        help="Runtime environment for the deployment (JSON string)",
-    )
     return parser.parse_args()
 
 
@@ -220,7 +186,7 @@ def main():
     """Main function to deploy a Megatron model using Ray."""
     args = parse_args()
     # Initialize Ray deployment with updated DeployRay class
-    runtime_env = args.runtime_env
+    runtime_env = {}
     if args.cuda_visible_devices is not None:
         runtime_env["env_vars"] = {
             "CUDA_VISIBLE_DEVICES": args.cuda_visible_devices,
@@ -234,8 +200,6 @@ def main():
         port=args.port,
         runtime_env=runtime_env,
     )
-    if not args.megatron_checkpoint:
-        raise ValueError("--megatron_checkpoint must be provided")
 
     model_config_kwargs = {
         "account_for_embedding_in_pipeline_split": args.account_for_embedding_in_pipeline_split,
@@ -255,9 +219,7 @@ def main():
         tensor_model_parallel_size=args.tensor_model_parallel_size,
         pipeline_model_parallel_size=args.pipeline_model_parallel_size,
         expert_model_parallel_size=args.expert_model_parallel_size,
-        expert_tensor_parallel_size=args.expert_tensor_parallel_size,
         context_parallel_size=args.context_parallel_size,
-        sequence_parallel=args.sequence_parallel,
         model_id=args.model_id,
         num_cpus_per_replica=args.num_cpus_per_replica,
         num_replicas=args.num_replicas,
@@ -265,7 +227,6 @@ def main():
         enable_flash_decode=args.enable_flash_decode,
         legacy_ckpt=args.legacy_ckpt,
         max_batch_size=args.max_batch_size,
-        inference_max_seq_length=args.inference_max_seq_length,
         random_seed=args.random_seed,
         model_type=args.model_type,
         micro_batch_size=args.micro_batch_size,

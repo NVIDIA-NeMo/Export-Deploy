@@ -67,7 +67,7 @@ class TestTritonSettings:
     def test_triton_settings_exception_handling(self):
         """Test TritonSettings initialization when environment variables cause exceptions"""
         with patch.dict(os.environ, {"TRITON_PORT": "invalid_port"}, clear=True):
-            with patch("nemo.utils.logging.error") as mock_logging:
+            with patch("nemo_deploy.service.fastapi_interface_to_pytriton.logger.error") as mock_logging:
                 settings = TritonSettings()
 
                 # The attributes won't be set due to the early return, so accessing properties will fail
