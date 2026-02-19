@@ -26,8 +26,7 @@ This section demonstrates how to deploy [Megatron-Bridge](https://github.com/NVI
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_ray_inframework.py \
-      --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge \
-      --model_format megatron \
+      --megatron_checkpoint /opt/checkpoints/hf_llama31_8B_mbridge/iter_0000000/ \
       --model_id llama \
       --num_replicas 1 \
       --num_gpus 1 \
@@ -56,6 +55,5 @@ This section demonstrates how to deploy [Megatron-Bridge](https://github.com/NVI
 Deploying Megatron-Bridge models with Ray Serve closely follows the same process as deploying NeMo 2.0 models. The primary differences are:
 
 - Use the `--megatron_checkpoint` argument to specify your Megatron-Bridge checkpoint file.
-- Set `--model_format megatron` to indicate the model type.
 
 All other deployment steps, parameters, and Ray Serve features remain the same as for NeMo 2.0 LLMs. For a comprehensive walkthrough of advanced options, scaling, and troubleshooting, refer to the [Deploy NeMo 2.0 LLMs with Ray Serve](../nemo_2/in-framework-ray.md) documentation.
