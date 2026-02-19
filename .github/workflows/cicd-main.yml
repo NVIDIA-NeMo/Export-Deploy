@@ -243,7 +243,7 @@ jobs:
 
   cicd-e2e-tests-vllm:
     needs: [cicd-unit-tests-vllm, pre-flight]
-    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x8
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     if: |
