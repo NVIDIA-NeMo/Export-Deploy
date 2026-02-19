@@ -21,6 +21,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import numpy as np
 import torch
 import wrapt
+from datasets import load_dataset
 from transformers import AutoModel, AutoTokenizer
 
 from nemo_deploy import ITritonDeployable
@@ -31,7 +32,6 @@ from nemo_export.utils import (
 )
 from nemo_export_deploy_common.import_utils import (
     MISSING_MODELOPT_MSG,
-    MISSING_NEMO_MSG,
     MISSING_TENSORRT_MSG,
     UnavailableError,
 )
@@ -58,17 +58,6 @@ except (ImportError, ModuleNotFoundError):
 
     trt = MagicMock()
     HAVE_TENSORRT = False
-
-try:
-    from nemo.collections.llm.modelopt.quantization.quant_cfg_choices import (
-        get_quant_cfg_choices,
-    )
-
-    QUANT_CFG_CHOICES = get_quant_cfg_choices()
-
-    HAVE_NEMO = True
-except (ImportError, ModuleNotFoundError):
-    HAVE_NEMO = False
 
 
 @wrapt.decorator
@@ -250,6 +239,7 @@ class OnnxLLMExporter(ITritonDeployable):
                 dynamic_axes={**dynamic_axes_input, **dynamic_axes_output},
                 verbose=verbose,
                 opset_version=opset,
+                dynamo=False,
             )
         logger.info(f"Successfully exported PyTorch model to ONNX model {self.onnx_model_path}")
 
@@ -490,17 +480,15 @@ class OnnxLLMExporter(ITritonDeployable):
             forward_loop (callable): A function that accepts the model as a single parameter
                 and runs sample data through it. This is used for calibration during quantization.
         """
-        if not HAVE_NEMO:
-            raise UnavailableError(MISSING_NEMO_MSG)
-
         if not HAVE_MODELOPT:
             raise UnavailableError(MISSING_MODELOPT_MSG)
 
+        quant_cfg_choices = get_quant_cfg_choices()
         if isinstance(quant_cfg, str):
-            assert quant_cfg in QUANT_CFG_CHOICES, (
-                f"Quantization config {quant_cfg} is not supported. Supported configs: {list(QUANT_CFG_CHOICES)}"
+            assert quant_cfg in quant_cfg_choices, (
+                f"Quantization config {quant_cfg} is not supported. Supported configs: {list(quant_cfg_choices)}"
             )
-            quant_cfg = QUANT_CFG_CHOICES[quant_cfg]
+            quant_cfg = quant_cfg_choices[quant_cfg]
 
         logger.info("Starting quantization...")
         mtq.quantize(self.model, quant_cfg, forward_loop=forward_loop)
@@ -535,3 +523,57 @@ class OnnxLLMExporter(ITritonDeployable):
     def triton_infer_fn(self, **inputs: np.ndarray):
         """PyTriton inference function."""
         raise NotImplementedError("This function will be implemented later.")
+
+
+def get_calib_data_iter(
+    data: str = "cnn_dailymail", batch_size: int = 64, calib_size: int = 512, max_sequence_length: int = 512
+):
+    """Creates a sample data iterator for calibration."""
+    if data == "wikitext":
+        dataset = load_dataset("wikitext", "wikitext-103-v1", split="train")
+        text_column = "text"
+    elif data == "cnn_dailymail":
+        dataset = load_dataset("cnn_dailymail", name="3.0.0", split="train")
+        text_column = "article"
+    else:
+        # Assume a local JSON dataset with a column named "text"
+        dataset = load_dataset("json", data_files=data, split="train")
+        text_column = "text"
+    calib_size = max(min(len(dataset), calib_size), batch_size)
+    for i in range(calib_size // batch_size):
+        batch = dataset[i * batch_size : (i + 1) * batch_size][text_column]
+        for j in range(len(batch)):
+            batch[j] = batch[j][:max_sequence_length]
+        yield batch
+
+
+def get_quant_cfg_choices() -> Dict[str, Dict[str, Any]]:
+    """
+    Retrieve a dictionary of modelopt quantization configuration choices.
+
+    This function checks for the availability of specific quantization configurations defined in
+    the modelopt.torch.quantization (mtq) module and returns a dictionary mapping short names to
+    their corresponding configurations. The function is intended to work for different modelopt
+    library versions that come with variable configuration choices.
+
+    Returns:
+        dict: A dictionary where keys are short names (e.g., "fp8") and values are the
+            corresponding modelopt quantization configuration objects.
+    """
+    quant_cfg_names = [
+        ("int8", "INT8_DEFAULT_CFG"),
+        ("int8_sq", "INT8_SMOOTHQUANT_CFG"),
+        ("fp8", "FP8_DEFAULT_CFG"),
+        ("block_fp8", "FP8_2D_BLOCKWISE_WEIGHT_ONLY_CFG"),
+        ("int4_awq", "INT4_AWQ_CFG"),
+        ("w4a8_awq", "W4A8_AWQ_BETA_CFG"),
+        ("int4", "INT4_BLOCKWISE_WEIGHT_ONLY_CFG"),
+        ("nvfp4", "NVFP4_DEFAULT_CFG"),
+    ]
+
+    quant_cfg_choices = {}
+    for short_name, full_name in quant_cfg_names:
+        if config := getattr(mtq, full_name, None):
+            quant_cfg_choices[short_name] = config
+
+    return quant_cfg_choices

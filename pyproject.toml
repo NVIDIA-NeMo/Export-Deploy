@@ -76,14 +76,13 @@ dependencies = [
     "einops",
     "ijson",
     "pyarrow>=20.0.0,<21.0.0",
-    "torchao>=0.14.1",
 ]
 
 [project.optional-dependencies]
 inframework = []
 vllm = ["vllm~=0.11.2", "pandas", "timm"]
 trtllm = ["tensorrt-llm~=1.1.0", "cuda-python~=13.0.0"]
-trt-onnx = ["tensorrt==10.14.1.48.post1", "onnx==1.18.0", "transformers==4.51.3"]
+trt-onnx = ["tensorrt==10.14.1.48.post1", "onnx==1.18.0", "onnxscript>=0.6.0", "transformers==4.51.3"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`

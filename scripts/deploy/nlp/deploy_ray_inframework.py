@@ -77,10 +77,22 @@ def parse_args():
         help="Size of the expert model parallelism",
     )
     parser.add_argument(
+        "--expert_tensor_parallel_size",
+        type=int,
+        default=1,
+        help="Size of the expert tensor model parallelism",
+    )
+    parser.add_argument(
         "--context_parallel_size",
         type=int,
         default=1,
         help="Size of the context parallelism",
+    )
+    parser.add_argument(
+        "--sequence_parallel",
+        default=False,
+        action=argparse.BooleanOptionalAction,
+        help="Enable sequence parallelism",
     )
     parser.add_argument(
         "-eps",
@@ -243,7 +255,9 @@ def main():
         tensor_model_parallel_size=args.tensor_model_parallel_size,
         pipeline_model_parallel_size=args.pipeline_model_parallel_size,
         expert_model_parallel_size=args.expert_model_parallel_size,
+        expert_tensor_parallel_size=args.expert_tensor_parallel_size,
         context_parallel_size=args.context_parallel_size,
+        sequence_parallel=args.sequence_parallel,
         model_id=args.model_id,
         num_cpus_per_replica=args.num_cpus_per_replica,
         num_replicas=args.num_replicas,

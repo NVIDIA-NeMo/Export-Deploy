@@ -78,9 +78,13 @@ except (ImportError, ModuleNotFoundError):
     HAVE_NEMO = False
     from typing import Any
 
+    io = None
     GPTConfig = Any
     T5Config = Any
     MCoreTokenizerWrappper = Any
+    set_modelopt_spec_if_exists_in_ckpt = None
+    ckpt_to_weights_subdir = None
+    ckpt_to_context_subdir = None
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -211,6 +215,8 @@ def setup_megatron_model_and_tokenizer_for_inference(
     pipeline_model_parallel_size: Optional[int] = None,
     context_parallel_size: Optional[int] = None,
     expert_model_parallel_size: Optional[int] = None,
+    expert_tensor_parallel_size: Optional[int] = None,
+    sequence_parallel: Optional[bool] = None,
     micro_batch_size: Optional[int] = None,
     model_type: str = "gpt",
 ) -> Tuple[List[MegatronModule], MegatronTokenizer]:
@@ -264,6 +270,10 @@ def setup_megatron_model_and_tokenizer_for_inference(
         model_config.context_parallel_size = context_parallel_size
     if expert_model_parallel_size is not None:
         model_config.expert_model_parallel_size = expert_model_parallel_size
+    if expert_tensor_parallel_size is not None:
+        model_config.expert_tensor_parallel_size = expert_tensor_parallel_size
+    if sequence_parallel is not None:
+        model_config.sequence_parallel = sequence_parallel
     # Initialize Megatron for inference
     rng_config = RNGConfig(inference_rng_tracker=True)
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
@@ -284,6 +294,8 @@ def setup_model_and_tokenizer_for_inference(
     pipeline_model_parallel_size: Optional[int] = None,
     context_parallel_size: Optional[int] = None,
     expert_model_parallel_size: Optional[int] = None,
+    expert_tensor_parallel_size: Optional[int] = None,
+    sequence_parallel: Optional[int] = None,
     params_dtype: Optional[torch.dtype] = None,
     micro_batch_size: Optional[int] = None,
     enable_flash_decode: bool = False,
@@ -343,6 +355,10 @@ def setup_model_and_tokenizer_for_inference(
         model_config.context_parallel_size = context_parallel_size
     if expert_model_parallel_size is not None:
         model_config.expert_model_parallel_size = expert_model_parallel_size
+    if expert_tensor_parallel_size is not None:
+        model_config.expert_tensor_parallel_size = expert_tensor_parallel_size
+    if sequence_parallel is not None:
+        model_config.sequence_parallel = sequence_parallel
 
     if params_dtype is None:
         params_dtype = model_config.params_dtype
@@ -441,6 +457,8 @@ def create_mcore_engine(
     pipeline_model_parallel_size: Optional[int] = None,
     context_parallel_size: Optional[int] = None,
     expert_model_parallel_size: Optional[int] = None,
+    expert_tensor_parallel_size: Optional[int] = None,
+    sequence_parallel: Optional[int] = None,
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
     legacy_ckpt: bool = False,
@@ -482,7 +500,8 @@ def create_mcore_engine(
     pipeline_model_parallel_size = pipeline_model_parallel_size if pipeline_model_parallel_size is not None else 1
     context_parallel_size = context_parallel_size if context_parallel_size is not None else 1
     expert_model_parallel_size = expert_model_parallel_size if expert_model_parallel_size is not None else 1
-
+    expert_tensor_parallel_size = expert_tensor_parallel_size if expert_tensor_parallel_size is not None else 1
+    sequence_parallel = sequence_parallel if sequence_parallel is not None else 1
     if model_format == "nemo":
         modelList, tokenizer = setup_model_and_tokenizer_for_inference(
             checkpoint_path=path,
@@ -490,6 +509,8 @@ def create_mcore_engine(
             pipeline_model_parallel_size=pipeline_model_parallel_size,
             context_parallel_size=context_parallel_size,
             expert_model_parallel_size=expert_model_parallel_size,
+            expert_tensor_parallel_size=expert_tensor_parallel_size,
+            sequence_parallel=sequence_parallel,
             params_dtype=params_dtype,
             enable_flash_decode=enable_flash_decode,
             enable_cuda_graphs=enable_cuda_graphs,
@@ -504,6 +525,8 @@ def create_mcore_engine(
             pipeline_model_parallel_size=pipeline_model_parallel_size,
             context_parallel_size=context_parallel_size,
             expert_model_parallel_size=expert_model_parallel_size,
+            expert_tensor_parallel_size=expert_tensor_parallel_size,
+            sequence_parallel=sequence_parallel,
             micro_batch_size=micro_batch_size,
             model_type=model_type,
         )
