@@ -51,6 +51,7 @@ class ModelWorker:
         pipeline_model_parallel_size: int,
         context_parallel_size: int,
         expert_model_parallel_size: int,
+        sequence_parallel: bool,
         master_port: str,
         master_addr: Optional[str] = None,
         replica_id: int = 0,
@@ -90,6 +91,7 @@ class ModelWorker:
                 pipeline_model_parallel_size=pipeline_model_parallel_size,
                 expert_model_parallel_size=expert_model_parallel_size,
                 context_parallel_size=context_parallel_size,
+                sequence_parallel=sequence_parallel,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
                 legacy_ckpt=legacy_ckpt,
@@ -132,6 +134,8 @@ class MegatronRayDeployable:
         pipeline_model_parallel_size: int = 1,
         context_parallel_size: int = 1,
         expert_model_parallel_size: int = 1,
+        expert_tensor_parallel_size: int = 1,
+        sequence_parallel: bool = False,
         model_id: str = "megatron-model",
         enable_cuda_graphs: bool = False,
         enable_flash_decode: bool = False,
@@ -196,6 +200,8 @@ class MegatronRayDeployable:
                 pipeline_model_parallel_size=pipeline_model_parallel_size,
                 context_parallel_size=context_parallel_size,
                 expert_model_parallel_size=expert_model_parallel_size,
+                expert_tensor_parallel_size=expert_tensor_parallel_size,
+                sequence_parallel=sequence_parallel,
                 master_port=master_port,
                 master_addr=deploy_node_ip,
                 replica_id=replica_id,
@@ -234,6 +240,8 @@ class MegatronRayDeployable:
                     pipeline_model_parallel_size=pipeline_model_parallel_size,
                     context_parallel_size=context_parallel_size,
                     expert_model_parallel_size=expert_model_parallel_size,
+                    expert_tensor_parallel_size=expert_tensor_parallel_size,
+                    sequence_parallel=sequence_parallel,
                     master_port=master_port,
                     master_addr=deploy_node_ip,
                     replica_id=replica_id,
@@ -265,6 +273,7 @@ class MegatronRayDeployable:
     async def completions(self, request: Dict[Any, Any]):
         """Handle text completion requests."""
         try:
+            LOGGER.warning(f"request: {request}")
             if "prompt" in request:
                 request["prompts"] = [request["prompt"]]
             temperature = request.get("temperature", 0.0)
@@ -272,6 +281,11 @@ class MegatronRayDeployable:
             if temperature == 0.0 and top_p == 0.0:
                 LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
                 request["top_k"] = 1.0
+
+            # Extract stop words from the request (OpenAI API uses 'stop' field)
+            stop_words = request.get("stop", None)
+            if isinstance(stop_words, str):
+                stop_words = [stop_words]
 
             # Prepare inference inputs with proper parameter mapping
             inference_inputs = {
@@ -286,6 +300,7 @@ class MegatronRayDeployable:
                 "apply_chat_template": False,
                 "n_top_logprobs": request.get("logprobs", 0),
                 "echo": request.get("echo", False),
+                "stop_words": stop_words,
             }
 
             # Run tokenization and model inference in the thread pool
@@ -342,7 +357,7 @@ class MegatronRayDeployable:
                 # output format requires empty logprobs for the 1st token if echo is True
                 output["choices"][0]["logprobs"]["token_logprobs"].insert(0, None)
             # Comment out the below line to check the output in case if invalid accuracy score or output.
-            # LOGGER.warning(f"Output: {output}")
+            LOGGER.warning(f"Output: {output}")
             return output
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")
@@ -352,6 +367,7 @@ class MegatronRayDeployable:
     async def chat_completions(self, request: Dict[Any, Any]):
         """Handle chat completion requests."""
         try:
+            LOGGER.warning(f"request: {request}")
             # Extract parameters from the request dictionary
             messages = request.get("messages", [])
 
@@ -365,6 +381,11 @@ class MegatronRayDeployable:
                 LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
                 top_k = 1
 
+            # Extract stop words from the request (OpenAI API uses 'stop' field)
+            stop_words = request.get("stop", None)
+            if isinstance(stop_words, str):
+                stop_words = [stop_words]
+
             # Prepare inference parameters
             # For chat templates, we need to pass the entire messages list as a single prompt
             # so that apply_chat_template receives the full conversation context
@@ -376,6 +397,7 @@ class MegatronRayDeployable:
                 "top_p": top_p,
                 "compute_logprob": True if request.get("logprobs") == 1 else False,
                 "apply_chat_template": request.get("apply_chat_template", True),
+                "stop_words": stop_words,
             }
 
             # Run model inference in the thread pool
@@ -426,6 +448,7 @@ class MegatronRayDeployable:
                     "total_tokens": total_tokens,
                 },
             }
+            LOGGER.warning(f"Output: {output}")
             return output
         except Exception as e:
             LOGGER.error(f"Error during chat completion: {str(e)}")
