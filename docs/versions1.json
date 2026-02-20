@@ -1,6 +1,10 @@
 [
     {
-        "version": "latest",
+        "version": "nightly",
+        "url": "https://docs.nvidia.com/nemo/export-deploy/nightly/"
+    },
+    {
+        "version": "latest (0.3.0)",
         "url": "https://docs.nvidia.com/nemo/export-deploy/latest/"
     },
     {
