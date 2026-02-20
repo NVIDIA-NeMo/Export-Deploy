@@ -71,7 +71,6 @@ class BaseMultimodalRequest(BaseModel):
         top_p (float): Cumulative probability for nucleus sampling.
         top_k (int): Number of highest-probability tokens to consider for sampling.
         random_seed (Optional[int]): Random seed for generation.
-        max_batch_size (int): Maximum batch size for inference.
     """
 
     model: str
@@ -80,7 +79,6 @@ class BaseMultimodalRequest(BaseModel):
     top_p: float = 0.0
     top_k: int = 0
     random_seed: Optional[int] = None
-    max_batch_size: int = 4
 
 
 class MultimodalCompletionRequest(BaseMultimodalRequest):
@@ -175,7 +173,6 @@ def _helper_fun(
     top_p,
     max_length,
     random_seed,
-    max_batch_size,
     apply_chat_template,
 ):
     """run_in_executor doesn't allow to pass kwargs, so we have this helper function to pass args as a list."""
@@ -189,7 +186,6 @@ def _helper_fun(
         top_p=top_p,
         max_length=max_length,
         random_seed=random_seed,
-        max_batch_size=max_batch_size,
         apply_chat_template=apply_chat_template,
         init_timeout=300,
     )
@@ -207,7 +203,6 @@ async def query_multimodal_async(
     top_p,
     max_length,
     random_seed,
-    max_batch_size,
     apply_chat_template,
 ):
     """Sends requests to `NemoQueryMultimodalPytorch.query_multimodal` in a non-blocking way.
@@ -232,7 +227,6 @@ async def query_multimodal_async(
             top_p,
             max_length,
             random_seed,
-            max_batch_size,
             apply_chat_template,
         )
     return result
@@ -261,7 +255,6 @@ async def completions_v1(request: MultimodalCompletionRequest):
         top_p=request.top_p,
         max_length=request.max_tokens,
         random_seed=request.random_seed,
-        max_batch_size=request.max_batch_size,
         apply_chat_template=False,
     )
 
@@ -327,7 +320,6 @@ async def chat_completions_v1(request: MultimodalChatCompletionRequest):
         top_p=request.top_p,
         max_length=request.max_tokens,
         random_seed=request.random_seed,
-        max_batch_size=request.max_batch_size,
         apply_chat_template=True,
     )
 
