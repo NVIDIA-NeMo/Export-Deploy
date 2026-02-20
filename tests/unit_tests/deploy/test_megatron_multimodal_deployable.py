@@ -150,6 +150,7 @@ class TestMegatronMultimodalDeployable:
             params_dtype=torch.float16,
             inference_batch_times_seqlen_threshold=1500,
             inference_max_seq_length=4096,
+            inference_max_batch_size=4,
         )
 
     def test_generate_method(self, deployable, sample_image):
