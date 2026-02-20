@@ -197,7 +197,6 @@ class TestNemoQueryMultimodalPytorch:
             prompts=mock_prompts,
             images=mock_images,
             max_length=100,
-            max_batch_size=4,
             top_k=10,
             top_p=0.9,
             temperature=0.8,

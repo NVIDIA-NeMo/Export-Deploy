@@ -252,7 +252,6 @@ class MegatronMultimodalRayDeployable:
                 "top_p": request.get("top_p", 0.0),
                 "apply_chat_template": True,
                 "random_seed": request.get("random_seed", None),
-                "max_batch_size": request.get("max_batch_size", 4),
             }
 
             # Run model inference on all workers (distributed inference)
@@ -311,7 +310,6 @@ class MegatronMultimodalRayDeployable:
                 "top_p": request.get("top_p", 0.0),
                 "apply_chat_template": False,
                 "random_seed": request.get("random_seed", None),
-                "max_batch_size": request.get("max_batch_size", 4),
             }
 
             # Run model inference on all workers (distributed inference)

@@ -174,6 +174,7 @@ def nemo_deploy(argv):
         params_dtype=params_dtype,
         inference_batch_times_seqlen_threshold=args.inference_batch_times_seqlen_threshold,
         inference_max_seq_length=args.inference_max_seq_length,
+        inference_max_batch_size=args.max_batch_size,
     )
 
     if torch.distributed.is_initialized():

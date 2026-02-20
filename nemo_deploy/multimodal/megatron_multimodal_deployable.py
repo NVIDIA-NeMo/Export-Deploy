@@ -18,7 +18,7 @@ from typing import List, Optional
 
 import numpy as np
 import torch
-from megatron.core.inference.common_inference_params import CommonInferenceParams
+from megatron.core.inference.sampling_params import SamplingParams
 from PIL import Image
 
 from nemo_deploy import ITritonDeployable
@@ -77,6 +77,7 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         params_dtype (torch.dtype): data type for model parameters.
         inference_batch_times_seqlen_threshold (int): sequence threshold.
         inference_max_seq_length (int): maximum sequence length for inference.
+        inference_max_batch_size (int): maximum batch size for inference.
     """
 
     def __init__(
@@ -87,6 +88,7 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         params_dtype: torch.dtype = torch.bfloat16,
         inference_batch_times_seqlen_threshold: int = 1000,
         inference_max_seq_length: int = 8192,
+        inference_max_batch_size: int = 4,
     ):
         if not HAVE_TRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
@@ -98,7 +100,6 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         self.pipeline_model_parallel_size = pipeline_model_parallel_size
         self.params_dtype = params_dtype
         self.inference_batch_times_seqlen_threshold = inference_batch_times_seqlen_threshold
-        self.inference_max_seq_length = inference_max_seq_length
 
         self.inference_wrapped_model, self.processor = setup_model_and_tokenizer(
             megatron_model_path=megatron_checkpoint_filepath,
@@ -107,14 +108,14 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             params_dtype=params_dtype,
             inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
             inference_max_seq_length=inference_max_seq_length,
+            inference_max_batch_size=inference_max_batch_size,
         )
 
     def generate(
         self,
         prompts: List[str],
         images: List[Image],
-        inference_params: Optional[CommonInferenceParams] = None,
-        max_batch_size: int = 4,
+        inference_params: Optional[SamplingParams] = None,
         random_seed: Optional[int] = None,
         apply_chat_template: bool = False,
     ) -> dict:
@@ -123,8 +124,7 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         Args:
             prompts (List[str]): A list of input strings.
             images (List[Union[Image, List[Image]]]): A list of input images.
-            inference_params (Optional[CommonInferenceParams]): Parameters for controlling the inference process.
-            max_batch_size (int): max batch size for inference. Defaults to 4.
+            inference_params (Optional[SamplingParams]): Parameters for controlling the inference process.
             random_seed (Optional[int]): random seed for inference. Defaults to None.
             apply_chat_template (bool): Whether to apply chat template. Defaults to False.
 
@@ -141,9 +141,8 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             prompts=prompts,
             images=images,
             processor=self.processor,
-            max_batch_size=max_batch_size,
             random_seed=random_seed,
-            inference_params=inference_params,
+            sampling_params=inference_params,
         )
 
         return results
@@ -193,7 +192,6 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             Tensor(name="prompts", shape=(-1,), dtype=bytes),
             Tensor(name="images", shape=(-1,), dtype=bytes),
             Tensor(name="max_length", shape=(-1,), dtype=np.int_, optional=True),
-            Tensor(name="max_batch_size", shape=(-1,), dtype=np.int_, optional=True),
             Tensor(name="top_k", shape=(-1,), dtype=np.int_, optional=True),
             Tensor(name="top_p", shape=(-1,), dtype=np.single, optional=True),
             Tensor(name="temperature", shape=(-1,), dtype=np.single, optional=True),
@@ -209,7 +207,6 @@ class MegatronMultimodalDeployable(ITritonDeployable):
     @batch
     @first_value(
         "max_length",
-        "max_batch_size",
         "top_k",
         "top_p",
         "temperature",
@@ -224,7 +221,6 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         top_p = inputs.pop("top_p", 0.0)
         num_tokens_to_generate = inputs.pop("max_length", 50)
         random_seed = inputs.pop("random_seed", None)
-        max_batch_size = inputs.pop("max_batch_size", 4)
         apply_chat_template = inputs.pop("apply_chat_template", False)
 
         output_infer = self._infer_fn(
@@ -235,7 +231,6 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             top_p=top_p,
             num_tokens_to_generate=num_tokens_to_generate,
             random_seed=random_seed,
-            max_batch_size=max_batch_size,
             apply_chat_template=apply_chat_template,
         )
 
@@ -252,7 +247,6 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         top_p=0.0,
         num_tokens_to_generate=256,
         random_seed=None,
-        max_batch_size=4,
         apply_chat_template=False,
     ):
         """Private helper function that handles the core inference logic shared between triton and ray inference.
@@ -265,7 +259,6 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             top_p (float): Top-p sampling parameter
             num_tokens_to_generate (int): Maximum number of tokens to generate
             random_seed (Optional[int]): Random seed for inference
-            max_batch_size (int): Maximum batch size for inference
             apply_chat_template (bool): Whether to apply chat template
 
         Returns:
@@ -277,7 +270,7 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             top_k = 1
             top_p = 0.0
 
-        inference_params = CommonInferenceParams(
+        inference_params = SamplingParams(
             temperature=float(temperature),
             top_k=int(top_k),
             top_p=float(top_p),
@@ -290,7 +283,6 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             prompts,
             images,
             inference_params,
-            max_batch_size=max_batch_size,
             random_seed=random_seed,
             apply_chat_template=apply_chat_template,
         )
@@ -311,7 +303,6 @@ class MegatronMultimodalDeployable(ITritonDeployable):
                 - top_p (float): Top-p sampling parameter (default: 0.0)
                 - max_length (int): Maximum number of tokens to generate (default: 50)
                 - random_seed (Optional[int]): Random seed for reproducibility (default: None)
-                - max_batch_size (int): Maximum batch size for inference (default: 4)
                 - apply_chat_template (bool): Whether to apply chat template (default: False)
 
         Returns:
@@ -325,7 +316,6 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         top_p = inputs.get("top_p", 0.0)
         num_tokens_to_generate = inputs.get("max_length", 50)
         random_seed = inputs.get("random_seed", None)
-        max_batch_size = inputs.get("max_batch_size", 4)
         apply_chat_template = inputs.get("apply_chat_template", False)
 
         return self._infer_fn(
@@ -336,6 +326,5 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             top_p=top_p,
             num_tokens_to_generate=num_tokens_to_generate,
             random_seed=random_seed,
-            max_batch_size=max_batch_size,
             apply_chat_template=apply_chat_template,
         )

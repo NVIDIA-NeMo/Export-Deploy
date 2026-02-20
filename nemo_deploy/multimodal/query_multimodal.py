@@ -226,7 +226,6 @@ class NemoQueryMultimodalPytorch:
         prompts: List[str],
         images: List[str],
         max_length: Optional[int] = None,
-        max_batch_size: Optional[int] = None,
         top_k: Optional[int] = None,
         top_p: Optional[float] = None,
         temperature: Optional[float] = None,
@@ -241,7 +240,6 @@ class NemoQueryMultimodalPytorch:
             images (List[str]): List of image strings - either base64-encoded with data URI prefix
                                (e.g., "data:image;base64,...") or HTTP/HTTPS URLs (e.g., "http://example.com/image.jpg").
             max_length (Optional[int]): Maximum number of tokens to generate.
-            max_batch_size (Optional[int]): Maximum batch size for inference.
             top_k (Optional[int]): Limits to the top K tokens to consider at each step.
             top_p (Optional[float]): Limits to the top tokens within cumulative probability p.
             temperature (Optional[float]): Sampling temperature.
@@ -269,9 +267,6 @@ class NemoQueryMultimodalPytorch:
         # Add optional parameters if provided
         if max_length is not None:
             inputs["max_length"] = np.full(prompts_np.shape, max_length, dtype=np.int_)
-
-        if max_batch_size is not None:
-            inputs["max_batch_size"] = np.full(prompts_np.shape, max_batch_size, dtype=np.int_)
 
         if top_k is not None:
             inputs["top_k"] = np.full(prompts_np.shape, top_k, dtype=np.int_)
