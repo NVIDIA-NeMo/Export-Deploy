@@ -20,7 +20,7 @@ This section shows how to use scripts and APIs to export a [NeMo AutoModel](http
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
        --model_path_id meta-llama/Llama-3.2-1B \
-       --triton_model_name llama   
+       --triton_model_name llama
    ```
 
 3. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
@@ -36,6 +36,3 @@ This section shows how to use scripts and APIs to export a [NeMo AutoModel](http
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/query_vllm.py -mn llama -p "The capital of Canada is" -mat 50
    ```
-
-
-**Note:** The documentation for Automodel LLM deployment using vLLM is almost the same with the one for NeMo 2.0. Please check the [NeMo 2.0 documentation here](../../nemo_2/optimized/vllm.md).
