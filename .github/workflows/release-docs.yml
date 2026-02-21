@@ -43,7 +43,7 @@ on:
         description: Github ref to checkout
         required: false
         type: string
-        default: {{ github.sha }}
+        default: ""
 
   workflow_call:
     inputs:
@@ -75,7 +75,7 @@ on:
         description: Github ref to checkout
         required: false
         type: string
-        default: {{ github.sha }}
+        default: ""
 
 jobs:
   build-docs:
