@@ -69,7 +69,7 @@ def test_export(exporter, mock_llm):
         gpu_memory_utilization=0.9,
         swap_space=4,
         cpu_offload_gb=0,
-        enforce_eager=True,
+        enforce_eager=False,
         runner="auto",
     )
 
