@@ -114,7 +114,7 @@ class vLLMExporter(ITritonDeployable):
         gpu_memory_utilization: float = 0.9,
         swap_space: float = 4,
         cpu_offload_gb: float = 0,
-        enforce_eager: bool = True,
+        enforce_eager: bool = False,
         task: Literal["auto", "generate", "embedding"] = "auto",
         model_format: Literal["hf", "megatron_bridge"] = "megatron_bridge",
         hf_model_id: str = None,
@@ -207,6 +207,7 @@ class vLLMExporter(ITritonDeployable):
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
                     runner=task,
+                    compilation_config={"assume_32_bit_indexing": False},
                 )
         else:
             self.model = LLM(
@@ -223,6 +224,7 @@ class vLLMExporter(ITritonDeployable):
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
                 runner=task,
+                compilation_config={"assume_32_bit_indexing": False},
             )
 
     def add_lora_models(self, lora_model_name, lora_model):
