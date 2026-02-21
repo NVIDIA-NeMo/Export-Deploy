@@ -80,6 +80,14 @@ def _override_vllm_is_torch_equal_or_newer(version: str) -> bool:
     return original_is_torch_equal_or_newer(version)
 
 
+def _patch_vllm_is_torch_equal_or_newer():
+    """Patch vllm's torch version check to ensure correct torch features for 25.11 NGC pytorch version."""
+    vllm_decorators.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+    vllm.envs.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+    vllm.model_executor.layers.batch_invariant.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+    vllm.utils.torch_utils.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+
+
 class vLLMExporter(ITritonDeployable):
     """
     vLLMExporter enables deployment of Hugging Face or Megatron-Bridge models using vLLM and Triton.
@@ -121,12 +129,6 @@ class vLLMExporter(ITritonDeployable):
             raise UnavailableError(MISSING_VLLM_MSG)
         if not HAVE_PYTRITON:
             raise UnavailableError(MISSING_TRITON_MSG)
-
-        if HAVE_VLLM:
-            vllm_decorators.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
-            vllm.envs.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
-            vllm.model_executor.layers.batch_invariant.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
-            vllm.utils.torch_utils.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
 
     def export(
         self,
@@ -174,7 +176,9 @@ class vLLMExporter(ITritonDeployable):
         Raises:
             Exception: If Megatron-Bridge checkpoint conversion to Hugging Face format fails.
         """
+        _patch_vllm_is_torch_equal_or_newer()
         compilation_config = CompilationConfig(dynamic_shapes_config=DynamicShapesConfig(assume_32_bit_indexing=False))
+
         if model_format == "megatron_bridge":
             if not HAVE_MEGATRON_BRIDGE:
                 raise Exception(
