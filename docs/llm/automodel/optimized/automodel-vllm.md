@@ -38,4 +38,3 @@ This section shows how to use scripts and APIs to export a [NeMo AutoModel](http
    ```
 
 
-**Note:** The documentation for Automodel LLM deployment using vLLM is almost the same with the one for NeMo 2.0. Please check the [NeMo 2.0 documentation here](../../nemo_2/optimized/vllm.md).
