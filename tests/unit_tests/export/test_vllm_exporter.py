@@ -71,7 +71,7 @@ def test_export(exporter, mock_llm):
         cpu_offload_gb=0,
         enforce_eager=False,
         runner="auto",
-        compilation_config={'assume_32_bit_indexing': False},
+        compilation_config={"assume_32_bit_indexing": False},
     )
 
 
@@ -97,7 +97,7 @@ def test_export_with_lora(exporter, mock_llm):
         cpu_offload_gb=0,
         enforce_eager=False,
         runner="auto",
-        compilation_config={'assume_32_bit_indexing': False},
+        compilation_config={"assume_32_bit_indexing": False},
     )
 
 
@@ -129,7 +129,7 @@ def test_export_with_custom_params(exporter, mock_llm):
         cpu_offload_gb=0,
         enforce_eager=False,
         runner="auto",
-        compilation_config={'assume_32_bit_indexing': False},
+        compilation_config={"assume_32_bit_indexing": False},
     )
 
 
@@ -863,4 +863,4 @@ def test_export_megatron_bridge_with_all_vllm_params(exporter, mock_llm):
         assert call_kwargs["cpu_offload_gb"] == 2
         assert call_kwargs["enforce_eager"] is False
         assert call_kwargs["runner"] == "generate"
-        assert call_kwargs["compilation_config"] == {'assume_32_bit_indexing': False}
+        assert call_kwargs["compilation_config"] == {"assume_32_bit_indexing": False}
