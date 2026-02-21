@@ -62,7 +62,17 @@ except (ImportError, ModuleNotFoundError):
     HAVE_VLLM = False
 
 
-def is_torch_equal_or_newer(version: str) -> bool:
+def _vllm_is_torch_equal_or_newer(version: str) -> bool:
+    """Override vllm's torch version check
+
+    Return False for 2.10.0.dev to avoid vllm from assuming torch features
+    are incorrectly available in the 25.11 NGC pytorch version.
+
+    Args:
+        version: pytorch version to check
+
+    Returns: Whether the pytorch version is equal or newer than the given version
+    """
     if version == "2.10.0.dev":
         return False
 
@@ -70,7 +80,7 @@ def is_torch_equal_or_newer(version: str) -> bool:
 
 
 if HAVE_VLLM:
-    vllm.utils.torch_utils.is_torch_equal_or_newer = is_torch_equal_or_newer
+    vllm.utils.torch_utils.is_torch_equal_or_newer = _vllm_is_torch_equal_or_newer
 
 
 class vLLMExporter(ITritonDeployable):
