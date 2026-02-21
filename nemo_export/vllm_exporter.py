@@ -53,6 +53,7 @@ except (ImportError, ModuleNotFoundError):
 try:
     import vllm
     from vllm import LLM, SamplingParams
+    from vllm.compilation import decorators as vllm_decorators
     from vllm.config.compilation import CompilationConfig, DynamicShapesConfig
     from vllm.lora.request import LoRARequest
     from vllm.utils.torch_utils import is_torch_equal_or_newer as original_is_torch_equal_or_newer
@@ -80,7 +81,7 @@ def _override_vllm_is_torch_equal_or_newer(version: str) -> bool:
 
 
 if HAVE_VLLM:
-    vllm.compilation.decorators.py.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+    vllm_decorators.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
     vllm.envs.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
     vllm.model_executor.layers.batch_invariant.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
     vllm.utils.torch_utils.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
