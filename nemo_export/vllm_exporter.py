@@ -51,12 +51,26 @@ except (ImportError, ModuleNotFoundError):
     HAVE_PYTRITON = False
 
 try:
+    import vllm
     from vllm import LLM, SamplingParams
+    from vllm.config.compilation import CompilationConfig, DynamicShapesConfig
     from vllm.lora.request import LoRARequest
+    from vllm.utils.torch_utils import is_torch_equal_or_newer as original_is_torch_equal_or_newer
 
     HAVE_VLLM = True
 except (ImportError, ModuleNotFoundError):
     HAVE_VLLM = False
+
+
+def is_torch_equal_or_newer(version: str) -> bool:
+    if version == "2.10.0.dev":
+        return False
+
+    return original_is_torch_equal_or_newer(version)
+
+
+if HAVE_VLLM:
+    vllm.utils.torch_utils.is_torch_equal_or_newer = is_torch_equal_or_newer
 
 
 class vLLMExporter(ITritonDeployable):
@@ -147,6 +161,7 @@ class vLLMExporter(ITritonDeployable):
         Raises:
             Exception: If Megatron-Bridge checkpoint conversion to Hugging Face format fails.
         """
+        compilation_config = CompilationConfig(dynamic_shapes_config=DynamicShapesConfig(assume_32_bit_indexing=False))
         if model_format == "megatron_bridge":
             if not HAVE_MEGATRON_BRIDGE:
                 raise Exception(
@@ -207,7 +222,7 @@ class vLLMExporter(ITritonDeployable):
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
                     runner=task,
-                    compilation_config={"assume_32_bit_indexing": False},
+                    compilation_config=compilation_config,
                 )
         else:
             self.model = LLM(
@@ -224,7 +239,7 @@ class vLLMExporter(ITritonDeployable):
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
                 runner=task,
-                compilation_config={"assume_32_bit_indexing": False},
+                compilation_config=compilation_config,
             )
 
     def add_lora_models(self, lora_model_name, lora_model):
