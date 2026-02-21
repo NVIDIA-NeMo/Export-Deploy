@@ -1,6 +1,9 @@
+---
+orphan: true
+---
 # Export and Deploy NeMo 2.0 MMs
 
-The [NeMo 2.0](https://github.com/NVIDIA-NeMo/NeMo) model and checkpoint format is the current standard for saving and deploying Multimodals (MMs) trained with the NeMo Framework. 
+The [NeMo 2.0](https://github.com/NVIDIA-NeMo/NeMo) model and checkpoint format is the current standard for saving and deploying Multimodals (MMs) trained with the NeMo Framework.
 
 With the Export-Deploy library, you can seamlessly export and deploy the NeMo 2.0 models and checkpoints across a variety of production environments. The following export and deployment paths are supported for NeMo 2.0 models:
 
