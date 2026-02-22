@@ -51,41 +51,41 @@ except (ImportError, ModuleNotFoundError):
     HAVE_PYTRITON = False
 
 try:
-    import vllm
-    from vllm import LLM, SamplingParams
+    from vllm import envs as vllm_envs
     from vllm.compilation import decorators as vllm_decorators
+    from vllm.model_executor.layers import batch_invariant as vllm_batch_invariant
+    from vllm.utils import torch_utils as vllm_torch_utils
+
+    original_is_torch_equal_or_newer = vllm_torch_utils.is_torch_equal_or_newer
+
+    def _override_vllm_is_torch_equal_or_newer(version: str) -> bool:
+        """Override vllm's torch version check
+
+        Return False for 2.10.0.dev to avoid vllm from assuming torch features
+        are incorrectly available in the 25.11 NGC pytorch version.
+
+        Args:
+            version: pytorch version to check
+
+        Returns: Whether the pytorch version is equal or newer than the given version
+        """
+        if version == "2.10.0.dev":
+            return False
+
+        return original_is_torch_equal_or_newer(version)
+
+    vllm_torch_utils.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+    vllm_decorators.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+    vllm_envs.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+    vllm_batch_invariant.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+
+    from vllm import LLM, SamplingParams
     from vllm.config.compilation import CompilationConfig, DynamicShapesConfig
     from vllm.lora.request import LoRARequest
-    from vllm.utils.torch_utils import is_torch_equal_or_newer as original_is_torch_equal_or_newer
 
     HAVE_VLLM = True
 except (ImportError, ModuleNotFoundError):
     HAVE_VLLM = False
-
-
-def _override_vllm_is_torch_equal_or_newer(version: str) -> bool:
-    """Override vllm's torch version check
-
-    Return False for 2.10.0.dev to avoid vllm from assuming torch features
-    are incorrectly available in the 25.11 NGC pytorch version.
-
-    Args:
-        version: pytorch version to check
-
-    Returns: Whether the pytorch version is equal or newer than the given version
-    """
-    if version == "2.10.0.dev":
-        return False
-
-    return original_is_torch_equal_or_newer(version)
-
-
-def _patch_vllm_is_torch_equal_or_newer():
-    """Patch vllm's torch version check to ensure correct torch features for 25.11 NGC pytorch version."""
-    vllm_decorators.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
-    vllm.envs.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
-    vllm.model_executor.layers.batch_invariant.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
-    vllm.utils.torch_utils.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
 
 
 class vLLMExporter(ITritonDeployable):
@@ -176,7 +176,6 @@ class vLLMExporter(ITritonDeployable):
         Raises:
             Exception: If Megatron-Bridge checkpoint conversion to Hugging Face format fails.
         """
-        _patch_vllm_is_torch_equal_or_newer()
         compilation_config = CompilationConfig(dynamic_shapes_config=DynamicShapesConfig(assume_32_bit_indexing=False))
 
         if model_format == "megatron_bridge":
