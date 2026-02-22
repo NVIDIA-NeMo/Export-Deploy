@@ -20,6 +20,7 @@ import pytest
 
 try:
     import vllm  # noqa: F401
+    from vllm.config.compilation import CompilationConfig, DynamicShapesConfig
 
     HAVE_VLLM = True
 except ImportError:
@@ -69,8 +70,9 @@ def test_export(exporter, mock_llm):
         gpu_memory_utilization=0.9,
         swap_space=4,
         cpu_offload_gb=0,
-        enforce_eager=True,
+        enforce_eager=False,
         runner="auto",
+        compilation_config=CompilationConfig(dynamic_shapes_config=DynamicShapesConfig(assume_32_bit_indexing=False)),
     )
 
 
@@ -94,8 +96,9 @@ def test_export_with_lora(exporter, mock_llm):
         gpu_memory_utilization=0.9,
         swap_space=4,
         cpu_offload_gb=0,
-        enforce_eager=True,
+        enforce_eager=False,
         runner="auto",
+        compilation_config=CompilationConfig(dynamic_shapes_config=DynamicShapesConfig(assume_32_bit_indexing=False)),
     )
 
 
@@ -125,8 +128,9 @@ def test_export_with_custom_params(exporter, mock_llm):
         gpu_memory_utilization=0.9,
         swap_space=4,
         cpu_offload_gb=0,
-        enforce_eager=True,
+        enforce_eager=False,
         runner="auto",
+        compilation_config=CompilationConfig(dynamic_shapes_config=DynamicShapesConfig(assume_32_bit_indexing=False)),
     )
 
 
@@ -840,7 +844,7 @@ def test_export_megatron_bridge_with_all_vllm_params(exporter, mock_llm):
             gpu_memory_utilization=0.85,
             swap_space=8,
             cpu_offload_gb=2,
-            enforce_eager=True,
+            enforce_eager=False,
             task="generate",
         )
 
@@ -858,5 +862,8 @@ def test_export_megatron_bridge_with_all_vllm_params(exporter, mock_llm):
         assert call_kwargs["gpu_memory_utilization"] == 0.85
         assert call_kwargs["swap_space"] == 8
         assert call_kwargs["cpu_offload_gb"] == 2
-        assert call_kwargs["enforce_eager"] is True
+        assert call_kwargs["enforce_eager"] is False
         assert call_kwargs["runner"] == "generate"
+        assert call_kwargs["compilation_config"] == CompilationConfig(
+            dynamic_shapes_config=DynamicShapesConfig(assume_32_bit_indexing=False)
+        )

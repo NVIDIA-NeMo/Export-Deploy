@@ -51,7 +51,36 @@ except (ImportError, ModuleNotFoundError):
     HAVE_PYTRITON = False
 
 try:
+    from vllm import envs as vllm_envs
+    from vllm.compilation import decorators as vllm_decorators
+    from vllm.model_executor.layers import batch_invariant as vllm_batch_invariant
+    from vllm.utils import torch_utils as vllm_torch_utils
+
+    original_is_torch_equal_or_newer = vllm_torch_utils.is_torch_equal_or_newer
+
+    def _override_vllm_is_torch_equal_or_newer(version: str) -> bool:
+        """Override vllm's torch version check
+
+        Return False for 2.10.0.dev to avoid vllm from assuming torch features
+        are incorrectly available in the 25.11 NGC pytorch version.
+
+        Args:
+            version: pytorch version to check
+
+        Returns: Whether the pytorch version is equal or newer than the given version
+        """
+        if version == "2.10.0.dev":
+            return False
+
+        return original_is_torch_equal_or_newer(version)
+
+    vllm_torch_utils.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+    vllm_decorators.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+    vllm_envs.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+    vllm_batch_invariant.is_torch_equal_or_newer = _override_vllm_is_torch_equal_or_newer
+
     from vllm import LLM, SamplingParams
+    from vllm.config.compilation import CompilationConfig, DynamicShapesConfig
     from vllm.lora.request import LoRARequest
 
     HAVE_VLLM = True
@@ -114,7 +143,7 @@ class vLLMExporter(ITritonDeployable):
         gpu_memory_utilization: float = 0.9,
         swap_space: float = 4,
         cpu_offload_gb: float = 0,
-        enforce_eager: bool = True,
+        enforce_eager: bool = False,
         task: Literal["auto", "generate", "embedding"] = "auto",
         model_format: Literal["hf", "megatron_bridge"] = "megatron_bridge",
         hf_model_id: str = None,
@@ -147,6 +176,8 @@ class vLLMExporter(ITritonDeployable):
         Raises:
             Exception: If Megatron-Bridge checkpoint conversion to Hugging Face format fails.
         """
+        compilation_config = CompilationConfig(dynamic_shapes_config=DynamicShapesConfig(assume_32_bit_indexing=False))
+
         if model_format == "megatron_bridge":
             if not HAVE_MEGATRON_BRIDGE:
                 raise Exception(
@@ -207,6 +238,7 @@ class vLLMExporter(ITritonDeployable):
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
                     runner=task,
+                    compilation_config=compilation_config,
                 )
         else:
             self.model = LLM(
@@ -223,6 +255,7 @@ class vLLMExporter(ITritonDeployable):
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
                 runner=task,
+                compilation_config=compilation_config,
             )
 
     def add_lora_models(self, lora_model_name, lora_model):
