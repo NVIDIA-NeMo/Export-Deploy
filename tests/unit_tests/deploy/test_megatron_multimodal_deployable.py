@@ -124,6 +124,7 @@ class TestMegatronMultimodalDeployable:
             pipeline_model_parallel_size=2,
             params_dtype=torch.float16,
             inference_batch_times_seqlen_threshold=2000,
+            inference_max_batch_size=8,
         )
 
         assert deployable.tensor_model_parallel_size == 2
@@ -149,6 +150,7 @@ class TestMegatronMultimodalDeployable:
             params_dtype=torch.float16,
             inference_batch_times_seqlen_threshold=1500,
             inference_max_seq_length=4096,
+            inference_max_batch_size=4,
         )
 
     def test_generate_method(self, deployable, sample_image):
@@ -165,7 +167,6 @@ class TestMegatronMultimodalDeployable:
                     prompts=prompts,
                     images=images,
                     inference_params=inference_params,
-                    max_batch_size=2,
                     random_seed=42,
                     apply_chat_template=True,
                 )
@@ -177,9 +178,8 @@ class TestMegatronMultimodalDeployable:
                     prompts=prompts,
                     images=images,
                     processor=deployable.processor,
-                    max_batch_size=2,
                     random_seed=42,
-                    inference_params=inference_params,
+                    sampling_params=inference_params,
                 )
 
                 assert len(results) == 2
@@ -203,16 +203,15 @@ class TestMegatronMultimodalDeployable:
                 prompts=prompts,
                 images=images,
                 processor=deployable.processor,
-                max_batch_size=4,
                 random_seed=None,
-                inference_params=None,
+                sampling_params=None,
             )
 
     def test_get_triton_input(self, deployable):
         """Test the get_triton_input property."""
         inputs = deployable.get_triton_input
 
-        assert len(inputs) == 9
+        assert len(inputs) == 8
 
         # Check prompts input
         assert inputs[0].name == "prompts"
@@ -228,19 +227,19 @@ class TestMegatronMultimodalDeployable:
         assert inputs[2].name == "max_length"
         assert inputs[2].optional is True
 
-        assert inputs[3].name == "max_batch_size"
+        assert inputs[3].name == "top_k"
         assert inputs[3].optional is True
 
-        assert inputs[4].name == "top_k"
+        assert inputs[4].name == "top_p"
         assert inputs[4].optional is True
 
-        assert inputs[5].name == "top_p"
+        assert inputs[5].name == "temperature"
         assert inputs[5].optional is True
 
-        assert inputs[6].name == "temperature"
+        assert inputs[6].name == "random_seed"
         assert inputs[6].optional is True
 
-        assert inputs[7].name == "random_seed"
+        assert inputs[7].name == "apply_chat_template"
         assert inputs[7].optional is True
 
     def test_get_triton_output(self, deployable):
@@ -271,7 +270,6 @@ class TestMegatronMultimodalDeployable:
                     top_p=0.95,
                     num_tokens_to_generate=150,
                     random_seed=123,
-                    max_batch_size=3,
                 )
 
                 # Check that process_image_input was called for each image
@@ -291,7 +289,6 @@ class TestMegatronMultimodalDeployable:
                 assert call_args[0][2].top_p == 0.95
                 assert call_args[0][2].num_tokens_to_generate == 150
                 # Check keyword arguments
-                assert call_args[1]["max_batch_size"] == 3
                 assert call_args[1]["random_seed"] == 123
 
                 assert "sentences" in result
@@ -328,7 +325,6 @@ class TestMegatronMultimodalDeployable:
                 assert call_args[0][2].top_p == 0.0
                 assert call_args[0][2].num_tokens_to_generate == 256
                 # Check keyword arguments
-                assert call_args[1]["max_batch_size"] == 4
                 assert call_args[1]["random_seed"] is None
 
                 assert result["sentences"] == ["Generated text 1"]
@@ -430,7 +426,6 @@ class TestMegatronMultimodalDeployable:
             "top_p": np.array([0.9]),
             "max_length": np.array([100]),
             "random_seed": np.array([42]),
-            "max_batch_size": np.array([2]),
             "apply_chat_template": np.array([False]),
         }
 
@@ -465,7 +460,6 @@ class TestMegatronMultimodalDeployable:
                         top_p=0.9,
                         num_tokens_to_generate=100,
                         random_seed=42,
-                        max_batch_size=2,
                         apply_chat_template=False,
                     )
 
@@ -619,7 +613,6 @@ class TestMegatronMultimodalDeployable:
             "top_p": 0.95,
             "max_length": 200,
             "random_seed": 999,
-            "max_batch_size": 2,
             "apply_chat_template": True,
         }
 
@@ -636,7 +629,6 @@ class TestMegatronMultimodalDeployable:
                 top_p=0.95,
                 num_tokens_to_generate=200,
                 random_seed=999,
-                max_batch_size=2,
                 apply_chat_template=True,
             )
 
@@ -662,7 +654,6 @@ class TestMegatronMultimodalDeployable:
                 top_p=0.0,
                 num_tokens_to_generate=50,
                 random_seed=None,
-                max_batch_size=4,
                 apply_chat_template=False,
             )
 
@@ -685,7 +676,6 @@ class TestMegatronMultimodalDeployable:
                 top_p=0.0,
                 num_tokens_to_generate=50,
                 random_seed=None,
-                max_batch_size=4,
                 apply_chat_template=False,
             )
 
