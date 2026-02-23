@@ -91,7 +91,6 @@ class TestPydanticModels:
         assert request.top_p == 0.0
         assert request.top_k == 0
         assert request.random_seed is None
-        assert request.max_batch_size == 4
 
     def test_base_multimodal_request_custom_values(self):
         """Test BaseMultimodalRequest with custom values."""
@@ -102,7 +101,6 @@ class TestPydanticModels:
             top_p=0.9,
             top_k=50,
             random_seed=42,
-            max_batch_size=8,
         )
         assert request.model == "custom-model"
         assert request.max_tokens == 100
@@ -110,7 +108,6 @@ class TestPydanticModels:
         assert request.top_p == 0.9
         assert request.top_k == 50
         assert request.random_seed == 42
-        assert request.max_batch_size == 8
 
     def test_multimodal_completion_request(self):
         """Test MultimodalCompletionRequest."""
@@ -299,7 +296,6 @@ class TestCompletionsEndpoint:
             "top_k": 50,
             "top_p": 0.95,
             "random_seed": 42,
-            "max_batch_size": 2,
         }
 
         mock_output = {"choices": [{"text": [["Generated text"]]}], "model": "test-model"}
@@ -318,7 +314,6 @@ class TestCompletionsEndpoint:
             assert call_kwargs["top_k"] == 50
             assert call_kwargs["top_p"] == 0.95
             assert call_kwargs["random_seed"] == 42
-            assert call_kwargs["max_batch_size"] == 2
 
 
 class TestChatCompletionsEndpoint:
@@ -508,7 +503,6 @@ class TestQueryMultimodalAsync:
                 top_p=0.9,
                 max_length=100,
                 random_seed=42,
-                max_batch_size=4,
                 apply_chat_template=False,
             )
 
@@ -521,7 +515,6 @@ class TestQueryMultimodalAsync:
                 top_p=0.9,
                 max_length=100,
                 random_seed=42,
-                max_batch_size=4,
                 apply_chat_template=False,
                 init_timeout=300,
             )
@@ -548,7 +541,6 @@ class TestQueryMultimodalAsync:
                     top_p=0.0,
                     max_length=50,
                     random_seed=None,
-                    max_batch_size=4,
                     apply_chat_template=False,
                 )
             )
