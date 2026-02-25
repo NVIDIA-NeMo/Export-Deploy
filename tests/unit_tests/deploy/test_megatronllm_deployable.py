@@ -183,10 +183,10 @@ def test_generate_other_ranks_continue_processing(deployable):
 def test_generate_other_ranks_disables_materialize_when_log_probs(deployable):
     """Test that generate_other_ranks sets materialize_only_last_token_logits on both engine and context config."""
     with (
-        patch("torch.distributed.broadcast") as mock_broadcast,
+        patch("torch.distributed.broadcast"),
         patch("torch.empty") as mock_empty,
         patch("nemo_deploy.llm.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
-        patch.object(deployable, "generate") as mock_generate,
+        patch.object(deployable, "generate"),
     ):
         mock_message = MagicMock()
         mock_message.__eq__ = MagicMock(side_effect=[True, False])
