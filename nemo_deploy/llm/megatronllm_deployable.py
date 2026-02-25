@@ -206,6 +206,7 @@ class MegatronLLMDeployable(ITritonDeployable):
                     dynamic_engine = getattr(self.mcore_engine, "dynamic_engine", None)
                     if dynamic_engine is not None:
                         dynamic_engine.materialize_only_last_token_logits = False
+                        dynamic_engine.context.config.materialize_only_last_token_logits = False
 
                 self.generate(prompts, inference_params)
             else:
@@ -417,12 +418,15 @@ class MegatronLLMDeployable(ITritonDeployable):
         )
 
         # Mcore's dynamic inference engine defaults materialize_only_last_token_logits=True for
-        # performance, but prompt log probs require all token logits to be materialized.
-        # Toggle it only for requests that need log probs.
+        # performance, but prompt log probs require all token logits to be materialized
+        # (prompt log probs are required for logprob eval benchmarks).
+        # Toggle it on both the engine and the context config (controls the
+        # model forward pass and log prob calculations).
         dynamic_engine = getattr(self.mcore_engine, "dynamic_engine", None)
         needs_all_logits = log_probs or bool(top_logprobs)
         if dynamic_engine is not None and needs_all_logits:
             dynamic_engine.materialize_only_last_token_logits = False
+            dynamic_engine.context.config.materialize_only_last_token_logits = False
 
         results = self.generate(prompts, inference_params)
         # Handle DynamicInferenceRequestRecord objects by merging them into a single request
