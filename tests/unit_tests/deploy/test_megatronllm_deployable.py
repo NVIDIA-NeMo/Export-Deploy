@@ -180,6 +180,33 @@ def test_generate_other_ranks_continue_processing(deployable):
 
 
 @pytest.mark.run_only_on("GPU")
+def test_generate_other_ranks_disables_materialize_when_log_probs(deployable):
+    """Test that generate_other_ranks sets materialize_only_last_token_logits on both engine and context config."""
+    with (
+        patch("torch.distributed.broadcast"),
+        patch("torch.empty") as mock_empty,
+        patch("nemo_deploy.llm.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
+        patch.object(deployable, "generate"),
+    ):
+        mock_message = MagicMock()
+        mock_message.__eq__ = MagicMock(side_effect=[True, False])
+        mock_empty.return_value = mock_message
+
+        mock_broadcast_list.side_effect = [
+            ["test prompt"],
+            [1.0, 1, 0.0, 256, True, None],  # log_probs=True
+        ]
+
+        deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits = True
+        deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits = True
+
+        deployable.generate_other_ranks()
+
+        assert deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits is False
+        assert deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits is False
+
+
+@pytest.mark.run_only_on("GPU")
 def test_triton_infer_fn_with_top_logprobs(deployable):
     """Test triton inference with top logprobs by testing the underlying _infer_fn method."""
     prompts = ["Hello"]
@@ -983,3 +1010,75 @@ def test_ray_infer_fn_all_parameters(deployable):
             echo=False,
             stop_words=None,
         )
+
+
+# --- Tests for materialize_only_last_token_logits toggle ---
+@pytest.mark.run_only_on("GPU")
+def test_infer_fn_disables_materialize_only_last_token_logits_when_log_probs(deployable):
+    """Test that materialize_only_last_token_logits is set to False when log_probs=True."""
+    with (
+        patch.object(deployable, "generate") as mock_generate,
+        patch.object(deployable, "remove_eos_token") as mock_remove_eos,
+        patch("torch.tensor") as mock_tensor,
+    ):
+        mock_result = MagicMock()
+        mock_result.generated_text = "text"
+        mock_result.generated_log_probs = [0.1]
+        mock_generate.return_value = [mock_result]
+        mock_remove_eos.return_value = ["text"]
+        mock_tensor_instance = MagicMock()
+        mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = np.array([0.1])
+        mock_tensor.return_value = mock_tensor_instance
+
+        deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits = True
+        deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits = True
+
+        deployable._infer_fn(prompts=["Hello"], log_probs=True)
+
+        assert deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits is False
+        assert deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits is False
+
+
+@pytest.mark.run_only_on("GPU")
+def test_infer_fn_disables_materialize_only_last_token_logits_when_top_logprobs(deployable):
+    """Test that materialize_only_last_token_logits is set to False when top_logprobs > 0."""
+    with (
+        patch.object(deployable, "generate") as mock_generate,
+        patch.object(deployable, "remove_eos_token") as mock_remove_eos,
+        patch("nemo_deploy.llm.megatronllm_deployable.dict_to_str") as mock_dict_to_str,
+    ):
+        mock_result = MagicMock()
+        mock_result.generated_text = "text"
+        mock_result.generated_top_n_logprobs = {"tok": 0.1}
+        mock_generate.return_value = [mock_result]
+        mock_remove_eos.return_value = ["text"]
+        mock_dict_to_str.return_value = '{"tok": 0.1}'
+
+        deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits = True
+        deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits = True
+
+        deployable._infer_fn(prompts=["Hello"], top_logprobs=5)
+
+        assert deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits is False
+        assert deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits is False
+
+
+@pytest.mark.run_only_on("GPU")
+def test_infer_fn_keeps_materialize_only_last_token_logits_when_no_logprobs(deployable):
+    """Test that materialize_only_last_token_logits is not changed when logprobs are not requested."""
+    with (
+        patch.object(deployable, "generate") as mock_generate,
+        patch.object(deployable, "remove_eos_token") as mock_remove_eos,
+    ):
+        mock_result = MagicMock()
+        mock_result.generated_text = "text"
+        mock_generate.return_value = [mock_result]
+        mock_remove_eos.return_value = ["text"]
+
+        deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits = True
+        deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits = True
+
+        deployable._infer_fn(prompts=["Hello"], log_probs=False, top_logprobs=0)
+
+        assert deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits is True
+        assert deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits is True
