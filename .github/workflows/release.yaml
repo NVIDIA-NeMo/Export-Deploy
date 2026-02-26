@@ -56,7 +56,7 @@ permissions:
 
 jobs:
   release:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_release_library.yml@0.76.1
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_release_library.yml@v0.77.0
     with:
       release-ref: ${{ inputs.release-ref || github.sha }}
       python-package: nemo_export_deploy_common
