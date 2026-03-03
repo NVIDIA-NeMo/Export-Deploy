@@ -169,6 +169,7 @@ class HFRayDeployable:
             HTTPException: If inference fails.
         """
         try:
+            LOGGER.warning(f"Request: {request}")
             if "prompt" in request:
                 request["prompts"] = [request["prompt"]]
             temperature = request.get("temperature", 0.0)
@@ -256,7 +257,7 @@ class HFRayDeployable:
                 },
             }
             # Uncomment the below line to view the output
-            # LOGGER.warning(f"Output: {output}")
+            LOGGER.warning(f"Output: {output}")
             return output
         except Exception as e:
             LOGGER.error(f"Error during inference: {str(e)}")
