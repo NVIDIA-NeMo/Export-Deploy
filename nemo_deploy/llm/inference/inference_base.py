@@ -16,7 +16,7 @@
 import atexit
 import logging
 from pathlib import Path
-from typing import Any, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
@@ -31,6 +31,9 @@ from megatron.core.inference.contexts import StaticInferenceContext
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
+)
+from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
+    InferenceWrapperConfig,
 )
 from megatron.core.inference.text_generation_controllers.text_generation_controller import (
     TextGenerationController,
@@ -62,29 +65,14 @@ try:
 except ImportError:
     HAVE_TRITON = False
 
-try:
-    if not HAVE_TRITON:
-        raise ImportError("Triton is not installed")
-    from nemo.collections.llm.gpt.model.base import GPTConfig
-    from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
-    from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
-    from nemo.collections.llm.t5.model.t5 import T5Config
-    from nemo.lightning import io
-    from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
-    from nemo.lightning.io.pl import ckpt_to_weights_subdir
-
-    HAVE_NEMO = True
-except (ImportError, ModuleNotFoundError):
-    HAVE_NEMO = False
-    from typing import Any
-
-    io = None
-    GPTConfig = Any
-    T5Config = Any
-    MCoreTokenizerWrappper = Any
-    set_modelopt_spec_if_exists_in_ckpt = None
-    ckpt_to_weights_subdir = None
-    ckpt_to_context_subdir = None
+from .nemo_utils import (
+    HAVE_NEMO,
+    MCoreTokenizerWrappper,
+    ckpt_to_context_subdir,
+    ckpt_to_weights_subdir,
+    io,
+    set_modelopt_spec_if_exists_in_ckpt,
+)
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -534,8 +522,20 @@ def create_mcore_engine(
     else:
         raise ValueError(f"Model format {model_format} not supported.")
 
+    # Build the inference wrapper config required by the old MCoreEngine API.
+    # MCoreEngine (StaticInferenceEngine) uses this config to internally create a
+    # DynamicInferenceContext and switch to DynamicInferenceEngine.
+    inference_wrapper_config = InferenceWrapperConfig(
+        hidden_size=model.config.hidden_size,
+        params_dtype=params_dtype,
+        inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
+        padded_vocab_size=getattr(model, "vocab_size", tokenizer.vocab_size),
+        inference_max_seq_length=inference_max_seq_length,
+        inference_max_requests=max_batch_size,
+        fp32_residual_connection=getattr(model.config, "fp32_residual_connection", False),
+    )
     inference_context = StaticInferenceContext(max_batch_size, inference_max_seq_length)
-    model_inference_wrapper = GPTInferenceWrapper(model, inference_context)
+    model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config, inference_context)
     text_generation_controller = TextGenerationController(
         inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
     )

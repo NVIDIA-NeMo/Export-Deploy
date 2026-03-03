@@ -39,20 +39,7 @@ try:
 except ImportError:
     HAVE_TRITON = False
 
-try:
-    if not HAVE_TRITON:
-        raise ImportError("Triton is not installed")
-
-    from nemo.collections.llm.gpt.model.base import GPTConfig
-    from nemo.collections.llm.t5.model.t5 import T5Config
-
-    HAVE_NEMO = True
-except (ImportError, ModuleNotFoundError):
-    from typing import Any
-
-    GPTConfig = Any
-    T5Config = Any
-    HAVE_NEMO = False
+from .nemo_utils import GPTConfig, T5Config
 
 LOGGER = logging.getLogger("NeMo")
 
