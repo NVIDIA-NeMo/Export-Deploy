@@ -42,8 +42,6 @@ from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
 from packaging import version
 
-from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
-
 from .tron_utils import (
     DistributedInitConfig,
     RNGConfig,
@@ -66,7 +64,6 @@ except ImportError:
     HAVE_TRITON = False
 
 from .nemo_utils import (
-    HAVE_NEMO,
     MCoreTokenizerWrappper,
     ckpt_to_context_subdir,
     ckpt_to_weights_subdir,
@@ -189,8 +186,6 @@ def load_nemo_checkpoint_to_tron_model(model: List[MegatronModule], path: Path, 
         path (Path): Path to NeMo checkpoint directory
         legacy_ckpt (bool): Whether to use legacy checkpoint format
     """
-    if not HAVE_NEMO:
-        raise UnavailableError(MISSING_NEMO_MSG)
     weights_dir = ckpt_to_weights_subdir(path, is_saving=False)
     LOGGER.info(f"Loading NeMo checkpoint from {weights_dir}")
 
@@ -312,9 +307,6 @@ def setup_model_and_tokenizer_for_inference(
     Raises:
         ValueError: If checkpoint_path is not a valid NeMo-2.0 checkpoint
     """
-    if not HAVE_NEMO:
-        raise UnavailableError(MISSING_NEMO_MSG)
-
     checkpoint_path = Path(checkpoint_path)
 
     # Load model context for config and tokenizer
@@ -480,9 +472,6 @@ def create_mcore_engine(
             - GPTInferenceWrapper: Inference-wrapped model
             - Union[MCoreTokenizerWrappper, MegatronTokenizer]: Tokenizer instance
     """
-    if not HAVE_NEMO and model_format == "nemo":
-        raise UnavailableError(MISSING_NEMO_MSG)
-
     # Default to 1 for any parallelism dimension that's None
     tensor_model_parallel_size = tensor_model_parallel_size if tensor_model_parallel_size is not None else 1
     pipeline_model_parallel_size = pipeline_model_parallel_size if pipeline_model_parallel_size is not None else 1

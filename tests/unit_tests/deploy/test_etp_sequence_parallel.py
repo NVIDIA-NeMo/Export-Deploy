@@ -283,7 +283,6 @@ class TestSetupModelETPSequenceParallel(unittest.TestCase):
 
     def _common_patches(self):
         return [
-            patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True),
             patch("nemo_deploy.llm.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt"),
             patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init"),
             patch("nemo_deploy.llm.inference.inference_base.io", new_callable=MagicMock),
@@ -391,7 +390,6 @@ class TestSetupModelETPSequenceParallel(unittest.TestCase):
 class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
     """Tests that create_mcore_engine handles ETP/SP defaults and passes them down."""
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
@@ -413,7 +411,6 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
         _, kwargs = mock_setup.call_args
         assert kwargs["expert_tensor_parallel_size"] == 1
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
@@ -435,7 +432,6 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
         _, kwargs = mock_setup.call_args
         assert kwargs["sequence_parallel"] == 1
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
@@ -457,7 +453,6 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
         _, kwargs = mock_setup.call_args
         assert kwargs["expert_tensor_parallel_size"] == 4
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
