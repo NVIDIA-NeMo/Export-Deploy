@@ -79,6 +79,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         legacy_ckpt (bool): use legacy checkpoint format. Defaults to False.
         model_type (str): type of model to load. Defaults to "gpt".
         micro_batch_size (Optional[int]): micro batch size for model execution. Defaults to None.
+        buffer_size_gb (float): KV cache buffer size in GiB for DynamicInferenceContext. Defaults to 10.0.
     """
 
     def __init__(
@@ -102,6 +103,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         legacy_ckpt: bool = False,
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
+        buffer_size_gb: float = 10.0,
         **model_config_kwargs,
     ):
         if not HAVE_TRITON:
@@ -131,6 +133,7 @@ class MegatronLLMDeployable(ITritonDeployable):
             model_type=model_type,
             model_format="megatron",
             micro_batch_size=micro_batch_size,
+            buffer_size_gb=buffer_size_gb,
             **model_config_kwargs,
         )
         self.enable_cuda_graphs = enable_cuda_graphs
