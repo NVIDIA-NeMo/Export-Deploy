@@ -27,7 +27,6 @@ from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
 )
 from megatron.core.dist_checkpointing.validation import StrictHandling
-from megatron.core.inference.contexts import StaticInferenceContext
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
@@ -445,6 +444,7 @@ def create_mcore_engine(
     model_type: str = "gpt",
     model_format: str = "nemo",
     micro_batch_size: Optional[int] = None,
+    buffer_size_gb: float = 10.0,
     **model_config_kwargs,
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MCoreEngine for inference.
@@ -511,20 +511,17 @@ def create_mcore_engine(
     else:
         raise ValueError(f"Model format {model_format} not supported.")
 
-    # Build the inference wrapper config required by the old MCoreEngine API.
-    # MCoreEngine (StaticInferenceEngine) uses this config to internally create a
-    # DynamicInferenceContext and switch to DynamicInferenceEngine.
+    inner_model = peel(model)
+    model_config = inner_model.config
     inference_wrapper_config = InferenceWrapperConfig(
-        hidden_size=model.config.hidden_size,
-        params_dtype=params_dtype,
+        hidden_size=model_config.hidden_size,
+        params_dtype=model_config.params_dtype,
         inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
-        padded_vocab_size=getattr(model, "vocab_size", tokenizer.vocab_size),
-        inference_max_seq_length=inference_max_seq_length,
+        padded_vocab_size=inner_model.vocab_size,
         inference_max_requests=max_batch_size,
-        fp32_residual_connection=getattr(model.config, "fp32_residual_connection", False),
+        inference_max_seq_length=inference_max_seq_length,
     )
-    inference_context = StaticInferenceContext(max_batch_size, inference_max_seq_length)
-    model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config, inference_context)
+    model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config)
     text_generation_controller = TextGenerationController(
         inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
     )
@@ -532,6 +529,7 @@ def create_mcore_engine(
         text_generation_controller=text_generation_controller,
         max_batch_size=max_batch_size,
         random_seed=random_seed,
+        buffer_size_gb=buffer_size_gb,
     )
 
     # Wrap the engine to ensure cleanup
