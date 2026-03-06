@@ -31,9 +31,6 @@ from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
 )
-from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
-    InferenceWrapperConfig,
-)
 from megatron.core.inference.text_generation_controllers.text_generation_controller import (
     TextGenerationController,
 )
@@ -510,6 +507,10 @@ def create_mcore_engine(
         model = modelList[0]
     else:
         raise ValueError(f"Model format {model_format} not supported.")
+
+    from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
+        InferenceWrapperConfig,
+    )
 
     inner_model = peel(model)
     model_config = inner_model.config
