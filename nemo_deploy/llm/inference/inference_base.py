@@ -509,25 +509,9 @@ def create_mcore_engine(
     else:
         raise ValueError(f"Model format {model_format} not supported.")
 
-<<<<<<< HEAD
-    from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
-        InferenceWrapperConfig,
-    )
-
-    inner_model = peel(model)
-    model_config = inner_model.config
-    inference_wrapper_config = InferenceWrapperConfig(
-        hidden_size=model_config.hidden_size,
-        params_dtype=model_config.params_dtype,
-        inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
-        padded_vocab_size=inner_model.vocab_size,
-        inference_max_requests=max_batch_size,
-        inference_max_seq_length=inference_max_seq_length,
-=======
     inference_context = StaticInferenceContext(
         max_batch_size=max_batch_size,
         max_sequence_length=inference_max_seq_length,
->>>>>>> remove-direct-nemo-imports-in-inference
     )
     model_inference_wrapper = GPTInferenceWrapper(model, inference_context)
     text_generation_controller = TextGenerationController(
