@@ -27,6 +27,7 @@ from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
 )
 from megatron.core.dist_checkpointing.validation import StrictHandling
+from megatron.core.inference.contexts.static_context import StaticInferenceContext
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
@@ -518,8 +519,6 @@ def create_mcore_engine(
         model = modelList[0]
     else:
         raise ValueError(f"Model format {model_format} not supported.")
-
-    from megatron.core.inference.contexts.static_context import StaticInferenceContext
 
     inference_context = StaticInferenceContext(
         max_batch_size=max_batch_size,
