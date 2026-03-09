@@ -152,8 +152,7 @@ def _io_init(self, **kwargs) -> fdl.Config:
         return fdl.Config(type(self), **kwargs)
     except Exception as e:
         raise RuntimeError(
-            f"Error creating fdl.Config for {type(self).__name__}: {e}\n"
-            f"Arguments that caused the error: {kwargs}"
+            f"Error creating fdl.Config for {type(self).__name__}: {e}\nArguments that caused the error: {kwargs}"
         ) from e
 
 
