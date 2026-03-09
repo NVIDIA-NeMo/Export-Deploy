@@ -16,7 +16,7 @@
 import atexit
 import logging
 from pathlib import Path
-from typing import Any, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import megatron.core.dist_checkpointing.serialization as dist_ckpt
 import torch
@@ -27,7 +27,7 @@ from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
 )
 from megatron.core.dist_checkpointing.validation import StrictHandling
-from megatron.core.inference.contexts import StaticInferenceContext
+from megatron.core.inference.contexts.static_context import StaticInferenceContext
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
@@ -62,29 +62,14 @@ try:
 except ImportError:
     HAVE_TRITON = False
 
-try:
-    if not HAVE_TRITON:
-        raise ImportError("Triton is not installed")
-    from nemo.collections.llm.gpt.model.base import GPTConfig
-    from nemo.collections.llm.inference.base import MCoreTokenizerWrappper
-    from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
-    from nemo.collections.llm.t5.model.t5 import T5Config
-    from nemo.lightning import io
-    from nemo.lightning.ckpt_utils import ckpt_to_context_subdir
-    from nemo.lightning.io.pl import ckpt_to_weights_subdir
-
-    HAVE_NEMO = True
-except (ImportError, ModuleNotFoundError):
-    HAVE_NEMO = False
-    from typing import Any
-
-    io = None
-    GPTConfig = Any
-    T5Config = Any
-    MCoreTokenizerWrappper = Any
-    set_modelopt_spec_if_exists_in_ckpt = None
-    ckpt_to_weights_subdir = None
-    ckpt_to_context_subdir = None
+from .nemo_utils import (
+    HAVE_NEMO,
+    MCoreTokenizerWrappper,
+    ckpt_to_context_subdir,
+    ckpt_to_weights_subdir,
+    io,
+    set_modelopt_spec_if_exists_in_ckpt,
+)
 
 LOGGER = logging.getLogger("NeMo")
 
@@ -465,6 +450,7 @@ def create_mcore_engine(
     model_type: str = "gpt",
     model_format: str = "nemo",
     micro_batch_size: Optional[int] = None,
+    buffer_size_gb: float = 10.0,
     **model_config_kwargs,
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MCoreEngine for inference.
@@ -534,7 +520,10 @@ def create_mcore_engine(
     else:
         raise ValueError(f"Model format {model_format} not supported.")
 
-    inference_context = StaticInferenceContext(max_batch_size, inference_max_seq_length)
+    inference_context = StaticInferenceContext(
+        max_batch_size=max_batch_size,
+        max_sequence_length=inference_max_seq_length,
+    )
     model_inference_wrapper = GPTInferenceWrapper(model, inference_context)
     text_generation_controller = TextGenerationController(
         inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
@@ -543,6 +532,7 @@ def create_mcore_engine(
         text_generation_controller=text_generation_controller,
         max_batch_size=max_batch_size,
         random_seed=random_seed,
+        buffer_size_gb=buffer_size_gb,
     )
 
     # Wrap the engine to ensure cleanup

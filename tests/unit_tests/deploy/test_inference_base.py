@@ -637,6 +637,275 @@ class TestInferenceBase(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(len(result), 3)  # Returns (model, tokenizer, mlm_args)
 
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_distributed")
+    @patch("nemo_deploy.llm.inference.inference_base._set_random_seed")
+    @patch("nemo_deploy.llm.inference.inference_base._initialize_tp_communicators")
+    def test_initialize_megatron_for_inference_no_tp_comm(self, mock_tp_comm, mock_seed, mock_init_dist):
+        """Test initialize_megatron_for_inference when tp_comm_overlap is False."""
+        self.model_config.tp_comm_overlap = False
+        micro_batch_size = 4
+
+        initialize_megatron_for_inference(self.model_config, self.dist_config, self.rng_config, micro_batch_size)
+
+        mock_init_dist.assert_called_once()
+        mock_seed.assert_called_once()
+        mock_tp_comm.assert_not_called()
+
+    @patch("nemo_deploy.llm.inference.inference_base.dist_ckpt.load")
+    @patch("nemo_deploy.llm.inference.inference_base.get_default_load_sharded_strategy")
+    @patch("megatron.core.transformer.module.MegatronModule.sharded_state_dict")
+    def test_load_dist_shards_into_model_legacy_ckpt(self, mock_sharded_state_dict, mock_get_strategy, mock_load):
+        """Test _load_dist_shards_into_model with legacy_ckpt=True uses LOG_ALL strict handling."""
+        mock_sharded_state_dict.return_value = {"fake_key": "fake_value"}
+        mock_get_strategy.return_value = "fake_strategy"
+
+        _load_dist_shards_into_model(self.mock_model_list, self.mock_weights_dir, legacy_ckpt=True)
+
+        mock_load.assert_called_once()
+        # Verify legacy strict handling was passed (LOG_ALL)
+        call_kwargs = mock_load.call_args
+        from megatron.core.dist_checkpointing.validation import StrictHandling
+
+        assert call_kwargs.kwargs.get("strict") == StrictHandling.LOG_ALL or (
+            call_kwargs.args and StrictHandling.LOG_ALL in call_kwargs.args
+        )
+
+    def test_load_nemo_checkpoint_no_nemo(self):
+        """Test load_nemo_checkpoint_to_tron_model raises when NeMo is not available."""
+        with patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", False):
+            with self.assertRaises(Exception):
+                load_nemo_checkpoint_to_tron_model(self.mock_model_list, self.mock_path)
+
+    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", False)
+    def test_setup_model_and_tokenizer_no_nemo(self):
+        """Test setup_model_and_tokenizer_for_inference raises UnavailableError when NeMo is absent."""
+        with self.assertRaises(UnavailableError):
+            setup_model_and_tokenizer_for_inference(checkpoint_path=self.mock_path)
+
+    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.llm.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.io.load_context")
+    @patch("nemo_deploy.llm.inference.inference_base.check_is_distributed_checkpoint")
+    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_weights_subdir")
+    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_context_subdir")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.get_model_from_config")
+    @patch("nemo_deploy.llm.inference.inference_base.load_nemo_checkpoint_to_tron_model")
+    @patch("nemo_deploy.llm.inference.inference_base.peel")
+    @patch("nemo_deploy.llm.inference.inference_base.MCoreTokenizerWrappper")
+    def test_setup_model_and_tokenizer_cuda_graphs(
+        self,
+        mock_tokenizer_wrapper,
+        mock_peel,
+        mock_load_ckpt,
+        mock_get_model,
+        mock_init_megatron,
+        mock_context_subdir,
+        mock_weights_subdir,
+        mock_check_dist,
+        mock_load_context,
+        mock_torch_dist_init,
+        mock_set_modelopt,
+    ):
+        """Test setup_model_and_tokenizer_for_inference with enable_cuda_graphs=True."""
+        mock_context = MagicMock()
+        mock_context.config = self.model_config
+        mock_context.tokenizer = self.mock_tokenizer
+        mock_load_context.return_value = mock_context
+        mock_check_dist.return_value = True
+        mock_get_model.return_value = self.mock_model_list
+        mock_peel.return_value = self.mock_model
+
+        result = setup_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            enable_cuda_graphs=True,
+        )
+
+        self.assertEqual(len(result), 2)
+        # Verify cuda graph settings were applied
+        self.assertTrue(self.model_config.enable_cuda_graph)
+        self.assertTrue(self.model_config.use_te_rng_tracker)
+        self.assertTrue(self.model_config.inference_rng_tracker)
+
+    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.llm.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.io.load_context")
+    @patch("nemo_deploy.llm.inference.inference_base.check_is_distributed_checkpoint")
+    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_weights_subdir")
+    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_context_subdir")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.get_model_from_config")
+    @patch("nemo_deploy.llm.inference.inference_base.load_nemo_checkpoint_to_tron_model")
+    @patch("nemo_deploy.llm.inference.inference_base.peel")
+    @patch("nemo_deploy.llm.inference.inference_base.MCoreTokenizerWrappper")
+    def test_setup_model_and_tokenizer_with_gradient_accum_fusion(
+        self,
+        mock_tokenizer_wrapper,
+        mock_peel,
+        mock_load_ckpt,
+        mock_get_model,
+        mock_init_megatron,
+        mock_context_subdir,
+        mock_weights_subdir,
+        mock_check_dist,
+        mock_load_context,
+        mock_torch_dist_init,
+        mock_set_modelopt,
+    ):
+        """Test that gradient_accumulation_fusion is disabled when present."""
+        mock_context = MagicMock()
+        mock_context.config = self.model_config
+        mock_context.tokenizer = self.mock_tokenizer
+        # Add gradient_accumulation_fusion to model_config
+        self.model_config.gradient_accumulation_fusion = True
+        mock_load_context.return_value = mock_context
+        mock_check_dist.return_value = True
+        mock_get_model.return_value = self.mock_model_list
+        mock_peel.return_value = self.mock_model
+
+        setup_model_and_tokenizer_for_inference(checkpoint_path=self.mock_path)
+
+        self.assertFalse(self.model_config.gradient_accumulation_fusion)
+
+    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.llm.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.io.load_context")
+    @patch("nemo_deploy.llm.inference.inference_base.check_is_distributed_checkpoint")
+    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_weights_subdir")
+    @patch("nemo_deploy.llm.inference.inference_base.ckpt_to_context_subdir")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.get_model_from_config")
+    @patch("nemo_deploy.llm.inference.inference_base.load_nemo_checkpoint_to_tron_model")
+    @patch("nemo_deploy.llm.inference.inference_base.peel")
+    @patch("nemo_deploy.llm.inference.inference_base.MCoreTokenizerWrappper")
+    def test_setup_model_and_tokenizer_model_config_kwargs(
+        self,
+        mock_tokenizer_wrapper,
+        mock_peel,
+        mock_load_ckpt,
+        mock_get_model,
+        mock_init_megatron,
+        mock_context_subdir,
+        mock_weights_subdir,
+        mock_check_dist,
+        mock_load_context,
+        mock_torch_dist_init,
+        mock_set_modelopt,
+    ):
+        """Test that model_config_kwargs override config attributes."""
+        mock_context = MagicMock()
+        mock_context.config = self.model_config
+        mock_context.tokenizer = self.mock_tokenizer
+        mock_load_context.return_value = mock_context
+        mock_check_dist.return_value = True
+        mock_get_model.return_value = self.mock_model_list
+        mock_peel.return_value = self.mock_model
+
+        setup_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            hidden_size=1024,  # Override a model_config attribute
+        )
+
+        self.assertEqual(self.model_config.hidden_size, 1024)
+
+    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
+    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
+    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
+    def test_create_mcore_engine_nemo_format(
+        self,
+        mock_mcore_engine,
+        mock_text_ctrl,
+        mock_gpt_wrapper,
+        mock_static_ctx,
+        mock_setup,
+    ):
+        """Test create_mcore_engine with nemo model_format."""
+        mock_model = MagicMock()
+        mock_tokenizer = MagicMock()
+        mock_setup.return_value = ([mock_model], mock_tokenizer)
+        mock_engine_instance = MagicMock()
+        mock_mcore_engine.return_value = mock_engine_instance
+
+        engine, wrapper, tokenizer = create_mcore_engine(
+            path=self.mock_path,
+            model_format="nemo",
+            inference_max_seq_length=2048,
+            max_batch_size=4,
+        )
+
+        mock_setup.assert_called_once()
+        mock_mcore_engine.assert_called_once()
+        self.assertIsNotNone(engine)
+
+    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
+    @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
+    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
+    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
+    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
+    def test_create_mcore_engine_megatron_format(
+        self,
+        mock_mcore_engine,
+        mock_text_ctrl,
+        mock_gpt_wrapper,
+        mock_static_ctx,
+        mock_setup,
+    ):
+        """Test create_mcore_engine with megatron model_format."""
+        mock_model = MagicMock()
+        mock_tokenizer = MagicMock()
+        mock_mlm_args = MagicMock()
+        mock_setup.return_value = ([mock_model], mock_tokenizer, mock_mlm_args)
+        mock_engine_instance = MagicMock()
+        mock_mcore_engine.return_value = mock_engine_instance
+
+        engine, wrapper, tokenizer = create_mcore_engine(
+            path=self.mock_path,
+            model_format="megatron",
+            inference_max_seq_length=2048,
+            max_batch_size=4,
+        )
+
+        mock_setup.assert_called_once()
+        mock_mcore_engine.assert_called_once()
+        self.assertIsNotNone(engine)
+
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    def test_setup_megatron_parallel_overrides(
+        self, mock_load_tokenizer, mock_build_model, mock_init_megatron, mock_load_config, mock_torch_dist
+    ):
+        """Test that parallel size overrides are applied in setup_megatron_model_and_tokenizer_for_inference."""
+        mock_config = MagicMock()
+        mock_config.attention_backend = "AttnBackend.flash"
+        mock_mlm_args = MagicMock()
+        mock_load_config.return_value = (mock_config, mock_mlm_args)
+        mock_build_model.return_value = [MagicMock()]
+        mock_load_tokenizer.return_value = MagicMock()
+
+        setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            context_parallel_size=2,
+            expert_model_parallel_size=4,
+            expert_tensor_parallel_size=2,
+            sequence_parallel=True,
+            micro_batch_size=8,
+        )
+
+        self.assertEqual(mock_config.context_parallel_size, 2)
+        self.assertEqual(mock_config.expert_model_parallel_size, 4)
+        self.assertEqual(mock_config.expert_tensor_parallel_size, 2)
+        self.assertEqual(mock_config.sequence_parallel, True)
+
 
 if __name__ == "__main__":
     unittest.main()
