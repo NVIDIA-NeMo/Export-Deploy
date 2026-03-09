@@ -654,19 +654,6 @@ class TestInferenceBase(unittest.TestCase):
             call_kwargs.args and StrictHandling.LOG_ALL in call_kwargs.args
         )
 
-    def test_load_nemo_checkpoint_no_nemo(self):
-        """Test load_nemo_checkpoint_to_tron_model raises when NeMo is not available."""
-        with patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", False):
-            with self.assertRaises(Exception):
-                load_nemo_checkpoint_to_tron_model(self.mock_model_list, self.mock_path)
-
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", False)
-    def test_setup_model_and_tokenizer_no_nemo(self):
-        """Test setup_model_and_tokenizer_for_inference raises UnavailableError when NeMo is absent."""
-        with self.assertRaises(UnavailableError):
-            setup_model_and_tokenizer_for_inference(checkpoint_path=self.mock_path)
-
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
     @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
     @patch("nemo_deploy.llm.inference.inference_base.io.load_context")
@@ -712,7 +699,6 @@ class TestInferenceBase(unittest.TestCase):
         self.assertTrue(self.model_config.use_te_rng_tracker)
         self.assertTrue(self.model_config.inference_rng_tracker)
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
     @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
     @patch("nemo_deploy.llm.inference.inference_base.io.load_context")
@@ -753,7 +739,6 @@ class TestInferenceBase(unittest.TestCase):
 
         self.assertFalse(self.model_config.gradient_accumulation_fusion)
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.set_modelopt_spec_if_exists_in_ckpt")
     @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
     @patch("nemo_deploy.llm.inference.inference_base.io.load_context")
@@ -795,7 +780,6 @@ class TestInferenceBase(unittest.TestCase):
 
         self.assertEqual(self.model_config.hidden_size, 1024)
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
     @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
@@ -827,7 +811,6 @@ class TestInferenceBase(unittest.TestCase):
         mock_mcore_engine.assert_called_once()
         self.assertIsNotNone(engine)
 
-    @patch("nemo_deploy.llm.inference.inference_base.HAVE_NEMO", True)
     @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
     @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
