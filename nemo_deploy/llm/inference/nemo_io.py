@@ -21,7 +21,6 @@ loaded at runtime, NeMo classes are imported transitively through
 checkpoints.
 
 Sources
--------
   - IOProtocol         : nemo/lightning/io/capture.py
   - IO helpers, load   : nemo/lightning/io/mixin.py
   - load_context       : nemo/lightning/io/api.py
