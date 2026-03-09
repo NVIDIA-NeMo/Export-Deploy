@@ -27,6 +27,7 @@ from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
 )
 from megatron.core.dist_checkpointing.validation import StrictHandling
+from megatron.core.inference.contexts.static_context import StaticInferenceContext
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
@@ -508,6 +509,7 @@ def create_mcore_engine(
     else:
         raise ValueError(f"Model format {model_format} not supported.")
 
+<<<<<<< HEAD
     from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
         InferenceWrapperConfig,
     )
@@ -521,8 +523,13 @@ def create_mcore_engine(
         padded_vocab_size=inner_model.vocab_size,
         inference_max_requests=max_batch_size,
         inference_max_seq_length=inference_max_seq_length,
+=======
+    inference_context = StaticInferenceContext(
+        max_batch_size=max_batch_size,
+        max_sequence_length=inference_max_seq_length,
+>>>>>>> remove-direct-nemo-imports-in-inference
     )
-    model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config)
+    model_inference_wrapper = GPTInferenceWrapper(model, inference_context)
     text_generation_controller = TextGenerationController(
         inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
     )
