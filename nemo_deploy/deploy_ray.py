@@ -194,6 +194,7 @@ class DeployRay:
         test_mode: bool = False,
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
+        batch_wait_timeout_s: float = 0.1,
         **model_config_kwargs,
     ):
         """Deploy an inframework Megatron model using Ray Serve.
@@ -245,6 +246,7 @@ class DeployRay:
             app = MegatronRayDeployable.options(
                 num_replicas=num_replicas,
                 ray_actor_options={"num_cpus": num_cpus_per_replica},
+                max_ongoing_requests=max_batch_size * 2,
             ).bind(
                 megatron_checkpoint_filepath=megatron_checkpoint,
                 num_gpus=gpus_per_replica,
@@ -263,6 +265,7 @@ class DeployRay:
                 random_seed=random_seed,
                 model_type=model_type,
                 micro_batch_size=micro_batch_size,
+                batch_wait_timeout_s=batch_wait_timeout_s,
                 **model_config_kwargs,
             )
 

@@ -18,7 +18,7 @@ import logging
 import os
 import random
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import ray
@@ -116,7 +116,7 @@ class ModelWorker:
 @serve.deployment(
     num_replicas=1,
     ray_actor_options={"num_cpus": 8},
-    max_ongoing_requests=32,
+    max_ongoing_requests=64,
 )
 @serve.ingress(app)
 class MegatronRayDeployable:
@@ -145,6 +145,7 @@ class MegatronRayDeployable:
         random_seed: Optional[int] = None,
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
+        batch_wait_timeout_s: float = 0.1,
         **model_config_kwargs,
     ):
         """Initialize the distributed Megatron LLM model deployment.
@@ -164,9 +165,13 @@ class MegatronRayDeployable:
             random_seed (int): Random seed for model initialization.
             model_type (str): Type of model to load.
             micro_batch_size (Optional[int]): Micro batch size for model execution.
+            batch_wait_timeout_s (float): Max seconds to wait for additional requests before
+                processing a batch. Defaults to 0.1.
         """
         try:
             self.model_id = model_id
+            self.max_batch_size = max_batch_size
+            self.batch_wait_timeout_s = batch_wait_timeout_s
 
             # Generate a unique replica ID based on the actor handle
             replica_id = abs(hash(str(self))) % 10000
@@ -265,9 +270,85 @@ class MegatronRayDeployable:
 
             LOGGER.info(f"Replica {replica_id} - Initialized {num_gpus} model workers")
 
+            # Set up separate batch queues for completions and chat to prevent
+            # cross-contamination of apply_chat_template between endpoint types
+            self._batched_completions_infer = serve.batch(
+                max_batch_size=self.max_batch_size,
+                batch_wait_timeout_s=self.batch_wait_timeout_s,
+            )(self._batched_infer_impl)
+
+            self._batched_chat_infer = serve.batch(
+                max_batch_size=self.max_batch_size,
+                batch_wait_timeout_s=self.batch_wait_timeout_s,
+            )(self._batched_infer_impl)
+
+            LOGGER.info(
+                f"Replica {replica_id} - Batching enabled: max_batch_size={self.max_batch_size}, "
+                f"batch_wait_timeout_s={self.batch_wait_timeout_s}"
+            )
+
         except Exception as e:
             LOGGER.error(f"Error initializing distributed model deployment: {str(e)}")
             raise
+
+    async def _batched_infer_impl(self, inference_inputs_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Batch handler: merges multiple requests, runs single inference, splits results."""
+        batch_size = len(inference_inputs_list)
+        if batch_size > 1:
+            LOGGER.info(f"Batching {batch_size} requests together")
+
+        # Merge prompts, track per-request counts
+        all_prompts = []
+        prompt_counts = []
+        for inputs in inference_inputs_list:
+            prompts = inputs.get("prompts", [])
+            all_prompts.extend(prompts)
+            prompt_counts.append(len(prompts))
+
+        # First-value semantics for shared parameters (matches PyTriton @first_value pattern)
+        first = inference_inputs_list[0]
+        if batch_size > 1:
+            for param in ["temperature", "top_k", "top_p", "max_length"]:
+                vals = {inputs.get(param) for inputs in inference_inputs_list}
+                if len(vals) > 1:
+                    LOGGER.warning(
+                        f"Batched requests have different '{param}': {vals}. Using first request's value."
+                    )
+
+        merged_inputs = {
+            "prompts": all_prompts,
+            "max_length": first.get("max_length", 256),
+            "temperature": first.get("temperature", 1.0),
+            "top_k": first.get("top_k", 0),
+            "top_p": first.get("top_p", 0.0),
+            "compute_logprob": first.get("compute_logprob", False),
+            "apply_chat_template": first.get("apply_chat_template", False),
+            "n_top_logprobs": first.get("n_top_logprobs", 0),
+            "echo": first.get("echo", False),
+            "stop_words": first.get("stop_words", None),
+        }
+
+        # Use await instead of ray.get() to avoid blocking the event loop
+        results = await self.primary_worker.infer.remote(merged_inputs)
+
+        # Split results back per-request
+        individual_results = []
+        offset = 0
+        for count in prompt_counts:
+            result = {"sentences": results.get("sentences", [])[offset:offset + count]}
+
+            log_probs = results.get("log_probs", None)
+            if log_probs is not None:
+                result["log_probs"] = log_probs[offset:offset + count]
+
+            top_logprobs = results.get("top_logprobs", None)
+            if top_logprobs is not None:
+                result["top_logprobs"] = top_logprobs[offset:offset + count]
+
+            individual_results.append(result)
+            offset += count
+
+        return individual_results
 
     @app.post("/v1/completions/")
     async def completions(self, request: Dict[Any, Any]):
@@ -303,8 +384,8 @@ class MegatronRayDeployable:
                 "stop_words": stop_words,
             }
 
-            # Run tokenization and model inference in the thread pool
-            results = ray.get(self.primary_worker.infer.remote(inference_inputs))
+            # Run batched inference (collects concurrent requests automatically)
+            results = await self._batched_completions_infer(inference_inputs)
             # Extract generated texts from results
             generated_texts = results.get("sentences", [])
 
@@ -400,8 +481,8 @@ class MegatronRayDeployable:
                 "stop_words": stop_words,
             }
 
-            # Run model inference in the thread pool
-            results = ray.get(self.primary_worker.infer.remote(inference_inputs))
+            # Run batched inference (collects concurrent requests automatically)
+            results = await self._batched_chat_infer(inference_inputs)
 
             # Extract generated texts from results
             generated_texts = results["sentences"]
