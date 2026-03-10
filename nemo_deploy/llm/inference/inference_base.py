@@ -32,6 +32,10 @@ from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
 )
+from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
+    InferenceWrapperConfig,
+)
+from megatron.core.utils import get_model_config
 from megatron.core.inference.text_generation_controllers.text_generation_controller import (
     TextGenerationController,
 )
@@ -524,7 +528,16 @@ def create_mcore_engine(
         max_batch_size=max_batch_size,
         max_sequence_length=inference_max_seq_length,
     )
-    model_inference_wrapper = GPTInferenceWrapper(model, inference_context)
+    model_config = get_model_config(model)
+    inference_wrapper_config = InferenceWrapperConfig(
+        hidden_size=model_config.hidden_size,
+        params_dtype=params_dtype,
+        inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
+        padded_vocab_size=tokenizer.vocab_size,
+        fp32_residual_connection=getattr(model_config, 'fp32_residual_connection', False),
+        inference_max_seq_length=inference_max_seq_length,
+    )
+    model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config, inference_context)
     text_generation_controller = TextGenerationController(
         inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
     )
