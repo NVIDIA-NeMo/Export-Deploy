@@ -314,7 +314,6 @@ class TestSetupModelETPSequenceParallel(unittest.TestCase):
         patches = self._common_patches()
         mocks = [p.start() for p in patches]
         (
-            _have_nemo,
             _set_modelopt,
             _torch_dist,
             mock_io,
@@ -351,7 +350,6 @@ class TestSetupModelETPSequenceParallel(unittest.TestCase):
         patches = self._common_patches()
         mocks = [p.start() for p in patches]
         (
-            _have_nemo,
             _set_modelopt,
             _torch_dist,
             mock_io,
