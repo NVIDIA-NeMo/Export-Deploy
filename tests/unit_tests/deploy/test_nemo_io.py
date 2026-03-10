@@ -755,9 +755,7 @@ class TestLoad:
 
         mock_result = MagicMock(spec=fdl.Config)
         with patch("nemo_deploy.llm.inference.nemo_io.locate", return_value=fake_cls):
-            with patch(
-                "nemo_deploy.llm.inference.nemo_io.serialization.find_node_traverser", return_value=None
-            ):
+            with patch("nemo_deploy.llm.inference.nemo_io.serialization.find_node_traverser", return_value=None):
                 with patch("nemo_deploy.llm.inference.nemo_io.track_io") as mock_track:
                     with patch("nemo_deploy.llm.inference.nemo_io.serialization.Deserialization") as mock_deser:
                         mock_deser.return_value.result = mock_result
