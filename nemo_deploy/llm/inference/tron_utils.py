@@ -356,7 +356,7 @@ def _get_model_type(model_config: Union[GPTConfig, T5Config]) -> ModelType:
     Returns:
         ModelType: The model type enum value (encoder_and_decoder or encoder_or_decoder)
     """
-    return ModelType.encoder_and_decoder if type(model_config).__name__ == "T5Config" else ModelType.encoder_or_decoder
+    return ModelType.encoder_and_decoder if isinstance(model_config, T5Config) else ModelType.encoder_or_decoder
 
 
 def get_model_from_config(
@@ -409,7 +409,7 @@ def get_model_from_config(
         pre_process = parallel_state.is_pipeline_first_stage()
         post_process = parallel_state.is_pipeline_last_stage()
         if model_type == ModelType.encoder_and_decoder:
-            assert type(model_config).__name__ == "T5Config"
+            assert isinstance(model_config, T5Config)
             if parallel_state.get_pipeline_model_parallel_world_size() > 1:
                 rank = parallel_state.get_pipeline_model_parallel_rank()
                 first_decoder_rank = parallel_state.get_pipeline_model_parallel_decoder_start()
