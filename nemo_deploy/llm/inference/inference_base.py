@@ -35,12 +35,12 @@ from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper 
 from megatron.core.inference.model_inference_wrappers.inference_wrapper_config import (
     InferenceWrapperConfig,
 )
-from megatron.core.utils import get_model_config
 from megatron.core.inference.text_generation_controllers.text_generation_controller import (
     TextGenerationController,
 )
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
+from megatron.core.utils import get_model_config
 from packaging import version
 
 from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
@@ -534,7 +534,7 @@ def create_mcore_engine(
         params_dtype=params_dtype,
         inference_batch_times_seqlen_threshold=inference_batch_times_seqlen_threshold,
         padded_vocab_size=tokenizer.vocab_size,
-        fp32_residual_connection=getattr(model_config, 'fp32_residual_connection', False),
+        fp32_residual_connection=getattr(model_config, "fp32_residual_connection", False),
         inference_max_seq_length=inference_max_seq_length,
     )
     model_inference_wrapper = GPTInferenceWrapper(model, inference_wrapper_config, inference_context)
