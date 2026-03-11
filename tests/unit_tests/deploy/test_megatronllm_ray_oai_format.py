@@ -16,7 +16,7 @@
 
 import asyncio
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import numpy as np
 import pytest
@@ -30,6 +30,10 @@ def mock_ray_deployment():
     deployment.model_id = "megatron-model"
     deployment.workers = [MagicMock()]
     deployment.primary_worker = deployment.workers[0]
+
+    # Initialize batched infer mocks (tests set return_value before calling)
+    deployment._batched_completions_infer = AsyncMock()
+    deployment._batched_chat_infer = AsyncMock()
 
     # Mock the completions method to behave like the actual implementation
     async def mock_completions(request):
@@ -78,46 +82,46 @@ def test_completions_output_format_basic(mock_ray_deployment):
         ],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        # Verify top-level structure
-        assert isinstance(output, dict)
-        assert "id" in output
-        assert output["object"] == "text_completion"
-        assert "created" in output
-        assert output["model"] == "megatron-model"
-        assert "choices" in output
-        assert "usage" in output
+    # Verify top-level structure
+    assert isinstance(output, dict)
+    assert "id" in output
+    assert output["object"] == "text_completion"
+    assert "created" in output
+    assert output["model"] == "megatron-model"
+    assert "choices" in output
+    assert "usage" in output
 
-        # Verify choices structure
-        assert isinstance(output["choices"], list)
-        assert len(output["choices"]) == 1
-        choice = output["choices"][0]
+    # Verify choices structure
+    assert isinstance(output["choices"], list)
+    assert len(output["choices"]) == 1
+    choice = output["choices"][0]
 
-        # Test 1: Verify 'text' is a string
-        assert "text" in choice
-        assert isinstance(choice["text"], str), f"Expected 'text' to be str, got {type(choice['text'])}"
+    # Test 1: Verify 'text' is a string
+    assert "text" in choice
+    assert isinstance(choice["text"], str), f"Expected 'text' to be str, got {type(choice['text'])}"
 
-        # Test 2: Verify 'logprobs' is a dictionary
-        assert "logprobs" in choice
-        assert isinstance(choice["logprobs"], dict), f"Expected 'logprobs' to be dict, got {type(choice['logprobs'])}"
+    # Test 2: Verify 'logprobs' is a dictionary
+    assert "logprobs" in choice
+    assert isinstance(choice["logprobs"], dict), f"Expected 'logprobs' to be dict, got {type(choice['logprobs'])}"
 
-        # Test 3: Verify 'token_logprobs' is a list
-        assert "token_logprobs" in choice["logprobs"]
-        assert isinstance(choice["logprobs"]["token_logprobs"], list), (
-            f"Expected 'token_logprobs' to be list, got {type(choice['logprobs']['token_logprobs'])}"
-        )
+    # Test 3: Verify 'token_logprobs' is a list
+    assert "token_logprobs" in choice["logprobs"]
+    assert isinstance(choice["logprobs"]["token_logprobs"], list), (
+        f"Expected 'token_logprobs' to be list, got {type(choice['logprobs']['token_logprobs'])}"
+    )
 
-        # Test 4: Verify 'top_logprobs' is a list of dictionaries
-        assert "top_logprobs" in choice["logprobs"]
-        assert isinstance(choice["logprobs"]["top_logprobs"], list), (
-            f"Expected 'top_logprobs' to be list, got {type(choice['logprobs']['top_logprobs'])}"
-        )
+    # Test 4: Verify 'top_logprobs' is a list of dictionaries
+    assert "top_logprobs" in choice["logprobs"]
+    assert isinstance(choice["logprobs"]["top_logprobs"], list), (
+        f"Expected 'top_logprobs' to be list, got {type(choice['logprobs']['top_logprobs'])}"
+    )
 
-        # Verify each element in top_logprobs is a dictionary
-        for i, item in enumerate(choice["logprobs"]["top_logprobs"]):
-            assert isinstance(item, dict), f"Expected top_logprobs[{i}] to be dict, got {type(item)}"
+    # Verify each element in top_logprobs is a dictionary
+    for i, item in enumerate(choice["logprobs"]["top_logprobs"]):
+        assert isinstance(item, dict), f"Expected top_logprobs[{i}] to be dict, got {type(item)}"
 
 
 @pytest.mark.run_only_on("GPU")
@@ -133,13 +137,13 @@ def test_completions_text_field_is_string(mock_ray_deployment):
         "sentences": ["This", "is", "a", "test"],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        text = output["choices"][0]["text"]
-        assert isinstance(text, str), f"Expected string, got {type(text)}"
-        # When multiple sentences are returned, they should be joined with spaces
-        assert text == "This is a test"
+    text = output["choices"][0]["text"]
+    assert isinstance(text, str), f"Expected string, got {type(text)}"
+    # When multiple sentences are returned, they should be joined with spaces
+    assert text == "This is a test"
 
 
 @pytest.mark.run_only_on("GPU")
@@ -157,34 +161,34 @@ def test_completions_logprobs_structure(mock_ray_deployment):
         "top_logprobs": [json.dumps([{"a": -0.1, "b": -0.5}, {"c": -0.2, "d": -0.6}, {"e": -0.3, "f": -0.7}])],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        logprobs = output["choices"][0]["logprobs"]
+    logprobs = output["choices"][0]["logprobs"]
 
-        # Verify logprobs is a dictionary
-        assert isinstance(logprobs, dict)
+    # Verify logprobs is a dictionary
+    assert isinstance(logprobs, dict)
 
-        # Verify token_logprobs is a list
-        assert "token_logprobs" in logprobs
-        token_logprobs = logprobs["token_logprobs"]
-        assert isinstance(token_logprobs, list)
-        assert len(token_logprobs) == 3
-        for prob in token_logprobs:
-            assert isinstance(prob, (int, float)) or prob is None
+    # Verify token_logprobs is a list
+    assert "token_logprobs" in logprobs
+    token_logprobs = logprobs["token_logprobs"]
+    assert isinstance(token_logprobs, list)
+    assert len(token_logprobs) == 3
+    for prob in token_logprobs:
+        assert isinstance(prob, (int, float)) or prob is None
 
-        # Verify top_logprobs is a list of dictionaries
-        assert "top_logprobs" in logprobs
-        top_logprobs = logprobs["top_logprobs"]
-        assert isinstance(top_logprobs, list)
-        assert len(top_logprobs) == 3
+    # Verify top_logprobs is a list of dictionaries
+    assert "top_logprobs" in logprobs
+    top_logprobs = logprobs["top_logprobs"]
+    assert isinstance(top_logprobs, list)
+    assert len(top_logprobs) == 3
 
-        for item in top_logprobs:
-            assert isinstance(item, dict)
-            # Each dictionary should have string keys and numeric values
-            for key, value in item.items():
-                assert isinstance(key, str)
-                assert isinstance(value, (int, float))
+    for item in top_logprobs:
+        assert isinstance(item, dict)
+        # Each dictionary should have string keys and numeric values
+        for key, value in item.items():
+            assert isinstance(key, str)
+            assert isinstance(value, (int, float))
 
 
 @pytest.mark.run_only_on("GPU")
@@ -203,15 +207,15 @@ def test_completions_with_echo_adds_none_to_token_logprobs(mock_ray_deployment):
         "top_logprobs": [json.dumps([{"a": -0.1}, {"b": -0.2}])],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        token_logprobs = output["choices"][0]["logprobs"]["token_logprobs"]
+    token_logprobs = output["choices"][0]["logprobs"]["token_logprobs"]
 
-        # First element should be None when echo=True
-        assert token_logprobs[0] is None
-        # Rest should be floats
-        assert len(token_logprobs) == 3  # None + 2 original values
+    # First element should be None when echo=True
+    assert token_logprobs[0] is None
+    # Rest should be floats
+    assert len(token_logprobs) == 3  # None + 2 original values
 
 
 @pytest.mark.run_only_on("GPU")
@@ -227,16 +231,16 @@ def test_completions_without_logprobs_request(mock_ray_deployment):
         "sentences": ["Generated text"],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        logprobs = output["choices"][0]["logprobs"]
+    logprobs = output["choices"][0]["logprobs"]
 
-        # logprobs field should still exist but with None values
-        assert "token_logprobs" in logprobs
-        assert "top_logprobs" in logprobs
-        assert logprobs["token_logprobs"] is None
-        assert logprobs["top_logprobs"] is None
+    # logprobs field should still exist but with None values
+    assert "token_logprobs" in logprobs
+    assert "top_logprobs" in logprobs
+    assert logprobs["token_logprobs"] is None
+    assert logprobs["top_logprobs"] is None
 
 
 @pytest.mark.run_only_on("GPU")
@@ -265,34 +269,34 @@ def test_completions_complete_output_structure(mock_ray_deployment):
         ],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        # Verify complete structure
-        assert "id" in output and isinstance(output["id"], str)
-        assert output["object"] == "text_completion"
-        assert "created" in output and isinstance(output["created"], int)
-        assert output["model"] == "megatron-model"
+    # Verify complete structure
+    assert "id" in output and isinstance(output["id"], str)
+    assert output["object"] == "text_completion"
+    assert "created" in output and isinstance(output["created"], int)
+    assert output["model"] == "megatron-model"
 
-        # Verify choices
-        assert len(output["choices"]) == 1
-        choice = output["choices"][0]
-        assert isinstance(choice["text"], str)
-        assert choice["index"] == 0
-        assert choice["finish_reason"] in ["stop", "length"]
+    # Verify choices
+    assert len(output["choices"]) == 1
+    choice = output["choices"][0]
+    assert isinstance(choice["text"], str)
+    assert choice["index"] == 0
+    assert choice["finish_reason"] in ["stop", "length"]
 
-        # Verify logprobs structure
-        logprobs = choice["logprobs"]
-        assert isinstance(logprobs["token_logprobs"], list)
-        assert isinstance(logprobs["top_logprobs"], list)
-        assert len(logprobs["token_logprobs"]) == len(logprobs["top_logprobs"])
+    # Verify logprobs structure
+    logprobs = choice["logprobs"]
+    assert isinstance(logprobs["token_logprobs"], list)
+    assert isinstance(logprobs["top_logprobs"], list)
+    assert len(logprobs["token_logprobs"]) == len(logprobs["top_logprobs"])
 
-        # Verify usage
-        usage = output["usage"]
-        assert "prompt_tokens" in usage and isinstance(usage["prompt_tokens"], int)
-        assert "completion_tokens" in usage and isinstance(usage["completion_tokens"], int)
-        assert "total_tokens" in usage and isinstance(usage["total_tokens"], int)
-        assert usage["total_tokens"] == usage["prompt_tokens"] + usage["completion_tokens"]
+    # Verify usage
+    usage = output["usage"]
+    assert "prompt_tokens" in usage and isinstance(usage["prompt_tokens"], int)
+    assert "completion_tokens" in usage and isinstance(usage["completion_tokens"], int)
+    assert "total_tokens" in usage and isinstance(usage["total_tokens"], int)
+    assert usage["total_tokens"] == usage["prompt_tokens"] + usage["completion_tokens"]
 
 
 @pytest.mark.run_only_on("GPU")
@@ -310,14 +314,14 @@ def test_completions_token_logprobs_types(mock_ray_deployment):
         "top_logprobs": [json.dumps([{"a": -0.1}, {"b": -0.2}, {"c": -0.3}])],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        token_logprobs = output["choices"][0]["logprobs"]["token_logprobs"]
+    token_logprobs = output["choices"][0]["logprobs"]["token_logprobs"]
 
-        for prob in token_logprobs:
-            # Each element should be a float or None
-            assert prob is None or isinstance(prob, (float, np.floating)), f"Expected float or None, got {type(prob)}"
+    for prob in token_logprobs:
+        # Each element should be a float or None
+        assert prob is None or isinstance(prob, (float, np.floating)), f"Expected float or None, got {type(prob)}"
 
 
 @pytest.mark.run_only_on("GPU")
@@ -335,18 +339,18 @@ def test_completions_top_logprobs_dict_values(mock_ray_deployment):
         "top_logprobs": [json.dumps([{"token1": -1.0, "token2": -1.5}, {"token3": -2.0, "token4": -2.5}])],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        top_logprobs = output["choices"][0]["logprobs"]["top_logprobs"]
+    top_logprobs = output["choices"][0]["logprobs"]["top_logprobs"]
 
-        for logprob_dict in top_logprobs:
-            assert isinstance(logprob_dict, dict)
-            assert len(logprob_dict) > 0  # Should have at least one entry
+    for logprob_dict in top_logprobs:
+        assert isinstance(logprob_dict, dict)
+        assert len(logprob_dict) > 0  # Should have at least one entry
 
-            for token, prob in logprob_dict.items():
-                assert isinstance(token, str), f"Expected string key, got {type(token)}"
-                assert isinstance(prob, (int, float, np.number)), f"Expected numeric value, got {type(prob)}"
+        for token, prob in logprob_dict.items():
+            assert isinstance(token, str), f"Expected string key, got {type(token)}"
+            assert isinstance(prob, (int, float, np.number)), f"Expected numeric value, got {type(prob)}"
 
 
 @pytest.mark.run_only_on("GPU")
@@ -362,11 +366,11 @@ def test_completions_finish_reason_values(mock_ray_deployment):
         "sentences": ["a" * 100],  # Long text that exceeds max_tokens
     }
 
-    with patch("ray.get", return_value=mock_results_length):
-        output = asyncio.run(mock_ray_deployment.completions(request_length))
-        # The logic checks if generated_texts[0] length >= max_tokens
-        finish_reason = output["choices"][0]["finish_reason"]
-        assert finish_reason in ["stop", "length"]
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results_length)
+    output = asyncio.run(mock_ray_deployment.completions(request_length))
+    # The logic checks if generated_texts[0] length >= max_tokens
+    finish_reason = output["choices"][0]["finish_reason"]
+    assert finish_reason in ["stop", "length"]
 
 
 @pytest.mark.run_only_on("GPU")
@@ -381,13 +385,13 @@ def test_completions_empty_sentences(mock_ray_deployment):
         "sentences": [],  # Empty sentences
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        # text should be empty string when no sentences
-        assert output["choices"][0]["text"] == ""
-        # finish_reason should be 'stop' when no generated text
-        assert output["choices"][0]["finish_reason"] == "stop"
+    # text should be empty string when no sentences
+    assert output["choices"][0]["text"] == ""
+    # finish_reason should be 'stop' when no generated text
+    assert output["choices"][0]["finish_reason"] == "stop"
 
 
 @pytest.mark.run_only_on("GPU")
@@ -433,26 +437,26 @@ def test_completions_with_real_example_format(mock_ray_deployment):
         ],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        # Verify it matches the expected format
-        assert isinstance(output["choices"][0]["text"], str)
-        assert isinstance(output["choices"][0]["logprobs"], dict)
-        assert isinstance(output["choices"][0]["logprobs"]["token_logprobs"], list)
-        assert isinstance(output["choices"][0]["logprobs"]["top_logprobs"], list)
+    # Verify it matches the expected format
+    assert isinstance(output["choices"][0]["text"], str)
+    assert isinstance(output["choices"][0]["logprobs"], dict)
+    assert isinstance(output["choices"][0]["logprobs"]["token_logprobs"], list)
+    assert isinstance(output["choices"][0]["logprobs"]["top_logprobs"], list)
 
-        # Verify top_logprobs is list of dicts
-        for item in output["choices"][0]["logprobs"]["top_logprobs"]:
-            assert isinstance(item, dict)
+    # Verify top_logprobs is list of dicts
+    for item in output["choices"][0]["logprobs"]["top_logprobs"]:
+        assert isinstance(item, dict)
 
-        # Verify the output has all required fields
-        assert "id" in output
-        assert "object" in output
-        assert "created" in output
-        assert "model" in output
-        assert "choices" in output
-        assert "usage" in output
+    # Verify the output has all required fields
+    assert "id" in output
+    assert "object" in output
+    assert "created" in output
+    assert "model" in output
+    assert "choices" in output
+    assert "usage" in output
 
 
 @pytest.mark.run_only_on("GPU")
@@ -471,15 +475,15 @@ def test_completions_numpy_array_conversion(mock_ray_deployment):
         "top_logprobs": [json.dumps([{"a": -1.0}, {"b": -2.0}, {"c": -3.0}])],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        token_logprobs = output["choices"][0]["logprobs"]["token_logprobs"]
+    token_logprobs = output["choices"][0]["logprobs"]["token_logprobs"]
 
-        # Should be a list, not numpy array
-        assert isinstance(token_logprobs, list)
-        # Each element should be JSON serializable (not numpy types)
-        json.dumps(token_logprobs)  # Should not raise an error
+    # Should be a list, not numpy array
+    assert isinstance(token_logprobs, list)
+    # Each element should be JSON serializable (not numpy types)
+    json.dumps(token_logprobs)  # Should not raise an error
 
 
 @pytest.mark.run_only_on("GPU")
@@ -494,14 +498,14 @@ def test_completions_id_format(mock_ray_deployment):
         "sentences": ["test"],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        # ID should start with "cmpl-" prefix
-        assert output["id"].startswith("cmpl-")
-        # The rest should be a timestamp (numeric)
-        id_suffix = output["id"].replace("cmpl-", "")
-        assert id_suffix.isdigit()
+    # ID should start with "cmpl-" prefix
+    assert output["id"].startswith("cmpl-")
+    # The rest should be a timestamp (numeric)
+    id_suffix = output["id"].replace("cmpl-", "")
+    assert id_suffix.isdigit()
 
 
 @pytest.mark.run_only_on("GPU")
@@ -516,23 +520,23 @@ def test_completions_usage_token_counts(mock_ray_deployment):
         "sentences": ["Generated response", "Another response"],
     }
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
 
-        usage = output["usage"]
+    usage = output["usage"]
 
-        # Verify all fields exist and are integers
-        assert isinstance(usage["prompt_tokens"], int)
-        assert isinstance(usage["completion_tokens"], int)
-        assert isinstance(usage["total_tokens"], int)
+    # Verify all fields exist and are integers
+    assert isinstance(usage["prompt_tokens"], int)
+    assert isinstance(usage["completion_tokens"], int)
+    assert isinstance(usage["total_tokens"], int)
 
-        # Verify the math is correct
-        assert usage["total_tokens"] == usage["prompt_tokens"] + usage["completion_tokens"]
+    # Verify the math is correct
+    assert usage["total_tokens"] == usage["prompt_tokens"] + usage["completion_tokens"]
 
-        # Verify they're all positive
-        assert usage["prompt_tokens"] > 0
-        assert usage["completion_tokens"] > 0
-        assert usage["total_tokens"] > 0
+    # Verify they're all positive
+    assert usage["prompt_tokens"] > 0
+    assert usage["completion_tokens"] > 0
+    assert usage["total_tokens"] > 0
 
 
 # --- Stop words tests for completions endpoint ---
@@ -547,11 +551,11 @@ def test_completions_stop_words_list_passed_to_inference(mock_ray_deployment):
 
     mock_results = {"sentences": ["Generated text"]}
 
-    with patch("ray.get", return_value=mock_results):
-        asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    asyncio.run(mock_ray_deployment.completions(request))
 
-        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
-        assert inference_inputs["stop_words"] == ["foo", "bar"]
+    inference_inputs = mock_ray_deployment._batched_completions_infer.call_args[0][0]
+    assert inference_inputs["stop_words"] == ["foo", "bar"]
 
 
 @pytest.mark.run_only_on("GPU")
@@ -565,11 +569,11 @@ def test_completions_stop_words_string_converted_to_list(mock_ray_deployment):
 
     mock_results = {"sentences": ["Generated text"]}
 
-    with patch("ray.get", return_value=mock_results):
-        asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    asyncio.run(mock_ray_deployment.completions(request))
 
-        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
-        assert inference_inputs["stop_words"] == ["end_token"]
+    inference_inputs = mock_ray_deployment._batched_completions_infer.call_args[0][0]
+    assert inference_inputs["stop_words"] == ["end_token"]
 
 
 @pytest.mark.run_only_on("GPU")
@@ -582,11 +586,11 @@ def test_completions_stop_words_none_when_absent(mock_ray_deployment):
 
     mock_results = {"sentences": ["Generated text"]}
 
-    with patch("ray.get", return_value=mock_results):
-        asyncio.run(mock_ray_deployment.completions(request))
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    asyncio.run(mock_ray_deployment.completions(request))
 
-        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
-        assert inference_inputs["stop_words"] is None
+    inference_inputs = mock_ray_deployment._batched_completions_infer.call_args[0][0]
+    assert inference_inputs["stop_words"] is None
 
 
 # --- Stop words tests for chat completions endpoint ---
@@ -601,11 +605,11 @@ def test_chat_completions_stop_words_list_passed_to_inference(mock_ray_deploymen
 
     mock_results = {"sentences": ["Generated reply"]}
 
-    with patch("ray.get", return_value=mock_results):
-        asyncio.run(mock_ray_deployment.chat_completions(request))
+    mock_ray_deployment._batched_chat_infer = AsyncMock(return_value=mock_results)
+    asyncio.run(mock_ray_deployment.chat_completions(request))
 
-        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
-        assert inference_inputs["stop_words"] == ["foo", "bar"]
+    inference_inputs = mock_ray_deployment._batched_chat_infer.call_args[0][0]
+    assert inference_inputs["stop_words"] == ["foo", "bar"]
 
 
 @pytest.mark.run_only_on("GPU")
@@ -619,11 +623,11 @@ def test_chat_completions_stop_words_string_converted_to_list(mock_ray_deploymen
 
     mock_results = {"sentences": ["Generated reply"]}
 
-    with patch("ray.get", return_value=mock_results):
-        asyncio.run(mock_ray_deployment.chat_completions(request))
+    mock_ray_deployment._batched_chat_infer = AsyncMock(return_value=mock_results)
+    asyncio.run(mock_ray_deployment.chat_completions(request))
 
-        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
-        assert inference_inputs["stop_words"] == ["end_token"]
+    inference_inputs = mock_ray_deployment._batched_chat_infer.call_args[0][0]
+    assert inference_inputs["stop_words"] == ["end_token"]
 
 
 @pytest.mark.run_only_on("GPU")
@@ -636,11 +640,11 @@ def test_chat_completions_stop_words_none_when_absent(mock_ray_deployment):
 
     mock_results = {"sentences": ["Generated reply"]}
 
-    with patch("ray.get", return_value=mock_results):
-        asyncio.run(mock_ray_deployment.chat_completions(request))
+    mock_ray_deployment._batched_chat_infer = AsyncMock(return_value=mock_results)
+    asyncio.run(mock_ray_deployment.chat_completions(request))
 
-        inference_inputs = mock_ray_deployment.primary_worker.infer.remote.call_args[0][0]
-        assert inference_inputs["stop_words"] is None
+    inference_inputs = mock_ray_deployment._batched_chat_infer.call_args[0][0]
+    assert inference_inputs["stop_words"] is None
 
 
 @pytest.mark.run_only_on("GPU")
@@ -654,17 +658,17 @@ def test_chat_completions_output_format_with_stop_words(mock_ray_deployment):
 
     mock_results = {"sentences": ["Hi there! How can I help?"]}
 
-    with patch("ray.get", return_value=mock_results):
-        output = asyncio.run(mock_ray_deployment.chat_completions(request))
+    mock_ray_deployment._batched_chat_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.chat_completions(request))
 
-        assert output["object"] == "chat.completion"
-        assert output["model"] == "megatron-model"
-        assert output["id"].startswith("chatcmpl-")
+    assert output["object"] == "chat.completion"
+    assert output["model"] == "megatron-model"
+    assert output["id"].startswith("chatcmpl-")
 
-        choice = output["choices"][0]
-        assert choice["message"]["role"] == "assistant"
-        assert isinstance(choice["message"]["content"], str)
-        assert choice["index"] == 0
-        assert choice["finish_reason"] in ["stop", "length"]
+    choice = output["choices"][0]
+    assert choice["message"]["role"] == "assistant"
+    assert isinstance(choice["message"]["content"], str)
+    assert choice["index"] == 0
+    assert choice["finish_reason"] in ["stop", "length"]
 
-        assert "usage" in output
+    assert "usage" in output

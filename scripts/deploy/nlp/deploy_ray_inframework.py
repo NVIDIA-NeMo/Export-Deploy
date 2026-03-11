@@ -208,6 +208,12 @@ def parse_args():
         help="Micro batch size for model execution",
     )
     parser.add_argument(
+        "--batch_wait_timeout_s",
+        type=float,
+        default=0.1,
+        help="Max seconds to wait for additional requests before processing a batch",
+    )
+    parser.add_argument(
         "--runtime_env",
         type=json_type,
         default={},
@@ -269,6 +275,7 @@ def main():
         random_seed=args.random_seed,
         model_type=args.model_type,
         micro_batch_size=args.micro_batch_size,
+        batch_wait_timeout_s=args.batch_wait_timeout_s,
         **model_config_kwargs,
     )
 
