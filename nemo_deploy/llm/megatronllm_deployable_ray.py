@@ -311,9 +311,7 @@ class MegatronRayDeployable:
             for param in ["temperature", "top_k", "top_p", "max_length"]:
                 vals = {inputs.get(param) for inputs in inference_inputs_list}
                 if len(vals) > 1:
-                    LOGGER.warning(
-                        f"Batched requests have different '{param}': {vals}. Using first request's value."
-                    )
+                    LOGGER.warning(f"Batched requests have different '{param}': {vals}. Using first request's value.")
 
         merged_inputs = {
             "prompts": all_prompts,
@@ -335,15 +333,15 @@ class MegatronRayDeployable:
         individual_results = []
         offset = 0
         for count in prompt_counts:
-            result = {"sentences": results.get("sentences", [])[offset:offset + count]}
+            result = {"sentences": results.get("sentences", [])[offset : offset + count]}
 
             log_probs = results.get("log_probs", None)
             if log_probs is not None:
-                result["log_probs"] = log_probs[offset:offset + count]
+                result["log_probs"] = log_probs[offset : offset + count]
 
             top_logprobs = results.get("top_logprobs", None)
             if top_logprobs is not None:
-                result["top_logprobs"] = top_logprobs[offset:offset + count]
+                result["top_logprobs"] = top_logprobs[offset : offset + count]
 
             individual_results.append(result)
             offset += count
