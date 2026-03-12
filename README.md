@@ -25,10 +25,6 @@ The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for
 
 ![image](docs/NeMo_Repo_Overview_ExportDeploy.png)
 
-## 📣 News
-
-- [03/12/2026] **Deprecating Python 3.10 support:** We're officially dropping Python 3.10 support with the upcoming 0.4.0 release. Downstream applications must raise their lower boundary to 3.12 to stay compatible with Export-Deploy.
-
 ## 🚀 Key Features
 
 - Support for Large Language Models (LLMs) and Multimodal Models (MMs)
@@ -183,6 +179,9 @@ Now proceed with the main installation:
 ```bash
 pip install --no-build-isolation .[trt-onnx]
 ```
+
+
+
 
 ## 🤝 Contributing
 
