@@ -13,13 +13,11 @@
 # limitations under the License.
 """NeMo utility code copied from the NeMo project.
 
-Standalone utilities (MCoreTokenizerWrappper, checkpoint path helpers) are
-copied directly and have no dependency on the nemo package.
-
-Complex types that are tightly coupled to NeMo's class hierarchy and
-serialization system (GPTConfig, T5Config, io, set_modelopt_spec_if_exists_in_ckpt)
-are re-exported here from the nemo package so that inference_base.py and
-tron_utils.py do not need to import from nemo directly.
+All utilities here are copied directly from NeMo and have no static
+dependency on the nemo package.  When a NeMo checkpoint is loaded at
+runtime, NeMo classes are imported transitively through pydoc.locate
+inside nemo_io.load_context — NeMo must therefore still be installed
+to read NeMo checkpoints.
 
 Sources:
   - MCoreTokenizerWrappper  : nemo/collections/llm/inference/base.py
@@ -28,11 +26,36 @@ Sources:
     ckpt_to_context_subdir  : nemo/lightning/ckpt_utils.py
   - ckpt_to_weights_subdir  : nemo/lightning/io/pl.py
   - constants               : nemo/lightning/ckpt_utils.py
+  - set_modelopt_spec_*     : nemo/collections/llm/modelopt/model_utils.py
+  - load_context, io        : nemo_io.py (copied from nemo/lightning/io/)
 """
 
 import inspect
+import logging
+import types
+from functools import partial
 from pathlib import Path
 from typing import Any, Union
+
+from .nemo_io import load_context as _load_context
+
+_logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# io namespace — exposes load_context under the same attribute name that
+# inference_base.py uses (io.load_context(...)).
+# ---------------------------------------------------------------------------
+
+io = types.SimpleNamespace(load_context=_load_context)
+
+# ---------------------------------------------------------------------------
+# GPTConfig / T5Config — type stubs used only for annotations.
+# The actual runtime objects are NeMo classes deserialized from the
+# checkpoint; isinstance() checks use class-name strings instead.
+# ---------------------------------------------------------------------------
+
+GPTConfig = Any
+T5Config = Any
 
 # ---------------------------------------------------------------------------
 # Constants  (from nemo.lightning.ckpt_utils)
@@ -163,26 +186,62 @@ class MCoreTokenizerWrappper:
 
 
 # ---------------------------------------------------------------------------
-# NeMo complex types
+# set_modelopt_spec_if_exists_in_ckpt
 #
-# GPTConfig, T5Config, io, and set_modelopt_spec_if_exists_in_ckpt are
-# deeply coupled to NeMo's class hierarchy and serialization system.
-# Checkpoints saved by NeMo contain instances of these exact classes, so
-# they must originate from the nemo package to preserve isinstance()
-# compatibility.  They are re-exported here so that inference_base.py and
-# tron_utils.py do not need to import from nemo directly.
+# Copied from nemo/collections/llm/modelopt/model_utils.py.
+# NeMo model-type isinstance checks are replaced by class-name checks to
+# avoid importing nemo at module level.
 # ---------------------------------------------------------------------------
 
-try:
-    from nemo.collections.llm.gpt.model.base import GPTConfig
-    from nemo.collections.llm.modelopt import set_modelopt_spec_if_exists_in_ckpt
-    from nemo.collections.llm.t5.model.t5 import T5Config
-    from nemo.lightning import io
 
-    HAVE_NEMO = True
-except (ImportError, ModuleNotFoundError):
-    GPTConfig = Any
-    T5Config = Any
-    io = None
-    set_modelopt_spec_if_exists_in_ckpt = None
-    HAVE_NEMO = False
+def set_modelopt_spec_if_exists_in_ckpt(model, path: str) -> None:
+    """Set model.config.transformer_layer_spec to a modelopt spec if the
+    checkpoint contains a ``modelopt_state`` directory.
+
+    Copied from ``nemo.collections.llm.modelopt.model_utils.set_modelopt_spec_if_exists_in_ckpt``
+    with NeMo isinstance checks replaced by class-name comparisons.
+    """
+    path = str(path).removeprefix("nemo://")
+    modelopt_state_path = ckpt_to_weights_subdir(path, is_saving=False) / "modelopt_state"
+    if not modelopt_state_path.exists() or hasattr(model, "module"):
+        return
+
+    model_type_name = type(model).__name__
+    if model_type_name not in ("GPTModel", "MambaModel"):
+        _logger.warning(
+            "%s is neither a GPTModel nor MambaModel. Modelopt state will not be loaded.",
+            type(model),
+        )
+        return
+
+    config = model.config
+    config_type_name = type(config).__name__
+
+    try:
+        from megatron.core.post_training.modelopt.gpt.model_specs import get_gpt_modelopt_spec
+
+        _HAVE_GPT_MODELOPT_SPEC = True
+    except ImportError:
+        _HAVE_GPT_MODELOPT_SPEC = False
+
+    if config_type_name == "GPTConfig":
+        if _HAVE_GPT_MODELOPT_SPEC:
+            config.transformer_layer_spec = partial(
+                get_gpt_modelopt_spec,
+                remap_te_layernorm=True,
+                local_core_attention=getattr(config, "softmax_type", "vanilla") != "vanilla",
+            )
+        else:
+            _logger.warning("get_gpt_modelopt_spec not available; skipping modelopt layer spec.")
+    elif config_type_name == "SSMConfig":
+        try:
+            from megatron.core.post_training.modelopt.mamba.model_specs import get_mamba_stack_modelopt_spec
+
+            config.mamba_stack_spec = partial(get_mamba_stack_modelopt_spec, remap_te_layernorm=True)
+        except ImportError:
+            _logger.warning("get_mamba_stack_modelopt_spec not available; skipping modelopt layer spec.")
+    else:
+        _logger.warning("No modelopt layer spec supported for config type %s.", type(config))
+        return
+
+    config.gradient_accumulation_fusion = False

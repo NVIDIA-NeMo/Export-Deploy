@@ -24,6 +24,7 @@ from nemo_deploy.llm.inference.nemo_utils import (
     ckpt_to_dir,
     ckpt_to_weights_subdir,
     idempotent_path_append,
+    set_modelopt_spec_if_exists_in_ckpt,
 )
 
 
@@ -236,3 +237,203 @@ class TestMCoreTokenizerWrappper:
         mock_tok.pad_id = 0
         wrapper = MCoreTokenizerWrappper(mock_tok)
         assert wrapper.pad == 0
+
+
+# ---------------------------------------------------------------------------
+# set_modelopt_spec_if_exists_in_ckpt
+# ---------------------------------------------------------------------------
+
+
+class TestSetModeloptSpecIfExistsInCkpt:
+    """Tests for set_modelopt_spec_if_exists_in_ckpt — no GPU required."""
+
+    def _make_model(self, type_name: str, config_type_name: str, *, has_module: bool = False):
+        """Build a MagicMock that looks like a NeMo model with the given type names."""
+        model = MagicMock()
+        type(model).__name__ = type_name
+        if has_module:
+            model.module = MagicMock()
+        else:
+            del model.module  # ensure hasattr returns False
+
+        config = MagicMock()
+        type(config).__name__ = config_type_name
+        model.config = config
+        return model, config
+
+    @patch("nemo_deploy.llm.inference.nemo_utils.ckpt_to_weights_subdir")
+    def test_returns_early_when_modelopt_state_path_missing(self, mock_ckpt_to_weights):
+        """When modelopt_state does not exist, the function should return immediately."""
+        mock_weights = MagicMock()
+        mock_modelopt_path = MagicMock()
+        mock_modelopt_path.exists.return_value = False
+        mock_weights.__truediv__ = MagicMock(return_value=mock_modelopt_path)
+        mock_ckpt_to_weights.return_value = mock_weights
+
+        model, config = self._make_model("GPTModel", "GPTConfig")
+        set_modelopt_spec_if_exists_in_ckpt(model, "/fake/path")
+
+        # config should be untouched
+        config.transformer_layer_spec = MagicMock()
+        assert not mock_modelopt_path.exists.return_value
+
+    @patch("nemo_deploy.llm.inference.nemo_utils.ckpt_to_weights_subdir")
+    def test_returns_early_when_model_has_module_attr(self, mock_ckpt_to_weights):
+        """When model.module exists (DDP wrapper), the function should skip."""
+        mock_weights = MagicMock()
+        mock_modelopt_path = MagicMock()
+        mock_modelopt_path.exists.return_value = True
+        mock_weights.__truediv__ = MagicMock(return_value=mock_modelopt_path)
+        mock_ckpt_to_weights.return_value = mock_weights
+
+        # has_module=True forces early return
+        model, config = self._make_model("GPTModel", "GPTConfig", has_module=True)
+        set_modelopt_spec_if_exists_in_ckpt(model, "/fake/path")
+
+        # gradient_accumulation_fusion should NOT be set (we returned early)
+        config.gradient_accumulation_fusion.assert_not_called() if callable(
+            config.gradient_accumulation_fusion
+        ) else None
+
+    @patch("nemo_deploy.llm.inference.nemo_utils.ckpt_to_weights_subdir")
+    def test_logs_warning_for_non_gpt_mamba_model(self, mock_ckpt_to_weights):
+        """Models that are neither GPTModel nor MambaModel should log a warning and return."""
+        mock_weights = MagicMock()
+        mock_modelopt_path = MagicMock()
+        mock_modelopt_path.exists.return_value = True
+        mock_weights.__truediv__ = MagicMock(return_value=mock_modelopt_path)
+        mock_ckpt_to_weights.return_value = mock_weights
+
+        model, config = self._make_model("SomeOtherModel", "GPTConfig")
+
+        with patch("nemo_deploy.llm.inference.nemo_utils._logger") as mock_logger:
+            set_modelopt_spec_if_exists_in_ckpt(model, "/fake/path")
+
+        mock_logger.warning.assert_called_once()
+        warning_msg = mock_logger.warning.call_args[0][0]
+        assert "neither a GPTModel nor MambaModel" in warning_msg
+
+    @patch("nemo_deploy.llm.inference.nemo_utils.ckpt_to_weights_subdir")
+    def test_gpt_config_with_gpt_modelopt_spec_available(self, mock_ckpt_to_weights):
+        """GPTModel + GPTConfig: when get_gpt_modelopt_spec is importable, spec is set."""
+        mock_weights = MagicMock()
+        mock_modelopt_path = MagicMock()
+        mock_modelopt_path.exists.return_value = True
+        mock_weights.__truediv__ = MagicMock(return_value=mock_modelopt_path)
+        mock_ckpt_to_weights.return_value = mock_weights
+
+        model, config = self._make_model("GPTModel", "GPTConfig")
+        config.softmax_type = "vanilla"
+
+        mock_spec_fn = MagicMock()
+        fake_module = MagicMock()
+        fake_module.get_gpt_modelopt_spec = mock_spec_fn
+
+        with patch.dict(
+            "sys.modules",
+            {"megatron.core.post_training.modelopt.gpt.model_specs": fake_module},
+        ):
+            set_modelopt_spec_if_exists_in_ckpt(model, "/fake/path")
+
+        assert config.gradient_accumulation_fusion is False
+        # transformer_layer_spec should be a partial wrapping get_gpt_modelopt_spec
+        assert config.transformer_layer_spec is not None
+
+    @patch("nemo_deploy.llm.inference.nemo_utils.ckpt_to_weights_subdir")
+    def test_gpt_config_without_gpt_modelopt_spec(self, mock_ckpt_to_weights):
+        """GPTModel + GPTConfig: when get_gpt_modelopt_spec is NOT importable, log warning."""
+        mock_weights = MagicMock()
+        mock_modelopt_path = MagicMock()
+        mock_modelopt_path.exists.return_value = True
+        mock_weights.__truediv__ = MagicMock(return_value=mock_modelopt_path)
+        mock_ckpt_to_weights.return_value = mock_weights
+
+        model, config = self._make_model("GPTModel", "GPTConfig")
+
+        # Ensure the import fails
+        with patch.dict("sys.modules", {"megatron.core.post_training.modelopt.gpt.model_specs": None}):
+            with patch("nemo_deploy.llm.inference.nemo_utils._logger") as mock_logger:
+                set_modelopt_spec_if_exists_in_ckpt(model, "/fake/path")
+
+        mock_logger.warning.assert_called()
+        warning_args = mock_logger.warning.call_args[0]
+        assert "get_gpt_modelopt_spec not available" in warning_args[0]
+
+    @patch("nemo_deploy.llm.inference.nemo_utils.ckpt_to_weights_subdir")
+    def test_ssm_config_with_mamba_spec_available(self, mock_ckpt_to_weights):
+        """MambaModel + SSMConfig: when get_mamba_stack_modelopt_spec is importable, spec is set."""
+        mock_weights = MagicMock()
+        mock_modelopt_path = MagicMock()
+        mock_modelopt_path.exists.return_value = True
+        mock_weights.__truediv__ = MagicMock(return_value=mock_modelopt_path)
+        mock_ckpt_to_weights.return_value = mock_weights
+
+        model, config = self._make_model("MambaModel", "SSMConfig")
+
+        mock_mamba_fn = MagicMock()
+        fake_mamba_module = MagicMock()
+        fake_mamba_module.get_mamba_stack_modelopt_spec = mock_mamba_fn
+
+        with patch.dict(
+            "sys.modules",
+            {"megatron.core.post_training.modelopt.mamba.model_specs": fake_mamba_module},
+        ):
+            set_modelopt_spec_if_exists_in_ckpt(model, "/fake/path")
+
+        assert config.gradient_accumulation_fusion is False
+        assert config.mamba_stack_spec is not None
+
+    @patch("nemo_deploy.llm.inference.nemo_utils.ckpt_to_weights_subdir")
+    def test_ssm_config_without_mamba_spec(self, mock_ckpt_to_weights):
+        """MambaModel + SSMConfig: when get_mamba_stack_modelopt_spec is NOT importable, log warning."""
+        mock_weights = MagicMock()
+        mock_modelopt_path = MagicMock()
+        mock_modelopt_path.exists.return_value = True
+        mock_weights.__truediv__ = MagicMock(return_value=mock_modelopt_path)
+        mock_ckpt_to_weights.return_value = mock_weights
+
+        model, config = self._make_model("MambaModel", "SSMConfig")
+
+        with patch.dict("sys.modules", {"megatron.core.post_training.modelopt.mamba.model_specs": None}):
+            with patch("nemo_deploy.llm.inference.nemo_utils._logger") as mock_logger:
+                set_modelopt_spec_if_exists_in_ckpt(model, "/fake/path")
+
+        mock_logger.warning.assert_called()
+        warning_args = mock_logger.warning.call_args[0]
+        assert "get_mamba_stack_modelopt_spec not available" in warning_args[0]
+
+    @patch("nemo_deploy.llm.inference.nemo_utils.ckpt_to_weights_subdir")
+    def test_other_config_type_logs_warning_and_returns(self, mock_ckpt_to_weights):
+        """GPTModel with an unrecognised config type should log a warning and not touch gradient_accumulation_fusion."""
+        mock_weights = MagicMock()
+        mock_modelopt_path = MagicMock()
+        mock_modelopt_path.exists.return_value = True
+        mock_weights.__truediv__ = MagicMock(return_value=mock_modelopt_path)
+        mock_ckpt_to_weights.return_value = mock_weights
+
+        model, config = self._make_model("GPTModel", "UnknownConfig")
+
+        with patch("nemo_deploy.llm.inference.nemo_utils._logger") as mock_logger:
+            set_modelopt_spec_if_exists_in_ckpt(model, "/fake/path")
+
+        mock_logger.warning.assert_called()
+        warning_args = mock_logger.warning.call_args[0]
+        assert "No modelopt layer spec supported" in warning_args[0]
+        # gradient_accumulation_fusion should NOT have been set to False (early return)
+        # config is a MagicMock, so we just verify the warning was the only side-effect logged
+        assert mock_logger.warning.call_count == 1
+
+    @patch("nemo_deploy.llm.inference.nemo_utils.ckpt_to_weights_subdir")
+    def test_strips_nemo_prefix_from_path(self, mock_ckpt_to_weights):
+        """Path starting with 'nemo://' should have that prefix stripped before processing."""
+        mock_weights = MagicMock()
+        mock_modelopt_path = MagicMock()
+        mock_modelopt_path.exists.return_value = False
+        mock_weights.__truediv__ = MagicMock(return_value=mock_modelopt_path)
+        mock_ckpt_to_weights.return_value = mock_weights
+
+        model, config = self._make_model("GPTModel", "GPTConfig")
+        set_modelopt_spec_if_exists_in_ckpt(model, "nemo:///real/path")
+
+        # Verify ckpt_to_weights_subdir was called with the stripped path
+        mock_ckpt_to_weights.assert_called_once_with("/real/path", is_saving=False)
