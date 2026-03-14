@@ -67,7 +67,7 @@ dependencies = [
     "wandb",
     "webdataset>=0.2.86",
     "nvidia-pytriton ; platform_system != 'Darwin' ",
-    "flashinfer-python>=0.2.5 ; platform_system != 'Darwin'",
+    "flashinfer-python>=0.2.5 ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "Pillow ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "decord ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "pyparsing>2.0.2",
@@ -82,7 +82,7 @@ dependencies = [
 inframework = []
 vllm = ["vllm~=0.17.1", "pandas", "timm"]
 trtllm = ["tensorrt-llm~=1.2.0", "cuda-python~=13.1.0"]
-trt-onnx = ["tensorrt==10.15.1.29", "onnx==1.20.1", "onnxscript>=0.6.0", "transformers==4.51.3"]
+trt-onnx = ["tensorrt==10.15.1.29", "onnx==1.19.1", "onnxscript>=0.6.0", "transformers==4.51.3"]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
@@ -157,6 +157,7 @@ override-dependencies = [
     "protobuf~=6.33.5",
     "opencv-python-headless; sys_platform == 'never'",
     "cryptography>=43.0.0,<47",
+    "onnx<1.20.0"
 ]
 prerelease = "allow"
 
