@@ -81,7 +81,7 @@ dependencies = [
 [project.optional-dependencies]
 inframework = []
 vllm = ["vllm~=0.17.1", "pandas", "timm"]
-trtllm = ["tensorrt-llm~=1.2.0", "cuda-python~=13.1.0"]
+trtllm = ["tensorrt-llm~=1.2.0", "cuda-python~=13.1.0", "transformers==4.57.6"]
 trt-onnx = ["tensorrt==10.15.1.29", "onnx==1.19.1", "onnxscript>=0.6.0", "transformers==4.51.3"]
 
 [dependency-groups]

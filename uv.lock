@@ -4515,6 +4515,7 @@ trt-onnx = [
 trtllm = [
     { name = "cuda-python" },
     { name = "tensorrt-llm" },
+    { name = "transformers" },
 ]
 vllm = [
     { name = "pandas" },
@@ -4600,6 +4601,7 @@ requires-dist = [
     { name = "torchvision" },
     { name = "transformer-engine", extras = ["core-cu13", "pytorch"], marker = "sys_platform != 'darwin'" },
     { name = "transformers", marker = "extra == 'trt-onnx'", specifier = "==4.51.3" },
+    { name = "transformers", marker = "extra == 'trtllm'", specifier = "==4.57.6" },
     { name = "uvicorn" },
     { name = "vllm", marker = "platform_machine == 'aarch64' and extra == 'vllm'", specifier = "~=0.17.1", index = "https://pypi.org/simple" },
     { name = "vllm", marker = "(python_full_version >= '3.9' and platform_machine == 'x86_64' and extra == 'vllm') or (platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'vllm')", specifier = "~=0.17.1" },
