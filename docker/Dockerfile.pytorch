@@ -21,7 +21,6 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 ENV PATH="$UV_PROJECT_ENVIRONMENT/bin:$PATH"
 ENV UV_LINK_MODE=copy
 ENV LD_LIBRARY_PATH=/opt/hpcx/ucx/lib:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
-ENV VLLM_USE_STANDALONE_COMPILE=0
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
