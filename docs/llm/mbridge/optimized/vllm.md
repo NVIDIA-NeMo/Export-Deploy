@@ -18,15 +18,7 @@ This section shows how to use scripts and APIs to export a Megatron-Bridge LLM t
        nvcr.io/nvidia/nemo:vr
    ```
 
-3. Install vLLM by executing the following command inside the container if it is not available in the container:
-
-   ```shell
-   cd /opt/Export-Deploy
-   uv sync --inexact --link-mode symlink --locked --extra vllm $(cat /opt/uv_args.txt)
-
-   ```
-
-4. Run the following deployment script to verify that everything is working correctly. The script exports the Llama Megatron-Bridge checkpoint to vLLM and subsequently serves it on the Triton server:
+3. Run the following deployment script to verify that everything is working correctly. The script exports the Llama Megatron-Bridge checkpoint to vLLM and subsequently serves it on the Triton server:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/deploy_vllm_triton.py \
@@ -35,15 +27,15 @@ This section shows how to use scripts and APIs to export a Megatron-Bridge LLM t
        --tensor_parallelism_size 1
    ```
 
-5. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
+4. If the test yields a shared memory-related error, increase the shared memory size using ``--shm-size`` (gradually by 50%, for example).
 
-6. In a separate terminal, access the running container as follows:
+5. In a separate terminal, access the running container as follows:
 
    ```shell
    docker exec -it nemo-fw bash
    ```
 
-7. To send a query to the Triton server, run the following script:
+6. To send a query to the Triton server, run the following script:
 
    ```shell
    python /opt/Export-Deploy/scripts/deploy/nlp/query_vllm.py -mn llama -p "The capital of Canada is" -mat 50
