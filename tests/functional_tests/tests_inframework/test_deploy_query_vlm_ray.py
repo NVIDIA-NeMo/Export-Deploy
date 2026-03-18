@@ -103,7 +103,7 @@ class TestDeployRayVLM:
                 port=8000,
                 model_id="megatron-multimodal",
                 prompt="What is the color of a banana?",
-                max_tokens=20,
+                max_tokens=5,
             )
 
             print(output)
@@ -123,7 +123,7 @@ class TestDeployRayVLM:
                 port=8000,
                 model_id="megatron-multimodal",
                 prompt=chat_messages,
-                max_tokens=20,
+                max_tokens=5,
                 use_chat=True,
             )
             print(output_chat)
@@ -148,7 +148,7 @@ class TestDeployRayVLM:
                 port=8000,
                 model_id="megatron-multimodal",
                 messages=messages_with_image,
-                max_tokens=16,
+                max_tokens=5,
             )
             print(output_image)
             assert output_image != "", "Chat with base64 image returned empty"
