@@ -153,7 +153,7 @@ override-dependencies = [
     "transformer-engine-cu13>=2.12.0a0,<2.15.0; sys_platform != 'darwin'",
     "transformer-engine-cu12; sys_platform == 'never'",
     "mamba-ssm>=2.3.0,<2.4.0",
-    "transformers>=5.0.0",
+    "transformers>=5.0.0,<=5.2.0",
     "protobuf~=6.33.5",
     "opencv-python-headless; sys_platform == 'never'",
     "cryptography>=43.0.0,<47",
