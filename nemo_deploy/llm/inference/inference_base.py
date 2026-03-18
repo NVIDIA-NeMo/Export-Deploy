@@ -236,17 +236,20 @@ def setup_megatron_model_and_tokenizer_for_inference(
         model_config.cache_mla_latents = True
 
     # Convert attention_backend from string to enum if needed
-    if hasattr(model_config, "attention_backend") and isinstance(model_config.attention_backend, str):
-        if model_config.attention_backend == "AttnBackend.fused":
-            model_config.attention_backend = AttnBackend.fused
-        elif model_config.attention_backend == "AttnBackend.flash":
-            model_config.attention_backend = AttnBackend.flash
-        elif model_config.attention_backend == "AttnBackend.unfused":
-            model_config.attention_backend = AttnBackend.unfused
-        elif model_config.attention_backend == "AttnBackend.local":
-            model_config.attention_backend = AttnBackend.local
-        elif model_config.attention_backend == "AttnBackend.auto":
+    if hasattr(model_config, "attention_backend"):
+        if model_config.attention_backend is None:
+            # Deserialization of the AttnBackend enum failed (e.g. Hydra _target_ dict
+            # not reconstructed); fall back to auto so the engine can pick the best backend.
             model_config.attention_backend = AttnBackend.auto
+        elif isinstance(model_config.attention_backend, str):
+            _str_to_attn_backend = {
+                "AttnBackend.fused": AttnBackend.fused,
+                "AttnBackend.flash": AttnBackend.flash,
+                "AttnBackend.unfused": AttnBackend.unfused,
+                "AttnBackend.local": AttnBackend.local,
+                "AttnBackend.auto": AttnBackend.auto,
+            }
+            model_config.attention_backend = _str_to_attn_backend.get(model_config.attention_backend, AttnBackend.auto)
 
     if tensor_model_parallel_size is not None:
         model_config.tensor_model_parallel_size = tensor_model_parallel_size
