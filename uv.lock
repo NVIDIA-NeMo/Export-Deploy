@@ -9295,7 +9295,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/b0/aa/5872f0944e88b9a7a
 
 [[package]]
 name = "transformers"
-version = "5.3.0"
+version = "5.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "huggingface-hub" },
