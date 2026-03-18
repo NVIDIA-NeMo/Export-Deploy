@@ -229,6 +229,12 @@ def setup_megatron_model_and_tokenizer_for_inference(
     torch_distributed_init(dist_config)
     model_config, mlm_args = load_model_config(checkpoint_path)
 
+    # MLA models require cache_mla_latents=True for the dynamic inference backend.
+    # The checkpoint may have saved it as False (training default), but inference
+    # with the dynamic engine always needs it enabled.
+    if hasattr(model_config, "cache_mla_latents"):
+        model_config.cache_mla_latents = True
+
     # Convert attention_backend from string to enum if needed
     if hasattr(model_config, "attention_backend") and isinstance(model_config.attention_backend, str):
         if model_config.attention_backend == "AttnBackend.fused":
