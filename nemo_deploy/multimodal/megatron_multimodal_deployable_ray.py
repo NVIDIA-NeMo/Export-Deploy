@@ -79,6 +79,9 @@ class ModelWorker:
                 **model_config_kwargs,
             )
             self.rank = rank
+            LOGGER.warning(
+                f"Replica {replica_id} - Inference context type: {type(self.model.inference_wrapped_model.inference_context)}"
+            )
         except Exception as e:
             LOGGER.error(f"Replica {replica_id} - Failed to initialize multimodal model for rank {rank}: {str(e)}")
             raise
