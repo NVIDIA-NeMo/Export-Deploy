@@ -27,7 +27,10 @@ from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
 )
 from megatron.core.dist_checkpointing.validation import StrictHandling
+from megatron.core.inference.config import InferenceConfig
+from megatron.core.inference.contexts.dynamic_context import DynamicInferenceContext
 from megatron.core.inference.contexts.static_context import StaticInferenceContext
+from megatron.core.inference.engines.dynamic_engine import DynamicInferenceEngine
 from megatron.core.inference.engines.mcore_engine import MCoreEngine
 from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
     GPTInferenceWrapper,
@@ -532,6 +535,35 @@ def create_mcore_engine(
         random_seed=random_seed,
         buffer_size_gb=buffer_size_gb,
     )
+
+    # MCoreEngine (StaticInferenceEngine) initialises its DynamicInferenceContext with
+    # block_size_tokens=256.  MLA models require block_size_tokens=64 (Flash MLA), so the
+    # init silently fails and the engine falls back to legacy static batching — which is
+    # incompatible with cache_mla_latents=True.  Detect that fallback and redo the dynamic
+    # engine setup with the correct block size.
+    if getattr(model.config, "cache_mla_latents", False) and mcore_engine.legacy:
+        LOGGER.info(
+            "MCoreEngine fell back to legacy static engine for MLA model; "
+            "reinitialising DynamicInferenceEngine with block_size_tokens=64."
+        )
+        dynamic_context = DynamicInferenceContext(
+            model_config=model.config,
+            inference_config=InferenceConfig(
+                max_sequence_length=inference_max_seq_length,
+                buffer_size_gb=buffer_size_gb,
+                max_requests=max_batch_size,
+                num_cuda_graphs=1,
+                block_size_tokens=64,  # Flash MLA requirement
+                unified_memory_level=0,
+            ),
+        )
+        mcore_engine.controller.inference_wrapped_model.inference_context = dynamic_context
+        mcore_engine.controller.inference_wrapped_model.prep_model_for_inference()
+        mcore_engine.controller._init_dynamic_sampling_tensors()
+        mcore_engine.dynamic_engine = DynamicInferenceEngine(
+            controller=mcore_engine.controller, context=dynamic_context
+        )
+        mcore_engine.legacy = False
 
     # Wrap the engine to ensure cleanup
     wrapped_engine = MCoreEngineWithCleanup(mcore_engine, model_inference_wrapper, tokenizer)
