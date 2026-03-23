@@ -242,6 +242,12 @@ def setup_megatron_model_and_tokenizer_for_inference(
         elif model_config.attention_backend == "AttnBackend.auto":
             model_config.attention_backend = AttnBackend.auto
 
+    # Force AttnBackend.local for GPT-OSS and similar models where attention_backend is
+    # None or auto. This avoids TEDotProductAttention's strict KV stride check and ensures
+    # window_size (SWA) is correctly applied via MCoreDotProductAttention.
+    if not hasattr(model_config, "attention_backend") or model_config.attention_backend in (None, AttnBackend.auto):
+        model_config.attention_backend = AttnBackend.local
+
     if tensor_model_parallel_size is not None:
         model_config.tensor_model_parallel_size = tensor_model_parallel_size
     if pipeline_model_parallel_size is not None:
@@ -522,6 +528,7 @@ def create_mcore_engine(
         max_batch_size=max_batch_size,
         random_seed=random_seed,
         buffer_size_gb=buffer_size_gb,
+        legacy=model_format == "megatron",
     )
 
     # Wrap the engine to ensure cleanup
