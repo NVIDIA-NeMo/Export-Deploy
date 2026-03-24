@@ -208,6 +208,12 @@ def parse_args():
         help="Micro batch size for model execution",
     )
     parser.add_argument(
+        "--legacy_model_format",
+        default=False,
+        action="store_true",
+        help="Use the legacy StaticInferenceEngine path in MCoreEngine",
+    )
+    parser.add_argument(
         "--batch_wait_timeout_s",
         type=float,
         default=0.1,
@@ -276,6 +282,7 @@ def main():
         model_type=args.model_type,
         micro_batch_size=args.micro_batch_size,
         batch_wait_timeout_s=args.batch_wait_timeout_s,
+        legacy_model_format=args.legacy_model_format,
         **model_config_kwargs,
     )
 

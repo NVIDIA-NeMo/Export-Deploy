@@ -195,6 +195,7 @@ class DeployRay:
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
         batch_wait_timeout_s: float = 0.1,
+        legacy_model_format: bool = False,
         **model_config_kwargs,
     ):
         """Deploy an inframework Megatron model using Ray Serve.
@@ -266,6 +267,7 @@ class DeployRay:
                 model_type=model_type,
                 micro_batch_size=micro_batch_size,
                 batch_wait_timeout_s=batch_wait_timeout_s,
+                legacy_model_format=legacy_model_format,
                 **model_config_kwargs,
             )
 

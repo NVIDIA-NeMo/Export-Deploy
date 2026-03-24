@@ -104,6 +104,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
         buffer_size_gb: float = 10.0,
+        legacy_model_format: bool = False,
         **model_config_kwargs,
     ):
         if not HAVE_TRITON:
@@ -134,6 +135,7 @@ class MegatronLLMDeployable(ITritonDeployable):
             model_format="megatron",
             micro_batch_size=micro_batch_size,
             buffer_size_gb=buffer_size_gb,
+            legacy_model_format=legacy_model_format,
             **model_config_kwargs,
         )
         self.enable_cuda_graphs = enable_cuda_graphs
