@@ -443,6 +443,7 @@ def create_mcore_engine(
     model_format: str = "nemo",
     micro_batch_size: Optional[int] = None,
     buffer_size_gb: float = 10.0,
+    legacy_model_format: bool = False,
     **model_config_kwargs,
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MCoreEngine for inference.
@@ -464,6 +465,7 @@ def create_mcore_engine(
         model_type (str): Type of model to load (default: "gpt")
         model_format (str): Format of model to load (default: "nemo")
         micro_batch_size (Optional[int]): Micro batch size for model execution
+        legacy_model_format (bool): Whether to use the legacy StaticInferenceEngine path in MCoreEngine (default: False)
     Returns:
         Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]: Tuple containing:
             - MCoreEngineWithCleanup: Engine for text generation with proper cleanup
@@ -522,6 +524,7 @@ def create_mcore_engine(
         max_batch_size=max_batch_size,
         random_seed=random_seed,
         buffer_size_gb=buffer_size_gb,
+        legacy=legacy_model_format,
     )
 
     # Wrap the engine to ensure cleanup
