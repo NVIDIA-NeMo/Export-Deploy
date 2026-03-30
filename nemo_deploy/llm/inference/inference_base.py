@@ -39,8 +39,6 @@ from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
 from packaging import version
 
-from nemo_export_deploy_common.import_utils import MISSING_NEMO_MSG, UnavailableError
-
 from .tron_utils import (
     DistributedInitConfig,
     RNGConfig,
@@ -63,7 +61,6 @@ except ImportError:
     HAVE_TRITON = False
 
 from .nemo_utils import (
-    HAVE_NEMO,
     MCoreTokenizerWrappper,
     ckpt_to_context_subdir,
     ckpt_to_weights_subdir,
@@ -186,8 +183,6 @@ def load_nemo_checkpoint_to_tron_model(model: List[MegatronModule], path: Path, 
         path (Path): Path to NeMo checkpoint directory
         legacy_ckpt (bool): Whether to use legacy checkpoint format
     """
-    if not HAVE_NEMO:
-        raise UnavailableError(MISSING_NEMO_MSG)
     weights_dir = ckpt_to_weights_subdir(path, is_saving=False)
     LOGGER.info(f"Loading NeMo checkpoint from {weights_dir}")
 
@@ -309,9 +304,6 @@ def setup_model_and_tokenizer_for_inference(
     Raises:
         ValueError: If checkpoint_path is not a valid NeMo-2.0 checkpoint
     """
-    if not HAVE_NEMO:
-        raise UnavailableError(MISSING_NEMO_MSG)
-
     checkpoint_path = Path(checkpoint_path)
 
     # Load model context for config and tokenizer
@@ -451,6 +443,7 @@ def create_mcore_engine(
     model_format: str = "nemo",
     micro_batch_size: Optional[int] = None,
     buffer_size_gb: float = 10.0,
+    legacy_model_format: bool = False,
     **model_config_kwargs,
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MCoreEngine for inference.
@@ -472,15 +465,13 @@ def create_mcore_engine(
         model_type (str): Type of model to load (default: "gpt")
         model_format (str): Format of model to load (default: "nemo")
         micro_batch_size (Optional[int]): Micro batch size for model execution
+        legacy_model_format (bool): Whether to use the legacy StaticInferenceEngine path in MCoreEngine (default: False)
     Returns:
         Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]: Tuple containing:
             - MCoreEngineWithCleanup: Engine for text generation with proper cleanup
             - GPTInferenceWrapper: Inference-wrapped model
             - Union[MCoreTokenizerWrappper, MegatronTokenizer]: Tokenizer instance
     """
-    if not HAVE_NEMO and model_format == "nemo":
-        raise UnavailableError(MISSING_NEMO_MSG)
-
     # Default to 1 for any parallelism dimension that's None
     tensor_model_parallel_size = tensor_model_parallel_size if tensor_model_parallel_size is not None else 1
     pipeline_model_parallel_size = pipeline_model_parallel_size if pipeline_model_parallel_size is not None else 1
@@ -533,6 +524,7 @@ def create_mcore_engine(
         max_batch_size=max_batch_size,
         random_seed=random_seed,
         buffer_size_gb=buffer_size_gb,
+        legacy=legacy_model_format,
     )
 
     # Wrap the engine to ensure cleanup

@@ -63,6 +63,7 @@ class ModelWorker:
         random_seed: Optional[int] = None,
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
+        legacy_model_format: bool = False,
         **model_config_kwargs,
     ):
         # Use replica-specific environment variables to avoid conflicts
@@ -100,6 +101,7 @@ class ModelWorker:
                 random_seed=random_seed,
                 model_type=model_type,
                 micro_batch_size=micro_batch_size,
+                legacy_model_format=legacy_model_format,
                 **model_config_kwargs,
             )
             if rank != 0:
@@ -146,6 +148,7 @@ class MegatronRayDeployable:
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
         batch_wait_timeout_s: float = 0.1,
+        legacy_model_format: bool = False,
         **model_config_kwargs,
     ):
         """Initialize the distributed Megatron LLM model deployment.
@@ -218,6 +221,7 @@ class MegatronRayDeployable:
                 random_seed=random_seed,
                 model_type=model_type,
                 micro_batch_size=micro_batch_size,
+                legacy_model_format=legacy_model_format,
                 **model_config_kwargs,
             )
 
@@ -257,6 +261,7 @@ class MegatronRayDeployable:
                     random_seed=random_seed,
                     model_type=model_type,
                     micro_batch_size=micro_batch_size,
+                    legacy_model_format=legacy_model_format,
                     **model_config_kwargs,
                 )
                 worker_futures.append(worker)

@@ -12,20 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# WAR for trtllm and lightning conflict
 from nemo_export_deploy_common.package_info import __package_name__, __version__
 
-try:
-    from nemo.lightning import io
-
-    HAVE_IO = True
-except (ImportError, ModuleNotFoundError):
-    HAVE_IO = False
-
 __all__ = ["__version__", "__package_name__"]
-
-if HAVE_IO:
-    __all__ += ["io"]
 
 # Optional convenience imports for TensorRT-LLM classes
 try:

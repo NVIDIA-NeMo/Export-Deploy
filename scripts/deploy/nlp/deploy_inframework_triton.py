@@ -228,6 +228,12 @@ def get_args(argv):
         default=None,
         help="Micro batch size for model execution",
     )
+    parser.add_argument(
+        "--legacy_model_format",
+        default=False,
+        action="store_true",
+        help="Use the legacy StaticInferenceEngine path in MCoreEngine",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -277,6 +283,7 @@ def nemo_deploy(argv):
         legacy_ckpt=args.legacy_ckpt,
         model_type=args.model_type,
         micro_batch_size=args.micro_batch_size,
+        legacy_model_format=args.legacy_model_format,
         **model_config_kwargs,
     )
 
