@@ -149,11 +149,14 @@ override-dependencies = [
     "flash-linear-attention>=0.3.0,<0.4.dev0",
     "patchelf; sys_platform=='never'",
     "nvidia-resiliency-ext>=0.3.0,<0.6.0",
-    "transformer-engine[pytorch,core_cu13]>=2.12.0a0,<2.15.0; sys_platform != 'darwin'",
-    "transformer-engine-cu13>=2.12.0a0,<2.15.0; sys_platform != 'darwin'",
     "transformer-engine-cu12; sys_platform == 'never'",
+    # The custom-built TE in the container already includes the torch extension natively.
+    # Installing transformer-engine-torch from PyPI creates a dist-info that triggers TE's
+    # sanity check requiring the base package to also be a PyPI wheel, which fails for
+    # source/custom builds. Since the .so is already present, skip the PyPI package.
+    "transformer-engine-torch; sys_platform == 'never'",
     "mamba-ssm>=2.3.0,<2.4.0",
-    "transformers>=5.0.0",
+    "transformers==5.2.0",
     "protobuf~=6.33.5",
     "opencv-python-headless; sys_platform == 'never'",
     "cryptography>=43.0.0,<47",
