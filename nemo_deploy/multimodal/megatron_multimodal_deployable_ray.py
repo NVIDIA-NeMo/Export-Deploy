@@ -217,6 +217,11 @@ class MegatronMultimodalRayDeployable:
             if not isinstance(messages, list):
                 prompts = [messages]
 
+            # Normalize content: "content" as string -> list of one text part
+            for message in prompts:
+                if isinstance(message.get("content"), str):
+                    message["content"] = [{"type": "text", "text": message["content"]}]
+
             # Normalize image_url format to image format for consistent processing
             for message in prompts:
                 for content in message["content"]:

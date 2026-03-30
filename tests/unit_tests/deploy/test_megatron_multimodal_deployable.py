@@ -403,6 +403,29 @@ class TestMegatronMultimodalDeployable:
             results = deployable.generate(prompts=[], images=[])
             assert len(results) == 0
 
+    def test_generate_with_empty_images(self, deployable):
+        """Test generate with images=[] passes None to bridge generate (text-only)."""
+        prompts = ["Text-only prompt"]
+        images = []
+
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.generate") as mock_generate:
+            mock_generate.return_value = [MockResult("Generated from text only")]
+
+            results = deployable.generate(prompts=prompts, images=images)
+
+            mock_generate.assert_called_once_with(
+                wrapped_model=deployable.inference_wrapped_model,
+                tokenizer=deployable.processor.tokenizer,
+                image_processor=deployable.processor.image_processor,
+                prompts=prompts,
+                images=None,
+                processor=deployable.processor,
+                random_seed=None,
+                sampling_params=None,
+            )
+            assert len(results) == 1
+            assert results[0].generated_text == "Generated from text only"
+
     def test_generate_mismatched_inputs(self, deployable, sample_image):
         """Test generate method with mismatched prompt and image counts."""
         prompts = ["prompt1", "prompt2"]
