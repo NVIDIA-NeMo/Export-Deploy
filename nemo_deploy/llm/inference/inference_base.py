@@ -496,11 +496,6 @@ def create_mcore_engine(
             **model_config_kwargs,
         )
         model = modelList[0]
-        # MLA models require block_size_tokens=64 for the dynamic engine, which is not
-        # configurable in the current Megatron-LM version. Fall back to the legacy static
-        # engine so MLA inference works correctly without touching Megatron-LM.
-        if isinstance(getattr(model, 'config', None), MLATransformerConfig):
-            legacy_model_format = True
     elif model_format == "megatron":
         modelList, tokenizer, mlm_args = setup_megatron_model_and_tokenizer_for_inference(
             checkpoint_path=path,
@@ -516,6 +511,12 @@ def create_mcore_engine(
         model = modelList[0]
     else:
         raise ValueError(f"Model format {model_format} not supported.")
+
+    # MLA models require block_size_tokens=64 for the dynamic engine, which is not
+    # configurable in the current Megatron-LM version. Fall back to the legacy static
+    # engine so MLA inference works correctly without touching Megatron-LM.
+    if isinstance(getattr(model, 'config', None), MLATransformerConfig):
+        legacy_model_format = True
 
     inference_context = StaticInferenceContext(
         max_batch_size=max_batch_size,
