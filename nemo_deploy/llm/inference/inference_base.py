@@ -316,14 +316,6 @@ def setup_model_and_tokenizer_for_inference(
         if hasattr(model_config, name):
             setattr(model_config, name, value)
 
-    # Auto-configure MLA models for dynamic inference: cache_mla_latents must be True
-    # when using the dynamic engine, and rope fusion is incompatible with it.
-    if isinstance(model_config, MLATransformerConfig):
-        if not model_config.cache_mla_latents:
-            model_config.cache_mla_latents = True
-        if model_config.apply_rope_fusion:
-            model_config.apply_rope_fusion = False
-
     # Disable gradient_accumulation_fusion since its not required for inference
     # and only available with Apex. We don't support Apex for community cuda-based
     # installs.
@@ -504,6 +496,11 @@ def create_mcore_engine(
             **model_config_kwargs,
         )
         model = modelList[0]
+        # MLA models require block_size_tokens=64 for the dynamic engine, which is not
+        # configurable in the current Megatron-LM version. Fall back to the legacy static
+        # engine so MLA inference works correctly without touching Megatron-LM.
+        if isinstance(getattr(model, 'config', None), MLATransformerConfig):
+            legacy_model_format = True
     elif model_format == "megatron":
         modelList, tokenizer, mlm_args = setup_megatron_model_and_tokenizer_for_inference(
             checkpoint_path=path,
