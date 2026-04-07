@@ -36,8 +36,8 @@ from megatron.core.inference.text_generation_controllers.text_generation_control
     TextGenerationController,
 )
 from megatron.core.transformer.enums import AttnBackend
-from megatron.core.transformer.transformer_config import MLATransformerConfig
 from megatron.core.transformer.module import MegatronModule
+from megatron.core.transformer.transformer_config import MLATransformerConfig
 from packaging import version
 
 from .tron_utils import (
@@ -515,7 +515,7 @@ def create_mcore_engine(
     # MLA models require block_size_tokens=64 for the dynamic engine, which is not
     # configurable in the current Megatron-LM version. Fall back to the legacy static
     # engine so MLA inference works correctly without touching Megatron-LM.
-    model_config = getattr(model, 'config', None)
+    model_config = getattr(model, "config", None)
     if isinstance(model_config, MLATransformerConfig):
         legacy_model_format = True
         # The legacy static engine requires an explicit attention backend.
