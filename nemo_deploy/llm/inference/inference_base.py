@@ -36,6 +36,7 @@ from megatron.core.inference.text_generation_controllers.text_generation_control
     TextGenerationController,
 )
 from megatron.core.transformer.enums import AttnBackend
+from megatron.core.transformer.transformer_config import MLATransformerConfig
 from megatron.core.transformer.module import MegatronModule
 from packaging import version
 
@@ -314,6 +315,14 @@ def setup_model_and_tokenizer_for_inference(
     for name, value in model_config_kwargs.items():
         if hasattr(model_config, name):
             setattr(model_config, name, value)
+
+    # Auto-configure MLA models for dynamic inference: cache_mla_latents must be True
+    # when using the dynamic engine, and rope fusion is incompatible with it.
+    if isinstance(model_config, MLATransformerConfig):
+        if not model_config.cache_mla_latents:
+            model_config.cache_mla_latents = True
+        if model_config.apply_rope_fusion:
+            model_config.apply_rope_fusion = False
 
     # Disable gradient_accumulation_fusion since its not required for inference
     # and only available with Apex. We don't support Apex for community cuda-based
