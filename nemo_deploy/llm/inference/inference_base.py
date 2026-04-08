@@ -37,6 +37,7 @@ from megatron.core.inference.text_generation_controllers.text_generation_control
 )
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
+from megatron.core.transformer.transformer_config import MLATransformerConfig
 from packaging import version
 
 from .tron_utils import (
@@ -510,6 +511,17 @@ def create_mcore_engine(
         model = modelList[0]
     else:
         raise ValueError(f"Model format {model_format} not supported.")
+
+    # MLA models require block_size_tokens=64 for the dynamic engine, which is not
+    # configurable in the current Megatron-LM version. Fall back to the legacy static
+    # engine so MLA inference works correctly without touching Megatron-LM.
+    model_config = getattr(model, "config", None)
+    if isinstance(model_config, MLATransformerConfig):
+        legacy_model_format = True
+        # The legacy static engine requires an explicit attention backend.
+        # MLA models use flash attention (attention_mask is handled internally).
+        if not model_config.attention_backend:
+            model_config.attention_backend = AttnBackend.flash
 
     inference_context = StaticInferenceContext(
         max_batch_size=max_batch_size,
