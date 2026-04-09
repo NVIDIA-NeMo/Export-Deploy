@@ -37,6 +37,7 @@ from megatron.core.inference.text_generation_controllers.text_generation_control
 )
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
+from megatron.core.transformer.transformer_config import MLATransformerConfig
 from packaging import version
 
 from .tron_utils import (
@@ -443,6 +444,7 @@ def create_mcore_engine(
     model_format: str = "nemo",
     micro_batch_size: Optional[int] = None,
     buffer_size_gb: float = 10.0,
+    legacy_model_format: bool = False,
     **model_config_kwargs,
 ) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MCoreEngine for inference.
@@ -464,6 +466,7 @@ def create_mcore_engine(
         model_type (str): Type of model to load (default: "gpt")
         model_format (str): Format of model to load (default: "nemo")
         micro_batch_size (Optional[int]): Micro batch size for model execution
+        legacy_model_format (bool): Whether to use the legacy StaticInferenceEngine path in MCoreEngine (default: False)
     Returns:
         Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]: Tuple containing:
             - MCoreEngineWithCleanup: Engine for text generation with proper cleanup
@@ -509,6 +512,17 @@ def create_mcore_engine(
     else:
         raise ValueError(f"Model format {model_format} not supported.")
 
+    # MLA models require block_size_tokens=64 for the dynamic engine, which is not
+    # configurable in the current Megatron-LM version. Fall back to the legacy static
+    # engine so MLA inference works correctly without touching Megatron-LM.
+    model_config = getattr(model, "config", None)
+    if isinstance(model_config, MLATransformerConfig):
+        legacy_model_format = True
+        # The legacy static engine requires an explicit attention backend.
+        # MLA models use flash attention (attention_mask is handled internally).
+        if not model_config.attention_backend:
+            model_config.attention_backend = AttnBackend.flash
+
     inference_context = StaticInferenceContext(
         max_batch_size=max_batch_size,
         max_sequence_length=inference_max_seq_length,
@@ -522,6 +536,7 @@ def create_mcore_engine(
         max_batch_size=max_batch_size,
         random_seed=random_seed,
         buffer_size_gb=buffer_size_gb,
+        legacy=legacy_model_format,
     )
 
     # Wrap the engine to ensure cleanup

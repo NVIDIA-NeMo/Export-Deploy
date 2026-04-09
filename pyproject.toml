@@ -38,7 +38,7 @@ readme = { file = "README.md", content-type = "text/markdown" }
 name = "NeMo-Export-Deploy"
 dynamic = ["version", "readme"]
 description = "NeMo Export and Deploy - a library to export and deploy LLMs and MMs"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.12,<3.13"
 license = { text = "Apache 2.0" }
 dependencies = [
     "megatron-core",
@@ -80,9 +80,14 @@ dependencies = [
 
 [project.optional-dependencies]
 inframework = []
-vllm = ["vllm~=0.17.1", "pandas", "timm"]
-trtllm = ["tensorrt-llm~=1.2.0", "cuda-python~=13.1.0", "transformers==4.57.6"]
-trt-onnx = ["tensorrt==10.15.1.29", "onnx==1.19.1", "onnxscript>=0.6.0", "transformers==4.51.3"]
+vllm = ["vllm~=0.18.0", "pandas", "timm"]
+trtllm = ["tensorrt-llm~=1.1.0", "cuda-python~=13.0.0"]
+trt-onnx = [
+    "tensorrt==10.14.1.48.post1",
+    "onnx==1.21.0",
+    "onnxscript>=0.6.0",
+    "transformers==4.51.3",
+]
 
 [dependency-groups]
 # This is a default group so that we install these even with bare `uv sync`
@@ -139,7 +144,7 @@ override-dependencies = [
     "torchvision; sys_platform == 'never'",
     "triton; sys_platform == 'never'",
     "urllib3>1.27.0",
-    "tiktoken>=0.9.0",                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
+    "tiktoken>=0.9.0",                                                                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
     "transformer-engine[pytorch]>=2.12.0a0,<2.14.0",
     "open-clip-torch>=3.2.0",
@@ -157,7 +162,7 @@ override-dependencies = [
     "protobuf~=6.33.5",
     "opencv-python-headless; sys_platform == 'never'",
     "cryptography>=43.0.0,<47",
-    "onnx<1.20.0"
+    "onnx<1.20.0",
 ]
 prerelease = "allow"
 
