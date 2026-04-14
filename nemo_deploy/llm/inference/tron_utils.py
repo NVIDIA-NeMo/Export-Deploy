@@ -356,7 +356,15 @@ def _get_model_type(model_config: Union[GPTConfig, T5Config]) -> ModelType:
     Returns:
         ModelType: The model type enum value (encoder_and_decoder or encoder_or_decoder)
     """
-    return ModelType.encoder_and_decoder if isinstance(model_config, T5Config) else ModelType.encoder_or_decoder
+    if isinstance(model_config, T5Config):
+        # Older megatron-core exposes encoder_and_decoder; newer versions only have encoder_or_decoder.
+        return getattr(ModelType, "encoder_and_decoder", ModelType.encoder_or_decoder)
+    return ModelType.encoder_or_decoder
+
+
+def _is_t5_encoder_decoder_model(model_config: Union[GPTConfig, T5Config]) -> bool:
+    """True for T5-style encoder+decoder models (branching uses config when ModelType is unified)."""
+    return isinstance(model_config, T5Config)
 
 
 def get_model_from_config(
@@ -389,7 +397,7 @@ def get_model_from_config(
         parallel_state.get_pipeline_model_parallel_world_size() > 1
         and parallel_state.get_virtual_pipeline_model_parallel_world_size() is not None
     ):
-        assert model_type != ModelType.encoder_and_decoder, (
+        assert not _is_t5_encoder_decoder_model(model_config), (
             "Interleaved schedule not supported for model with both encoder and decoder"
         )
         model = []
@@ -408,7 +416,7 @@ def get_model_from_config(
     else:
         pre_process = parallel_state.is_pipeline_first_stage()
         post_process = parallel_state.is_pipeline_last_stage()
-        if model_type == ModelType.encoder_and_decoder:
+        if _is_t5_encoder_decoder_model(model_config):
             assert isinstance(model_config, T5Config)
             if parallel_state.get_pipeline_model_parallel_world_size() > 1:
                 rank = parallel_state.get_pipeline_model_parallel_rank()

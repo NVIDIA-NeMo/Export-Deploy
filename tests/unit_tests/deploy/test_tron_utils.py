@@ -189,7 +189,8 @@ class TestGetModelType:
 
         with patch("nemo_deploy.llm.inference.tron_utils.T5Config", MockT5Config):
             result = _get_model_type(mock_t5_instance)
-            assert result == ModelType.encoder_and_decoder
+            expected = getattr(ModelType, "encoder_and_decoder", ModelType.encoder_or_decoder)
+            assert result == expected
 
     def test_gpt_config_returns_encoder_or_decoder(self):
         from megatron.core.enums import ModelType

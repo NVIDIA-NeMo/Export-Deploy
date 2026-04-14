@@ -397,3 +397,29 @@ class TestMegatronMultimodalRayDeployable:
 
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
+
+    def test_chat_completions_with_string_content(self):
+        """Test chat_completions when message content is a plain string (normalized to text part)."""
+        actual_class = MegatronMultimodalRayDeployable.func_or_class
+        deployment = MagicMock()
+        deployment.model_id = "test-chat-string-content"
+        deployment.workers = [MagicMock()]
+
+        request = {
+            "model": "test-chat-string-content",
+            "messages": [
+                {"role": "user", "content": "What is the color of the sky?"},
+            ],
+            "max_tokens": 10,
+        }
+
+        with patch("nemo_deploy.multimodal.megatron_multimodal_deployable_ray.ray.get") as mock_ray_get:
+            mock_ray_get.return_value = {"sentences": ["Generated multimodal response"]}
+
+            result = run_async(actual_class.chat_completions(deployment, request))
+
+        assert "choices" in result
+        assert len(result["choices"]) >= 1
+        assert "message" in result["choices"][0]
+        assert "content" in result["choices"][0]["message"]
+        assert result["choices"][0]["message"]["content"] == "Generated multimodal response"
