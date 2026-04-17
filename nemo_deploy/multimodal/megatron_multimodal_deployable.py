@@ -139,7 +139,7 @@ class MegatronMultimodalDeployable(ITritonDeployable):
             tokenizer=self.processor.tokenizer,
             image_processor=self.processor.image_processor,
             prompts=prompts,
-            images=images,
+            images=images if images and len(images) > 0 else None,
             processor=self.processor,
             random_seed=random_seed,
             sampling_params=inference_params,
