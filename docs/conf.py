@@ -26,7 +26,7 @@ import sys
 project = "NeMo-Export-Deploy"
 copyright = "2026, NVIDIA Corporation"
 author = "NVIDIA Corporation"
-release = "nightly"
+release = "0.5.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
