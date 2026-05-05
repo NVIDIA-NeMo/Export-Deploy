@@ -15,13 +15,3 @@
 from nemo_export_deploy_common.package_info import __package_name__, __version__
 
 __all__ = ["__version__", "__package_name__"]
-
-# Optional convenience imports for TensorRT-LLM classes
-try:
-    from nemo_export.tensorrt_llm import TensorRTLLM
-    from nemo_export.tensorrt_llm_hf import TensorRTLLMHF
-
-    __all__ += ["TensorRTLLM", "TensorRTLLMHF"]
-except (ImportError, ModuleNotFoundError):
-    # TensorRT-LLM may not be available
-    pass

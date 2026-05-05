@@ -21,7 +21,7 @@
 
 </div>
 
-The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for exporting and deploying NeMo and 🤗Hugging Face models to production environments. It supports various deployment paths including TensorRT, TensorRT-LLM, and vLLM deployment through NVIDIA Triton Inference Server and Ray Serve.
+The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for exporting and deploying NeMo and 🤗Hugging Face models to production environments. It supports various deployment paths including TensorRT and vLLM deployment through NVIDIA Triton Inference Server and Ray Serve.
 
 ![image](docs/NeMo_Repo_Overview_ExportDeploy.png)
 
@@ -32,7 +32,7 @@ The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for
 ## 🚀 Key Features
 
 - Support for Large Language Models (LLMs) and Multimodal Models (MMs)
-- Export Megatron-Brdige and Hugging Face models to optimized inference formats including TensorRT-LLM and vLLM
+- Export Megatron-Brdige and Hugging Face models to optimized inference formats including vLLM
 - Deploy Megatron-Brdige and Hugging Face models using Ray Serve or NVIDIA Triton Inference Server
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
@@ -41,11 +41,11 @@ The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for
 
 ### Model Export Capabilities
 
-| Model / Checkpoint                                                                              | TensorRT-LLM                                   | vLLM      | ONNX                        | TensorRT               |
-|-------------------------------------------------------------------------------------------------|:----------------------------------------------:|:---------:|:--------------------------:|:----------------------:|
-| [Hugging Face](https://huggingface.co/docs/transformers/en/index)                               | bf16                                           | bf16      | N/A                      | N/A                    |
-| [NIM Embedding](https://docs.nvidia.com/nim/nemo-retriever/text-embedding/latest/overview.html) | N/A                                            | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
-| [NIM Reranking](https://docs.nvidia.com/nim/nemo-retriever/text-reranking/latest/overview.html) | N/A                                            | N/A       | Coming Soon                | Coming Soon            |
+| Model / Checkpoint                                                                              | vLLM      | ONNX                        | TensorRT               |
+|-------------------------------------------------------------------------------------------------|:---------:|:--------------------------:|:----------------------:|
+| [Hugging Face](https://huggingface.co/docs/transformers/en/index)                               | bf16      | N/A                      | N/A                    |
+| [NIM Embedding](https://docs.nvidia.com/nim/nemo-retriever/text-embedding/latest/overview.html) | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
+| [NIM Reranking](https://docs.nvidia.com/nim/nemo-retriever/text-reranking/latest/overview.html) | N/A       | Coming Soon                | Coming Soon            |
 
 The support matrix above outlines the export capabilities for each model or checkpoint, including the supported precision options across various inference-optimized libraries. The export module enables exporting models that have been quantized using post-training quantization (PTQ) with the [TensorRT Model Optimizer](https://github.com/NVIDIA/TensorRT-Model-Optimizer) library, as shown above. Models trained with low precision or quantization-aware training are also supported, as indicated in the table.
 
@@ -59,16 +59,15 @@ Please note that not all large language models (LLMs) and multimodal models (MMs
 |-------------------------------------------------------------------------------------------|------------------------------------------|-------------------------|
 | [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                      | Limited                                  | Limited              |
 | [Hugging Face](https://huggingface.co/docs/transformers/en/index)                         | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
-| [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM)                                    | Single-Node Multi-GPU,<br>Multi-instance | Multi-Node Multi-GPU    |
 | [vLLM](https://github.com/vllm-project/vllm)                                              | N/A                                      | Single-Node Multi-GPU   |
 
 The support matrix above outlines the available deployment options for each model or checkpoint, highlighting multi-node and multi-GPU support where applicable. For comprehensive details, please refer to the [documentation](https://docs.nvidia.com/nemo/export-deploy/latest/index.html).
 
 Refer to the table below for an overview of optimized inference and deployment support for NeMo Framework and Hugging Face models with Triton Inference Server.
 
-| Model / Checkpoint           | TensorRT-LLM + Triton Inference Server | vLLM + Triton Inference Server | Direct Triton Inference Server |
-|------------------------------|:--------------------------------------:|:------------------------------:|:------------------------------:|
-| Hugging Face                 | &#x2611;                              | &#x2611;                      | &#x2611;                      |
+| Model / Checkpoint           | vLLM + Triton Inference Server | Direct Triton Inference Server |
+|------------------------------|:------------------------------:|:------------------------------:|
+| Hugging Face                 | &#x2611;                      | &#x2611;                      |
 
 ## 🔧 Install
 
@@ -78,7 +77,7 @@ For quick exploration of NeMo Export-Deploy, we recommend installing our pip pac
 pip install nemo-export-deploy
 ```
 
-This installation comes without extra dependencies like [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/), [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM) or [vLLM](https://github.com/vllm-project/vllm). The installation serves for navigating around and for exploring the project.
+This installation comes without extra dependencies like [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/) or [vLLM](https://github.com/vllm-project/vllm). The installation serves for navigating around and for exploring the project.
 
 For a feature-complete install, please refer to the following sections.
 
@@ -95,7 +94,7 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
 
 ### Build with Dockerfile
 
-For containerized development, use our Dockerfile for building your own container. There are three flavors: `INFERENCE_FRAMEWORK=inframework`, `INFERENCE_FRAMEWORK=trtllm` and `INFERENCE_FRAMEWORK=vllm`:
+For containerized development, use our Dockerfile for building your own container. There are two flavors: `INFERENCE_FRAMEWORK=inframework` and `INFERENCE_FRAMEWORK=vllm`:
 
 ```bash
 docker build \
@@ -116,7 +115,7 @@ docker run --rm -it -w /workdir -v $(pwd):/workdir \
 
 ### Install from Source
 
-For complete feature coverage, we recommend to install [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/?tab=readme-ov-file#pip-installation) and additionally either [TensorRT-LLM](https://nvidia.github.io/TensorRT-LLM/0.20.0/installation/linux.html) or [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#pre-built-wheels).
+For complete feature coverage, we recommend to install [TransformerEngine](https://github.com/NVIDIA/TransformerEngine/?tab=readme-ov-file#pip-installation) and additionally [vLLM](https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#pre-built-wheels).
 
 #### Recommended Requirements
 
@@ -139,21 +138,6 @@ Now proceed with the main installation:
 git clone https://github.com/NVIDIA-NeMo/Export-Deploy
 cd Export-Deploy/
 pip install --no-build-isolation .
-```
-
-#### Install TransformerEngine + TensorRT-LLM
-
-For highly optimized TransformerEngine path with TensorRT-LLM backend, please make sure to install the following prerequisites first:
-
-```bash
-sudo apt-get -y install libopenmpi-dev  # Required for TensorRT-LLM
-pip install torch==2.7.0 setuptools pybind11 wheel_stub  # Required for TE
-```
-
-Now proceed with the main installation:
-
-```bash
-pip install --no-build-isolation .[trtllm]
 ```
 
 #### Install TransformerEngine + vLLM
