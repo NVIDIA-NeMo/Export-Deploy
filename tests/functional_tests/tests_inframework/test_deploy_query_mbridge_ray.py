@@ -39,9 +39,13 @@ class TestDeployRayMBridge:
             self.deploy_proc = None
 
     def test_deploy_ray(self):
-        mbridge_checkpoint_path = "/home/TestData/megatron_bridge/checkpoints/llama3_145m-mbridge_saved-distckpt"
-
         try:
+            # Export Megatron-Bridge checkpoint
+            from megatron.bridge import AutoBridge
+
+            mbridge_checkpoint_path = "/opt/checkpoints/hf_llama32_1B_mbridge"
+            AutoBridge.import_ckpt("meta-llama/Llama-3.2-1B", mbridge_checkpoint_path)
+
             # Run Ray deployment
             self.deploy_proc = subprocess.Popen(
                 [
