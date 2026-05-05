@@ -109,7 +109,7 @@ jobs:
       runner: ${{ needs.pre-flight.outputs.runner_prefix }}-container
       container-options: "--gpus all --runtime=nvidia"
       gh-release-use-changelog-builder: ${{ inputs.generate-changelog || false }}
-      publish-docs: ${{ inputs.publish-docs || false }}
+      publish-docs: ${{ inputs.publish-docs || true }}
       docs-target-path: nemo/export-deploy
       gh-release-from-tag: ${{ inputs.gh-release-from-tag || '' }}
       restrict-to-admins: true
