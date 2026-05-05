@@ -106,7 +106,7 @@ jobs:
       skip-test-wheel: true
       custom-container: nvcr.io/nvidia/pytorch:25.11-py3
       no-build-isolation: true
-      runner: ${{ needs.pre-flight.outputs.runner_prefix }}-container
+      runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2-container
       container-options: "--gpus all --runtime=nvidia"
       gh-release-use-changelog-builder: ${{ inputs.generate-changelog || false }}
       publish-docs: ${{ inputs.publish-docs || true }}
