@@ -40,11 +40,7 @@ class TestDeployRayMBridge:
 
     def test_deploy_ray(self):
         try:
-            # Export Megatron-Bridge checkpoint
-            from megatron.bridge import AutoBridge
-
-            mbridge_checkpoint_path = "/opt/checkpoints/hf_llama32_1B_mbridge"
-            AutoBridge.import_ckpt("meta-llama/Llama-3.2-1B", mbridge_checkpoint_path)
+            mbridge_checkpoint_path = "/home/TestData/export-deploy/checkpoints/mbridge/hf_llama32_1B_mbridge/iter_0000000"
 
             # Run Ray deployment
             self.deploy_proc = subprocess.Popen(
@@ -56,7 +52,7 @@ class TestDeployRayMBridge:
                     "--parallel-mode",
                     "scripts/deploy/nlp/deploy_ray_inframework.py",
                     "--megatron_checkpoint",
-                    f"{mbridge_checkpoint_path}/iter_0000000",
+                    mbridge_checkpoint_path,
                     "--model_id",
                     "llama",
                     "--num_gpus",

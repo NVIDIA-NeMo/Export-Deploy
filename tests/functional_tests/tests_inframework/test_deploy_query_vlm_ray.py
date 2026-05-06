@@ -64,11 +64,7 @@ class TestDeployRayVLM:
 
     def test_deploy_ray(self):
         try:
-            # Export Megatron-Bridge checkpoint
-            from megatron.bridge import AutoBridge
-
-            vlm_checkpoint_path = "/opt/checkpoints/hf_qwen25_vl_3b_mbridge"
-            AutoBridge.import_ckpt("Qwen/Qwen2.5-VL-3B-Instruct", vlm_checkpoint_path)
+            vlm_checkpoint_path = "/home/TestData/export-deploy/checkpoints/mbridge/hf_qwen25_vl_3b_mbridge/iter_0000000"
 
             # Run Ray deployment for Megatron multimodal (VLM) model
             self.deploy_proc = subprocess.Popen(
@@ -80,7 +76,7 @@ class TestDeployRayVLM:
                     "--parallel-mode",
                     "scripts/deploy/multimodal/deploy_ray_inframework.py",
                     "--megatron_checkpoint",
-                    f"{vlm_checkpoint_path}/iter_0000000",
+                    vlm_checkpoint_path,
                     "--model_id",
                     "megatron-multimodal",
                     "--num_gpus",
