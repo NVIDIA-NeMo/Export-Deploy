@@ -40,7 +40,9 @@ class TestDeployRayMBridge:
 
     def test_deploy_ray(self):
         try:
-            mbridge_checkpoint_path = "/home/TestData/export-deploy/checkpoints/mbridge/hf_llama32_1B_mbridge/iter_0000000"
+            mbridge_checkpoint_path = (
+                "/home/TestData/export-deploy/checkpoints/mbridge/hf_llama32_1B_mbridge/iter_0000000"
+            )
 
             # Run Ray deployment
             self.deploy_proc = subprocess.Popen(

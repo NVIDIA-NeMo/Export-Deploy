@@ -64,7 +64,9 @@ class TestDeployRayVLM:
 
     def test_deploy_ray(self):
         try:
-            vlm_checkpoint_path = "/home/TestData/export-deploy/checkpoints/mbridge/hf_qwen25_vl_3b_mbridge/iter_0000000"
+            vlm_checkpoint_path = (
+                "/home/TestData/export-deploy/checkpoints/mbridge/hf_qwen25_vl_3b_mbridge/iter_0000000"
+            )
 
             # Run Ray deployment for Megatron multimodal (VLM) model
             self.deploy_proc = subprocess.Popen(
