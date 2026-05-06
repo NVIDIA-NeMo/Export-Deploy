@@ -80,7 +80,7 @@ class TestDeployRayVLM:
                     "--parallel-mode",
                     "scripts/deploy/multimodal/deploy_ray_inframework.py",
                     "--megatron_checkpoint",
-                    vlm_checkpoint_path,
+                    f"{vlm_checkpoint_path}/iter_0000000",
                     "--model_id",
                     "megatron-multimodal",
                     "--num_gpus",

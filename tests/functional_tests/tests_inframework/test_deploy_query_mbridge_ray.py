@@ -56,7 +56,7 @@ class TestDeployRayMBridge:
                     "--parallel-mode",
                     "scripts/deploy/nlp/deploy_ray_inframework.py",
                     "--megatron_checkpoint",
-                    mbridge_checkpoint_path,
+                    f"{mbridge_checkpoint_path}/iter_0000000",
                     "--model_id",
                     "llama",
                     "--num_gpus",
