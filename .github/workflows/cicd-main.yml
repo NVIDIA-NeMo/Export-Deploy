@@ -240,13 +240,8 @@ jobs:
           runner: ${{ needs.pre-flight.outputs.runner_prefix }}
 
   cicd-e2e-tests-inframework:
-<<<<<<< HEAD
     needs: [pre-flight, cicd-unit-tests-vllm]
-    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
-=======
-    needs: [pre-flight, cicd-unit-tests-trtllm, cicd-unit-tests-vllm]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
->>>>>>> origin/main
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     if: |
