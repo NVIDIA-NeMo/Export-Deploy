@@ -15,13 +15,9 @@ uv sync --only-group build  # Installs build dependencies required by Transforme
 uv sync
 ```
 
-On a machine with CUDA, you can additionally sync TRT-LLM or vLLM:
+On a machine with CUDA, you can additionally sync vLLM:
 
 ```bash
-# TRT-LLM
-uv sync --extra te --extra trtllm
-
-# or vLLM
 uv sync --extra te --extra vllm
 ```
 
@@ -35,7 +31,7 @@ New required dependencies can be added by `uv add $DEPENDENCY`.
 New optional dependencies can be added by `uv add --optional --extra $EXTRA $DEPENDENCY`.
 
 `EXTRA` refers to the subgroup of extra-dependencies to which you're adding the new dependency.
-Example: For adding a TRT-LLM specific dependency, run `uv add --optional --extra trtllm $DEPENDENCY`.
+Example: For adding a vLLM specific dependency, run `uv add --optional --extra vllm $DEPENDENCY`.
 
 Alternatively, the `pyproject.toml` file can also be modified directly.
 

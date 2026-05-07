@@ -81,7 +81,6 @@ dependencies = [
 [project.optional-dependencies]
 inframework = []
 vllm = ["vllm~=0.17.1", "pandas", "timm"]
-trtllm = ["tensorrt-llm~=1.2.0", "cuda-python~=13.0.0"]
 trt-onnx = [
     "tensorrt==10.14.1.48.post1",
     "onnx==1.21.0",
@@ -139,7 +138,7 @@ default-groups = ["linting", "build", "test"]
 #  --link-mode=copy (slower but more reliable; supresses warning)
 #  --link-mode=symlink (fastest option when uv cache and venv on different file-system; caveat: venv is brittle since it depends on the environment/container)
 link-mode = "copy"
-conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }, { extra = "trt-onnx" }]]
+conflicts = [[{ extra = "vllm" }, { extra = "trt-onnx" }]]
 override-dependencies = [
     "cachetools>=5.0.0",
     "torch; sys_platform == 'never'",

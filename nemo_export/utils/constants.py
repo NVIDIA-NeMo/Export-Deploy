@@ -12,5 +12,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Export
-TRTLLM_ENGINE_DIR = "trtllm_engine"

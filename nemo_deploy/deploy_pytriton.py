@@ -30,39 +30,7 @@ except (ImportError, ModuleNotFoundError):
 
 
 class DeployPyTriton(DeployBase):
-    """Deploys any models to Triton Inference Server that implements ITritonDeployable interface in nemo_deploy.
-
-    Example:
-        from nemo_deploy import DeployPyTriton, NemoQueryLLM
-        from nemo_export.tensorrt_llm import TensorRTLLM
-
-        trt_llm_exporter = TensorRTLLM(model_dir="/path/for/model/files")
-        trt_llm_exporter.export(
-            nemo_checkpoint_path="/path/for/nemo/checkpoint",
-            model_type="llama",
-            tensor_parallelism_size=1,
-        )
-
-        nm = DeployPyTriton(model=trt_llm_exporter, triton_model_name="model_name", http_port=8000)
-        nm.deploy()
-        nm.run()
-        nq = NemoQueryLLM(url="localhost", model_name="model_name")
-
-        prompts = ["hello, testing GPT inference", "another GPT inference test?"]
-        output = nq.query_llm(prompts=prompts, max_output_len=100)
-        print("prompts: ", prompts)
-        print("")
-        print("output: ", output)
-        print("")
-
-        prompts = ["Give me some info about Paris", "Do you think Londan is a good city to visit?", "What do you think about Rome?"]
-        output = nq.query_llm(prompts=prompts, max_output_len=250)
-        print("prompts: ", prompts)
-        print("")
-        print("output: ", output)
-        print("")
-
-    """
+    """Deploys any models to Triton Inference Server that implements ITritonDeployable interface in nemo_deploy."""
 
     def __init__(
         self,
