@@ -78,7 +78,7 @@ jobs:
       default_test_data_path: ${{ vars.DEFAULT_TEST_DATA_PATH }}
       non_nvidia_test_data_path: ${{ vars.NON_NVIDIA_TEST_DATA_PATH }}
       sso_users_filename: ${{ vars.SSO_USERS_FILENAME }}
-    secrets: inherit
+    secrets: inherit  # pragma: allowlist secret
 
   release:
     needs: [pre-flight]
@@ -112,7 +112,7 @@ jobs:
       docs-target-path: nemo/export-deploy
       gh-release-from-tag: ${{ inputs.gh-release-from-tag || '' }}
       restrict-to-admins: true
-    secrets: inherit
+    secrets: inherit  # pragma: allowlist secret
 
   release-summary:
     needs: [pre-flight, release]
