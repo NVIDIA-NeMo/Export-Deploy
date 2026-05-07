@@ -183,7 +183,7 @@ jobs:
 
   cicd-e2e-tests-trt-onnx:
     needs: [pre-flight, cicd-unit-tests-vllm]
-    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     if: |
