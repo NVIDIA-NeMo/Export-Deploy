@@ -125,7 +125,7 @@ jobs:
           fi
           REGISTRY="${{ needs.pre-flight.outputs.registry }}"
           echo "key=$KEY" | tee -a "$GITHUB_OUTPUT"
-          echo "cache-to=type=registry,ref=${REGISTRY}/evaluator:${KEY}-buildcache,mode=max" | tee -a "$GITHUB_OUTPUT"
+          echo "cache-to=type=registry,ref=${REGISTRY}/export-deploy:${KEY}-buildcache,mode=max" | tee -a "$GITHUB_OUTPUT"
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -136,11 +136,11 @@ jobs:
           build-args: |
             INFERENCE_FRAMEWORK=inframework
           cache-from: |
-            type=registry,ref=${{ needs.pre-flight.outputs.registry }}/evaluator:${{ steps.cache_keys.outputs.key }}-buildcache
-            type=registry,ref=${{ needs.pre-flight.outputs.registry }}/evaluator:main-buildcache
+            type=registry,ref=${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ steps.cache_keys.outputs.key }}-buildcache
+            type=registry,ref=${{ needs.pre-flight.outputs.registry }}/export-deploy:main-buildcache
           cache-to: ${{ steps.cache_keys.outputs.cache-to }}
           tags: |
-            ${{ needs.pre-flight.outputs.registry }}/evaluator:${{ github.sha }}
+            ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           secrets: |
             GH_TOKEN=${{ secrets.PAT }}
 
@@ -176,7 +176,7 @@ jobs:
           is_unit_test: "true"
           cpu-only: ${{ matrix.cpu-only || false }}
           PAT: ${{ secrets.PAT }}
-          container-image: ${{ needs.pre-flight.outputs.registry }}/evaluator:${{ github.sha }}
+          container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: trtllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ matrix.runner }}
@@ -213,7 +213,7 @@ jobs:
           is_unit_test: "true"
           cpu-only: ${{ matrix.cpu-only || false }}
           PAT: ${{ secrets.PAT }}
-          container-image: ${{ needs.pre-flight.outputs.registry }}/evaluator:${{ github.sha }}
+          container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: vllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ matrix.runner }}
@@ -249,7 +249,7 @@ jobs:
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ secrets.PAT }}
-          container-image: ${{ needs.pre-flight.outputs.registry }}/evaluator:${{ github.sha }}
+          container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: trtllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ matrix.runner }}
@@ -279,7 +279,7 @@ jobs:
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ secrets.PAT }}
-          container-image: ${{ needs.pre-flight.outputs.registry }}/evaluator:${{ github.sha }}
+          container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: trt-onnx
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ needs.pre-flight.outputs.runner_prefix }}
@@ -307,7 +307,7 @@ jobs:
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ secrets.PAT }}
-          container-image: ${{ needs.pre-flight.outputs.registry }}/evaluator:${{ github.sha }}
+          container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: vllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ needs.pre-flight.outputs.runner_prefix }}
@@ -335,7 +335,7 @@ jobs:
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ secrets.PAT }}
-          container-image: ${{ needs.pre-flight.outputs.registry }}/evaluator:${{ github.sha }}
+          container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: inframework
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
           runner: ${{ needs.pre-flight.outputs.runner_prefix }}
