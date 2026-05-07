@@ -633,12 +633,6 @@ def run_inference_tests(args):
     if args.run_accuracy and args.test_data_path is None:
         raise UsageError("Accuracy testing requires the --test_data_path argument.")
 
-    if args.force_hf_export and (args.use_vllm or args.use_huggingface):
-        raise UsageError(
-            "--force_hf_export cannot be used with --use_vllm or --use_huggingface. "
-            "It is only for forcing HF export path for NeMo checkpoints."
-        )
-
     if args.max_tps is None:
         args.max_tps = args.min_tps
 
