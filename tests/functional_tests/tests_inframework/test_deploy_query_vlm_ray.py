@@ -64,6 +64,7 @@ class TestDeployRayVLM:
 
     def test_deploy_ray(self):
         try:
+            # Checkpoint created via AutoBridge.import_ckpt("Qwen/Qwen2.5-VL-3B-Instruct", "/path/to/checkpoint")
             vlm_checkpoint_path = (
                 "/home/TestData/export-deploy/checkpoints/mbridge/hf_qwen25_vl_3b_mbridge/iter_0000000"
             )

@@ -40,6 +40,7 @@ class TestDeployRayMBridge:
 
     def test_deploy_ray(self):
         try:
+            # Checkpoint created via AutoBridge.import_ckpt("meta-llama/Llama-3.2-1B", "/path/to/checkpoint")
             mbridge_checkpoint_path = (
                 "/home/TestData/export-deploy/checkpoints/mbridge/hf_llama32_1B_mbridge/iter_0000000"
             )
