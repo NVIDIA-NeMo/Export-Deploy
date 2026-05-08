@@ -22,7 +22,7 @@ while [[ $# -gt 0 ]]; do
         ;;
     *)
         echo "Unknown option: $1"
-        echo "Usage: $0 --base-image {pytorch|ubuntu} --inference-framework {trtllm|vllm|inframework|trt-onnx} [--python-version] [--use-uv]"
+        echo "Usage: $0 --base-image {pytorch|ubuntu} --inference-framework {vllm|inframework|trt-onnx} [--python-version] [--use-uv]"
         exit 1
         ;;
     esac
@@ -39,7 +39,7 @@ fi
 # Validate base image argument
 if [[ -z "${BASE_IMAGE:-}" || -z "${INFERENCE_FRAMEWORK:-}" ]]; then
     echo "Error: --base-image and --inference-framework arguments are required"
-    echo "Usage: $0 --base-image {pytorch|ubuntu} --inference-framework {trtllm|vllm|inframework}"
+    echo "Usage: $0 --base-image {pytorch|ubuntu} --inference-framework {vllm|inframework|trt-onnx}"
     exit 1
 fi
 
@@ -49,9 +49,9 @@ if [[ "$BASE_IMAGE" != "pytorch" && "$BASE_IMAGE" != "ubuntu" ]]; then
     exit 1
 fi
 
-if [[ "$INFERENCE_FRAMEWORK" != "trtllm" && "$INFERENCE_FRAMEWORK" != "vllm" && "$INFERENCE_FRAMEWORK" != "inframework" && "$INFERENCE_FRAMEWORK" != "trt-onnx" ]]; then
-    echo "Error: --inference-framework must be either 'trtllm' or 'vllm' or 'inframework' or 'trt-onnx'"
-    echo "Usage: $0 --inference-framework {trtllm|vllm|inframework}"
+if [[ "$INFERENCE_FRAMEWORK" != "vllm" && "$INFERENCE_FRAMEWORK" != "inframework" && "$INFERENCE_FRAMEWORK" != "trt-onnx" ]]; then
+    echo "Error: --inference-framework must be either 'vllm' or 'inframework' or 'trt-onnx'"
+    echo "Usage: $0 --inference-framework {vllm|inframework|trt-onnx}"
     exit 1
 fi
 
@@ -133,7 +133,6 @@ main() {
                 "--no-install-package" "nvidia-cusparse"
                 "--no-install-package" "nvidia-cusparselt-cu13"
                 "--no-install-package" "nvidia-nccl-cu13"
-                "--no-install-package" "tensorrt-llm"
                 "--no-install-package" "vllm"
             )
         else

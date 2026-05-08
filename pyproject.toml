@@ -67,7 +67,7 @@ dependencies = [
     "wandb",
     "webdataset>=0.2.86",
     "nvidia-pytriton ; platform_system != 'Darwin' ",
-    "flashinfer-python>=0.2.5 ; platform_system != 'Darwin'",
+    "flashinfer-python==0.6.8.post1 ; platform_system != 'Darwin'",
     "Pillow ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "decord ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "pyparsing>2.0.2",
@@ -80,10 +80,9 @@ dependencies = [
 
 [project.optional-dependencies]
 inframework = []
-vllm = ["vllm~=0.17.1", "pandas", "timm"]
-trtllm = ["tensorrt-llm~=1.2.0", "cuda-python~=13.0.0"]
+vllm = ["vllm~=0.20.1", "pandas", "timm"]
 trt-onnx = [
-    "tensorrt==10.14.1.48.post1",
+    "tensorrt==10.16.1.11",
     "onnx==1.21.0",
     "onnxscript>=0.6.0",
     "transformers==4.51.3",
@@ -102,12 +101,6 @@ docs = [
 ]
 linting = ["pre-commit>=3.6.0", "ruff~=0.9.0"]
 test = ["pytest", "pytest-mock", "coverage", "click"]
-nemo-toolkit = [
-    "nemo-toolkit[common-only,nlp-only,multimodal-only]>=2.5.0a0,<2.7.0",
-    "nv_one_logger_core>=2.3.1",
-    "nv_one_logger_training_telemetry>=2.3.1",
-    "nv_one_logger_pytorch_lightning_integration>=2.3.1",
-]
 nemo-run = ["nemo-run"]
 
 [tool.uv.sources]
@@ -117,7 +110,8 @@ vllm = [
     { index = "pytorch-cu130", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
-megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "4cb379fade7c6b85610db0f7412b3601ae15dea8" }
+megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "859a18d001eca4423ad79e7771632d839f50fa77" }
+nvidia-resiliency-ext = { git = "https://github.com/NVIDIA/nvidia-resiliency-ext.git", rev = "b2bb3d728a18795807d9f76c535e005a609a1b01" }
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
@@ -138,24 +132,25 @@ default-groups = ["linting", "build", "test"]
 #  --link-mode=copy (slower but more reliable; supresses warning)
 #  --link-mode=symlink (fastest option when uv cache and venv on different file-system; caveat: venv is brittle since it depends on the environment/container)
 link-mode = "copy"
-conflicts = [[{ extra = "trtllm" }, { extra = "vllm" }, { extra = "trt-onnx" }]]
+conflicts = [[{ extra = "vllm" }, { extra = "trt-onnx" }]]
 override-dependencies = [
+    "cachetools>=5.0.0",
     "torch; sys_platform == 'never'",
     "torchvision; sys_platform == 'never'",
     "triton; sys_platform == 'never'",
     "urllib3>1.27.0",
     "tiktoken>=0.9.0",                                                                   # because nemo-toolkit and megatron-bridge disagree on tiktoken, we need to pin it here,
     "fsspec[http]>=2023.1.0,<=2024.9.0",
-    "transformer-engine[pytorch]>=2.12.0a0,<2.14.0",
+    "transformer-engine[pytorch]>=2.14.0a0,<2.17.0",
     "open-clip-torch>=3.2.0",
     "megatron-energon[av-decode]>=6.0,<7.dev0",
-    "flashinfer-python>=0.3.0,<0.4.0",
+    "flashinfer-python==0.6.8.post1",
     "datasets>=3.3.0",
     "flash-linear-attention>=0.3.0,<0.4.dev0",
     "patchelf; sys_platform=='never'",
     "nvidia-resiliency-ext>=0.3.0,<0.6.0",
-    "transformer-engine[pytorch,core_cu13]>=2.12.0a0,<2.15.0; sys_platform != 'darwin'",
-    "transformer-engine-cu13>=2.12.0a0,<2.15.0; sys_platform != 'darwin'",
+    "transformer-engine[pytorch,core_cu13]>=2.14.0a0,<2.17.0; sys_platform != 'darwin'",
+    "transformer-engine-cu13>=2.14.0a0,<2.17.0; sys_platform != 'darwin'",
     "transformer-engine-cu12; sys_platform == 'never'",
     "mamba-ssm>=2.3.0,<2.4.0",
     "transformers>=5.0.0",

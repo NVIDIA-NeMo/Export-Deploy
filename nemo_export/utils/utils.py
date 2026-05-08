@@ -26,7 +26,7 @@ def prepare_directory_for_export(
     delete_existing_files: bool,
     subdir: Optional[str] = None,
 ) -> None:
-    """Prepares model_dir path for the TensorRTT-LLM / vLLM export.
+    """Prepares model_dir path for the vLLM export.
 
     Makes sure that the model_dir directory exists and is empty.
 

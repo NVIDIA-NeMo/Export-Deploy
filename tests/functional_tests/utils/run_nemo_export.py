@@ -28,7 +28,7 @@ LOGGER = logging.getLogger("NeMo")
 triton_supported = True
 try:
     from nemo_deploy import DeployPyTriton
-    from nemo_deploy.llm import NemoQueryLLM, NemoQueryvLLM
+    from nemo_deploy.llm import NemoQueryvLLM
 except Exception as e:
     LOGGER.warning(f"Cannot import Triton, deployment will not be available. {type(e).__name__}: {e}")
     triton_supported = False
@@ -45,14 +45,6 @@ except Exception as e:
         f"in-framework inference will not be available. Reason: {type(e).__name__}: {e}"
     )
     in_framework_supported = False
-
-trt_llm_supported = True
-try:
-    from nemo_export.tensorrt_llm import TensorRTLLM
-    from nemo_export.tensorrt_llm_hf import TensorRTLLMHF
-except Exception as e:
-    LOGGER.warning(f"Cannot import the TensorRTLLM exporter, it will not be available. {type(e).__name__}: {e}")
-    trt_llm_supported = False
 
 vllm_supported = True
 try:
@@ -84,7 +76,7 @@ class AccuracyResult:
 def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path, use_vllm: bool = False):
     # lambada dataset based accuracy test, which includes more than 5000 sentences.
     # Use generated last token with original text's last token for accuracy comparison.
-    # If the generated last token start with the original token, trtllm_correct make an increment.
+    # If the generated last token starts with the original token, correct is incremented.
     # It generates a CSV file for text comparison detail.
 
     correct_answers = 0
@@ -226,13 +218,7 @@ def run_inference(
     checkpoint_path,
     model_dir,
     use_vllm,
-    use_huggingface,
-    force_hf_export=False,
-    max_batch_size=8,
-    max_input_len=128,
     max_output_len=128,
-    max_num_tokens=None,
-    use_parallel_embedding=False,
     lora=False,
     lora_checkpoint=None,
     tp_size=1,
@@ -243,19 +229,12 @@ def run_inference(
     run_accuracy=False,
     debug=True,
     stop_words_list=None,
-    test_cpp_runtime=False,
     test_deployment=False,
     test_data_path=None,
     save_engine=False,
-    fp8_quantized=False,
-    fp8_kvcache=False,
-    trt_llm_export_kwargs=None,
     vllm_export_kwargs=None,
     vllm_model_format="megatron_bridge",
 ) -> Tuple[Optional[FunctionalResult], Optional[AccuracyResult]]:
-    if trt_llm_export_kwargs is None:
-        trt_llm_export_kwargs = {}
-
     if vllm_export_kwargs is None:
         vllm_export_kwargs = {}
 
@@ -282,101 +261,40 @@ def run_inference(
 
         _ = None
 
-        lora_ckpt_list = None
         lora_uids = None
-        use_lora_plugin = None
-        lora_target_modules = None
 
         if lora:
             if Path(lora_checkpoint).exists():
-                lora_ckpt_list = [lora_checkpoint]
                 lora_uids = ["0", "-1", "0"]
-                use_lora_plugin = "bfloat16"
-                lora_target_modules = ["attn_qkv"]
                 if debug:
                     print("---- LoRA enabled.")
             else:
                 print("---- LoRA could not be enabled and skipping the test.")
                 return (None, None)
 
-        if use_vllm:
-            exporter = vLLMExporter()
+        if not use_vllm:
+            raise UsageError("run_inference only supports vLLM (use_vllm=True).")
 
-            exporter.export(
-                model_path_id=checkpoint_path,
-                trust_remote_code=True,
-                tensor_parallel_size=tp_size,
-                model_format=vllm_model_format,
-                **vllm_export_kwargs,
-            )
+        exporter = vLLMExporter()
 
-            if top_p == 0.0:
-                top_p = 0.01
+        exporter.export(
+            model_path_id=checkpoint_path,
+            trust_remote_code=True,
+            tensor_parallel_size=tp_size,
+            model_format=vllm_model_format,
+            **vllm_export_kwargs,
+        )
 
-            output = exporter.forward(
-                input_texts=prompts,
-                max_tokens=max_output_len,
-                top_k=top_k,
-                top_p=top_p,
-                temperature=temperature,
-            )
-        else:
-            if use_huggingface:
-                exporter = TensorRTLLMHF(model_dir, lora_ckpt_list, load_model=False)
-                exporter.export_hf_model(
-                    hf_model_path=checkpoint_path,
-                    max_batch_size=max_batch_size,
-                    tensor_parallelism_size=tp_size,
-                    max_input_len=max_input_len,
-                    max_num_tokens=max_num_tokens,
-                    model_type=model_type,
-                )
-            else:
-                exporter = TensorRTLLM(model_dir, lora_ckpt_list, load_model=False)
-                if force_hf_export:
-                    # Use direct HF export path for NeMo checkpoint
-                    exporter.export_with_hf(
-                        nemo_checkpoint_path=checkpoint_path,
-                        model_type=model_type,
-                        tensor_parallelism_size=tp_size,
-                        max_input_len=max_input_len,
-                        max_output_len=max_output_len,
-                        max_batch_size=max_batch_size,
-                        max_num_tokens=max_num_tokens,
-                        max_seq_len=(max_input_len + max_output_len) if max_output_len else None,
-                        **trt_llm_export_kwargs,
-                    )
-                else:
-                    # Use standard export with automatic HF fallback
-                    exporter.export(
-                        nemo_checkpoint_path=checkpoint_path,
-                        model_type=model_type,
-                        tensor_parallelism_size=tp_size,
-                        pipeline_parallelism_size=pp_size,
-                        max_input_len=max_input_len,
-                        max_seq_len=(max_input_len + max_output_len),
-                        max_batch_size=max_batch_size,
-                        use_parallel_embedding=use_parallel_embedding,
-                        use_lora_plugin=use_lora_plugin,
-                        lora_target_modules=lora_target_modules,
-                        max_num_tokens=max_num_tokens,
-                        fp8_quantized=fp8_quantized,
-                        fp8_kvcache=fp8_kvcache,
-                        **trt_llm_export_kwargs,
-                    )
+        if top_p == 0.0:
+            top_p = 0.01
 
-            if use_vllm and top_p == 0.0:
-                top_p = 0.01
-
-            output = exporter.forward(
-                input_texts=prompts,
-                max_output_len=max_output_len,
-                top_k=top_k,
-                top_p=top_p,
-                temperature=temperature,
-                lora_uids=lora_uids,
-                stop_words_list=stop_words_list,
-            )
+        output = exporter.forward(
+            input_texts=prompts,
+            max_tokens=max_output_len,
+            top_k=top_k,
+            top_p=top_p,
+            temperature=temperature,
+        )
 
         # Unwrap the generator if needed
         output = list(output)
@@ -390,23 +308,6 @@ def run_inference(
                 LOGGER.warning("Model outputs don't match the expected result.")
                 functional_result.regular_pass = False
 
-        output_cpp = ""
-        if test_cpp_runtime and not use_lora_plugin and not use_vllm:
-            # This may cause OOM for large models as it creates 2nd instance of a model
-            exporter_cpp = TensorRTLLM(
-                model_dir,
-                load_model=True,
-                use_python_runtime=False,
-            )
-
-            output_cpp = exporter_cpp.forward(
-                input_texts=prompts,
-                max_output_len=max_output_len,
-                top_k=top_k,
-                top_p=top_p,
-                temperature=temperature,
-            )
-
         nq = None
         nm = None
         output_deployed = ""
@@ -419,39 +320,18 @@ def run_inference(
             nm.deploy()
             nm.run()
 
-            if use_vllm:
-                nq = NemoQueryvLLM(url="localhost:8000", model_name=model_name)
-                output_deployed = nq.query_llm(
-                    prompts=prompts,
-                    max_tokens=max_output_len,
-                    min_tokens=1,
-                    top_k=1,
-                    top_p=0.1,
-                    temperature=1.0,
-                    n_log_probs=2,
-                    n_prompt_log_probs=3,
-                    seed=1,
-                )
-            else:
-                nq = NemoQueryLLM(url="localhost:8000", model_name=model_name)
-                output_deployed = nq.query_llm(
-                    prompts=prompts,
-                    max_output_len=max_output_len,
-                    top_k=1,
-                    top_p=0.0,
-                    temperature=1.0,
-                    lora_uids=lora_uids,
-                )
-
-                # Unwrap the generator if needed
-                output_deployed = list(output_deployed)
-
-                # Check deployed functional correctness
-                if args.functional_test and not use_vllm:
-                    functional_result.deployed_pass = True
-                    if not check_model_outputs(output_deployed, expected_outputs):
-                        LOGGER.warning("Deployed model outputs don't match the expected result.")
-                        functional_result.deployed_pass = False
+            nq = NemoQueryvLLM(url="localhost:8000", model_name=model_name)
+            output_deployed = nq.query_llm(
+                prompts=prompts,
+                max_tokens=max_output_len,
+                min_tokens=1,
+                top_k=1,
+                top_p=0.1,
+                temperature=1.0,
+                n_log_probs=2,
+                n_prompt_log_probs=3,
+                seed=1,
+            )
 
         if debug or functional_result.regular_pass == False or functional_result.deployed_pass == False:
             print("")
@@ -462,9 +342,6 @@ def run_inference(
             print("--- Output: ", output)
             print("")
             print("--- Output deployed: ", output_deployed)
-            print("")
-            print("")
-            print("--- Output with C++ runtime: ", output_cpp)
             print("")
 
         accuracy_result = None
@@ -654,11 +531,6 @@ def get_args():
         default=0.5,
     )
     parser.add_argument(
-        "--test_cpp_runtime",
-        type=str,
-        default="False",
-    )
-    parser.add_argument(
         "--test_deployment",
         type=str,
         default="False",
@@ -689,17 +561,6 @@ def get_args():
         default="False",
     )
     parser.add_argument(
-        "--use_huggingface",
-        type=str,
-        default="False",
-    )
-    parser.add_argument(
-        "--force_hf_export",
-        type=str,
-        default="False",
-        help="Force using HF export path (export_with_hf) for NeMo checkpoints",
-    )
-    parser.add_argument(
         "--enable_flash_decode",
         type=str,
         default="False",
@@ -715,26 +576,6 @@ def get_args():
         default=0.95,  # 0.95 is needed to run Mixtral-8x7B on 2x48GB GPUs
         type=float,
         help="GPU memory utilization percentage for vLLM.",
-    )
-    parser.add_argument(
-        "-fp8",
-        "--export_fp8_quantized",
-        default="auto",
-        type=str,
-        help="Enables exporting to a FP8-quantized TRT LLM checkpoint",
-    )
-    parser.add_argument(
-        "-kv_fp8",
-        "--use_fp8_kv_cache",
-        default="auto",
-        type=str,
-        help="Enables exporting with FP8-quantizatized KV-cache",
-    )
-    parser.add_argument(
-        "--trt_llm_export_kwargs",
-        default={},
-        type=json.loads,
-        help="Extra keyword arguments passed to TensorRTLLM.export",
     )
     parser.add_argument(
         "--vllm_export_kwargs",
@@ -767,28 +608,19 @@ def get_args():
         raise UsageError(f"Invalid boolean value for argument --{name}: '{s}'")
 
     args.model_type = None if str(args.model_type).lower() == "none" else args.model_type
-    args.test_cpp_runtime = str_to_bool("test_cpp_runtime", args.test_cpp_runtime)
     args.test_deployment = str_to_bool("test_deployment", args.test_deployment)
     args.functional_test = str_to_bool("functional_test", args.functional_test)
     args.save_engine = str_to_bool("save_engine", args.save_engine)
     args.run_accuracy = str_to_bool("run_accuracy", args.run_accuracy)
     args.use_vllm = str_to_bool("use_vllm", args.use_vllm)
-    args.use_huggingface = str_to_bool("use_huggingface", args.use_huggingface)
-    args.force_hf_export = str_to_bool("force_hf_export", args.force_hf_export)
     args.enable_flash_decode = str_to_bool("enable_flash_decode", args.enable_flash_decode)
     args.lora = str_to_bool("lora", args.lora)
-    args.use_parallel_embedding = str_to_bool("use_parallel_embedding", args.use_parallel_embedding)
     args.in_framework = str_to_bool("in_framework", args.in_framework)
-    args.export_fp8_quantized = str_to_bool("export_fp8_quantized", args.export_fp8_quantized, optional=True)
-    args.use_fp8_kv_cache = str_to_bool("use_fp8_kv_cache", args.use_fp8_kv_cache, optional=True)
 
     return args
 
 
 def run_inference_tests(args):
-    if not args.use_vllm and not args.in_framework and not trt_llm_supported:
-        raise UsageError("TensorRT-LLM engine is not supported in this environment.")
-
     if args.use_vllm and not vllm_supported:
         raise UsageError("vLLM engine is not supported in this environment.")
 
@@ -800,12 +632,6 @@ def run_inference_tests(args):
 
     if args.run_accuracy and args.test_data_path is None:
         raise UsageError("Accuracy testing requires the --test_data_path argument.")
-
-    if args.force_hf_export and (args.use_vllm or args.use_huggingface):
-        raise UsageError(
-            "--force_hf_export cannot be used with --use_vllm or --use_huggingface. "
-            "It is only for forcing HF export path for NeMo checkpoints."
-        )
 
     if args.max_tps is None:
         args.max_tps = args.min_tps
@@ -853,15 +679,9 @@ def run_inference_tests(args):
                 checkpoint_path=args.checkpoint_dir,
                 model_dir=args.model_dir,
                 use_vllm=args.use_vllm,
-                use_huggingface=args.use_huggingface,
-                force_hf_export=args.force_hf_export,
                 tp_size=tps,
                 pp_size=args.pps,
-                max_batch_size=args.max_batch_size,
-                max_input_len=args.max_input_len,
                 max_output_len=args.max_output_len,
-                max_num_tokens=args.max_num_tokens,
-                use_parallel_embedding=args.use_parallel_embedding,
                 lora=args.lora,
                 lora_checkpoint=args.lora_checkpoint,
                 top_k=args.top_k,
@@ -870,12 +690,8 @@ def run_inference_tests(args):
                 run_accuracy=args.run_accuracy,
                 debug=args.debug,
                 test_deployment=args.test_deployment,
-                test_cpp_runtime=args.test_cpp_runtime,
                 test_data_path=args.test_data_path,
                 save_engine=args.save_engine,
-                fp8_quantized=args.export_fp8_quantized,
-                fp8_kvcache=args.use_fp8_kv_cache,
-                trt_llm_export_kwargs=args.trt_llm_export_kwargs,
                 vllm_export_kwargs=args.vllm_export_kwargs,
                 vllm_model_format=args.vllm_model_format,
             )
