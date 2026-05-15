@@ -63,9 +63,12 @@ class TestDeployRayVLM:
             self.deploy_proc = None
 
     def test_deploy_ray(self):
-        vlm_checkpoint_path = "/home/TestData/megatron_bridge/checkpoints/qwen25-vl-3b"
-
         try:
+            # Checkpoint created via AutoBridge.import_ckpt("Qwen/Qwen2.5-VL-3B-Instruct", "/path/to/checkpoint")
+            vlm_checkpoint_path = (
+                "/home/TestData/export-deploy/checkpoints/mbridge/hf_qwen25_vl_3b_mbridge/iter_0000000"
+            )
+
             # Run Ray deployment for Megatron multimodal (VLM) model
             self.deploy_proc = subprocess.Popen(
                 [
