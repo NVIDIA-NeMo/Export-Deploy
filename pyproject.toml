@@ -69,7 +69,6 @@ dependencies = [
     "nvidia-pytriton ; platform_system != 'Darwin' ",
     "flashinfer-python>=0.2.5 ; platform_system != 'Darwin'",
     "Pillow ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
-    "decord ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "pyparsing>2.0.2",
     "sentencepiece",
     "tiktoken",
@@ -161,6 +160,7 @@ override-dependencies = [
     "transformers>=5.0.0",
     "protobuf~=6.33.5",
     "opencv-python-headless; sys_platform == 'never'",
+    "decord; sys_platform == 'never'",
     "cryptography>=43.0.0,<47",
     "onnx<1.20.0",
 ]
