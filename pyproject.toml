@@ -163,6 +163,7 @@ override-dependencies = [
     "protobuf~=6.33.5",
     "opencv-python-headless; sys_platform == 'never'",
     "decord; sys_platform == 'never'",
+    "av; sys_platform == 'never'",
     "cryptography>=43.0.0,<47",
     "onnx<1.20.0",
 ]
