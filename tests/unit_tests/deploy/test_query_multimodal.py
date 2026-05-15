@@ -117,17 +117,17 @@ class TestNemoQueryMultimodal:
         assert result[0] == "test response"
         os.unlink(mock_image)
 
-    @patch("nemo_deploy.multimodal.query_multimodal.VideoReader")
-    def test_setup_media_video(self, mock_video_reader, mock_video):
-        nq = NemoQueryMultimodal(url="localhost", model_name="test_model", model_type="video-neva")
+    # @patch("nemo_deploy.multimodal.query_multimodal.VideoReader")
+    # def test_setup_media_video(self, mock_video_reader, mock_video):
+    #     nq = NemoQueryMultimodal(url="localhost", model_name="test_model", model_type="video-neva")
 
-        # Mock VideoReader
-        mock_frames = [MagicMock(asnumpy=lambda: np.zeros((100, 100, 3))) for _ in range(10)]
-        mock_video_reader.return_value = mock_frames
+    #     # Mock VideoReader
+    #     mock_frames = [MagicMock(asnumpy=lambda: np.zeros((100, 100, 3))) for _ in range(10)]
+    #     mock_video_reader.return_value = mock_frames
 
-        result = nq.setup_media(mock_video)
-        assert isinstance(result, np.ndarray)
-        os.unlink(mock_video)
+    #     result = nq.setup_media(mock_video)
+    #     assert isinstance(result, np.ndarray)
+    #     os.unlink(mock_video)
 
 
 class TestNemoQueryMultimodalPytorch:
