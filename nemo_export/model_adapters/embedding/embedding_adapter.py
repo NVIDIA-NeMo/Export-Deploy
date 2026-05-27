@@ -20,6 +20,8 @@ import torch
 import torch.nn.functional as F
 from transformers import AutoModel, AutoTokenizer
 
+from nemo_export.model_adapters.util import replace_onnx_safe_bidirectional_mask
+
 
 class LlamaBidirectionalHFAdapter(torch.nn.Module):
     """
@@ -251,6 +253,8 @@ def get_llama_bidirectional_hf_model(
     ):
         pooling_module = model.latent_attention_model
         model = model.embedding_model
+
+    replace_onnx_safe_bidirectional_mask(model)
 
     adapted_model = LlamaBidirectionalHFAdapter(model=model, normalize=normalize, pooling_module=pooling_module)
     return adapted_model, tokenizer

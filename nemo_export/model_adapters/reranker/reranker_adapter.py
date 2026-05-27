@@ -18,6 +18,8 @@ import os
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
+from nemo_export.model_adapters.util import replace_onnx_safe_bidirectional_mask
+
 
 class SequenceClassificationModelAdapterWithoutTypeIds(torch.nn.Module):
     """Adapter for sequence classification models that don't use token type IDs.
@@ -137,6 +139,8 @@ def get_llama_reranker_hf_model(
         # reset config to handle case where config is mutated after init
         # TODO: remove when we're no longer using Llama 3.1 model with `_attn_implementation` set in __init__ method.
         model.config._attn_implementation = attn_implementation
+
+    replace_onnx_safe_bidirectional_mask(model)
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_name_or_path,
