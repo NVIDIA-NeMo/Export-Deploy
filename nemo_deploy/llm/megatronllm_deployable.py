@@ -233,6 +233,14 @@ class MegatronLLMDeployable(ITritonDeployable):
                 # Some tokenizers might not have bos_token, use empty string as fallback
                 bos_token = ""
 
+            # Try to get eos_token - many chat templates reference it
+            eos_token = None
+            try:
+                eos_token = self.mcore_tokenizer._tokenizer.eos_token
+            except AttributeError:
+                # Some tokenizers might not have eos_token, use empty string as fallback
+                eos_token = ""
+
             # Check if chat_template is None or empty
             if tokenizer_chat_template is None:
                 raise ValueError(
@@ -251,6 +259,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         rendered_output = template.render(
             messages=messages,
             bos_token=bos_token,
+            eos_token=eos_token,
             add_generation_prompt=add_generation_prompt,
         )
 
