@@ -193,6 +193,7 @@ def get_llama_bidirectional_hf_model(
     pooling_mode: Optional[Literal["avg", "cls", "last"]] = None,
     torch_dtype: Optional[Union[torch.dtype, str]] = None,
     trust_remote_code: bool = False,
+    attn_implementation: Optional[str] = None,
 ):
     """
     Factory function to create a LlamaBidirectionalHFAdapter with proper configuration.
@@ -213,6 +214,8 @@ def get_llama_bidirectional_hf_model(
                      - "cls" becomes "cls__left" for left-padding tokenizers
         torch_dtype: The torch data type to use for the model. If None, uses model default.
         trust_remote_code: Whether to trust remote code when loading the model.
+        attn_implementation: Attention implementation to use. Use "eager" for
+                           ONNX export compatibility with bidirectional Llama models.
 
     Returns:
         tuple: A tuple containing:
@@ -236,9 +239,18 @@ def get_llama_bidirectional_hf_model(
         pooling_mode = "cls__left"  # type: ignore
 
     # load the model
-    model = AutoModel.from_pretrained(
-        model_name_or_path, torch_dtype=torch_dtype, trust_remote_code=trust_remote_code
-    ).eval()
+    model_kwargs = {
+        "torch_dtype": torch_dtype,
+        "trust_remote_code": trust_remote_code,
+    }
+    if attn_implementation is not None:
+        model_kwargs["attn_implementation"] = attn_implementation
+
+    model = AutoModel.from_pretrained(model_name_or_path, **model_kwargs).eval()
+
+    if attn_implementation:
+        # Reset config in case remote-code init mutates the selected attention implementation.
+        model.config._attn_implementation = attn_implementation
 
     # configure pooling
     pooling_module = Pooling(pooling_mode=pooling_mode)
@@ -251,6 +263,8 @@ def get_llama_bidirectional_hf_model(
     ):
         pooling_module = model.latent_attention_model
         model = model.embedding_model
+        if attn_implementation:
+            model.config._attn_implementation = attn_implementation
 
     adapted_model = LlamaBidirectionalHFAdapter(model=model, normalize=normalize, pooling_module=pooling_module)
     return adapted_model, tokenizer

@@ -343,6 +343,33 @@ class TestGetLlamaBidirectionalHFModel:
 
     @patch("nemo_export.model_adapters.embedding.embedding_adapter.AutoTokenizer")
     @patch("nemo_export.model_adapters.embedding.embedding_adapter.AutoModel")
+    def test_get_model_with_attn_implementation(self, mock_auto_model, mock_auto_tokenizer):
+        """Test model loading with a specific attention implementation."""
+        mock_tokenizer = Mock()
+        mock_tokenizer.padding_side = "right"
+        mock_auto_tokenizer.from_pretrained.return_value = mock_tokenizer
+
+        mock_model = Mock()
+        mock_config = Mock()
+        mock_model.config = mock_config
+        mock_model.eval.return_value = mock_model
+        mock_auto_model.from_pretrained.return_value = mock_model
+
+        adapted_model, tokenizer = get_llama_bidirectional_hf_model(
+            model_name_or_path="test/model",
+            normalize=True,
+            attn_implementation="eager",
+        )
+
+        mock_auto_model.from_pretrained.assert_called_once_with(
+            "test/model", torch_dtype=None, trust_remote_code=False, attn_implementation="eager"
+        )
+        assert mock_config._attn_implementation == "eager"
+        assert isinstance(adapted_model, LlamaBidirectionalHFAdapter)
+        assert tokenizer == mock_tokenizer
+
+    @patch("nemo_export.model_adapters.embedding.embedding_adapter.AutoTokenizer")
+    @patch("nemo_export.model_adapters.embedding.embedding_adapter.AutoModel")
     def test_get_model_pooling_mode_adjustment_last(self, mock_auto_model, mock_auto_tokenizer):
         """Test pooling mode adjustment for 'last' with right padding."""
         mock_tokenizer = Mock()
