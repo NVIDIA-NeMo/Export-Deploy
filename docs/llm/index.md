@@ -17,9 +17,7 @@ The library supports several checkpoint formats, each with specific capabilities
 
 **Supported Export and Deployment Paths:**
 - Model deployment with Triton and Ray Serve
-
-**Export and Deployment Paths Coming Soon:**
-- vLLM export and deployment with Triton and Ray Serve
+- vLLM export and deployment with Triton
 
 
 ### AutoModel Model/Checkpoints

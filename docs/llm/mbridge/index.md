@@ -5,7 +5,7 @@ The [Megatron-Bridge](https://github.com/NVIDIA-NeMo/Megatron-Bridge) checkpoint
 With the Export-Deploy library, you can seamlessly export and deploy Megatron-Bridge checkpoints across a variety of production environments. The following export and deployment paths are supported for Megatron-Bridge models:
 
 - **Model deployment with Triton and Ray Serve:** Directly serve Megatron-Bridge models using NVIDIA Triton Inference Server or Ray Serve for scalable inference.
-- **vLLM export and deployment with Triton:** Export Megatron-Bridge models to the vLLM format for efficient serving with Triton. Support for this feature is coming soon.
+- **vLLM export and deployment with Triton:** Export Megatron-Bridge models to the vLLM format for efficient serving with Triton.
 
 
 ```{toctree}
