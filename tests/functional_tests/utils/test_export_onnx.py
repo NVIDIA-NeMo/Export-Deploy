@@ -55,6 +55,13 @@ def get_args():
     )
     parser.add_argument("--onnx_opset", type=int, default=17, help="ONNX version to use for export.")
     parser.add_argument(
+        "--attn_implementation",
+        type=str,
+        default="eager",
+        choices=["eager", "sdpa", "flash_attention_2"],
+        help="Attention implementation to use while tracing. Use eager for ONNX export.",
+    )
+    parser.add_argument(
         "--trt_model_path",
         type=str,
         default="/tmp/trt_model/",
@@ -100,6 +107,7 @@ def export_onnx_trt(args):
         normalize=args.normalize,
         pooling_mode=args.pooling_strategy,
         trust_remote_code=True,
+        attn_implementation=args.attn_implementation,
     )
 
     input_names = [
