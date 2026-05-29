@@ -1,6 +1,6 @@
 # Export and Deploy Large Language Models
 
-The Export-Deploy library provides comprehensive tools and APIs for exporting and deploying Large Language Models (LLMs) to production environments. This library supports multiple checkpoint formats and offers various deployment paths including TensorRT-LLM and vLLM deployment through NVIDIA Triton Inference Server and Ray Serve.
+The Export-Deploy library provides comprehensive tools and APIs for exporting and deploying Large Language Models (LLMs) to production environments. This library supports multiple checkpoint formats and offers various deployment paths including vLLM deployment through NVIDIA Triton Inference Server and Ray Serve.
 
 ## Overview
 
@@ -19,7 +19,6 @@ The library supports several checkpoint formats, each with specific capabilities
 - Model deployment with Triton and Ray Serve
 
 **Export and Deployment Paths Coming Soon:**
-- TensorRT-LLM export and deployment with Triton and Ray Serve
 - vLLM export and deployment with Triton and Ray Serve
 
 
@@ -29,7 +28,6 @@ The library supports several checkpoint formats, each with specific capabilities
 
 **Supported Export and Deployment Paths:**
 - Model deployment with Triton and Ray Serve
-- TensorRT-LLM export and deployment with Triton and Ray Serve
 - vLLM export and deployment with Triton and Ray Serve
 
 

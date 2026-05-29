@@ -36,7 +36,6 @@ or use `pip install --extra-index-url https://pypi.nvidia.com ".[cuda12x]"` if i
 )
 
 MISSING_TRITON_MSG = "pytriton is not available. Please install it with `pip install nvidia-pytriton`."
-MISSING_TENSORRT_LLM_MSG = "tensorrt_llm is not available. Please install it with `pip install tensorrt-llm`."
 MISSING_TENSORRT_MSG = "tensorrt is not available. Please install it with `pip install nvidia-tensorrt`."
 MISSING_NEMO_MSG = "nemo is not available. Please install it with `pip install nemo`."
 MISSING_MBRIDGE_MSG = (
