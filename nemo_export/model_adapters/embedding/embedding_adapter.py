@@ -20,6 +20,8 @@ import torch
 import torch.nn.functional as F
 from transformers import AutoModel, AutoTokenizer
 
+from nemo_export.model_adapters.masking import patch_bidirectional_mask_for_export
+
 
 class LlamaBidirectionalHFAdapter(torch.nn.Module):
     """
@@ -265,6 +267,10 @@ def get_llama_bidirectional_hf_model(
         model = model.embedding_model
         if attn_implementation:
             model.config._attn_implementation = attn_implementation
+
+    if attn_implementation:
+        # Replace the transformers>=5.0 bidirectional mask builder, which is not ONNX-traceable.
+        patch_bidirectional_mask_for_export(model)
 
     adapted_model = LlamaBidirectionalHFAdapter(model=model, normalize=normalize, pooling_module=pooling_module)
     return adapted_model, tokenizer

@@ -269,9 +269,10 @@ class TestGetLlamaRerankerHfModel:
         # Verify tokenizer loading with trust_remote_code
         mock_auto_tokenizer.from_pretrained.assert_called_once_with("test-model", trust_remote_code=True)
 
+    @patch("nemo_export.model_adapters.reranker.reranker_adapter.patch_bidirectional_mask_for_export")
     @patch("nemo_export.model_adapters.reranker.reranker_adapter.AutoTokenizer")
     @patch("nemo_export.model_adapters.reranker.reranker_adapter.AutoModelForSequenceClassification")
-    def test_get_model_with_attn_implementation(self, mock_auto_model, mock_auto_tokenizer):
+    def test_get_model_with_attn_implementation(self, mock_auto_model, mock_auto_tokenizer, mock_patch_mask):
         """Test loading a model with specific attention implementation."""
         # Setup mocks
         mock_model = Mock()
@@ -295,6 +296,28 @@ class TestGetLlamaRerankerHfModel:
 
         # Verify config is reset after init
         assert mock_config._attn_implementation == attn_impl
+        # The bidirectional mask builder is patched for ONNX export compatibility.
+        mock_patch_mask.assert_called_once_with(mock_model)
+
+    @patch("nemo_export.model_adapters.reranker.reranker_adapter.patch_bidirectional_mask_for_export")
+    @patch("nemo_export.model_adapters.reranker.reranker_adapter.AutoTokenizer")
+    @patch("nemo_export.model_adapters.reranker.reranker_adapter.AutoModelForSequenceClassification")
+    def test_get_model_without_attn_implementation_skips_mask_patch(
+        self, mock_auto_model, mock_auto_tokenizer, mock_patch_mask
+    ):
+        """The mask builder must not be patched when no attention implementation is requested."""
+        mock_model = Mock()
+        mock_model.config = Mock()
+        mock_model.eval.return_value = mock_model
+        mock_auto_model.from_pretrained.return_value = mock_model
+
+        mock_tokenizer = Mock()
+        mock_tokenizer.model_input_names = ["input_ids", "attention_mask"]
+        mock_auto_tokenizer.from_pretrained.return_value = mock_tokenizer
+
+        get_llama_reranker_hf_model("test-model")
+
+        mock_patch_mask.assert_not_called()
 
     @patch("nemo_export.model_adapters.reranker.reranker_adapter.AutoTokenizer")
     @patch("nemo_export.model_adapters.reranker.reranker_adapter.AutoModelForSequenceClassification")
@@ -325,9 +348,10 @@ class TestGetLlamaRerankerHfModel:
         # Verify tokenizer loading
         mock_auto_tokenizer.from_pretrained.assert_called_once_with(model_path, trust_remote_code=False)
 
+    @patch("nemo_export.model_adapters.reranker.reranker_adapter.patch_bidirectional_mask_for_export")
     @patch("nemo_export.model_adapters.reranker.reranker_adapter.AutoTokenizer")
     @patch("nemo_export.model_adapters.reranker.reranker_adapter.AutoModelForSequenceClassification")
-    def test_get_model_all_parameters(self, mock_auto_model, mock_auto_tokenizer):
+    def test_get_model_all_parameters(self, mock_auto_model, mock_auto_tokenizer, mock_patch_mask):
         """Test loading a model with all parameters specified."""
         # Setup mocks
         mock_model = Mock()
