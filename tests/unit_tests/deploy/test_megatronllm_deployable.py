@@ -467,6 +467,52 @@ def test_apply_chat_template(deployable):
 
 
 @pytest.mark.run_only_on("GPU")
+def test_apply_chat_template_passes_eos_token(deployable):
+    """Test that eos_token is forwarded to template.render."""
+    deployable.mcore_tokenizer._tokenizer.eos_token = "<custom_eos>"
+    messages = [{"role": "user", "content": "Hello"}]
+
+    template_mock = MagicMock()
+    template_mock.render.return_value = "rendered"
+
+    with patch("nemo_deploy.llm.megatronllm_deployable.Template", return_value=template_mock):
+        deployable.apply_chat_template(messages)
+
+    call_kwargs = template_mock.render.call_args[1]
+    assert call_kwargs["eos_token"] == "<custom_eos>"
+    assert call_kwargs["bos_token"] == "<bos>"
+
+
+@pytest.mark.run_only_on("GPU")
+def test_apply_chat_template_eos_token_fallback(deployable):
+    """Test eos_token falls back to empty string when tokenizer lacks the attribute."""
+    del deployable.mcore_tokenizer._tokenizer.eos_token
+    messages = [{"role": "user", "content": "Hello"}]
+
+    template_mock = MagicMock()
+    template_mock.render.return_value = "rendered"
+
+    with patch("nemo_deploy.llm.megatronllm_deployable.Template", return_value=template_mock):
+        deployable.apply_chat_template(messages)
+
+    call_kwargs = template_mock.render.call_args[1]
+    assert call_kwargs["eos_token"] == ""
+
+
+@pytest.mark.run_only_on("GPU")
+def test_apply_chat_template_renders_template_using_eos_token(deployable):
+    """Regression test: chat templates that reference eos_token must render without UndefinedError."""
+    deployable.mcore_tokenizer._tokenizer.chat_template = (
+        "{{ bos_token }}{% for m in messages %}{{ m['content'] }}{{ eos_token }}{% endfor %}"
+    )
+    messages = [{"role": "user", "content": "Hello"}]
+
+    rendered = deployable.apply_chat_template(messages)
+
+    assert rendered == "<bos>Hello<eos>"
+
+
+@pytest.mark.run_only_on("GPU")
 def test_remove_eos_token(deployable):
     """Test EOS token removal covering all code paths."""
     # Test normal case - eos_token accessible via self.mcore_tokenizer._tokenizer.eos_token
