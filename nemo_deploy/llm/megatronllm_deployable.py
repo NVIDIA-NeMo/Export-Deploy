@@ -217,6 +217,33 @@ class MegatronLLMDeployable(ITritonDeployable):
             else:
                 return
 
+    def _get_special_tokens_for_template(self):
+        """Collect special tokens to pass to the chat template.
+
+        Mirrors HuggingFace's ``apply_chat_template`` which unpacks
+        ``tokenizer.special_tokens_map`` into the Jinja kwargs, so templates that
+        reference any of ``bos_token``/``eos_token``/``pad_token``/``unk_token``/
+        ``sep_token``/``cls_token``/``mask_token``/``additional_special_tokens``
+        render correctly. ``bos_token`` and ``eos_token`` always fall back to
+        an empty string for non-HF tokenizers that don't expose them.
+        """
+        underlying = self.mcore_tokenizer._tokenizer
+        tokens = {}
+
+        sp_map = getattr(underlying, "special_tokens_map", None)
+        if isinstance(sp_map, dict):
+            tokens.update(sp_map)
+
+        for attr in ("bos_token", "eos_token"):
+            if tokens.get(attr) is None:
+                try:
+                    value = getattr(underlying, attr)
+                except AttributeError:
+                    value = None
+                tokens[attr] = value if value is not None else ""
+
+        return tokens
+
     def apply_chat_template(self, messages, add_generation_prompt=True):
         """Load the chat template.
 
@@ -224,22 +251,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         """
         try:
             tokenizer_chat_template = self.mcore_tokenizer._tokenizer.chat_template
-
-            # Try to get bos_token
-            bos_token = None
-            try:
-                bos_token = self.mcore_tokenizer._tokenizer.bos_token
-            except AttributeError:
-                # Some tokenizers might not have bos_token, use empty string as fallback
-                bos_token = ""
-
-            # Try to get eos_token - many chat templates reference it
-            eos_token = None
-            try:
-                eos_token = self.mcore_tokenizer._tokenizer.eos_token
-            except AttributeError:
-                # Some tokenizers might not have eos_token, use empty string as fallback
-                eos_token = ""
+            special_tokens = self._get_special_tokens_for_template()
 
             # Check if chat_template is None or empty
             if tokenizer_chat_template is None:
@@ -258,9 +270,8 @@ class MegatronLLMDeployable(ITritonDeployable):
         # Render the template with the provided messages
         rendered_output = template.render(
             messages=messages,
-            bos_token=bos_token,
-            eos_token=eos_token,
             add_generation_prompt=add_generation_prompt,
+            **special_tokens,
         )
 
         return rendered_output

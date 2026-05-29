@@ -33,6 +33,9 @@ def mock_engine_and_tokenizer():
     mock_tokenizer._tokenizer.chat_template = "{{messages}}"
     mock_tokenizer._tokenizer.bos_token = "<bos>"
     mock_tokenizer._tokenizer.eos_token = "<eos>"
+    # Real HF tokenizers expose special_tokens_map as a dict; mirror that here
+    # so tests exercise the primary code path in _get_special_tokens_for_template.
+    mock_tokenizer._tokenizer.special_tokens_map = {"bos_token": "<bos>", "eos_token": "<eos>"}
 
     return mock_engine, mock_model, mock_tokenizer
 
@@ -469,7 +472,10 @@ def test_apply_chat_template(deployable):
 @pytest.mark.run_only_on("GPU")
 def test_apply_chat_template_passes_eos_token(deployable):
     """Test that eos_token is forwarded to template.render."""
-    deployable.mcore_tokenizer._tokenizer.eos_token = "<custom_eos>"
+    deployable.mcore_tokenizer._tokenizer.special_tokens_map = {
+        "bos_token": "<bos>",
+        "eos_token": "<custom_eos>",
+    }
     messages = [{"role": "user", "content": "Hello"}]
 
     template_mock = MagicMock()
@@ -486,6 +492,8 @@ def test_apply_chat_template_passes_eos_token(deployable):
 @pytest.mark.run_only_on("GPU")
 def test_apply_chat_template_eos_token_fallback(deployable):
     """Test eos_token falls back to empty string when tokenizer lacks the attribute."""
+    # Neither special_tokens_map nor direct attribute provides eos_token
+    deployable.mcore_tokenizer._tokenizer.special_tokens_map = {"bos_token": "<bos>"}
     del deployable.mcore_tokenizer._tokenizer.eos_token
     messages = [{"role": "user", "content": "Hello"}]
 
@@ -510,6 +518,67 @@ def test_apply_chat_template_renders_template_using_eos_token(deployable):
     rendered = deployable.apply_chat_template(messages)
 
     assert rendered == "<bos>Hello<eos>"
+
+
+@pytest.mark.run_only_on("GPU")
+def test_apply_chat_template_passes_all_special_tokens(deployable):
+    """Test that every entry of special_tokens_map is forwarded to template.render."""
+    deployable.mcore_tokenizer._tokenizer.special_tokens_map = {
+        "bos_token": "<bos>",
+        "eos_token": "<eos>",
+        "pad_token": "<pad>",
+        "cls_token": "<cls>",
+        "additional_special_tokens": ["<extra_0>"],
+    }
+    messages = [{"role": "user", "content": "Hi"}]
+
+    template_mock = MagicMock()
+    template_mock.render.return_value = "rendered"
+
+    with patch("nemo_deploy.llm.megatronllm_deployable.Template", return_value=template_mock):
+        deployable.apply_chat_template(messages)
+
+    call_kwargs = template_mock.render.call_args[1]
+    assert call_kwargs["bos_token"] == "<bos>"
+    assert call_kwargs["eos_token"] == "<eos>"
+    assert call_kwargs["pad_token"] == "<pad>"
+    assert call_kwargs["cls_token"] == "<cls>"
+    assert call_kwargs["additional_special_tokens"] == ["<extra_0>"]
+
+
+@pytest.mark.run_only_on("GPU")
+def test_apply_chat_template_renders_with_pad_token(deployable):
+    """Regression test: chat templates referencing pad_token (or any special token) must render."""
+    deployable.mcore_tokenizer._tokenizer.special_tokens_map = {
+        "bos_token": "<bos>",
+        "eos_token": "<eos>",
+        "pad_token": "<pad>",
+    }
+    deployable.mcore_tokenizer._tokenizer.chat_template = "{{ bos_token }}{{ messages[0]['content'] }}{{ pad_token }}"
+    messages = [{"role": "user", "content": "Hi"}]
+
+    rendered = deployable.apply_chat_template(messages)
+
+    assert rendered == "<bos>Hi<pad>"
+
+
+@pytest.mark.run_only_on("GPU")
+def test_apply_chat_template_no_special_tokens_map(deployable):
+    """Tokenizers without special_tokens_map (non-HF) still get bos/eos fallbacks."""
+    del deployable.mcore_tokenizer._tokenizer.special_tokens_map
+    del deployable.mcore_tokenizer._tokenizer.bos_token
+    del deployable.mcore_tokenizer._tokenizer.eos_token
+    messages = [{"role": "user", "content": "Hi"}]
+
+    template_mock = MagicMock()
+    template_mock.render.return_value = "rendered"
+
+    with patch("nemo_deploy.llm.megatronllm_deployable.Template", return_value=template_mock):
+        deployable.apply_chat_template(messages)
+
+    call_kwargs = template_mock.render.call_args[1]
+    assert call_kwargs["bos_token"] == ""
+    assert call_kwargs["eos_token"] == ""
 
 
 @pytest.mark.run_only_on("GPU")
