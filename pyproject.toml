@@ -115,6 +115,7 @@ nvidia-resiliency-ext = { git = "https://github.com/NVIDIA/nvidia-resiliency-ext
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
+managed = true
 # Currently, TE must be built with no build-isolation b/c it requires torch
 no-build-isolation-package = [
     "transformer-engine",
