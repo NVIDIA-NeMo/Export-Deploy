@@ -27,14 +27,8 @@ from megatron.core.dist_checkpointing.serialization import (
     get_default_load_sharded_strategy,
 )
 from megatron.core.dist_checkpointing.validation import StrictHandling
-from megatron.core.inference.contexts.static_context import StaticInferenceContext
-from megatron.core.inference.engines.mcore_engine import MCoreEngine
-from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
-    GPTInferenceWrapper,
-)
-from megatron.core.inference.text_generation_controllers.text_generation_controller import (
-    TextGenerationController,
-)
+from megatron.core.inference.apis import MegatronLLM
+from megatron.core.inference.config import InferenceConfig
 from megatron.core.transformer.enums import AttnBackend
 from megatron.core.transformer.module import MegatronModule
 from megatron.core.transformer.transformer_config import MLATransformerConfig
@@ -390,27 +384,24 @@ def setup_model_and_tokenizer_for_inference(
 
 
 class MCoreEngineWithCleanup:
-    """Wrapper around MCoreEngine that ensures proper cleanup of distributed resources.
+    """Wrapper around MegatronLLM that ensures proper cleanup of distributed resources.
 
-    This class delegates all operations to the underlying MCoreEngine while ensuring that
-    distributed resources are properly cleaned up when the engine is destroyed.
+    This class delegates all operations to the underlying MegatronLLM engine while ensuring
+    that distributed resources are properly cleaned up when the engine is destroyed.
     """
 
     def __init__(
         self,
-        mcore_engine: MCoreEngine,
-        model_inference_wrapper: GPTInferenceWrapper,
+        llm: MegatronLLM,
         tokenizer: Union[MCoreTokenizerWrappper, MegatronTokenizer],
     ):
         """Initialize the MCoreEngineWithCleanup.
 
         Args:
-            mcore_engine (MCoreEngine): The underlying MCoreEngine instance
-            model_inference_wrapper (GPTInferenceWrapper): The model inference wrapper
+            llm (MegatronLLM): The underlying MegatronLLM instance
             tokenizer (Union[MCoreTokenizerWrappper, MegatronTokenizer]): The tokenizer instance
         """
-        self.mcore_engine = mcore_engine
-        self.model_inference_wrapper = model_inference_wrapper
+        self.mcore_engine = llm
         self.tokenizer = tokenizer
 
     def __del__(self):
@@ -446,8 +437,8 @@ def create_mcore_engine(
     buffer_size_gb: float = 10.0,
     legacy_model_format: bool = False,
     **model_config_kwargs,
-) -> Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
-    """Set up the model, tokenizer and MCoreEngine for inference.
+) -> Tuple[MCoreEngineWithCleanup, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
+    """Set up the model, tokenizer and MegatronLLM engine for inference.
 
     Args:
         path (Path): Path to the checkpoint file
@@ -455,7 +446,7 @@ def create_mcore_engine(
         inference_batch_times_seqlen_threshold (int): Threshold for batch size times sequence length
         inference_max_seq_length (int): Maximum sequence length for inference
         max_batch_size (int): Maximum batch size for inference
-        random_seed (Optional[int]): Random seed for reproducibility
+        random_seed (Optional[int]): Random seed for reproducibility (set globally during init)
         tensor_model_parallel_size (Optional[int]): Size of tensor model parallelism
         pipeline_model_parallel_size (Optional[int]): Size of pipeline model parallelism
         context_parallel_size (Optional[int]): Size of context parallelism
@@ -466,11 +457,10 @@ def create_mcore_engine(
         model_type (str): Type of model to load (default: "gpt")
         model_format (str): Format of model to load (default: "nemo")
         micro_batch_size (Optional[int]): Micro batch size for model execution
-        legacy_model_format (bool): Whether to use the legacy StaticInferenceEngine path in MCoreEngine (default: False)
+        legacy_model_format (bool): Deprecated; no longer used (DynamicInferenceEngine is always used)
     Returns:
-        Tuple[MCoreEngineWithCleanup, GPTInferenceWrapper, Union[MCoreTokenizerWrappper, MegatronTokenizer]]: Tuple containing:
+        Tuple[MCoreEngineWithCleanup, Union[MCoreTokenizerWrappper, MegatronTokenizer]]: Tuple containing:
             - MCoreEngineWithCleanup: Engine for text generation with proper cleanup
-            - GPTInferenceWrapper: Inference-wrapped model
             - Union[MCoreTokenizerWrappper, MegatronTokenizer]: Tokenizer instance
     """
     # Default to 1 for any parallelism dimension that's None
@@ -512,34 +502,32 @@ def create_mcore_engine(
     else:
         raise ValueError(f"Model format {model_format} not supported.")
 
-    # MLA models require block_size_tokens=64 for the dynamic engine, which is not
-    # configurable in the current Megatron-LM version. Fall back to the legacy static
-    # engine so MLA inference works correctly without touching Megatron-LM.
+    model.eval()
+
+    # MLA models require block_size_tokens=64 for correct KV cache operation with the
+    # dynamic inference engine. Set the attention backend to flash if not already set.
+    block_size_tokens = 256
     model_config = getattr(model, "config", None)
     if isinstance(model_config, MLATransformerConfig):
-        legacy_model_format = True
-        # The legacy static engine requires an explicit attention backend.
-        # MLA models use flash attention (attention_mask is handled internally).
+        block_size_tokens = 64
         if not model_config.attention_backend:
             model_config.attention_backend = AttnBackend.flash
 
-    inference_context = StaticInferenceContext(
-        max_batch_size=max_batch_size,
+    inference_config = InferenceConfig(
         max_sequence_length=inference_max_seq_length,
+        buffer_size_gb=int(buffer_size_gb),
+        max_requests=max_batch_size,
+        block_size_tokens=block_size_tokens,
+        materialize_only_last_token_logits=True,
     )
-    model_inference_wrapper = GPTInferenceWrapper(model, inference_context)
-    text_generation_controller = TextGenerationController(
-        inference_wrapped_model=model_inference_wrapper, tokenizer=tokenizer
-    )
-    mcore_engine = MCoreEngine(
-        text_generation_controller=text_generation_controller,
-        max_batch_size=max_batch_size,
-        random_seed=random_seed,
-        buffer_size_gb=buffer_size_gb,
-        legacy=legacy_model_format,
+
+    llm = MegatronLLM(
+        model=model,
+        tokenizer=tokenizer,
+        inference_config=inference_config,
     )
 
     # Wrap the engine to ensure cleanup
-    wrapped_engine = MCoreEngineWithCleanup(mcore_engine, model_inference_wrapper, tokenizer)
+    wrapped_engine = MCoreEngineWithCleanup(llm, tokenizer)
 
-    return wrapped_engine, model_inference_wrapper, tokenizer
+    return wrapped_engine, tokenizer

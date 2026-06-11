@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 import torch
-from megatron.core.inference.common_inference_params import CommonInferenceParams
+from megatron.core.inference.sampling_params import SamplingParams
 from PIL import Image
 
 from nemo_deploy.multimodal.megatron_multimodal_deployable import MegatronMultimodalDeployable
@@ -157,7 +157,7 @@ class TestMegatronMultimodalDeployable:
         """Test the generate method."""
         prompts = ["Test prompt 1", "Test prompt 2"]
         images = [sample_image, sample_image]
-        inference_params = CommonInferenceParams(temperature=0.7, top_k=10, top_p=0.9, num_tokens_to_generate=100)
+        inference_params = SamplingParams(temperature=0.7, top_k=10, top_p=0.9, num_tokens_to_generate=100)
 
         with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.generate") as mock_generate:
             with patch.object(deployable, "apply_chat_template", side_effect=lambda x: x):
@@ -282,8 +282,8 @@ class TestMegatronMultimodalDeployable:
                 assert call_args[0][0] == prompts
                 # Images should be converted from base64
                 assert len(call_args[0][1]) == 2
-                # Check that inference_params is a CommonInferenceParams object (3rd positional arg)
-                assert isinstance(call_args[0][2], CommonInferenceParams)
+                # Check that inference_params is a SamplingParams object (3rd positional arg)
+                assert isinstance(call_args[0][2], SamplingParams)
                 assert call_args[0][2].temperature == 0.8
                 assert call_args[0][2].top_k == 20
                 assert call_args[0][2].top_p == 0.95
@@ -318,8 +318,8 @@ class TestMegatronMultimodalDeployable:
                 assert call_args[0][0] == prompts
                 # Images should be converted from base64
                 assert len(call_args[0][1]) == 1
-                # Check that inference_params is a CommonInferenceParams object (3rd positional arg)
-                assert isinstance(call_args[0][2], CommonInferenceParams)
+                # Check that inference_params is a SamplingParams object (3rd positional arg)
+                assert isinstance(call_args[0][2], SamplingParams)
                 assert call_args[0][2].temperature == 1.0
                 assert call_args[0][2].top_k == 1
                 assert call_args[0][2].top_p == 0.0
@@ -357,7 +357,7 @@ class TestMegatronMultimodalDeployable:
                 call_args = mock_generate.call_args
 
                 # Check that inference_params has greedy sampling parameters
-                assert isinstance(call_args[0][2], CommonInferenceParams)
+                assert isinstance(call_args[0][2], SamplingParams)
                 assert call_args[0][2].temperature == 0.0  # Kept as 0.0
                 assert call_args[0][2].top_k == 1  # Overridden for greedy sampling
                 assert call_args[0][2].top_p == 0.0  # Overridden for greedy sampling

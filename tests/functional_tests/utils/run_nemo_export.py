@@ -35,13 +35,13 @@ except Exception as e:
 
 in_framework_supported = True
 try:
-    from megatron.core.inference.common_inference_params import CommonInferenceParams
+    from megatron.core.inference.sampling_params import SamplingParams
 
     from nemo_deploy.llm import NemoQueryLLMPyTorch
     from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
 except Exception as e:
     LOGGER.warning(
-        "Cannot import MegatronLLMDeployable class, or NemoQueryLLMPyTorch, or CommonInferenceParams, "
+        "Cannot import MegatronLLMDeployable class, or NemoQueryLLMPyTorch, or SamplingParams, "
         f"in-framework inference will not be available. Reason: {type(e).__name__}: {e}"
     )
     in_framework_supported = False
@@ -98,7 +98,7 @@ def get_accuracy_with_lambada(model, nq, lora_uids, test_data_path, use_vllm: bo
                 if in_framework_supported and isinstance(model, MegatronLLMDeployable):
                     model_output = model.generate(
                         prompts=[prompt],
-                        inference_params=CommonInferenceParams(
+                        inference_params=SamplingParams(
                             temperature=0.1,
                             top_k=1,
                             top_p=0.0,

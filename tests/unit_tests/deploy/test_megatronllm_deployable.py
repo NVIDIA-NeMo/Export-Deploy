@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-from megatron.core.inference.common_inference_params import CommonInferenceParams
+from megatron.core.inference.sampling_params import SamplingParams
 
 from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable, dict_to_str
 from nemo_export_deploy_common.import_utils import UnavailableError
@@ -121,7 +121,7 @@ def test_generate_with_cuda_graphs_empty_prompts(deployable):
     deployable.enable_cuda_graphs = True
     deployable.max_batch_size = 4
     prompts = []
-    inference_params = CommonInferenceParams()
+    inference_params = SamplingParams()
 
     with patch.object(deployable.mcore_engine, "generate") as mock_generate:
         mock_generate.return_value = ["", "", "", ""]
@@ -197,13 +197,13 @@ def test_generate_other_ranks_disables_materialize_when_log_probs(deployable):
             [1.0, 1, 0.0, 256, True, None],  # log_probs=True
         ]
 
-        deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits = True
-        deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits = True
+        deployable.mcore_engine.engine.materialize_only_last_token_logits = True
+        deployable.mcore_engine.engine.context.config.materialize_only_last_token_logits = True
 
         deployable.generate_other_ranks()
 
-        assert deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits is False
-        assert deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits is False
+        assert deployable.mcore_engine.engine.materialize_only_last_token_logits is False
+        assert deployable.mcore_engine.engine.context.config.materialize_only_last_token_logits is False
 
 
 @pytest.mark.run_only_on("GPU")
@@ -387,7 +387,7 @@ def test_generate_without_cuda_graphs(deployable):
     deployable.enable_cuda_graphs = False
 
     prompts = ["Hello", "World"]
-    inference_params = CommonInferenceParams(
+    inference_params = SamplingParams(
         temperature=1.0,
         top_k=1,
         top_p=0.0,
@@ -403,7 +403,7 @@ def test_generate_without_cuda_graphs(deployable):
 
         results = deployable.generate(prompts, inference_params)
         assert len(results) == 2
-        mock_generate.assert_called_once_with(prompts=prompts, add_BOS=False, common_inference_params=inference_params)
+        mock_generate.assert_called_once_with(prompts=prompts, sampling_params=inference_params)
 
 
 @pytest.mark.run_only_on("GPU")
@@ -414,7 +414,7 @@ def test_generate_with_cuda_graphs(deployable):
     deployable.max_batch_size = 4
 
     prompts = ["Hello", "World"]
-    inference_params = CommonInferenceParams(
+    inference_params = SamplingParams(
         temperature=1.0,
         top_k=1,
         top_p=0.0,
@@ -446,8 +446,7 @@ def test_generate_with_cuda_graphs(deployable):
         called_args = mock_generate.call_args[1]
         assert len(called_args["prompts"]) == 4  # Should pad to max_batch_size
         assert called_args["prompts"][:2] == prompts  # Original prompts should be first
-        assert called_args["add_BOS"] is False
-        assert called_args["common_inference_params"] == inference_params
+        assert called_args["sampling_params"] == inference_params
 
 
 @pytest.mark.run_only_on("GPU")
@@ -607,8 +606,8 @@ def test_init_with_megatron_valid_types(model_type):
         patch("nemo_deploy.llm.megatronllm_deployable.HAVE_TRITON", True),
         patch("nemo_deploy.llm.megatronllm_deployable.create_mcore_engine") as mock_create,
     ):
-        mock_engine, mock_model, mock_tokenizer = MagicMock(), MagicMock(), MagicMock()
-        mock_create.return_value = (mock_engine, mock_model, mock_tokenizer)
+        mock_engine, mock_tokenizer = MagicMock(), MagicMock()
+        mock_create.return_value = (mock_engine, mock_tokenizer)
 
         deployable = MegatronLLMDeployable(
             megatron_checkpoint_filepath="bar.ckpt",
@@ -716,7 +715,7 @@ def test_infer_fn_basic(deployable):
         call_args = mock_generate.call_args[0]
         assert call_args[0] == prompts
 
-        # Verify CommonInferenceParams
+        # Verify SamplingParams
         inference_params = mock_generate.call_args[0][1]
         assert inference_params.temperature == 1.0
         assert inference_params.top_k == 1
@@ -1076,13 +1075,13 @@ def test_infer_fn_disables_materialize_only_last_token_logits_when_log_probs(dep
         mock_tensor_instance.cpu.return_value.detach.return_value.numpy.return_value = np.array([0.1])
         mock_tensor.return_value = mock_tensor_instance
 
-        deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits = True
-        deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits = True
+        deployable.mcore_engine.engine.materialize_only_last_token_logits = True
+        deployable.mcore_engine.engine.context.config.materialize_only_last_token_logits = True
 
         deployable._infer_fn(prompts=["Hello"], log_probs=True)
 
-        assert deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits is False
-        assert deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits is False
+        assert deployable.mcore_engine.engine.materialize_only_last_token_logits is False
+        assert deployable.mcore_engine.engine.context.config.materialize_only_last_token_logits is False
 
 
 @pytest.mark.run_only_on("GPU")
@@ -1100,13 +1099,13 @@ def test_infer_fn_disables_materialize_only_last_token_logits_when_top_logprobs(
         mock_remove_eos.return_value = ["text"]
         mock_dict_to_str.return_value = '{"tok": 0.1}'
 
-        deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits = True
-        deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits = True
+        deployable.mcore_engine.engine.materialize_only_last_token_logits = True
+        deployable.mcore_engine.engine.context.config.materialize_only_last_token_logits = True
 
         deployable._infer_fn(prompts=["Hello"], top_logprobs=5)
 
-        assert deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits is False
-        assert deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits is False
+        assert deployable.mcore_engine.engine.materialize_only_last_token_logits is False
+        assert deployable.mcore_engine.engine.context.config.materialize_only_last_token_logits is False
 
 
 @pytest.mark.run_only_on("GPU")
@@ -1121,10 +1120,10 @@ def test_infer_fn_keeps_materialize_only_last_token_logits_when_no_logprobs(depl
         mock_generate.return_value = [mock_result]
         mock_remove_eos.return_value = ["text"]
 
-        deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits = True
-        deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits = True
+        deployable.mcore_engine.engine.materialize_only_last_token_logits = True
+        deployable.mcore_engine.engine.context.config.materialize_only_last_token_logits = True
 
         deployable._infer_fn(prompts=["Hello"], log_probs=False, top_logprobs=0)
 
-        assert deployable.mcore_engine.dynamic_engine.materialize_only_last_token_logits is True
-        assert deployable.mcore_engine.dynamic_engine.context.config.materialize_only_last_token_logits is True
+        assert deployable.mcore_engine.engine.materialize_only_last_token_logits is True
+        assert deployable.mcore_engine.engine.context.config.materialize_only_last_token_logits is True
