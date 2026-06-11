@@ -16,6 +16,6 @@ With the Export-Deploy library, you can seamlessly export and deploy Megatron-Br
 Generate a Megatron-Bridge Checkpoint <gen_mbridge_ckpt.md>
 Deploy with Triton <in-framework.md>
 Deploy with Ray Serve <in-framework-ray.md>
-Export and Deploy <optimized/index.md>
+Optimized <optimized/index.md>
 ```
 
