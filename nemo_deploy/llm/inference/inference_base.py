@@ -265,7 +265,11 @@ def setup_megatron_model_and_tokenizer_for_inference(
         megatron_args=mlm_args,
         use_cpu_init=False,
     )
-    tokenizer = load_tokenizer(checkpoint_path)
+    # In-framework deploy operates on a user-supplied checkpoint that is already trusted
+    # (locally converted and served by the same user), so opt in to the Megatron-Bridge
+    # load_tokenizer security guard that requires trust_remote_code=True when the checkpoint
+    # tokenizer config has it baked in (e.g. Llama tokenizers).
+    tokenizer = load_tokenizer(checkpoint_path, trust_remote_code=True)
     return model, tokenizer, mlm_args
 
 

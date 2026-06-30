@@ -439,6 +439,43 @@ class TestInferenceBase(unittest.TestCase):
     @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
     @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
+    def test_load_tokenizer_passes_trust_remote_code(
+        self, mock_load_tokenizer, mock_build_model, mock_init_megatron, mock_load_config, mock_torch_dist
+    ):
+        """Regression (NVBug 6393765): load_tokenizer must be called with trust_remote_code=True.
+
+        Megatron-Bridge's load_tokenizer raises ValueError when the checkpoint tokenizer config
+        has trust_remote_code=True baked in (e.g. Llama tokenizers) but the caller does not opt in.
+        The in-framework deploy path must pass trust_remote_code=True so Ray/Triton deployments of
+        converted MBridge checkpoints load the tokenizer instead of failing.
+        """
+        mock_config = MagicMock()
+        mock_config.attention_backend = None
+        mock_config.tensor_model_parallel_size = 1
+        mock_config.pipeline_model_parallel_size = 1
+        mock_config.context_parallel_size = 1
+        mock_config.expert_model_parallel_size = 1
+
+        mock_mlm_args = MagicMock()
+        mock_load_config.return_value = (mock_config, mock_mlm_args)
+
+        mock_build_model.return_value = [MagicMock()]
+        mock_load_tokenizer.return_value = MagicMock()
+
+        setup_megatron_model_and_tokenizer_for_inference(
+            checkpoint_path=self.mock_path,
+            tensor_model_parallel_size=1,
+            pipeline_model_parallel_size=1,
+        )
+
+        # Pre-fix this was load_tokenizer(checkpoint_path) (no kwarg) and the MB guard raised.
+        mock_load_tokenizer.assert_called_once_with(self.mock_path, trust_remote_code=True)
+
+    @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
+    @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
+    @patch("nemo_deploy.llm.inference.inference_base.initialize_megatron_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.build_and_load_model")
+    @patch("nemo_deploy.llm.inference.inference_base.load_tokenizer")
     def test_attention_backend_conversion_unfused(
         self, mock_load_tokenizer, mock_build_model, mock_init_megatron, mock_load_config, mock_torch_dist
     ):
