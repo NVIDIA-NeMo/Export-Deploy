@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = "==3.12.*"
 resolution-markers = [
     "platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm'",
@@ -30,7 +30,7 @@ overrides = [
     { name = "fsspec", extras = ["http"], specifier = ">=2023.1.0,<=2024.9.0" },
     { name = "mamba-ssm", specifier = ">=2.3.0,<2.4.0" },
     { name = "megatron-energon", extras = ["av-decode"], specifier = ">=6.0,<7.dev0" },
-    { name = "nvidia-resiliency-ext", git = "https://github.com/NVIDIA/nvidia-resiliency-ext.git?rev=b2bb3d728a18795807d9f76c535e005a609a1b01" },
+    { name = "nvidia-resiliency-ext", specifier = ">=0.6.0" },
     { name = "onnx", specifier = "<1.20.0" },
     { name = "open-clip-torch", specifier = ">=3.2.0" },
     { name = "opencv-python-headless", marker = "sys_platform == 'never'" },
@@ -578,7 +578,7 @@ name = "cffi"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser", marker = "implementation_name != 'PyPy' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "pycparser", marker = "implementation_name != 'PyPy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/eb/56/b1ba7935a17738ae8453301356628e8147c79dbb825bcbc73dc7401f9846/cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529", size = 523588, upload-time = "2025-09-08T23:24:04.541Z" }
 wheels = [
@@ -630,7 +630,7 @@ name = "click"
 version = "8.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/46/61/de6cd827efad202d7057d93e0fed9294b96952e188f7384832791c7b2254/click-8.3.0.tar.gz", hash = "sha256:e7b8232224eba16f4ebe410c25ced9f7875cb5f3263ffc93cc3e8da705e229c4", size = 276943, upload-time = "2025-09-18T17:32:23.696Z" }
 wheels = [
@@ -767,7 +767,7 @@ name = "cryptography"
 version = "46.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "cffi", marker = "platform_python_implementation != 'PyPy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/60/04/ee2a9e8542e4fa2773b81771ff8349ff19cdd56b7258a0cc442639052edb/cryptography-46.0.5.tar.gz", hash = "sha256:abace499247268e3757271b2f1e244b36b06f8515cf27c4d49468fc9eb16e93d", size = 750064, upload-time = "2026-02-10T19:18:38.255Z" }
 wheels = [
@@ -812,7 +812,7 @@ resolution-markers = [
     "sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-vllm'",
 ]
 dependencies = [
-    { name = "cuda-pathfinder", marker = "sys_platform == 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "cuda-pathfinder", marker = "sys_platform == 'darwin'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/61/3c/c33fd3aa5fcc89aa1c135e477a0561f29142ab5fe028ca425fc87f7f0a74/cuda_bindings-13.0.3-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b899e5a513c11eaa18648f9bf5265d8de2a93f76ef66a6bfca0a2887303965cd", size = 11709086, upload-time = "2025-10-21T15:09:00.005Z" },
@@ -832,7 +832,7 @@ resolution-markers = [
     "sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-vllm'",
 ]
 dependencies = [
-    { name = "cuda-pathfinder", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "cuda-pathfinder", marker = "sys_platform != 'darwin'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/53/3d/c8ed9d169843091f3f0d6b8218e826fd59520a37e0434c204feada597988/cuda_bindings-13.1.1-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1e75ad0cb863330df784236d289612d71ca855c013d19ae00e5693574abd6915", size = 15530160, upload-time = "2025-12-09T22:05:55.386Z" },
@@ -859,8 +859,8 @@ resolution-markers = [
     "sys_platform == 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-vllm'",
 ]
 dependencies = [
-    { name = "cuda-bindings", version = "13.0.3", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "cuda-pathfinder", marker = "sys_platform == 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "cuda-bindings", version = "13.0.3", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'darwin'" },
+    { name = "cuda-pathfinder", marker = "sys_platform == 'darwin'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/31/5f/beaa12a11b051027eec0b041df01c6690db4f02e3b2e8fadd5a0eeb4df52/cuda_python-13.0.3-py3-none-any.whl", hash = "sha256:914cd7e2dd075bd06a2d5121c1d9ccdd3d0c94b03ea5a44dbd98d24d8ed93bab", size = 7605, upload-time = "2025-10-21T15:48:59.222Z" },
@@ -878,8 +878,8 @@ resolution-markers = [
     "sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-vllm'",
 ]
 dependencies = [
-    { name = "cuda-bindings", version = "13.1.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "cuda-pathfinder", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "cuda-bindings", version = "13.1.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'darwin'" },
+    { name = "cuda-pathfinder", marker = "sys_platform != 'darwin'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cd/08/b5e3b9822662d72d540d830531e3ab6a7cabbda3dd56175696aabccfeb76/cuda_python-13.1.1-py3-none-any.whl", hash = "sha256:944cc4fe6482673d28dd545797a28840945a1668739328fa2ad1e9be4f7050d9", size = 8038, upload-time = "2025-12-09T22:13:10.719Z" },
@@ -1373,7 +1373,7 @@ dependencies = [
     { name = "packaging" },
     { name = "requests" },
     { name = "tabulate" },
-    { name = "torch", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "torch", marker = "sys_platform == 'never'" },
     { name = "tqdm" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/53/1e/2760fef9e74abc4480961048e5790b4c9e955872fb4d7d97900cfddced5a/flashinfer_python-0.6.8.post1.tar.gz", hash = "sha256:b18e4121baf9b93fa9a9f368ba9b981a0342895f50ab9dddc224aeb964ed346f", size = 6675885, upload-time = "2026-04-18T18:28:13.299Z" }
@@ -1834,7 +1834,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
     { name = "fsspec", extra = ["http"] },
-    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64'" },
     { name = "httpx" },
     { name = "packaging" },
     { name = "pyyaml" },
@@ -2819,7 +2819,7 @@ requires-dist = [
     { name = "megatron-core" },
     { name = "nvidia-modelopt", extras = ["torch"], marker = "sys_platform != 'darwin'" },
     { name = "nvidia-pytriton", marker = "sys_platform != 'darwin'" },
-    { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin'", git = "https://github.com/NVIDIA/nvidia-resiliency-ext.git?rev=b2bb3d728a18795807d9f76c535e005a609a1b01" },
+    { name = "nvidia-resiliency-ext", marker = "sys_platform != 'darwin'" },
     { name = "omegaconf", specifier = ">=2.3.0" },
     { name = "onnx", marker = "extra == 'trt-onnx'", specifier = "==1.21.0" },
     { name = "onnxscript", marker = "extra == 'trt-onnx'", specifier = ">=0.6.0" },
@@ -3051,7 +3051,7 @@ name = "nvidia-cudnn-cu13"
 version = "9.13.0.50"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-cublas", marker = "platform_machine != 'aarch64' and sys_platform != 'darwin'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/9c/9e99c00dc23db324244ec257d1e84d79539202ee2f185dee2c1fa97c9549/nvidia_cudnn_cu13-9.13.0.50-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:33f0aa0b64230101b348648fd0693342188071d3f8a137c0cf50051c24b3584b", size = 412337597, upload-time = "2025-09-04T20:22:31.535Z" },
@@ -3074,7 +3074,7 @@ name = "nvidia-cufft"
 version = "12.0.0.15"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-nvjitlink", marker = "platform_machine != 'aarch64' and sys_platform != 'darwin'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9b/e9/4e49b1baf6899e42eeec324a49d7aa2219fec42076327c4e468000dd375a/nvidia_cufft-12.0.0.15-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:1885731254835797572ff075f3daf43a2a0a2801210dea26971940dae7e1a367", size = 214053580, upload-time = "2025-08-04T10:20:45.781Z" },
@@ -3106,9 +3106,9 @@ name = "nvidia-cusolver"
 version = "12.0.3.29"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cusparse", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-cublas", marker = "platform_machine != 'aarch64' and sys_platform != 'darwin'" },
+    { name = "nvidia-cusparse", marker = "platform_machine != 'aarch64' and sys_platform != 'darwin'" },
+    { name = "nvidia-nvjitlink", marker = "platform_machine != 'aarch64' and sys_platform != 'darwin'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/bb/2e60de9bb1f0c3395eabd91ccad00f4ba3ef736dc9190a158a9d268419f5/nvidia_cusolver-12.0.3.29-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:3bb6e65ce0beaeafdd069b320246e8f17c1cd30ddb27a0539143a3706733a4d8", size = 193104180, upload-time = "2025-08-04T10:22:19.821Z" },
@@ -3121,7 +3121,7 @@ name = "nvidia-cusparse"
 version = "12.6.2.49"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and sys_platform != 'darwin') or (sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "nvidia-nvjitlink", marker = "platform_machine != 'aarch64' and sys_platform != 'darwin'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fc/30/f32023427f2ef4ec27e8293dfddb5068de566912cd0a45eccfd400017a62/nvidia_cusparse-12.6.2.49-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:5d3269c19283a0057fb5ebfb003ae2a10c97a28a6958f4238354826b055827c7", size = 155888587, upload-time = "2025-08-04T10:23:04.091Z" },
@@ -3261,7 +3261,11 @@ wheels = [
 [[package]]
 name = "nvidia-resiliency-ext"
 version = "0.6.0"
-source = { git = "https://github.com/NVIDIA/nvidia-resiliency-ext.git?rev=b2bb3d728a18795807d9f76c535e005a609a1b01#b2bb3d728a18795807d9f76c535e005a609a1b01" }
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2d/e1/8d3be847258068862df502123f92cc76dabe869fccde893ecf9ba07168d1/nvidia_resiliency_ext-0.6.0-cp312-cp312-manylinux_2_39_aarch64.whl", hash = "sha256:a71c1a1650b32c72f7fdf7d6f73b4d275961ce5d68bd68efaff9e0d7099031cb", size = 770623, upload-time = "2026-05-14T21:51:16.523Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/0b/957a223c71959497e96ed868acb2ec869170caa95a60a0edbab8909aa98b/nvidia_resiliency_ext-0.6.0-cp312-cp312-manylinux_2_39_x86_64.whl", hash = "sha256:7d5ac6567841aef0173af3bcc0c2044971d2b225918028b99af6e4eb7e6e2f5d", size = 773595, upload-time = "2026-05-14T21:52:06.46Z" },
+]
 
 [[package]]
 name = "nvidia-sphinx-theme"
@@ -4355,7 +4359,7 @@ name = "pyzmq"
 version = "27.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "(implementation_name == 'pypy' and sys_platform != 'darwin') or (implementation_name == 'pypy' and extra == 'extra-18-nemo-export-deploy-vllm') or (implementation_name != 'pypy' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "cffi", marker = "implementation_name == 'pypy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/04/0b/3c9baedbdf613ecaa7aa07027780b8867f57b6293b6ee50de316c9f3222b/pyzmq-27.1.0.tar.gz", hash = "sha256:ac0765e3d44455adb6ddbf4417dcce460fc40a05978c08efdf2948072f6db540", size = 281750, upload-time = "2025-09-08T23:10:18.157Z" }
 wheels = [
@@ -5145,7 +5149,7 @@ name = "sympy"
 version = "1.14.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "mpmath", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "mpmath", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/83/d3/803453b36afefb7c2bb238361cd4ae6125a569b4db67cd9e79846ba2d68c/sympy-1.14.0.tar.gz", hash = "sha256:d3d3fe8df1e5a0b42f0e7bdf50541697dbe7d23746e894990c030e2b05e72517", size = 7793921, upload-time = "2025-04-27T18:05:01.611Z" }
 wheels = [
@@ -5303,8 +5307,8 @@ dependencies = [
     { name = "huggingface-hub" },
     { name = "pyyaml" },
     { name = "safetensors" },
-    { name = "torch", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torchvision", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "torch", marker = "sys_platform == 'never'" },
+    { name = "torchvision", marker = "sys_platform == 'never'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b5/ba/6f5d96622a4a9fc315da53f58b3ca224c66015efe40aa191df0d523ede7c/timm-1.0.20.tar.gz", hash = "sha256:7468d32a410c359181c1ef961f49c7e213286e0c342bfb898b99534a4221fc54", size = 2360052, upload-time = "2025-09-21T17:26:35.492Z" }
 wheels = [
@@ -5341,29 +5345,29 @@ name = "torch"
 version = "2.9.0+cu130"
 source = { registry = "https://download.pytorch.org/whl/cu130" }
 dependencies = [
-    { name = "filelock", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "filelock", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
     { name = "fsspec", extra = ["http"], marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "jinja2", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "networkx", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cublas", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cuda-cupti", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cuda-runtime", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cudnn-cu13", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cufft", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cufile", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-curand", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cusolver", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cusparse", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-cusparselt-cu13", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-nccl-cu13", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-nvshmem-cu13", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "nvidia-nvtx", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform != 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "setuptools", version = "80.10.2", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "sympy", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "triton", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "typing-extensions", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "jinja2", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
+    { name = "networkx", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
+    { name = "nvidia-cublas", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-cuda-cupti", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-cuda-nvrtc", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-cuda-runtime", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-cudnn-cu13", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-cufft", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-cufile", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-curand", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-cusolver", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-cusparse", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-cusparselt-cu13", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-nccl-cu13", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-nvjitlink", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-nvshmem-cu13", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "nvidia-nvtx", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "setuptools", version = "80.10.2", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
+    { name = "sympy", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
+    { name = "triton", marker = "sys_platform == 'never'" },
+    { name = "typing-extensions", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cu130/torch-2.9.0%2Bcu130-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:3aef05b6247261f4a7c440be9a052c4be36c673c6721920181a4ac9a66d6c2a2", upload-time = "2025-10-14T17:30:43Z" },
@@ -5417,9 +5421,9 @@ name = "torchvision"
 version = "0.24.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "pillow", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "torch", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "numpy", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
+    { name = "pillow", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
+    { name = "torch", marker = "sys_platform == 'never'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/47/ef/81e4e69e02e2c4650b30e8c11c8974f946682a30e0ab7e9803a831beff76/torchvision-0.24.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:c61d40bcd2e2451e932902a702ad495ba1ec6f279e90b1e15cef2bb55dc911e2", size = 1891726, upload-time = "2025-10-15T15:51:16.977Z" },
@@ -5453,7 +5457,7 @@ name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737, upload-time = "2024-11-24T20:12:22.481Z" }
 wheels = [
@@ -5647,11 +5651,11 @@ wheels = [
 
 [package.optional-dependencies]
 standard = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
     { name = "httptools" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
-    { name = "uvloop", marker = "(platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32') or (platform_python_implementation == 'PyPy' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'cygwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'win32' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "uvloop", marker = "platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'" },
     { name = "watchfiles" },
     { name = "websockets" },
 ]
