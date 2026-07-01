@@ -110,8 +110,11 @@ vllm = [
     { index = "pytorch-cu130", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
-megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "859a18d001eca4423ad79e7771632d839f50fa77" }
-nvidia-resiliency-ext = { git = "https://github.com/NVIDIA/nvidia-resiliency-ext.git", rev = "b2bb3d728a18795807d9f76c535e005a609a1b01" }
+megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "97e8dba4060ae74a110b9da6255eb0a66b016b2d" }
+# Use the released nvidia-resiliency-ext (>=0.6.0) rather than a git dev build:
+# megatron-core's runtime is_nvrx_min_version() asserts the installed package
+# version is >=0.6.0, and a git build reports 0.6.0.devN (< 0.6.0), which fails
+# the assertion at import time.
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
@@ -123,7 +126,9 @@ no-build-isolation-package = [
     "mamba-ssm",
     "causal-conv1d",
     "nv-grouped-gemm",
+    "fast-hadamard-transform",
 ]
+
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
 # and this lets us assume they are implicitly installed with a simply `uv sync`. Ideally, we'd
 # avoid including these in the default dependency set, but for now it's required.
@@ -149,7 +154,7 @@ override-dependencies = [
     "datasets>=3.3.0",
     "flash-linear-attention>=0.3.0,<0.4.dev0",
     "patchelf; sys_platform=='never'",
-    "nvidia-resiliency-ext>=0.3.0,<0.6.0",
+    "nvidia-resiliency-ext>=0.6.0",
     "transformer-engine[pytorch,core_cu13]>=2.14.0a0,<2.17.0; sys_platform != 'darwin'",
     "transformer-engine-cu13>=2.14.0a0,<2.17.0; sys_platform != 'darwin'",
     "transformer-engine-cu12; sys_platform == 'never'",
@@ -161,6 +166,10 @@ override-dependencies = [
     "onnx<1.20.0",
 ]
 prerelease = "allow"
+
+[[tool.uv.dependency-metadata]]
+name = "nvidia-resiliency-ext"
+version = "0.6.0"
 
 [[tool.uv.index]]
 name = "pypi"

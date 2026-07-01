@@ -21,8 +21,8 @@ import numpy as np
 import torch
 import torch.distributed
 from jinja2 import Template
-from megatron.core.inference.common_inference_params import CommonInferenceParams
-from megatron.core.inference.inference_request import InferenceRequest
+from megatron.core.inference.inference_request import DynamicInferenceRequest
+from megatron.core.inference.sampling_params import SamplingParams
 
 from nemo_deploy import ITritonDeployable
 from nemo_deploy.llm.inference.inference_base import create_mcore_engine
@@ -113,7 +113,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         if model_type not in ["gpt", "mamba"]:
             raise ValueError(f"Model type {model_type} not supported for Megatron models.")
 
-        self.mcore_engine, self.inference_wrapped_model, self.mcore_tokenizer = create_mcore_engine(
+        self.mcore_engine, self.mcore_tokenizer = create_mcore_engine(
             num_devices=num_devices,
             num_nodes=num_nodes,
             path=Path(megatron_checkpoint_filepath),
@@ -144,18 +144,18 @@ class MegatronLLMDeployable(ITritonDeployable):
     def generate(
         self,
         prompts: List[str],
-        inference_params: Optional[CommonInferenceParams] = None,
-    ) -> List[InferenceRequest]:
+        inference_params: Optional[SamplingParams] = None,
+    ) -> List[DynamicInferenceRequest]:
         """Generates text based on the provided input prompts.
 
         Args:
             prompts (List[str]): A list of input strings.
-            inference_params (Optional[CommonInferenceParams]): Parameters for controlling the inference process.
+            inference_params (Optional[SamplingParams]): Parameters for controlling the inference process.
 
         Returns:
-            List[InferenceRequest]: A list containing the generated results.
+            List[DynamicInferenceRequest]: A list containing the generated results.
         """
-        inference_params = inference_params or CommonInferenceParams()
+        inference_params = inference_params or SamplingParams()
 
         # Store the original number of prompts
         orig_num_prompts = len(prompts)
@@ -173,8 +173,7 @@ class MegatronLLMDeployable(ITritonDeployable):
 
             results = self.mcore_engine.generate(
                 prompts=padded_prompts,
-                add_BOS=False,
-                common_inference_params=inference_params,
+                sampling_params=inference_params,
             )
 
             # Only return results for the original prompts
@@ -182,8 +181,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         else:
             results = self.mcore_engine.generate(
                 prompts=prompts,
-                add_BOS=False,
-                common_inference_params=inference_params,
+                sampling_params=inference_params,
             )
             return list(results)
 
@@ -198,7 +196,7 @@ class MegatronLLMDeployable(ITritonDeployable):
                     data=[None], src=0
                 )
 
-                inference_params = CommonInferenceParams(
+                inference_params = SamplingParams(
                     temperature=temperature,
                     top_k=int(top_k),
                     top_p=float(top_p),
@@ -208,7 +206,7 @@ class MegatronLLMDeployable(ITritonDeployable):
                 )
 
                 if log_probs:
-                    dynamic_engine = getattr(self.mcore_engine, "dynamic_engine", None)
+                    dynamic_engine = getattr(self.mcore_engine, "engine", None)
                     if dynamic_engine is not None:
                         dynamic_engine.materialize_only_last_token_logits = False
                         dynamic_engine.context.config.materialize_only_last_token_logits = False
@@ -419,15 +417,15 @@ class MegatronLLMDeployable(ITritonDeployable):
                 )
 
         # cast top_k,top_p to native int, float since typecheck assert statements added in MCore0.13 error otherwise
-        # return_prompt_top_n_logprobs returns top_logprobs for prompt tokens too when top_logprobs>0.
-        inference_params = CommonInferenceParams(
+        # skip_prompt_log_probs=False (default) includes prompt tokens in top-N logprobs when top_logprobs>0.
+        inference_params = SamplingParams(
             temperature=temperature,
             top_k=int(top_k),
             top_p=float(top_p),
             num_tokens_to_generate=num_tokens_to_generate,
             return_log_probs=log_probs,
             top_n_logprobs=top_logprobs,
-            return_prompt_top_n_logprobs=bool(top_logprobs),
+            skip_prompt_log_probs=not bool(top_logprobs),
             stop_words=stop_words,
         )
 
@@ -436,7 +434,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         # (prompt log probs are required for logprob eval benchmarks).
         # Toggle it on both the engine and the context config (controls the
         # model forward pass and log prob calculations).
-        dynamic_engine = getattr(self.mcore_engine, "dynamic_engine", None)
+        dynamic_engine = getattr(self.mcore_engine, "engine", None)
         needs_all_logits = log_probs or bool(top_logprobs)
         if dynamic_engine is not None and needs_all_logits:
             dynamic_engine.materialize_only_last_token_logits = False

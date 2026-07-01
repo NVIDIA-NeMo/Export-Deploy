@@ -19,10 +19,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
-from megatron.core.inference.engines.mcore_engine import MCoreEngine
-from megatron.core.inference.model_inference_wrappers.gpt.gpt_inference_wrapper import (
-    GPTInferenceWrapper,
-)
+from megatron.core.inference.apis import MegatronLLM
 from megatron.core.transformer.module import MegatronModule
 
 from nemo_deploy.llm.inference.inference_base import (
@@ -322,33 +319,31 @@ class TestInferenceBase(unittest.TestCase):
         mock_check_dist.assert_called_once()
 
     def test_mcore_engine_with_cleanup(self):
-        # Create mocks for the engine and wrapper
-        mock_engine = MagicMock(spec=MCoreEngine)
-        mock_wrapper = MagicMock(spec=GPTInferenceWrapper)
+        # Create mock for the LLM engine
+        mock_llm = MagicMock(spec=MegatronLLM)
 
         # Create the wrapper
-        engine_wrapper = MCoreEngineWithCleanup(mock_engine, mock_wrapper, self.mock_tokenizer)
+        engine_wrapper = MCoreEngineWithCleanup(mock_llm, self.mock_tokenizer)
 
         # Test attribute delegation - mock the attribute access directly instead of using __getattr__
         # Define the attribute directly on the mock
-        mock_engine.some_attribute = "attribute_value"
+        mock_llm.some_attribute = "attribute_value"
         attribute_value = engine_wrapper.some_attribute
         self.assertEqual(attribute_value, "attribute_value")
 
         # Test method delegation - create a method on the mock
-        mock_engine.some_method = MagicMock(return_value="method_result")
+        mock_llm.some_method = MagicMock(return_value="method_result")
         result = engine_wrapper.some_method()
         self.assertEqual(result, "method_result")
-        mock_engine.some_method.assert_called_once()
+        mock_llm.some_method.assert_called_once()
 
     @patch("nemo_deploy.llm.inference.inference_base.cleanup_distributed")
     def test_mcore_engine_with_cleanup_del(self, mock_cleanup):
-        # Create mocks
-        mock_engine = MagicMock(spec=MCoreEngine)
-        mock_wrapper = MagicMock(spec=GPTInferenceWrapper)
+        # Create mock for the LLM engine
+        mock_llm = MagicMock(spec=MegatronLLM)
 
         # Create the wrapper
-        engine_wrapper = MCoreEngineWithCleanup(mock_engine, mock_wrapper, self.mock_tokenizer)
+        engine_wrapper = MCoreEngineWithCleanup(mock_llm, self.mock_tokenizer)
 
         # Call __del__
         engine_wrapper.__del__()
@@ -781,26 +776,20 @@ class TestInferenceBase(unittest.TestCase):
         self.assertEqual(self.model_config.hidden_size, 1024)
 
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
-    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
-    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
-    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
-    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
     def test_create_mcore_engine_nemo_format(
         self,
-        mock_mcore_engine,
-        mock_text_ctrl,
-        mock_gpt_wrapper,
-        mock_static_ctx,
+        mock_megatron_llm,
         mock_setup,
     ):
         """Test create_mcore_engine with nemo model_format."""
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
         mock_setup.return_value = ([mock_model], mock_tokenizer)
-        mock_engine_instance = MagicMock()
-        mock_mcore_engine.return_value = mock_engine_instance
+        mock_llm_instance = MagicMock()
+        mock_megatron_llm.return_value = mock_llm_instance
 
-        engine, wrapper, tokenizer = create_mcore_engine(
+        engine, tokenizer = create_mcore_engine(
             path=self.mock_path,
             model_format="nemo",
             inference_max_seq_length=2048,
@@ -808,20 +797,14 @@ class TestInferenceBase(unittest.TestCase):
         )
 
         mock_setup.assert_called_once()
-        mock_mcore_engine.assert_called_once()
+        mock_megatron_llm.assert_called_once()
         self.assertIsNotNone(engine)
 
     @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
-    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
-    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
-    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
-    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
     def test_create_mcore_engine_megatron_format(
         self,
-        mock_mcore_engine,
-        mock_text_ctrl,
-        mock_gpt_wrapper,
-        mock_static_ctx,
+        mock_megatron_llm,
         mock_setup,
     ):
         """Test create_mcore_engine with megatron model_format."""
@@ -829,10 +812,10 @@ class TestInferenceBase(unittest.TestCase):
         mock_tokenizer = MagicMock()
         mock_mlm_args = MagicMock()
         mock_setup.return_value = ([mock_model], mock_tokenizer, mock_mlm_args)
-        mock_engine_instance = MagicMock()
-        mock_mcore_engine.return_value = mock_engine_instance
+        mock_llm_instance = MagicMock()
+        mock_megatron_llm.return_value = mock_llm_instance
 
-        engine, wrapper, tokenizer = create_mcore_engine(
+        engine, tokenizer = create_mcore_engine(
             path=self.mock_path,
             model_format="megatron",
             inference_max_seq_length=2048,
@@ -840,7 +823,7 @@ class TestInferenceBase(unittest.TestCase):
         )
 
         mock_setup.assert_called_once()
-        mock_mcore_engine.assert_called_once()
+        mock_megatron_llm.assert_called_once()
         self.assertIsNotNone(engine)
 
     @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")

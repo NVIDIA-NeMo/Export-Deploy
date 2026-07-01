@@ -389,19 +389,14 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
     """Tests that create_mcore_engine handles ETP/SP defaults and passes them down."""
 
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
-    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
-    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
-    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
-    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
-    def test_etp_defaults_to_1_when_none(
-        self, mock_tgc, mock_ctx, mock_wrapper, mock_cleanup, mock_engine_cls, mock_setup
-    ):
+    def test_etp_defaults_to_1_when_none(self, mock_cleanup, mock_llm_cls, mock_setup):
         """expert_tensor_parallel_size=None is normalised to 1 before forwarding."""
         from nemo_deploy.llm.inference.inference_base import create_mcore_engine
 
         mock_setup.return_value = ([MagicMock()], MagicMock())
-        mock_engine_cls.return_value = MagicMock()
+        mock_llm_cls.return_value = MagicMock()
         mock_cleanup.return_value = MagicMock()
 
         create_mcore_engine(path=Path("/fake"), model_format="nemo", expert_tensor_parallel_size=None)
@@ -410,19 +405,14 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
         assert kwargs["expert_tensor_parallel_size"] == 1
 
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
-    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
-    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
-    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
-    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
-    def test_sp_defaults_to_1_when_none(
-        self, mock_tgc, mock_ctx, mock_wrapper, mock_cleanup, mock_engine_cls, mock_setup
-    ):
+    def test_sp_defaults_to_1_when_none(self, mock_cleanup, mock_llm_cls, mock_setup):
         """sequence_parallel=None is normalised to 1 before forwarding."""
         from nemo_deploy.llm.inference.inference_base import create_mcore_engine
 
         mock_setup.return_value = ([MagicMock()], MagicMock())
-        mock_engine_cls.return_value = MagicMock()
+        mock_llm_cls.return_value = MagicMock()
         mock_cleanup.return_value = MagicMock()
 
         create_mcore_engine(path=Path("/fake"), model_format="nemo", sequence_parallel=None)
@@ -431,19 +421,14 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
         assert kwargs["sequence_parallel"] == 1
 
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
-    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
-    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
-    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
-    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
-    def test_explicit_etp_passed_through(
-        self, mock_tgc, mock_ctx, mock_wrapper, mock_cleanup, mock_engine_cls, mock_setup
-    ):
+    def test_explicit_etp_passed_through(self, mock_cleanup, mock_llm_cls, mock_setup):
         """An explicit expert_tensor_parallel_size value is forwarded unchanged."""
         from nemo_deploy.llm.inference.inference_base import create_mcore_engine
 
         mock_setup.return_value = ([MagicMock()], MagicMock())
-        mock_engine_cls.return_value = MagicMock()
+        mock_llm_cls.return_value = MagicMock()
         mock_cleanup.return_value = MagicMock()
 
         create_mcore_engine(path=Path("/fake"), model_format="nemo", expert_tensor_parallel_size=4)
@@ -452,19 +437,14 @@ class TestCreateMcoreEngineETPSequenceParallel(unittest.TestCase):
         assert kwargs["expert_tensor_parallel_size"] == 4
 
     @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
-    @patch("nemo_deploy.llm.inference.inference_base.MCoreEngine")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
     @patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
-    @patch("nemo_deploy.llm.inference.inference_base.GPTInferenceWrapper")
-    @patch("nemo_deploy.llm.inference.inference_base.StaticInferenceContext")
-    @patch("nemo_deploy.llm.inference.inference_base.TextGenerationController")
-    def test_explicit_sp_passed_through(
-        self, mock_tgc, mock_ctx, mock_wrapper, mock_cleanup, mock_engine_cls, mock_setup
-    ):
+    def test_explicit_sp_passed_through(self, mock_cleanup, mock_llm_cls, mock_setup):
         """An explicit sequence_parallel=True value is forwarded unchanged."""
         from nemo_deploy.llm.inference.inference_base import create_mcore_engine
 
         mock_setup.return_value = ([MagicMock()], MagicMock())
-        mock_engine_cls.return_value = MagicMock()
+        mock_llm_cls.return_value = MagicMock()
         mock_cleanup.return_value = MagicMock()
 
         create_mcore_engine(path=Path("/fake"), model_format="nemo", sequence_parallel=True)
@@ -487,7 +467,7 @@ class TestMegatronLLMDeployableETPSequenceParallel(unittest.TestCase):
         """expert_tensor_parallel_size is forwarded to create_mcore_engine."""
         from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
 
-        mock_create.return_value = (MagicMock(), MagicMock(), MagicMock())
+        mock_create.return_value = (MagicMock(), MagicMock())
 
         MegatronLLMDeployable(
             megatron_checkpoint_filepath="model.ckpt",
@@ -503,7 +483,7 @@ class TestMegatronLLMDeployableETPSequenceParallel(unittest.TestCase):
         """sequence_parallel is forwarded to create_mcore_engine."""
         from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
 
-        mock_create.return_value = (MagicMock(), MagicMock(), MagicMock())
+        mock_create.return_value = (MagicMock(), MagicMock())
 
         MegatronLLMDeployable(
             megatron_checkpoint_filepath="model.ckpt",
@@ -519,7 +499,7 @@ class TestMegatronLLMDeployableETPSequenceParallel(unittest.TestCase):
         """Defaults: expert_tensor_parallel_size=1, sequence_parallel=False."""
         from nemo_deploy.llm.megatronllm_deployable import MegatronLLMDeployable
 
-        mock_create.return_value = (MagicMock(), MagicMock(), MagicMock())
+        mock_create.return_value = (MagicMock(), MagicMock())
 
         MegatronLLMDeployable(megatron_checkpoint_filepath="model.ckpt")
 
