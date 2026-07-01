@@ -111,7 +111,10 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "97e8dba4060ae74a110b9da6255eb0a66b016b2d" }
-nvidia-resiliency-ext = { git = "https://github.com/NVIDIA/nvidia-resiliency-ext.git", rev = "b2bb3d728a18795807d9f76c535e005a609a1b01" }
+# Install nvidia-resiliency-ext from PyPI (0.6.0 final release) instead of a git
+# dev commit. Megatron-core's has_nvrx_async_support() asserts the installed
+# nvidia_resiliency_ext.__version__ is >= 0.6.0, and the git dev build reports
+# "0.6.0.dev69+..." which PEP 440 orders below the final "0.6.0", failing the check.
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
