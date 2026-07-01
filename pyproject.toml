@@ -135,7 +135,6 @@ default-groups = ["linting", "build", "test"]
 #  --link-mode=symlink (fastest option when uv cache and venv on different file-system; caveat: venv is brittle since it depends on the environment/container)
 link-mode = "copy"
 conflicts = [[{ extra = "vllm" }, { extra = "trt-onnx" }]]
-extra-build-dependencies = { fast-hadamard-transform = ["setuptools", "torch"] }
 override-dependencies = [
     "cachetools>=5.0.0",
     "torch; sys_platform == 'never'",
@@ -151,7 +150,7 @@ override-dependencies = [
     "datasets>=3.3.0",
     "flash-linear-attention>=0.3.0,<0.4.dev0",
     "patchelf; sys_platform=='never'",
-    "nvidia-resiliency-ext>=0.3.0,<0.6.0",
+    "nvidia-resiliency-ext>=0.3.0,<=0.6.0",
     "transformer-engine[pytorch,core_cu13]>=2.14.0a0,<2.17.0; sys_platform != 'darwin'",
     "transformer-engine-cu13>=2.14.0a0,<2.17.0; sys_platform != 'darwin'",
     "transformer-engine-cu12; sys_platform == 'never'",
@@ -163,6 +162,10 @@ override-dependencies = [
     "onnx<1.20.0",
 ]
 prerelease = "allow"
+
+[[tool.uv.dependency-metadata]]
+name = "nvidia-resiliency-ext"
+version = "0.6.0"
 
 [[tool.uv.index]]
 name = "pypi"
