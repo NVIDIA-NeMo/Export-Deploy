@@ -1,6 +1,6 @@
 # Export and Deploy Multimodal Models
 
-The Export-Deploy library provides comprehensive tools and APIs for exporting and deploying Multimodal Models (MMs) to production environments. This library supports multiple checkpoint formats and offers various deployment paths including TensorRT-LLM deployment through NVIDIA Triton Inference Server.
+The Export-Deploy library provides comprehensive tools and APIs for exporting and deploying Multimodal Models (MMs) to production environments. This library supports multiple checkpoint formats and offers various deployment paths through NVIDIA Triton Inference Server.
 
 ## Overview
 
@@ -17,7 +17,6 @@ The library supports several checkpoint formats, each with specific capabilities
 
 **Export and Deployment Paths Coming Soon:**
 - Model deployment with Triton and Ray Serve
-- TensorRT-LLM export and deployment with Triton and Ray Serve
 
 
 ### AutoModel Model/Checkpoints
@@ -26,7 +25,6 @@ The library supports several checkpoint formats, each with specific capabilities
 
 **Export and Deployment Paths Coming Soon:**
 - Model deployment with Triton
-- TensorRT-LLM export and deployment with Triton
 
 
 
