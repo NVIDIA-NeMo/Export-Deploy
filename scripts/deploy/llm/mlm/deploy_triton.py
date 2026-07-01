@@ -216,6 +216,13 @@ def get_args(argv):
         default=None,
         help="Micro batch size for model execution",
     )
+    parser.add_argument(
+        "-trc",
+        "--trust_remote_code",
+        default=False,
+        action="store_true",
+        help="Pass trust_remote_code=True to load_tokenizer() for checkpoints whose tokenizer requires it.",
+    )
     args = parser.parse_args(argv)
     return args
 
@@ -263,6 +270,7 @@ def nemo_deploy(argv):
         legacy_ckpt=args.legacy_ckpt,
         model_type=args.model_type,
         micro_batch_size=args.micro_batch_size,
+        trust_remote_code=args.trust_remote_code,
         **model_config_kwargs,
     )
 
