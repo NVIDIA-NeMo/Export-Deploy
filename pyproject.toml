@@ -123,6 +123,7 @@ no-build-isolation-package = [
     "mamba-ssm",
     "causal-conv1d",
     "nv-grouped-gemm",
+    "fast-hadamard-transform",
 ]
 
 # Always apply the build group since dependencies like TE/mcore/nemo-run require build dependencies
