@@ -151,7 +151,7 @@ override-dependencies = [
     "datasets>=3.3.0",
     "flash-linear-attention>=0.3.0,<0.4.dev0",
     "patchelf; sys_platform=='never'",
-    "nvidia-resiliency-ext>=0.3.0,<=0.6.0",
+    "nvidia-resiliency-ext>=0.6.0",
     "transformer-engine[pytorch,core_cu13]>=2.14.0a0,<2.17.0; sys_platform != 'darwin'",
     "transformer-engine-cu13>=2.14.0a0,<2.17.0; sys_platform != 'darwin'",
     "transformer-engine-cu12; sys_platform == 'never'",
