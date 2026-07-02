@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM nvcr.io/nvidian/nemo:export-deploy-pyt-26.04-vllm-v0.20.1
+FROM nvcr.io/nvidian/nemo:export-deploy-pyt-26.06-vllm-v0.24.0
 WORKDIR /workspace
 COPY . .
 ARG INFERENCE_FRAMEWORK
