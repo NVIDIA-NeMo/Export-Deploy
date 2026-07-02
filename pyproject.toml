@@ -111,7 +111,10 @@ vllm = [
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
 ]
 megatron-bridge = { git = "https://github.com/NVIDIA-NeMo/Megatron-Bridge.git", rev = "97e8dba4060ae74a110b9da6255eb0a66b016b2d" }
-nvidia-resiliency-ext = { git = "https://github.com/NVIDIA/nvidia-resiliency-ext.git", rev = "b2bb3d728a18795807d9f76c535e005a609a1b01" }
+# Use the released nvidia-resiliency-ext (>=0.6.0) rather than a git dev build:
+# megatron-core's runtime is_nvrx_min_version() asserts the installed package
+# version is >=0.6.0, and a git build reports 0.6.0.devN (< 0.6.0), which fails
+# the assertion at import time.
 # nemo-toolkit = { git = "https://github.com/NVIDIA/NeMo.git", rev = "main" }
 
 [tool.uv]
@@ -151,7 +154,7 @@ override-dependencies = [
     "datasets>=3.3.0",
     "flash-linear-attention>=0.3.0,<0.4.dev0",
     "patchelf; sys_platform=='never'",
-    "nvidia-resiliency-ext>=0.3.0,<=0.6.0",
+    "nvidia-resiliency-ext>=0.6.0",
     "transformer-engine[pytorch,core_cu13]>=2.14.0a0,<2.17.0; sys_platform != 'darwin'",
     "transformer-engine-cu13>=2.14.0a0,<2.17.0; sys_platform != 'darwin'",
     "transformer-engine-cu12; sys_platform == 'never'",

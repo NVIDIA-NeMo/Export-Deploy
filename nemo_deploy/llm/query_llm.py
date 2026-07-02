@@ -449,7 +449,7 @@ class NemoQueryLLM(NemoQueryLLMBase):
 
 
 class NemoQueryvLLM(NemoQueryLLMBase):
-    """Sends a query to Triton for TensorRT-LLM API deployment inference.
+    """Sends a query to Triton for vLLM deployment inference.
 
     Example:
         from nemo_deploy import NemoQueryvLLM

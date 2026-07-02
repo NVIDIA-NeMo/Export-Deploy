@@ -12,5 +12,5 @@ You will find step-by-step guides for deploying Automodel LLMs with both Triton 
 
 Deploy with Triton  <automodel-in-framework.md>
 Deploy with Ray Serve  <automodel-ray.md>
-Export and Deploy <optimized/index.md>
+Optimized <optimized/index.md>
 ```

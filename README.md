@@ -12,7 +12,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![GitHub Stars](https://img.shields.io/github/stars/NVIDIA-NeMo/Export-Deploy.svg?style=social&label=Star)](https://github.com/NVIDIA-NeMo/Export-Deploy/stargazers/)
 
-<!-- **Library with tooling and APIs for exporting and deploying NeMo and Hugging Face models with support of backends like  TensorRT, TensorRT-LLM and vLLM through NVIDIA Triton Inference Server.** -->
+<!-- **Library with tooling and APIs for exporting and deploying NeMo and Hugging Face models with support of backends like TensorRT and vLLM through NVIDIA Triton Inference Server.** -->
 
 [![📖 Documentation](https://img.shields.io/badge/docs-nvidia-informational?logo=book)](https://docs.nvidia.com/nemo/export-deploy/latest/index.html)
 [![🔧 Installation](https://img.shields.io/badge/install-guide-blue?logo=terminal)](https://github.com/NVIDIA-NeMo/Export-Deploy?tab=readme-ov-file#-install)
@@ -21,7 +21,7 @@
 
 </div>
 
-The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for exporting and deploying NeMo and 🤗Hugging Face models to production environments. It supports various deployment paths including TensorRT and vLLM deployment through NVIDIA Triton Inference Server and Ray Serve.
+The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for exporting and deploying NeMo and Hugging Face models to production environments. It supports various deployment paths including TensorRT and vLLM deployment through NVIDIA Triton Inference Server and Ray Serve.
 
 ![image](docs/NeMo_Repo_Overview_ExportDeploy.png)
 
@@ -32,8 +32,8 @@ The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for
 ## 🚀 Key Features
 
 - Support for Large Language Models (LLMs) and Multimodal Models (MMs)
-- Export Megatron-Brdige and Hugging Face models to optimized inference formats including vLLM
-- Deploy Megatron-Brdige and Hugging Face models using Ray Serve or NVIDIA Triton Inference Server
+- Export Megatron-Bridge and Hugging Face models to optimized inference formats including vLLM
+- Deploy Megatron-Bridge, Megatron-LM and Hugging Face models using Ray Serve or NVIDIA Triton Inference Server
 - Multi-GPU and distributed inference capabilities
 - Multi-instance deployment options
 
@@ -43,9 +43,10 @@ The **Export-Deploy library ("NeMo Export-Deploy")** provides tools and APIs for
 
 | Model / Checkpoint                                                                              | vLLM      | ONNX                        | TensorRT               |
 |-------------------------------------------------------------------------------------------------|:---------:|:--------------------------:|:----------------------:|
+| [Megatron Bridge](https://github.com/NVIDIA-NeMo/Megatron-Bridge)                               | bf16      | N/A                      | N/A                    |
 | [Hugging Face](https://huggingface.co/docs/transformers/en/index)                               | bf16      | N/A                      | N/A                    |
 | [NIM Embedding](https://docs.nvidia.com/nim/nemo-retriever/text-embedding/latest/overview.html) | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
-| [NIM Reranking](https://docs.nvidia.com/nim/nemo-retriever/text-reranking/latest/overview.html) | N/A       | Coming Soon                | Coming Soon            |
+| [NIM Reranking](https://docs.nvidia.com/nim/nemo-retriever/text-reranking/latest/overview.html) | N/A       | bf16, fp8, int8 (PTQ)      | bf16, fp8, int8 (PTQ)  |
 
 The support matrix above outlines the export capabilities for each model or checkpoint, including the supported precision options across various inference-optimized libraries. The export module enables exporting models that have been quantized using post-training quantization (PTQ) with the [TensorRT Model Optimizer](https://github.com/NVIDIA/TensorRT-Model-Optimizer) library, as shown above. Models trained with low precision or quantization-aware training are also supported, as indicated in the table.
 
@@ -57,6 +58,7 @@ Please note that not all large language models (LLMs) and multimodal models (MMs
 
 | Model / Checkpoint                                                                        | RayServe                                 | PyTriton                |
 |-------------------------------------------------------------------------------------------|------------------------------------------|-------------------------|
+| [Megatron Bridge](https://github.com/NVIDIA-NeMo/Megatron-Bridge)                         | Single/Multi-Node Multi-GPU              | Single-Node Multi-GPU   |
 | [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)                                      | Limited                                  | Limited              |
 | [Hugging Face](https://huggingface.co/docs/transformers/en/index)                         | Single-Node Multi-GPU,<br>Multi-instance | Single-Node Multi-GPU   |
 | [vLLM](https://github.com/vllm-project/vllm)                                              | N/A                                      | Single-Node Multi-GPU   |

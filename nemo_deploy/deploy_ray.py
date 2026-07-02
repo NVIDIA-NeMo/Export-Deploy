@@ -30,7 +30,7 @@ try:
     from nemo_deploy.multimodal.megatron_multimodal_deployable_ray import MegatronMultimodalRayDeployable
 
     HAVE_RAY = True
-except (ImportError, ModuleNotFoundError):
+except (ImportError, ModuleNotFoundError, AssertionError):
     from unittest.mock import MagicMock
 
     ray = MagicMock()
