@@ -82,7 +82,7 @@ dependencies = [
 inframework = []
 vllm = ["vllm~=0.24.0", "pandas", "timm"]
 trt-onnx = [
-    "tensorrt==10.16.1.11",
+    "tensorrt==11.0.0.114",
     "onnx==1.21.0",
     "onnxscript>=0.6.0",
     "transformers==4.51.3",
