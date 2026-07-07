@@ -52,7 +52,7 @@ def get_args():
     )
     parser.add_argument(
         "--trt_version_compatible",
-        default=True,
+        default=False,
         action="store_true",
         help="Whether to generate version compatible TensorRT models.",
     )
