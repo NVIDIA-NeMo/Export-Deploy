@@ -195,6 +195,7 @@ def setup_megatron_model_and_tokenizer_for_inference(
     sequence_parallel: Optional[bool] = None,
     micro_batch_size: Optional[int] = None,
     model_type: str = "gpt",
+    trust_remote_code: bool = False,
 ) -> Tuple[List[MegatronModule], MegatronTokenizer]:
     """Initialize a Megatron model and tokenizer for inference from a Megatron-LM/MBridge checkpoint.
 
@@ -260,7 +261,7 @@ def setup_megatron_model_and_tokenizer_for_inference(
         megatron_args=mlm_args,
         use_cpu_init=False,
     )
-    tokenizer = load_tokenizer(checkpoint_path)
+    tokenizer = load_tokenizer(checkpoint_path, trust_remote_code=trust_remote_code)
     return model, tokenizer, mlm_args
 
 
@@ -437,6 +438,7 @@ def create_mcore_engine(
     micro_batch_size: Optional[int] = None,
     buffer_size_gb: float = 10.0,
     legacy_model_format: bool = False,
+    trust_remote_code: bool = False,
     **model_config_kwargs,
 ) -> Tuple[MCoreEngineWithCleanup, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MegatronLLM engine for inference.
@@ -498,6 +500,7 @@ def create_mcore_engine(
             sequence_parallel=sequence_parallel,
             micro_batch_size=micro_batch_size,
             model_type=model_type,
+            trust_remote_code=trust_remote_code,
         )
         model = modelList[0]
     else:

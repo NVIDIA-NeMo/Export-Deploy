@@ -225,6 +225,13 @@ def parse_args():
         default={},
         help="Runtime environment for the deployment (JSON string)",
     )
+    parser.add_argument(
+        "-trc",
+        "--trust_remote_code",
+        default=False,
+        action="store_true",
+        help="Pass trust_remote_code=True to load_tokenizer() for checkpoints whose tokenizer requires it.",
+    )
     return parser.parse_args()
 
 
@@ -283,6 +290,7 @@ def main():
         micro_batch_size=args.micro_batch_size,
         batch_wait_timeout_s=args.batch_wait_timeout_s,
         legacy_model_format=args.legacy_model_format,
+        trust_remote_code=args.trust_remote_code,
         **model_config_kwargs,
     )
 
