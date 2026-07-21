@@ -99,7 +99,7 @@ jobs:
       app-id: ${{ vars.BOT_ID }}
       skip-test-wheel: true
       wheel-content-ignore: "W002,W004,W009"
-      custom-container: nvcr.io/nvidia/pytorch:25.11-py3
+      custom-container: nvcr.io/nvidia/pytorch:26.06-py3
       no-build-isolation: true
       runner: ${{ needs.pre-flight.outputs.runner_prefix }}-gpu-x2-container
       container-options: "--gpus all --runtime=nvidia"

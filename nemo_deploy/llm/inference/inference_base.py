@@ -15,6 +15,7 @@
 
 import atexit
 import logging
+import os
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
@@ -521,10 +522,13 @@ def create_mcore_engine(
         materialize_only_last_token_logits=True,
     )
 
+    coordinator_host = os.environ.get("MASTER_ADDR")
+
     llm = MegatronLLM(
         model=model,
         tokenizer=tokenizer,
         inference_config=inference_config,
+        coordinator_host=coordinator_host,
     )
 
     # Wrap the engine to ensure cleanup
