@@ -106,3 +106,23 @@ class TestOnnxLLMExporter:
             pytest.raises(UnavailableError),
         ):
             OnnxLLMExporter().quantize(quant_cfg="", forward_loop="")
+
+    def test_export_allows_none_dynamic_axes(self, temp_dir, dummy_model, dummy_tokenizer):
+        exporter = OnnxLLMExporter(
+            onnx_model_dir=temp_dir,
+            model=dummy_model,
+            tokenizer=dummy_tokenizer,
+            load_runtime=False,
+        )
+        example_inputs = {"input_ids": torch.randint(0, 10, (2, 4), device=exporter.device)}
+        with mock.patch("nemo_export.onnx_llm_exporter.torch.onnx.export") as mock_export:
+            exporter.export(
+                input_names=["input_ids"],
+                output_names=["output"],
+                example_inputs=example_inputs,
+                dynamic_axes_input=None,
+                dynamic_axes_output=None,
+            )
+
+        _, kwargs = mock_export.call_args
+        assert kwargs["dynamic_axes"] == {}
