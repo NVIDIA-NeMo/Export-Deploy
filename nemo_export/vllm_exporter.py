@@ -16,7 +16,7 @@
 import logging
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Optional
 
 import numpy as np
 
@@ -104,12 +104,12 @@ class vLLMExporter(ITritonDeployable):
     def export(
         self,
         model_path_id: str,
-        tokenizer: str = None,
+        tokenizer: Optional[str] = None,
         trust_remote_code: bool = False,
         enable_lora: bool = False,
         tensor_parallel_size: int = 1,
         dtype: str = "auto",
-        quantization: str = None,
+        quantization: Optional[str] = None,
         seed: int = 0,
         gpu_memory_utilization: float = 0.9,
         swap_space: float = 4,
@@ -117,7 +117,7 @@ class vLLMExporter(ITritonDeployable):
         enforce_eager: bool = False,
         task: Literal["auto", "generate", "embedding"] = "auto",
         model_format: Literal["hf", "megatron_bridge"] = "megatron_bridge",
-        hf_model_id: str = None,
+        hf_model_id: Optional[str] = None,
     ):
         """
         Exports a Hugging Face or Megatron-Bridge checkpoint to vLLM and initializes the engine.
@@ -630,10 +630,10 @@ class vLLMExporter(ITritonDeployable):
         top_k: int = 1,
         top_p: float = 0.1,
         temperature: float = 1.0,
-        n_log_probs: int = None,
-        n_prompt_log_probs: int = None,
-        seed: int = None,
-        lora_model_name: str = None,
+        n_log_probs: Optional[int] = None,
+        n_prompt_log_probs: Optional[int] = None,
+        seed: Optional[int] = None,
+        lora_model_name: Optional[str] = None,
     ):
         """
         Generate text completions for a list of input prompts using the vLLM model.
