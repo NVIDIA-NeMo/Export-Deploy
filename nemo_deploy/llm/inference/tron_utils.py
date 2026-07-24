@@ -261,7 +261,7 @@ def _set_random_seed(
     te_rng_tracker: bool = False,
     inference_rng_tracker: bool = False,
 ) -> None:
-    """Set random seed for reproducability.
+    """Set random seed for reproducibility.
 
     Args:
         seed_ (int): Base random seed to use
@@ -332,7 +332,7 @@ def _initialize_tp_communicators(model_config: Union[GPTConfig, T5Config], micro
             bootstrap_backend=bootstrap_backend,
         )
     except TypeError:
-        # Fallback for older TE versions
+        # Fallback for older Transformer Engine versions
         if bootstrap_backend != "mpi":
             LOGGER.info("Warning: Transformer Engine may only support MPI bootstrap backend")
 

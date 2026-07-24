@@ -120,10 +120,10 @@ def get_example_inputs(
 
 
 def validate_fp8_network(network) -> None:
-    """Checks the network to ensure it's compatible with fp8 precison.
+    """Checks the network to ensure it's compatible with fp8 precision.
 
     Raises:
-        ValueError if netowrk doesn't container Q/DQ FP8 layers
+        ValueError if network doesn't container Q/DQ FP8 layers
     """
     import tensorrt as trt
 

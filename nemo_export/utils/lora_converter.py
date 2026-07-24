@@ -201,7 +201,7 @@ def convert_lora_nemo_to_canonical(lora_nemo, save_path, hf_format=False, donor_
                         new_key = replace_number_add_offset(key, layer_offset)
                         lora_state_dict[tp][new_key] = value
 
-        # TODO: currently suport tp=1
+        # TODO: currently support tp=1
         lora_state_dict = lora_state_dict[0]
         if lora_config["peft"]["lora_tuning"].get("variant", "nemo") == "nemo":
             lora_config["peft"]["lora_tuning"]["variant"] = "canonical"
