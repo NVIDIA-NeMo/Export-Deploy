@@ -69,7 +69,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         context_parallel_size (int): context parallelism.
         expert_model_parallel_size (int): expert parallelism.
         params_dtype (torch.dtype): max input length.
-        inference_batch_times_seqlen_threshold (int): squence threshold.
+        inference_batch_times_seqlen_threshold (int): sequence threshold.
         inference_max_seq_length (int): max_seq_length for inference. Required by MCoreEngine (>=0.12). Defaults to
         4096.
         max_batch_size (int): max batch size for inference. Defaults to 32.
@@ -455,7 +455,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         if log_probs:
             output_log_probs = []
             for r in results:
-                # Convert to torch tensor and then move to cpu as generated_log_probs is a list and cant be moved
+                # Convert to torch tensor and then move to cpu as generated_log_probs is a list and cannot be moved
                 # to cpu otherwise
                 if echo:
                     lp = torch.tensor(r.prompt_log_probs + r.generated_log_probs).cpu().detach().numpy()
@@ -481,7 +481,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         if top_logprobs:
             output_top_n_log_probs = []
             for r in results:
-                # Convert to torch tensor and then move to cpu as generated_log_probs is a list and cant be moved
+                # Convert to torch tensor and then move to cpu as generated_log_probs is a list and cannot be moved
                 # to cpu otherwise.
                 # top_logprobs for input tokens is supported with MCore 0.13 and above.
                 if echo:

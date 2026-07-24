@@ -301,7 +301,7 @@ def run_inference(
 
         functional_result = FunctionalResult()
 
-        # Check non-deployed funcitonal correctness
+        # Check non-deployed functional correctness
         if args.functional_test:
             functional_result.regular_pass = True
             if not check_model_outputs(output, expected_outputs):
@@ -742,7 +742,7 @@ def run_inference_tests(args):
     if args.functional_test:
         print(f"Functional: {functional_test_result}")
     if args.run_accuracy:
-        print(f"Acccuracy: {accuracy_test_result}")
+        print(f"Accuracy: {accuracy_test_result}")
 
     if functional_test_result == "FAIL":
         raise Exception("Functional test failed")
