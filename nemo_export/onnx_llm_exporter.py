@@ -236,7 +236,7 @@ class OnnxLLMExporter(ITritonDeployable):
                 f=self.onnx_model_path,
                 input_names=input_names,
                 output_names=output_names,
-                dynamic_axes={**dynamic_axes_input, **dynamic_axes_output},
+                dynamic_axes={**(dynamic_axes_input or {}), **(dynamic_axes_output or {})},
                 verbose=verbose,
                 opset_version=opset,
                 dynamo=False,
