@@ -114,7 +114,7 @@ def query_llm(
         inputs["temperature"] = np.full(prompts.shape, temperature, dtype=np.single)
 
     if random_seed is not None:
-        inputs["random_seed"] = np.full(prompts.shape, random_seed, dtype=np.single)
+        inputs["random_seed"] = np.full(prompts.shape, random_seed, dtype=np.int_)
 
     if stop_words_list is not None:
         stop_words_list = np.char.encode(stop_words_list, "utf-8")
