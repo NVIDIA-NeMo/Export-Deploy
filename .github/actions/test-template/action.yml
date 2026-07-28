@@ -61,7 +61,7 @@ runs:
         apt-get install -y uuid-runtime
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         path: Export-Deploy
 
@@ -163,7 +163,7 @@ runs:
         echo ::endgroup::
 
     - name: Run main script
-      uses: nick-fields/retry@v3
+      uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
       id: run-main-script
       with:
         timeout_seconds: ${{ steps.create.outputs.timeout_in_seconds }}
@@ -210,7 +210,7 @@ runs:
         echo ::endgroup::
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       if: ${{ steps.check.outputs.coverage_report != 'none' }}
       with:
         name: ${{ steps.check.outputs.coverage_report }}
