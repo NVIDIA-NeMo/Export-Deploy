@@ -24,10 +24,10 @@ To run the code examples, you will need a [Megatron-Bridge](https://github.com/N
    from megatron.bridge import AutoBridge
 
    if __name__ == "__main__":
-      AutoBridge.import_ckpt(
-         "meta-llama/Llama-3.1-8B",
-         "/opt/checkpoints/hf_llama31_8B_mbridge",        
-      )
+       AutoBridge.import_ckpt(
+           "meta-llama/Llama-3.1-8B",
+           "/opt/checkpoints/hf_llama31_8B_mbridge",
+       )
    ```
 
 
