@@ -137,7 +137,7 @@ output = nq.query_llm(
     top_p=0.0,
     temperature=1.0,
     use_greedy=True,
-    repetition_penalty=1.0
+    repetition_penalty=1.0,
 )
 print(output)
 ```

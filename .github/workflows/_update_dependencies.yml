@@ -43,7 +43,7 @@ jobs:
         run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -53,7 +53,7 @@ jobs:
         run: az acr login --name nemoci
 
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ env.TARGET_BRANCH }}
 
@@ -71,7 +71,7 @@ jobs:
           fi
 
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ env.SOURCE_BRANCH }}
 
@@ -88,7 +88,7 @@ jobs:
           bash -c 'uv lock --upgrade'
 
       - name: Upload lock file
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: lock-file-${{ env.SOURCE_BRANCH }}
           path: uv.lock
@@ -102,7 +102,7 @@ jobs:
       TARGET_BRANCH: ${{ inputs.target-branch }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           token: ${{ secrets.PAT }}
           ref: ${{ env.TARGET_BRANCH }}
@@ -111,7 +111,7 @@ jobs:
         run: sudo apt-get install -y gnupg2
 
       - name: Import GPG key (for signing)
-        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
         id: gpg-action
         with:
           gpg_private_key: ${{ secrets.SSH_KEY }}
@@ -127,12 +127,12 @@ jobs:
           fi
 
       - name: Download lock file
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: lock-file-${{ env.SOURCE_BRANCH }}
 
       - name: Create Bump PR
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6
         id: create-pull-request
         env:
           title: "chore(beep boop 🤖): Bump `uv.lock` (${{ inputs.target-branch}}) (${{ needs.pre-flight.outputs.date }})"
