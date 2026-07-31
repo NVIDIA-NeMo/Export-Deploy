@@ -23,7 +23,7 @@ inputs:
     description: "Test script to execute"
     required: true
   is_optional:
-    description: "Failure will cancel all other tests if set to true"
+    description: "Failure is ignored and other tests continue if set to true"
     required: false
     default: "false"
   is_unit_test:
