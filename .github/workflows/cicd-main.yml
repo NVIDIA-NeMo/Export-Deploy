@@ -184,7 +184,7 @@ jobs:
   cicd-e2e-tests-trt-onnx:
     needs: [pre-flight, cicd-unit-tests-vllm]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
-    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    name: L2_ONNX_TRT
     environment: nemo-ci
     if: |
       (
@@ -202,7 +202,7 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: L2_ONNX_TRT
-          is_optional: ${{ matrix.is_optional || false }}
+          is_optional: false
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ secrets.PAT }}
@@ -214,7 +214,7 @@ jobs:
   cicd-e2e-tests-vllm:
     needs: [cicd-unit-tests-vllm, pre-flight]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
-    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    name: L2_Launch_vLLM
     environment: nemo-ci
     if: |
       (
@@ -230,7 +230,7 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: L2_Launch_vLLM
-          is_optional: ${{ matrix.is_optional || false }}
+          is_optional: false
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ secrets.PAT }}
@@ -242,7 +242,7 @@ jobs:
   cicd-e2e-tests-inframework:
     needs: [pre-flight, cicd-unit-tests-vllm]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
-    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    name: L2_Launch_InFramework
     environment: nemo-ci
     if: |
       (
@@ -258,7 +258,7 @@ jobs:
         uses: ./.github/actions/test-template
         with:
           script: L2_Launch_InFramework
-          is_optional: ${{ matrix.is_optional || false }}
+          is_optional: false
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ secrets.PAT }}
