@@ -152,6 +152,8 @@ main() {
             --all-groups ${UV_ARGS[@]}
         # Install the package
         uv pip install --no-deps -e .
+        # Remove pyelftools to address dependency/license issues.
+        uv pip uninstall pyelftools
     else
         if [[ "$INFERENCE_FRAMEWORK" != "inframework" ]]; then
             EXTRA="[$INFERENCE_FRAMEWORK]"
@@ -167,6 +169,8 @@ main() {
 
 
         pip install --pre --no-cache-dir --no-build-isolation .$EXTRA
+        # Remove pyelftools to address dependency/license issues.
+        pip uninstall -y pyelftools
     fi
 
 }
