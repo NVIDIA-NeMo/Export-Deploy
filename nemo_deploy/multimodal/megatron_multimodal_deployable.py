@@ -173,6 +173,13 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         if isinstance(self.inference_wrapped_model, QwenVLInferenceWrapper):
             from qwen_vl_utils import process_vision_info
 
+            from nemo_deploy.multimodal.image_url_validator import validate_image_url
+
+            # data: URIs are inline base64 and never trigger a network request.
+            # All other values are treated as URLs and must pass the SSRF guard.
+            if not image_source.startswith("data:"):
+                validate_image_url(image_source)
+
             messages = [
                 {
                     "role": "user",

@@ -100,6 +100,9 @@ class NemoQueryMultimodal:
                 raise UnavailableError(MISSING_PIL_MSG)
 
             if input_media.startswith("http") or input_media.startswith("https"):
+                from nemo_deploy.multimodal.image_url_validator import validate_image_url
+
+                validate_image_url(input_media)
                 response = requests.get(input_media, timeout=5)
                 media = Image.open(BytesIO(response.content)).convert("RGB")
             else:
