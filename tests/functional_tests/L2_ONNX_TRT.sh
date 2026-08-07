@@ -17,8 +17,12 @@ set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
 source "$(dirname -- "${BASH_SOURCE[0]}")/../coverage.sh"
 
-# onnx export only works with an older transformers version
-pushd .. && uv pip install transformers==4.51.3 && popd
+# ONNX export only works with an older transformers version. Install it into a
+# writable overlay rather than mutating the image's root-owned environment.
+TRANSFORMERS_OVERLAY="$XDG_CACHE_HOME/export-deploy/transformers-4.51.3"
+mkdir -p "$TRANSFORMERS_OVERLAY"
+uv pip install --target "$TRANSFORMERS_OVERLAY" transformers==4.51.3
+export PYTHONPATH="$TRANSFORMERS_OVERLAY${PYTHONPATH:+:$PYTHONPATH}"
 
 export CUDA_VISIBLE_DEVICES="0,1"
 

@@ -32,4 +32,10 @@ elif [ -z "${XDG_CACHE_HOME:-}" ]; then
 fi
 export XDG_CACHE_HOME
 
+# uv's image-level cache can also be root-owned. Keep package installation
+# usable for launchers that intentionally select a test-only dependency.
+if [ -n "${UV_CACHE_DIR:-}" ] && [ ! -w "$UV_CACHE_DIR" ]; then
+    export UV_CACHE_DIR="$XDG_CACHE_HOME/uv"
+fi
+
 cd "$PROJECT_ROOT"

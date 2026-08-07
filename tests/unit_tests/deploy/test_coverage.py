@@ -134,3 +134,32 @@ def test_shell_coverage_setup_preserves_writable_cache(tmp_path):
         env={"HOME": str(tmp_path / "home"), "PATH": "/usr/bin:/bin", "XDG_CACHE_HOME": str(cache)},
     )
     assert result.stdout.strip() == str(cache)
+
+
+def test_shell_coverage_setup_redirects_unwritable_uv_cache(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            'source "$1"; printf "%s\\n" "$UV_CACHE_DIR"',
+            "coverage-test",
+            str(PROJECT_ROOT / "tests" / "coverage.sh"),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"HOME": str(home), "PATH": "/usr/bin:/bin", "UV_CACHE_DIR": "/root-owned-uv-cache"},
+    )
+    assert result.stdout.strip() == str(home / ".cache" / "uv")
+
+
+def test_onnx_launcher_keeps_checkout_as_working_directory():
+    launcher = (PROJECT_ROOT / "tests" / "functional_tests" / "L2_ONNX_TRT.sh").read_text()
+
+    assert "pushd" not in launcher
+    assert "popd" not in launcher
+    assert 'uv pip install --target "$TRANSFORMERS_OVERLAY" transformers==4.51.3' in launcher
+    assert 'export PYTHONPATH="$TRANSFORMERS_OVERLAY${PYTHONPATH:+:$PYTHONPATH}"' in launcher
