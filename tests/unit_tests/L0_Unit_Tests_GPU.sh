@@ -15,7 +15,7 @@
 #!/bin/bash
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
+source "$(dirname -- "${BASH_SOURCE[0]}")/../coverage.sh"
 
 CUDA_VISIBLE_DEVICES=0,1 NEMO_NUMBA_MINVER=0.53 coverage run -a \
     --data-file="$PROJECT_ROOT/.coverage" \

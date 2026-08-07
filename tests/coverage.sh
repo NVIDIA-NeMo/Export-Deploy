@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2025, NVIDIA CORPORATION.
+# Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
-set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
-
-source "$(dirname -- "${BASH_SOURCE[0]}")/../coverage.sh"
-
-CUDA_VISIBLE_DEVICES="" NEMO_NUMBA_MINVER=0.53 coverage run -a \
-    --data-file="$PROJECT_ROOT/.coverage" \
-    --source="$PROJECT_ROOT" \
-    -m pytest -sv tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme" --cpu
-coverage combine -q
+# Resolve the checkout from this file so launchers also work when a linked
+# worktree is bind-mounted without its external Git metadata.
+PROJECT_ROOT=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+export PROJECT_ROOT
+cd "$PROJECT_ROOT"

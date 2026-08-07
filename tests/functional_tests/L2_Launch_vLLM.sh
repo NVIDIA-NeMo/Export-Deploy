@@ -16,7 +16,7 @@
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
 export CUDA_VISIBLE_DEVICES="0"
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
+source "$(dirname -- "${BASH_SOURCE[0]}")/../coverage.sh"
 
 coverage run \
     --data-file="$PROJECT_ROOT/.coverage" \

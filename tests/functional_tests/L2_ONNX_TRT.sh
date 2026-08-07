@@ -15,11 +15,12 @@
 #!/bin/bash
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
+source "$(dirname -- "${BASH_SOURCE[0]}")/../coverage.sh"
+
 # onnx export only works with an older transformers version
 pushd .. && uv pip install transformers==4.51.3 && popd
 
 export CUDA_VISIBLE_DEVICES="0,1"
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
 
 coverage run \
     --data-file="$PROJECT_ROOT/.coverage" \
