@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import subprocess
 import tomllib
 from pathlib import Path
@@ -64,3 +65,26 @@ def test_shell_coverage_setup_does_not_require_git(checkout, tmp_path):
 
     expected_root = str(mounted_checkout.resolve())
     assert result.stdout.splitlines() == [expected_root, expected_root]
+
+
+def test_shell_coverage_setup_provides_container_identity(tmp_path):
+    env = os.environ.copy()
+    env.pop("USER", None)
+    env.pop("LOGNAME", None)
+
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            'source "$1"; printf "%s\\n%s\\n" "$USER" "$LOGNAME"',
+            "coverage-test",
+            str(PROJECT_ROOT / "tests" / "coverage.sh"),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env=env,
+    )
+
+    assert result.stdout.splitlines() == ["nemo-ci", "nemo-ci"]

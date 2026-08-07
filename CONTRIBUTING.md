@@ -33,6 +33,8 @@ git worktree add --detach export-deploy-test "$COMMIT"
 docker run --rm -it \
     --user "$(id -u):$(id -g)" \
     --env HOME=/tmp/export-deploy-home \
+    --env USER="${USER:-nemo-ci}" \
+    --env LOGNAME="${LOGNAME:-${USER:-nemo-ci}}" \
     --env PATH=/opt/venv/bin:/usr/local/bin:/usr/bin:/bin \
     --workdir /workdir \
     --volume "$(pwd)/export-deploy-test:/workdir" \

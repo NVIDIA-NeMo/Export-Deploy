@@ -16,4 +16,11 @@
 # worktree is bind-mounted without its external Git metadata.
 PROJECT_ROOT=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 export PROJECT_ROOT
+
+# Some container runtimes start the requested numeric UID without adding it to
+# /etc/passwd. Python's getpass then needs an explicit identity, including when
+# PyTorch initializes its compilation cache during test collection.
+export USER="${USER:-nemo-ci}"
+export LOGNAME="${LOGNAME:-$USER}"
+
 cd "$PROJECT_ROOT"
