@@ -21,12 +21,7 @@ import pytest
 
 # Load the validator directly by file path so we don't trigger nemo_deploy/__init__.py
 # (which requires torch/triton). The module itself is pure stdlib.
-_validator_path = (
-    pathlib.Path(__file__).resolve().parents[3]
-    / "nemo_deploy"
-    / "multimodal"
-    / "image_url_validator.py"
-)
+_validator_path = pathlib.Path(__file__).resolve().parents[3] / "nemo_deploy" / "multimodal" / "image_url_validator.py"
 _spec = importlib.util.spec_from_file_location("image_url_validator", _validator_path)
 _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)

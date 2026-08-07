@@ -6,13 +6,13 @@ from urllib.parse import urlparse
 # 169.254.0.0/16 is the cloud IMDS range (AWS/GCP/Azure 169.254.169.254) —
 # the primary SSRF target in cloud deployments.
 _BLOCKED_NETWORKS = [
-    ipaddress.ip_network("127.0.0.0/8"),    # loopback — server's own local services
-    ipaddress.ip_network("10.0.0.0/8"),     # RFC 1918 private
+    ipaddress.ip_network("127.0.0.0/8"),  # loopback — server's own local services
+    ipaddress.ip_network("10.0.0.0/8"),  # RFC 1918 private
     ipaddress.ip_network("172.16.0.0/12"),  # RFC 1918 private
-    ipaddress.ip_network("192.168.0.0/16"), # RFC 1918 private
-    ipaddress.ip_network("169.254.0.0/16"), # link-local / cloud IMDS
-    ipaddress.ip_network("::1/128"),        # IPv6 loopback
-    ipaddress.ip_network("fc00::/7"),       # IPv6 unique-local
+    ipaddress.ip_network("192.168.0.0/16"),  # RFC 1918 private
+    ipaddress.ip_network("169.254.0.0/16"),  # link-local / cloud IMDS
+    ipaddress.ip_network("::1/128"),  # IPv6 loopback
+    ipaddress.ip_network("fc00::/7"),  # IPv6 unique-local
 ]
 
 
@@ -24,10 +24,7 @@ def validate_image_url(url: str) -> None:
     """
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
-        raise ValueError(
-            f"Unsupported image URL scheme '{parsed.scheme}'. "
-            "Only http and https are allowed."
-        )
+        raise ValueError(f"Unsupported image URL scheme '{parsed.scheme}'. Only http and https are allowed.")
     hostname = parsed.hostname
     if not hostname:
         raise ValueError("Image URL has no hostname.")
