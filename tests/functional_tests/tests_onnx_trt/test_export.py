@@ -20,6 +20,8 @@ import tempfile
 
 import pytest
 
+from tests.coverage import coverage_args
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -38,11 +40,7 @@ class TestONNXTRTExport:
     def test_export_onnx_trt_embedding(self):
         subprocess.run(
             [
-                "coverage",
-                "run",
-                "--data-file=/workspace/.coverage",
-                "--source=/workspace/",
-                "--parallel-mode",
+                *coverage_args(),
                 "tests/functional_tests/utils/run_onnx_trt_embedding_export.py",
                 "--hf_model_path",
                 "/home/TestData/llm/models/llama-3.2-nv-embedqa-1b-v2",
@@ -58,11 +56,7 @@ class TestONNXTRTExport:
     def test_export_onnx_trt_embedding_int8(self):
         subprocess.run(
             [
-                "coverage",
-                "run",
-                "--data-file=/workspace/.coverage",
-                "--source=/workspace/",
-                "--parallel-mode",
+                *coverage_args(),
                 "tests/functional_tests/utils/run_onnx_trt_embedding_export.py",
                 "--hf_model_path",
                 "/home/TestData/llm/models/llama-3.2-nv-embedqa-1b-v2",
@@ -85,11 +79,7 @@ class TestONNXTRTExport:
     def test_export_onnx_trt_reranking(self):
         subprocess.run(
             [
-                "coverage",
-                "run",
-                "--data-file=/workspace/.coverage",
-                "--source=/workspace/",
-                "--parallel-mode",
+                *coverage_args(),
                 "tests/functional_tests/utils/run_onnx_trt_reranking_export.py",
                 "--hf_model_path",
                 "/home/TestData/llm/models/llama-3.2-nv-reranker-1b",

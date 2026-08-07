@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2025, NVIDIA CORPORATION.
+# Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
-set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
+from pathlib import Path
 
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+COVERAGE_DATA_FILE = PROJECT_ROOT / ".coverage"
 
-CUDA_VISIBLE_DEVICES="" NEMO_NUMBA_MINVER=0.53 coverage run -a \
-    --data-file="$PROJECT_ROOT/.coverage" \
-    --source="$PROJECT_ROOT" \
-    -m pytest -sv tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme" --cpu
-coverage combine -q
+
+def coverage_args() -> list[str]:
+    """Return coverage arguments rooted at the active checkout."""
+    return [
+        "coverage",
+        "run",
+        f"--data-file={COVERAGE_DATA_FILE}",
+        f"--source={PROJECT_ROOT}",
+        "--parallel-mode",
+    ]

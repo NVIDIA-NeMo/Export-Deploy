@@ -19,10 +19,11 @@ set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 pushd .. && uv pip install transformers==4.51.3 && popd
 
 export CUDA_VISIBLE_DEVICES="0,1"
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
 
 coverage run \
-    --data-file=/workspace/.coverage \
-    --source=/workspace/ \
+    --data-file="$PROJECT_ROOT/.coverage" \
+    --source="$PROJECT_ROOT" \
     --parallel-mode \
     -m pytest \
     -o log_cli=true \

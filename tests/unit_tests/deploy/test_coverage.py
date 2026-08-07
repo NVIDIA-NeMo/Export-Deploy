@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2025, NVIDIA CORPORATION.
+# Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
-set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
+from tests.coverage import COVERAGE_DATA_FILE, PROJECT_ROOT, coverage_args
 
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
 
-CUDA_VISIBLE_DEVICES="" NEMO_NUMBA_MINVER=0.53 coverage run -a \
-    --data-file="$PROJECT_ROOT/.coverage" \
-    --source="$PROJECT_ROOT" \
-    -m pytest -sv tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme" --cpu
-coverage combine -q
+def test_coverage_args_follow_checkout():
+    args = coverage_args()
+
+    assert PROJECT_ROOT == COVERAGE_DATA_FILE.parent
+    assert f"--data-file={PROJECT_ROOT / '.coverage'}" in args
+    assert f"--source={PROJECT_ROOT}" in args
+    assert "--parallel-mode" in args

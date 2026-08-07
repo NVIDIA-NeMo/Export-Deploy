@@ -18,6 +18,8 @@ import time
 
 import requests
 
+from tests.coverage import coverage_args
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -72,11 +74,7 @@ class TestDeployRayVLM:
             # Run Ray deployment for Megatron multimodal (VLM) model
             self.deploy_proc = subprocess.Popen(
                 [
-                    "coverage",
-                    "run",
-                    "--data-file=/workspace/.coverage",
-                    "--source=/workspace/",
-                    "--parallel-mode",
+                    *coverage_args(),
                     "scripts/deploy/multimodal/deploy_ray_inframework.py",
                     "--megatron_checkpoint",
                     vlm_checkpoint_path,

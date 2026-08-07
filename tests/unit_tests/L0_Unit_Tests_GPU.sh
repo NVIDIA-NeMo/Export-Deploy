@@ -15,8 +15,10 @@
 #!/bin/bash
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+
 CUDA_VISIBLE_DEVICES=0,1 NEMO_NUMBA_MINVER=0.53 coverage run -a \
-    --data-file=/workspace/.coverage \
-    --source=/workspace/ \
+    --data-file="$PROJECT_ROOT/.coverage" \
+    --source="$PROJECT_ROOT" \
     -m pytest -sv tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme"
 coverage combine -q

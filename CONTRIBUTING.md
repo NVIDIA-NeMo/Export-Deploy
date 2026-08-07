@@ -21,6 +21,29 @@ On a machine with CUDA, you can additionally sync vLLM:
 uv sync --extra te --extra vllm
 ```
 
+### CI container
+
+To reproduce CI without modifying the prebuilt image, mount a checkout at any
+writable location and run with your host user. Replace `$IMAGE` with the image
+built by the `cicd-container-build` job and `$COMMIT` with the revision under
+test:
+
+```bash
+git worktree add --detach export-deploy-test "$COMMIT"
+docker run --rm -it \
+    --user "$(id -u):$(id -g)" \
+    --env HOME=/tmp/export-deploy-home \
+    --env PATH=/opt/venv/bin:/usr/local/bin:/usr/bin:/bin \
+    --workdir /workdir \
+    --volume "$(pwd)/export-deploy-test:/workdir" \
+    "$IMAGE" \
+    bash tests/unit_tests/L0_Unit_Tests_CPU.sh
+```
+
+GPU and functional scripts can be invoked from the same checkout after adding
+the runtime's GPU flags and test-data mount. The scripts write coverage data to
+the checkout root rather than requiring `/workspace` or root privileges.
+
 ## 📦 Dependencies management
 
 We use [uv](https://docs.astral.sh/uv/) for managing dependencies. For reproducible builds, our project tracks the generated `uv.lock` file in the repository.  
