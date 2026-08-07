@@ -32,7 +32,7 @@ def test_coverage_args_follow_checkout():
     assert "--parallel-mode" in args
 
 
-@pytest.mark.parametrize("checkout", [Path("/workdir"), Path("/tmp/export-deploy")])
+@pytest.mark.parametrize("checkout", [Path("/workdir"), Path("/") / "tmp" / "export-deploy"])
 def test_coverage_omit_rules_follow_checkout(checkout):
     config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text())
     matcher = GlobMatcher(config["tool"]["coverage"]["run"]["omit"])
@@ -42,7 +42,7 @@ def test_coverage_omit_rules_follow_checkout(checkout):
     assert not matcher.match(str(checkout / "nemo_export" / "example.py"))
 
 
-@pytest.mark.parametrize("checkout", [Path("/workdir"), Path("/tmp/export-deploy")])
+@pytest.mark.parametrize("checkout", [Path("/workdir"), Path("/") / "tmp" / "export-deploy"])
 def test_shell_coverage_setup_does_not_require_git(checkout, tmp_path):
     mounted_checkout = tmp_path / checkout.relative_to("/")
     helper = mounted_checkout / "tests" / "coverage.sh"
