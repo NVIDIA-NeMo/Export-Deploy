@@ -60,7 +60,7 @@ def test_shell_coverage_setup_does_not_require_git(checkout, tmp_path):
         check=True,
         capture_output=True,
         text=True,
-        env={"PATH": "/usr/bin:/bin"},
+        env={"HOME": str(tmp_path / "home"), "PATH": "/usr/bin:/bin"},
     )
 
     expected_root = str(mounted_checkout.resolve())
@@ -88,3 +88,49 @@ def test_shell_coverage_setup_provides_container_identity(tmp_path):
     )
 
     assert result.stdout.splitlines() == ["nemo-ci", "nemo-ci"]
+
+
+@pytest.mark.parametrize("configured_cache", [None, Path("/root-owned-cache")])
+def test_shell_coverage_setup_provides_writable_cache(configured_cache, tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    env = {"HOME": str(home), "PATH": "/usr/bin:/bin"}
+    if configured_cache is not None:
+        env["XDG_CACHE_HOME"] = str(configured_cache)
+
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            'source "$1"; printf "%s\\n" "$XDG_CACHE_HOME"',
+            "coverage-test",
+            str(PROJECT_ROOT / "tests" / "coverage.sh"),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env=env,
+    )
+
+    assert result.stdout.strip() == str(home / ".cache")
+
+
+def test_shell_coverage_setup_preserves_writable_cache(tmp_path):
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            'source "$1"; printf "%s\\n" "$XDG_CACHE_HOME"',
+            "coverage-test",
+            str(PROJECT_ROOT / "tests" / "coverage.sh"),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"HOME": str(tmp_path / "home"), "PATH": "/usr/bin:/bin", "XDG_CACHE_HOME": str(cache)},
+    )
+    assert result.stdout.strip() == str(cache)

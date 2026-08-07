@@ -23,4 +23,13 @@ export PROJECT_ROOT
 export USER="${USER:-nemo-ci}"
 export LOGNAME="${LOGNAME:-$USER}"
 
+# The CI image may provide a root-owned cache. Redirect it only when it is not
+# writable so existing writable cache configuration remains unchanged.
+if [ -n "${XDG_CACHE_HOME:-}" ] && [ ! -w "$XDG_CACHE_HOME" ]; then
+    XDG_CACHE_HOME="${HOME:?HOME must be set}/.cache"
+elif [ -z "${XDG_CACHE_HOME:-}" ]; then
+    XDG_CACHE_HOME="${HOME:?HOME must be set}/.cache"
+fi
+export XDG_CACHE_HOME
+
 cd "$PROJECT_ROOT"
