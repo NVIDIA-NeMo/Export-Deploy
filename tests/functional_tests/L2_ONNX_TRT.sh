@@ -17,8 +17,16 @@ set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
 source "$(dirname -- "${BASH_SOURCE[0]}")/../coverage.sh"
 
-# The current embedding model requires HybridCache, which is unavailable in
-# transformers 4.51.3. Keep the environment's locked transformers version.
+# ONNX export uses Transformers 4.51.3. Resolve it outside the project so the
+# repository-wide 5.8.1 override cannot replace the requested overlay version.
+TRANSFORMERS_OVERLAY="$XDG_CACHE_HOME/export-deploy/transformers-4.51.3"
+mkdir -p "$TRANSFORMERS_OVERLAY"
+(
+    cd /tmp
+    uv pip install --target "$TRANSFORMERS_OVERLAY" transformers==4.51.3
+)
+export PYTHONPATH="$TRANSFORMERS_OVERLAY${PYTHONPATH:+:$PYTHONPATH}"
+python -c 'import transformers; assert transformers.__version__ == "4.51.3"'
 
 export CUDA_VISIBLE_DEVICES="0,1"
 

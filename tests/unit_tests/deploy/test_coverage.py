@@ -161,5 +161,6 @@ def test_onnx_launcher_keeps_checkout_as_working_directory():
 
     assert "pushd" not in launcher
     assert "popd" not in launcher
-    assert "uv pip install" not in launcher
-    assert "TRANSFORMERS_OVERLAY" not in launcher
+    assert "(\n    cd /tmp" in launcher
+    assert 'uv pip install --target "$TRANSFORMERS_OVERLAY" transformers==4.51.3' in launcher
+    assert 'transformers.__version__ == "4.51.3"' in launcher
