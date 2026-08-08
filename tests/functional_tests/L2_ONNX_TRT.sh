@@ -17,16 +17,20 @@ set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
 source "$(dirname -- "${BASH_SOURCE[0]}")/../coverage.sh"
 
-# ONNX export uses Transformers 4.51.3. Resolve it outside the project so the
-# repository-wide 5.8.1 override cannot replace the requested overlay version.
+# ONNX export requires the Transformers 4.51.3 API. Resolve it outside the
+# project so the repository-wide override cannot replace the requested version.
 TRANSFORMERS_OVERLAY="$XDG_CACHE_HOME/export-deploy/transformers-4.51.3"
-mkdir -p "$TRANSFORMERS_OVERLAY"
-(
-    cd /tmp
-    uv pip install --target "$TRANSFORMERS_OVERLAY" transformers==4.51.3
-)
+if ! PYTHONPATH="$TRANSFORMERS_OVERLAY" python -c \
+    'from transformers.cache_utils import HybridCache; import transformers; assert transformers.__version__ == "4.51.3"'
+then
+    rm -rf "$TRANSFORMERS_OVERLAY"
+    mkdir -p "$TRANSFORMERS_OVERLAY"
+    (
+        cd /tmp
+        uv pip install --target "$TRANSFORMERS_OVERLAY" transformers==4.51.3
+    )
+fi
 export PYTHONPATH="$TRANSFORMERS_OVERLAY${PYTHONPATH:+:$PYTHONPATH}"
-python -c 'import transformers; assert transformers.__version__ == "4.51.3"'
 
 export CUDA_VISIBLE_DEVICES="0,1"
 
