@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import os
+import sqlite3
 import subprocess
 import tomllib
 from pathlib import Path
@@ -30,6 +32,33 @@ def test_coverage_args_follow_checkout():
     assert f"--data-file={PROJECT_ROOT / '.coverage'}" in args
     assert f"--source={PROJECT_ROOT}" in args
     assert "--parallel-mode" in args
+
+
+def test_coverage_records_checkout_relative_paths(tmp_path):
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    source = checkout / "package.py"
+    source.write_text("value = 1\n")
+    data_file = tmp_path / ".coverage"
+
+    subprocess.run(
+        [
+            "coverage",
+            "run",
+            f"--rcfile={PROJECT_ROOT / 'pyproject.toml'}",
+            f"--data-file={data_file}",
+            f"--source={checkout}",
+            str(source),
+        ],
+        check=True,
+        cwd=checkout,
+    )
+    coverage_files = glob.glob(f"{data_file}*")
+    assert len(coverage_files) == 1
+    with sqlite3.connect(coverage_files[0]) as coverage_db:
+        recorded_files = [row[0] for row in coverage_db.execute("SELECT path FROM file")]
+
+    assert recorded_files == [str(source.relative_to(checkout))]
 
 
 @pytest.mark.parametrize("checkout", [Path("/workdir"), Path("/") / "tmp" / "export-deploy"])

@@ -191,6 +191,7 @@ python_files = "test_*.py"
 
 [tool.coverage.run]
 concurrency = ["thread", "multiprocessing"]
+relative_files = true
 omit = [
     "*/tests/*",
     "*/nemo_export_deploy_common/*",
