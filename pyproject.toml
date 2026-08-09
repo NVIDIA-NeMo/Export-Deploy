@@ -64,7 +64,7 @@ dependencies = [
     "torch>=2.6.0",
     "torchvision",
     "torchmetrics>=0.11.0",
-    "wandb",
+    "wandb==0.27.2",
     "webdataset>=0.2.86",
     "nvidia-pytriton ; platform_system != 'Darwin' ",
     "flashinfer-python==0.6.8.post1 ; platform_system != 'Darwin'",
