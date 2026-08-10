@@ -15,8 +15,10 @@
 #!/bin/bash
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
+source "$(dirname -- "${BASH_SOURCE[0]}")/../coverage.sh"
+
 CUDA_VISIBLE_DEVICES=0,1 NEMO_NUMBA_MINVER=0.53 coverage run -a \
-    --data-file=/workspace/.coverage \
-    --source=/workspace/ \
+    --data-file="$PROJECT_ROOT/.coverage" \
+    --source="$PROJECT_ROOT" \
     -m pytest -sv tests/unit_tests/deploy tests/unit_tests/export -m "not pleasefixme"
 coverage combine -q
