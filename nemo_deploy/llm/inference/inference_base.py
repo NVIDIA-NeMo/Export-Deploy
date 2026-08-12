@@ -522,7 +522,13 @@ def create_mcore_engine(
         materialize_only_last_token_logits=True,
     )
 
-    coordinator_host = os.environ.get("MASTER_ADDR")
+    # Fall back to loopback when MASTER_ADDR is unset. Passing None is
+    # indistinguishable from passing nothing, and MCore then binds its data-parallel
+    # inference coordinator to socket.gethostname(), which inside Docker resolves to
+    # the container ID and is not a bindable interface (ZMQError: No such device).
+    # The Ray path never hits this because megatronllm_deployable_ray sets
+    # MASTER_ADDR to the node IP itself; the PyTriton path sets nothing.
+    coordinator_host = os.environ.get("MASTER_ADDR") or "127.0.0.1"
 
     llm = MegatronLLM(
         model=model,

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import types
 import unittest
 from pathlib import Path
@@ -825,6 +826,55 @@ class TestInferenceBase(unittest.TestCase):
         mock_setup.assert_called_once()
         mock_megatron_llm.assert_called_once()
         self.assertIsNotNone(engine)
+
+    @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
+    def test_create_mcore_engine_coordinator_host_defaults_to_loopback(
+        self,
+        mock_megatron_llm,
+        mock_setup,
+    ):
+        """coordinator_host must not be None when MASTER_ADDR is unset.
+
+        MCore falls back to socket.gethostname() when no hostname is supplied, which
+        inside Docker resolves to the container ID and is not a bindable interface
+        (ZMQError: No such device). Only the Ray deployable sets MASTER_ADDR; the
+        PyTriton path sets nothing, so the default has to come from here.
+        """
+        mock_setup.return_value = ([MagicMock()], MagicMock(), MagicMock())
+        mock_megatron_llm.return_value = MagicMock()
+
+        with patch.dict(os.environ, {}, clear=True):
+            os.environ.pop("MASTER_ADDR", None)
+            create_mcore_engine(
+                path=self.mock_path,
+                model_format="megatron",
+                inference_max_seq_length=2048,
+                max_batch_size=4,
+            )
+
+        self.assertEqual(mock_megatron_llm.call_args.kwargs["coordinator_host"], "127.0.0.1")
+
+    @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
+    def test_create_mcore_engine_coordinator_host_prefers_master_addr(
+        self,
+        mock_megatron_llm,
+        mock_setup,
+    ):
+        """An explicit MASTER_ADDR still wins over the loopback default."""
+        mock_setup.return_value = ([MagicMock()], MagicMock(), MagicMock())
+        mock_megatron_llm.return_value = MagicMock()
+
+        with patch.dict(os.environ, {"MASTER_ADDR": "10.0.0.5"}):
+            create_mcore_engine(
+                path=self.mock_path,
+                model_format="megatron",
+                inference_max_seq_length=2048,
+                max_batch_size=4,
+            )
+
+        self.assertEqual(mock_megatron_llm.call_args.kwargs["coordinator_host"], "10.0.0.5")
 
     @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
     @patch("nemo_deploy.llm.inference.inference_base.load_model_config")
