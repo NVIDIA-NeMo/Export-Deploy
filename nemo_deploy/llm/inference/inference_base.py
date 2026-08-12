@@ -16,6 +16,7 @@
 import atexit
 import logging
 import os
+import socket
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
@@ -414,6 +415,22 @@ class MCoreEngineWithCleanup:
         return getattr(self.mcore_engine, name)
 
 
+def _default_coordinator_host() -> str:
+    """Return a bindable address for the data-parallel inference coordinator.
+
+    MCore defaults the coordinator host to ``socket.gethostname()``, which is a
+    *name*, not an address. Inside Docker it resolves to the container ID and ZMQ
+    cannot bind it (``ZMQError: No such device``). Resolving that name to its IP
+    yields an address that is both bindable and reachable from other containers,
+    which is what the Ray path already gets by exporting the node IP as
+    ``MASTER_ADDR``. Fall back to loopback only if resolution fails.
+    """
+    try:
+        return socket.gethostbyname(socket.gethostname())
+    except OSError:
+        return "127.0.0.1"
+
+
 def create_mcore_engine(
     path: Path,
     num_devices: Optional[int] = None,
@@ -522,13 +539,7 @@ def create_mcore_engine(
         materialize_only_last_token_logits=True,
     )
 
-    # Fall back to loopback when MASTER_ADDR is unset. Passing None is
-    # indistinguishable from passing nothing, and MCore then binds its data-parallel
-    # inference coordinator to socket.gethostname(), which inside Docker resolves to
-    # the container ID and is not a bindable interface (ZMQError: No such device).
-    # The Ray path never hits this because megatronllm_deployable_ray sets
-    # MASTER_ADDR to the node IP itself; the PyTriton path sets nothing.
-    coordinator_host = os.environ.get("MASTER_ADDR") or "127.0.0.1"
+    coordinator_host = os.environ.get("MASTER_ADDR") or _default_coordinator_host()
 
     llm = MegatronLLM(
         model=model,

@@ -829,29 +829,59 @@ class TestInferenceBase(unittest.TestCase):
 
     @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
-    def test_create_mcore_engine_coordinator_host_defaults_to_loopback(
+    def test_create_mcore_engine_coordinator_host_resolves_to_address(
         self,
         mock_megatron_llm,
         mock_setup,
     ):
-        """coordinator_host must not be None when MASTER_ADDR is unset.
+        """With MASTER_ADDR unset, coordinator_host must be a bindable address.
 
-        MCore falls back to socket.gethostname() when no hostname is supplied, which
-        inside Docker resolves to the container ID and is not a bindable interface
-        (ZMQError: No such device). Only the Ray deployable sets MASTER_ADDR; the
-        PyTriton path sets nothing, so the default has to come from here.
+        MCore defaults the coordinator to socket.gethostname(), which is a name and
+        not an address; inside Docker it is the container ID and ZMQ cannot bind it
+        (ZMQError: No such device). Only the Ray deployable exports MASTER_ADDR, so
+        on the PyTriton path the resolved address has to come from here.
         """
         mock_setup.return_value = ([MagicMock()], MagicMock(), MagicMock())
         mock_megatron_llm.return_value = MagicMock()
 
         with patch.dict(os.environ, {}, clear=True):
             os.environ.pop("MASTER_ADDR", None)
-            create_mcore_engine(
-                path=self.mock_path,
-                model_format="megatron",
-                inference_max_seq_length=2048,
-                max_batch_size=4,
-            )
+            with patch("nemo_deploy.llm.inference.inference_base.socket") as mock_socket:
+                mock_socket.gethostname.return_value = "9f2c1a4b7d3e"  # container ID
+                mock_socket.gethostbyname.return_value = "172.17.0.2"
+                create_mcore_engine(
+                    path=self.mock_path,
+                    model_format="megatron",
+                    inference_max_seq_length=2048,
+                    max_batch_size=4,
+                )
+
+        host = mock_megatron_llm.call_args.kwargs["coordinator_host"]
+        self.assertEqual(host, "172.17.0.2")
+        self.assertNotEqual(host, "9f2c1a4b7d3e", "must not pass the bare hostname through")
+
+    @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
+    def test_create_mcore_engine_coordinator_host_falls_back_when_unresolvable(
+        self,
+        mock_megatron_llm,
+        mock_setup,
+    ):
+        """If the hostname cannot be resolved, fall back to loopback rather than None."""
+        mock_setup.return_value = ([MagicMock()], MagicMock(), MagicMock())
+        mock_megatron_llm.return_value = MagicMock()
+
+        with patch.dict(os.environ, {}, clear=True):
+            os.environ.pop("MASTER_ADDR", None)
+            with patch("nemo_deploy.llm.inference.inference_base.socket") as mock_socket:
+                mock_socket.gethostname.return_value = "9f2c1a4b7d3e"
+                mock_socket.gethostbyname.side_effect = OSError("name resolution failed")
+                create_mcore_engine(
+                    path=self.mock_path,
+                    model_format="megatron",
+                    inference_max_seq_length=2048,
+                    max_batch_size=4,
+                )
 
         self.assertEqual(mock_megatron_llm.call_args.kwargs["coordinator_host"], "127.0.0.1")
 
