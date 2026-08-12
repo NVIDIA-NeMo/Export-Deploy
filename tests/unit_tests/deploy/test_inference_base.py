@@ -847,7 +847,7 @@ class TestInferenceBase(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             os.environ.pop("MASTER_ADDR", None)
             with patch("nemo_deploy.llm.inference.inference_base.socket") as mock_socket:
-                mock_socket.gethostname.return_value = "9f2c1a4b7d3e"  # container ID
+                mock_socket.gethostname.return_value = "test-container-id"  # a name, not an address
                 mock_socket.gethostbyname.return_value = "172.17.0.2"
                 create_mcore_engine(
                     path=self.mock_path,
@@ -858,7 +858,7 @@ class TestInferenceBase(unittest.TestCase):
 
         host = mock_megatron_llm.call_args.kwargs["coordinator_host"]
         self.assertEqual(host, "172.17.0.2")
-        self.assertNotEqual(host, "9f2c1a4b7d3e", "must not pass the bare hostname through")
+        self.assertNotEqual(host, "test-container-id", "must not pass the bare hostname through")
 
     @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
@@ -874,7 +874,7 @@ class TestInferenceBase(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             os.environ.pop("MASTER_ADDR", None)
             with patch("nemo_deploy.llm.inference.inference_base.socket") as mock_socket:
-                mock_socket.gethostname.return_value = "9f2c1a4b7d3e"
+                mock_socket.gethostname.return_value = "test-container-id"
                 mock_socket.gethostbyname.side_effect = OSError("name resolution failed")
                 create_mcore_engine(
                     path=self.mock_path,
