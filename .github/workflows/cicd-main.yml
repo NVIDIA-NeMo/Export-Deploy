@@ -269,6 +269,12 @@ jobs:
 
   cicd-e2e-tests-inframework:
     needs: [pre-flight, cicd-unit-tests-vllm]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L2_Launch_InFramework
+            is_optional: false
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
