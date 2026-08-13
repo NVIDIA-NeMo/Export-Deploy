@@ -196,6 +196,12 @@ jobs:
           runner: ${{ matrix.runner }}
 
   cicd-e2e-tests-trt-onnx:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L2_ONNX_TRT
+            is_optional: false
     needs: [pre-flight, cicd-unit-tests-vllm]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
@@ -222,8 +228,8 @@ jobs:
       - name: main
         uses: ./.github/actions/test-template
         with:
-          script: L2_ONNX_TRT
-          is_optional: ${{ matrix.is_optional || false }}
+          script: ${{ matrix.script }}
+          is_optional: ${{ matrix.is_optional }}
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ steps.app-token.outputs.token }}
@@ -233,6 +239,12 @@ jobs:
           runner: ${{ needs.pre-flight.outputs.runner_prefix }}
 
   cicd-e2e-tests-vllm:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L2_Launch_vLLM
+            is_optional: false
     needs: [cicd-unit-tests-vllm, pre-flight]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
@@ -257,8 +269,8 @@ jobs:
       - name: main
         uses: ./.github/actions/test-template
         with:
-          script: L2_Launch_vLLM
-          is_optional: ${{ matrix.is_optional || false }}
+          script: ${{ matrix.script }}
+          is_optional: ${{ matrix.is_optional }}
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ steps.app-token.outputs.token }}
@@ -268,6 +280,12 @@ jobs:
           runner: ${{ needs.pre-flight.outputs.runner_prefix }}
 
   cicd-e2e-tests-inframework:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L2_Launch_InFramework
+            is_optional: false
     needs: [pre-flight, cicd-unit-tests-vllm]
     runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
@@ -292,8 +310,8 @@ jobs:
       - name: main
         uses: ./.github/actions/test-template
         with:
-          script: L2_Launch_InFramework
-          is_optional: ${{ matrix.is_optional || false }}
+          script: ${{ matrix.script }}
+          is_optional: ${{ matrix.is_optional }}
           is_unit_test: "false"
           timeout: 60
           PAT: ${{ steps.app-token.outputs.token }}
