@@ -519,7 +519,11 @@ def create_mcore_engine(
         buffer_size_gb=int(buffer_size_gb),
         max_requests=max_batch_size,
         block_size_tokens=block_size_tokens,
-        materialize_only_last_token_logits=True,
+        # Coordinator mode constructs one DynamicInferenceEngine per rank independently, so a
+        # per-request runtime toggle (as _infer_fn used to do) only ever reaches the primary
+        # rank's engine. Prompt log probs require this to be False on every rank, so it's set
+        # here unconditionally at construction time instead.
+        materialize_only_last_token_logits=False,
     )
 
     coordinator_host = os.environ.get("MASTER_ADDR")
