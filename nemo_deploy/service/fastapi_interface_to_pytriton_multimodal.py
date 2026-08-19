@@ -298,7 +298,7 @@ async def chat_completions_v1(request: MultimodalChatCompletionRequest):
                 # Remove image_url field
                 content.pop("image_url", None)
 
-    # Serialize the dictionary to a JSON string represnetation to be able to convert to numpy array
+    # Serialize the dictionary to a JSON string representation to be able to convert to numpy array
     # (str_list2numpy) and back to list (str_ndarray2list) as required by PyTriton. Using the dictionaries directly
     # with these methods is not possible as they expect string type.
     json_prompts = [dict_to_str(prompts)]

@@ -18,6 +18,8 @@ import shutil
 import subprocess
 import tempfile
 
+from tests.coverage import coverage_args
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -32,11 +34,7 @@ class TestVLLMExportMixtral:
         # Create HF model for testing
         subprocess.run(
             [
-                "coverage",
-                "run",
-                "--data-file=/workspace/.coverage",
-                "--source=/workspace/",
-                "--parallel-mode",
+                *coverage_args(),
                 "tests/functional_tests/utils/create_hf_model.py",
                 "--model_name_or_path",
                 "/home/TestData/hf/Mixtral-8x7B-Instruct-v0.1",
@@ -66,11 +64,7 @@ class TestVLLMExportMixtral:
     def test_vllm_export_mixtral(self):
         subprocess.run(
             [
-                "coverage",
-                "run",
-                "--data-file=/workspace/.coverage",
-                "--source=/workspace/",
-                "--parallel-mode",
+                *coverage_args(),
                 "tests/functional_tests/utils/run_nemo_export.py",
                 "--min_tps",
                 "1",

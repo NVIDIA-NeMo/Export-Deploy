@@ -31,7 +31,7 @@ permissions:
 
 jobs:
   pre-flight:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@c1a0837f362a1a696e647238ab1cf916b2a7cf4a # v1.8.6
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@cf5acebace78c7c339bc1f804357a991336f1c4d # v1.8.10
     with:
       default_runner_prefix: nemo-ci-aws-gpu-x2
       non_nvidia_runner_prefix: nemo-ci-aws-gpu-x2-ephemeral
@@ -127,6 +127,13 @@ jobs:
           echo "key=$KEY" | tee -a "$GITHUB_OUTPUT"
           echo "cache-to=type=registry,ref=${REGISTRY}/export-deploy:${KEY}-buildcache,mode=max" | tee -a "$GITHUB_OUTPUT"
 
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
       - name: Build and push
         uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
         with:
@@ -142,7 +149,7 @@ jobs:
           tags: |
             ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           secrets: |
-            GH_TOKEN=${{ secrets.PAT }}
+            GH_TOKEN=${{ steps.app-token.outputs.token }}
 
   cicd-unit-tests-vllm:
     strategy:
@@ -168,6 +175,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
       - name: main
         uses: ./.github/actions/test-template
         with:
@@ -175,7 +189,7 @@ jobs:
           timeout: 60
           is_unit_test: "true"
           cpu-only: ${{ matrix.cpu-only || false }}
-          PAT: ${{ secrets.PAT }}
+          PAT: ${{ steps.app-token.outputs.token }}
           container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: vllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
@@ -198,6 +212,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
       - name: main
         uses: ./.github/actions/test-template
         with:
@@ -205,7 +226,7 @@ jobs:
           is_optional: ${{ matrix.is_optional || false }}
           is_unit_test: "false"
           timeout: 60
-          PAT: ${{ secrets.PAT }}
+          PAT: ${{ steps.app-token.outputs.token }}
           container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: trt-onnx
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
@@ -226,6 +247,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
       - name: main
         uses: ./.github/actions/test-template
         with:
@@ -233,7 +261,7 @@ jobs:
           is_optional: ${{ matrix.is_optional || false }}
           is_unit_test: "false"
           timeout: 60
-          PAT: ${{ secrets.PAT }}
+          PAT: ${{ steps.app-token.outputs.token }}
           container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: vllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
@@ -254,6 +282,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
       - name: main
         uses: ./.github/actions/test-template
         with:
@@ -261,7 +296,7 @@ jobs:
           is_optional: ${{ matrix.is_optional || false }}
           is_unit_test: "false"
           timeout: 60
-          PAT: ${{ secrets.PAT }}
+          PAT: ${{ steps.app-token.outputs.token }}
           container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: inframework
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
@@ -319,10 +354,17 @@ jobs:
       && !cancelled()
     environment: nemo-ci
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
       - name: Generate fake coverage report
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
-          github-token: ${{ secrets.PAT }}
+          github-token: ${{ steps.app-token.outputs.token }}
           script: |
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
