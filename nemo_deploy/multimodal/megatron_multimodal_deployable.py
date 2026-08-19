@@ -173,12 +173,14 @@ class MegatronMultimodalDeployable(ITritonDeployable):
         if isinstance(self.inference_wrapped_model, QwenVLInferenceWrapper):
             from qwen_vl_utils import process_vision_info
 
-            from nemo_deploy.multimodal.image_url_validator import validate_image_url
+            from nemo_deploy.multimodal.image_url_validator import fetch_image_data_uri_safely
 
             # data: URIs are inline base64 and never trigger a network request.
-            # All other values are treated as URLs and must pass the SSRF guard.
+            # All other values are treated as URLs: fetch them ourselves under the SSRF
+            # guard and hand qwen_vl_utils a data URI, since it would otherwise perform
+            # its own unguarded network fetch for a raw URL.
             if not image_source.startswith("data:"):
-                validate_image_url(image_source)
+                image_source = fetch_image_data_uri_safely(image_source)
 
             messages = [
                 {

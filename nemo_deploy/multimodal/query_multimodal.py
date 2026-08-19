@@ -17,7 +17,6 @@ from io import BytesIO
 from typing import List, Optional
 
 import numpy as np
-import requests
 
 from nemo_deploy.utils import str_list2numpy
 from nemo_export_deploy_common.import_utils import (
@@ -100,11 +99,10 @@ class NemoQueryMultimodal:
                 raise UnavailableError(MISSING_PIL_MSG)
 
             if input_media.startswith("http") or input_media.startswith("https"):
-                from nemo_deploy.multimodal.image_url_validator import validate_image_url
+                from nemo_deploy.multimodal.image_url_validator import fetch_image_bytes_safely
 
-                validate_image_url(input_media)
-                response = requests.get(input_media, timeout=5)
-                media = Image.open(BytesIO(response.content)).convert("RGB")
+                image_bytes = fetch_image_bytes_safely(input_media, timeout=5)
+                media = Image.open(BytesIO(image_bytes)).convert("RGB")
             else:
                 media = Image.open(input_media).convert("RGB")
             return np.expand_dims(np.array(media), axis=0)
