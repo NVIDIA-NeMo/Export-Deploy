@@ -118,7 +118,7 @@ def export_onnx_trt(args):
         "/model/norm/",
         "/Div",
     ]
-    # Model specific operation wheter to override layernorm precision or not.
+    # Model specific operation whether to override layernorm precision or not.
     override_layernorm_precision_to_fp32 = True
     profiling_verbosity = "layer_names_only"
 
