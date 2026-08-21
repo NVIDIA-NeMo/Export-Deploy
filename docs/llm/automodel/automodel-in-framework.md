@@ -150,11 +150,7 @@ from nemo_deploy.llm import NemoQueryLLMHF
 
 nq = NemoQueryLLMHF(url="localhost:8000", model_name="llama")
 output = nq.query_llm(
-    prompts=["What is the capital of United States? "],
-    max_length=100,
-    top_k=1,
-    top_p=0.0,
-    temperature=1.0
+    prompts=["What is the capital of United States? "], max_length=100, top_k=1, top_p=0.0, temperature=1.0
 )
 print(output)
 ```

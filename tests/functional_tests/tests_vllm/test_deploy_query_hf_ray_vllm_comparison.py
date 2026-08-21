@@ -16,6 +16,8 @@ import logging
 import subprocess
 import time
 
+from tests.coverage import coverage_args
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -49,11 +51,7 @@ class TestDeployRayHFVLLMComparison:
             # Deploy with vLLM backend
             self.deploy_proc_vllm = subprocess.Popen(
                 [
-                    "coverage",
-                    "run",
-                    "--data-file=/workspace/.coverage",
-                    "--source=/workspace/",
-                    "--parallel-mode",
+                    *coverage_args(),
                     "scripts/deploy/nlp/deploy_ray_hf.py",
                     "--model_path",
                     hf_model_path,
@@ -125,11 +123,7 @@ class TestDeployRayHFVLLMComparison:
             # Deploy without vLLM backend (regular HF)
             self.deploy_proc_regular = subprocess.Popen(
                 [
-                    "coverage",
-                    "run",
-                    "--data-file=/workspace/.coverage",
-                    "--source=/workspace/",
-                    "--parallel-mode",
+                    *coverage_args(),
                     "scripts/deploy/nlp/deploy_ray_hf.py",
                     "--model_path",
                     hf_model_path,
@@ -203,11 +197,7 @@ class TestDeployRayHFVLLMComparison:
             # Deploy with vLLM backend
             self.deploy_proc_vllm = subprocess.Popen(
                 [
-                    "coverage",
-                    "run",
-                    "--data-file=/workspace/.coverage",
-                    "--source=/workspace/",
-                    "--parallel-mode",
+                    *coverage_args(),
                     "scripts/deploy/nlp/deploy_ray_hf.py",
                     "--model_path",
                     hf_model_path,

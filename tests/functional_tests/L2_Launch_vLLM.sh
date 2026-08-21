@@ -16,10 +16,11 @@
 set -xeuo pipefail # Exit immediately if a command exits with a non-zero status
 
 export CUDA_VISIBLE_DEVICES="0"
+source "$(dirname -- "${BASH_SOURCE[0]}")/../coverage.sh"
 
 coverage run \
-    --data-file=/workspace/.coverage \
-    --source=/workspace/ \
+    --data-file="$PROJECT_ROOT/.coverage" \
+    --source="$PROJECT_ROOT" \
     --parallel-mode \
     -m pytest \
     -o log_cli=true \
