@@ -1,0 +1,10 @@
+.github/ @nvidia-nemo/automation
+docker/ @nvidia-nemo/automation
+pyproject.toml @nvidia-nemo/automation
+uv.lock @nvidia-nemo/automation
+
+nemo_export @athitten @oyilmaz-nvidia @pthombre @meatybobby
+nemo_deploy @athitten @oyilmaz-nvidia @pthombre @meatybobby
+nemo_export_deploy @athitten @oyilmaz-nvidia @pthombre @meatybobby
+scripts @athitten @oyilmaz-nvidia @pthombre @meatybobby
+README.md @athitten @oyilmaz-nvidia @pthombre @meatybobby

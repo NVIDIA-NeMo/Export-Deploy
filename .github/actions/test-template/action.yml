@@ -1,0 +1,220 @@
+# Copyright (c) 2025, NVIDIA CORPORATION. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+name: "Test Template"
+description: "Template for running NeMo tests in a containerized environment"
+
+inputs:
+  timeout:
+    description: "Max runtime of test in minutes"
+    required: false
+    default: "60"
+  script:
+    description: "Test script to execute"
+    required: true
+  is_optional:
+    description: "Failure is ignored and other tests continue if set to true"
+    required: false
+    default: "false"
+  is_unit_test:
+    description: "Upload coverage as unit test"
+    required: false
+    default: "false"
+  cpu-only:
+    description: "Run tests on CPU only"
+    required: false
+    default: "false"
+  PAT:
+    description: "GitHub Personal Access Token"
+    required: true
+  container-image:
+    description: "Pre-built container image to use for test"
+    required: true
+  inference-framework:
+    description: "Inference framework extra to install at runtime (trtllm, vllm, trt-onnx, inframework)"
+    required: true
+  test-data-path:
+    description: "Test data path"
+    required: true
+  runner:
+    description: "The GHA runner to use"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install uuidgen
+      shell: bash -x -e -u -o pipefail {0}
+      if: ${{ contains(inputs.runner, 'aws') }}
+      run: |
+        apt-get update
+        apt-get install -y uuid-runtime
+
+    - name: Checkout repository
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        path: Export-Deploy
+
+
+    - name: Start container
+      shell: bash
+      run: |
+        echo ::group::Start test container
+
+        ARG=("")
+        if [[ "${{ inputs.cpu-only }}" == "false" ]]; then
+          ARG=("--runtime=nvidia --gpus all")
+        fi
+
+        cmd=$(cat <<RUN_TEST_EOF
+        #!/bin/bash
+        docker container rm -f nemo_container_${{ github.run_id }} || true
+        docker run \
+          --rm \
+          -d \
+          --name nemo_container_${{ github.run_id }} ${ARG[@]} \
+          --shm-size=64g \
+          --env HF_HUB_OFFLINE=1 \
+          --env HYDRA_FULL_ERROR=1 \
+          --env HF_HOME=/home/TestData/HF_HOME \
+          --env RUN_ID=${{ github.run_id }} \
+          --workdir /workspace \
+          --volume $(pwd)/Export-Deploy:/workspace \
+          --volume ${{ inputs.test-data-path }}:/home/TestData \
+          ${{ inputs.container-image }} \
+          bash -c "sleep $(( ${{ inputs.timeout }} * 60 + 60 ))"
+        RUN_TEST_EOF
+        )
+
+        echo "$cmd" | tee "retry_job.sh"
+        bash retry_job.sh
+        echo ::endgroup::
+
+    - name: Install framework deps
+      if: ${{ inputs.inference-framework != 'inframework' }}
+      shell: bash
+      run: |
+        echo ::group::Install ${{ inputs.inference-framework }} dependencies
+        docker exec nemo_container_${{ github.run_id }} bash -c '
+          uv sync --extra ${{ inputs.inference-framework }} --locked --all-groups \
+            --no-install-package torch \
+            --no-install-package torchvision \
+            --no-install-package triton \
+            --no-install-package nvidia-cublas-cu12 \
+            --no-install-package nvidia-cuda-cupti-cu12 \
+            --no-install-package nvidia-cuda-nvrtc-cu12 \
+            --no-install-package nvidia-cuda-runtime-cu12 \
+            --no-install-package nvidia-cudnn-cu12 \
+            --no-install-package nvidia-cufft-cu12 \
+            --no-install-package nvidia-cufile-cu12 \
+            --no-install-package nvidia-curand-cu12 \
+            --no-install-package nvidia-cusolver-cu12 \
+            --no-install-package nvidia-cusparse-cu12 \
+            --no-install-package nvidia-cusparselt-cu12 \
+            --no-install-package nvidia-nccl-cu12 \
+            --no-install-package nvidia-cublas \
+            --no-install-package nvidia-cuda-cupti \
+            --no-install-package nvidia-cuda-nvrtc \
+            --no-install-package nvidia-cuda-runtime \
+            --no-install-package nvidia-cudnn-cu13 \
+            --no-install-package nvidia-cufft \
+            --no-install-package nvidia-cufile \
+            --no-install-package nvidia-curand \
+            --no-install-package nvidia-cusolver \
+            --no-install-package nvidia-cusparse \
+            --no-install-package nvidia-cusparselt-cu13 \
+            --no-install-package nvidia-nccl-cu13 \
+            --no-install-package tensorrt-llm \
+            --no-install-package vllm
+        '
+        echo ::endgroup::
+
+    - name: Create run-script
+      id: create
+      shell: bash
+      run: |
+        echo ::group::Create run-script
+        COVERAGE_PREFIX=$([[ "${{ inputs.is_unit_test }}" == "true" ]] && echo "unit-test" || echo "e2e")
+        echo "coverage-prefix=$COVERAGE_PREFIX" | tee -a "$GITHUB_OUTPUT"
+
+        cmd=$(cat <<'RUN_TEST_EOF'
+        #!/bin/bash
+
+        docker exec -t nemo_container_${{ github.run_id }} bash -c '
+          set -e
+          bash tests/${{ inputs.is_unit_test == 'true' && 'unit_tests' || 'functional_tests' }}/${{ inputs.script }}.sh
+        '
+
+        RUN_TEST_EOF
+        )
+
+        echo "timeout_in_seconds=$(( ${{ inputs.timeout }} * 60 ))" | tee -a "$GITHUB_OUTPUT"
+        echo "$cmd" | tee "job.sh"
+        echo ::endgroup::
+
+    - name: Run main script
+      uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+      id: run-main-script
+      with:
+        timeout_seconds: ${{ steps.create.outputs.timeout_in_seconds }}
+        max_attempts: 3
+        shell: bash
+        retry_on: timeout
+        command: /bin/bash job.sh
+        on_retry_command: /bin/bash retry_job.sh
+
+    - name: Check result
+      id: check
+      shell: bash
+      run: |
+        echo ::group::Check result
+        docker exec nemo_container_${{ github.run_id }} /opt/venv/bin/coverage combine || true
+        docker exec nemo_container_${{ github.run_id }} /opt/venv/bin/coverage xml
+        docker cp nemo_container_${{ github.run_id }}:/workspace/.coverage .coverage
+        docker cp nemo_container_${{ github.run_id }}:/workspace/coverage.xml coverage.xml
+
+        coverage_report=coverage-${{ steps.create.outputs.coverage-prefix }}-${{ github.run_id }}-$(uuidgen)
+        echo "coverage_report=$coverage_report" >> "$GITHUB_OUTPUT"
+
+        EXIT_CODE=${{ steps.run-main-script.outputs.exit_code }}
+        IS_SUCCESS=$([[ "$EXIT_CODE" -eq 0 ]] && echo "true" || echo "false")
+
+        if [[ "$IS_SUCCESS" == "false" && "${{ inputs.is_optional }}" == "true" ]]; then
+          echo "::warning:: Test failed, but displayed as successful because it is marked as optional."
+          IS_SUCCESS=true
+        fi
+
+        if [[ "$IS_SUCCESS" == "false" ]]; then
+          echo Test did not finish successfully.
+          exit 1
+        fi
+
+        exit $EXIT_CODE
+        echo ::endgroup::
+
+    - name: Test coverage
+      shell: bash -x -e -u -o pipefail {0}
+      run: |
+        echo ::group::Test coverage
+        docker exec -t nemo_container_${{ github.run_id }} /opt/venv/bin/coverage report -i
+        echo ::endgroup::
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      if: ${{ steps.check.outputs.coverage_report != 'none' }}
+      with:
+        name: ${{ steps.check.outputs.coverage_report }}
+        path: |
+          coverage.xml
+          .coverage
+        include-hidden-files: true

@@ -1,0 +1,750 @@
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+import logging
+import tempfile
+from pathlib import Path
+from typing import Any, Dict, List, Literal
+
+import numpy as np
+
+LOGGER = logging.getLogger("NeMo")
+
+from nemo_deploy import ITritonDeployable
+from nemo_deploy.utils import cast_output, str_ndarray2list
+from nemo_export_deploy_common.import_utils import (
+    MISSING_TRITON_MSG,
+    MISSING_VLLM_MSG,
+    UnavailableError,
+)
+
+try:
+    from megatron.bridge.models.conversion.auto_bridge import AutoBridge
+    from transformers import AutoConfig
+
+    HAVE_MEGATRON_BRIDGE = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_MEGATRON_BRIDGE = False
+
+try:
+    from pytriton.decorators import batch, first_value
+    from pytriton.model_config import Tensor
+
+    HAVE_PYTRITON = True
+except (ImportError, ModuleNotFoundError):
+    from unittest.mock import MagicMock
+
+    batch = MagicMock()
+    first_value = MagicMock()
+    HAVE_PYTRITON = False
+
+try:
+    from vllm import LLM, SamplingParams
+    from vllm.lora.request import LoRARequest
+
+    HAVE_VLLM = True
+except (ImportError, ModuleNotFoundError):
+    HAVE_VLLM = False
+
+
+class vLLMExporter(ITritonDeployable):
+    """
+    vLLMExporter enables deployment of Hugging Face or Megatron-Bridge models using vLLM and Triton.
+
+    This class wraps vLLM APIs to load a model and make it deployable with Triton Inference Server.
+    It supports exporting Megatron-Bridge checkpoints to Hugging Face format if needed,
+    and then loads the model with vLLM for fast inference.
+
+    Example:
+        from nemo_export import vLLMExporter
+        from nemo_deploy import DeployPyTriton
+
+        exporter = vLLMExporter()
+        # For Megatron-Bridge checkpoint:
+        exporter.export(model_path_id="/path/to/megatron/checkpoint/", model_format="megatron_bridge")
+        # For HuggingFace checkpoint (default):
+        exporter.export(model_path_id="/path/to/hf/model/", model_format="hf")
+
+        server = DeployPyTriton(
+            model=exporter,
+            triton_model_name='model'
+        )
+
+        server.deploy()
+        server.serve()
+    """
+
+    def __init__(self):
+        """
+        Initializes the vLLMExporter instance.
+
+        This constructor sets up the exporter by initializing model and LoRA model attributes.
+        It also checks for the availability of required dependencies (vLLM, PyTriton)
+        and raises an UnavailableError if any are missing.
+        """
+        self.model = None
+        self.lora_models = None
+        if not HAVE_VLLM:
+            raise UnavailableError(MISSING_VLLM_MSG)
+        if not HAVE_PYTRITON:
+            raise UnavailableError(MISSING_TRITON_MSG)
+
+    def export(
+        self,
+        model_path_id: str,
+        tokenizer: str = None,
+        trust_remote_code: bool = False,
+        enable_lora: bool = False,
+        tensor_parallel_size: int = 1,
+        dtype: str = "auto",
+        quantization: str = None,
+        seed: int = 0,
+        gpu_memory_utilization: float = 0.9,
+        swap_space: float = 4,
+        cpu_offload_gb: float = 0,
+        enforce_eager: bool = False,
+        task: Literal["auto", "generate", "embedding"] = "auto",
+        model_format: Literal["hf", "megatron_bridge"] = "megatron_bridge",
+        hf_model_id: str = None,
+    ):
+        """
+        Exports a Hugging Face or Megatron-Bridge checkpoint to vLLM and initializes the engine.
+
+        Args:
+            model_path_id (str): Model name or path to the checkpoint directory. Can be a Hugging Face or Megatron-Bridge checkpoint.
+            tokenizer (str, optional): Path to the tokenizer or tokenizer name. Defaults to None.
+            trust_remote_code (bool, optional): Whether to trust remote code from Hugging Face Hub. Defaults to False.
+            enable_lora (bool, optional): Whether to enable LoRA support. Defaults to False.
+            tensor_parallel_size (int, optional): Number of tensor parallel partitions. Defaults to 1.
+            dtype (str, optional): Data type for model weights. Defaults to "auto".
+            quantization (str, optional): Quantization type. Defaults to None.
+            seed (int, optional): Random seed. Defaults to 0.
+            gpu_memory_utilization (float, optional): Fraction of GPU memory to use. Defaults to 0.9.
+            swap_space (float, optional): Amount of swap space (in GB) to use. Defaults to 4.
+            cpu_offload_gb (float, optional): Amount of CPU offload memory (in GB). Defaults to 0.
+            enforce_eager (bool, optional): Whether to enforce eager execution. Defaults to False.
+            task (Literal["auto", "generate", "embedding"], optional): Task type for vLLM. Defaults to "auto".
+            model_format (Literal["hf", "megatron_bridge"], optional): Format of the input checkpoint.
+                - "hf": Hugging Face format (default)
+                - "megatron_bridge": Megatron-Bridge checkpoint format
+                Defaults to "megatron_bridge".
+            hf_model_id (str, optional): Hugging Face model ID to use for Megatron-Bridge checkpoints.
+                If not provided, will attempt to extract from checkpoint metadata using AutoBridge.get_hf_model_id_from_checkpoint.
+                Defaults to None.
+
+        Raises:
+            Exception: If Megatron-Bridge checkpoint conversion to Hugging Face format fails.
+        """
+        if model_format == "megatron_bridge":
+            if not HAVE_MEGATRON_BRIDGE:
+                raise Exception(
+                    "Megatron-Bridge is not available. Please install megatron.bridge package to use Megatron-Bridge checkpoints."
+                )
+
+            with tempfile.TemporaryDirectory() as tmp_hf_export_dir:
+                # Get the HF model ID from the checkpoint metadata
+                extracted_hf_model_id = AutoBridge.get_hf_model_id_from_checkpoint(model_path_id)
+
+                # Use provided hf_model_id if extraction failed
+                if extracted_hf_model_id is None:
+                    if hf_model_id is None:
+                        raise Exception(
+                            "Could not find HuggingFace model ID in Megatron-Bridge checkpoint metadata. "
+                            "Please provide the 'hf_model_id' parameter explicitly."
+                        )
+                else:
+                    hf_model_id = extracted_hf_model_id
+
+                # Check if the model is supported by AutoBridge
+                config = AutoConfig.from_pretrained(hf_model_id, trust_remote_code=trust_remote_code)
+                if not AutoBridge.supports(config):
+                    supported_models = AutoBridge.list_supported_models()
+                    raise Exception(
+                        f"Model '{hf_model_id}' is not supported by AutoBridge. "
+                        f"Supported architectures: {', '.join(supported_models)}. "
+                        f"The model must have an architecture ending with 'ForCausalLM', 'ForConditionalGeneration', or 'NemotronH_Nano_VL_V2'."
+                    )
+
+                # Load the HF config to create the AutoBridge
+                bridge = AutoBridge.from_hf_pretrained(hf_model_id, trust_remote_code=trust_remote_code)
+
+                # Export the Megatron checkpoint to HuggingFace format
+                bridge.export_ckpt(
+                    megatron_path=model_path_id,
+                    hf_path=tmp_hf_export_dir,
+                    show_progress=True,
+                    source_path=hf_model_id,
+                )
+
+                if not any(Path(tmp_hf_export_dir).iterdir()):
+                    raise Exception(
+                        "Megatron-Bridge checkpoint conversion failed. Error occurred during Hugging Face conversion."
+                    )
+
+                self.model = LLM(
+                    model=tmp_hf_export_dir,
+                    tokenizer=tokenizer,
+                    trust_remote_code=trust_remote_code,
+                    enable_lora=enable_lora,
+                    tensor_parallel_size=tensor_parallel_size,
+                    dtype=dtype,
+                    quantization=quantization,
+                    seed=seed,
+                    gpu_memory_utilization=gpu_memory_utilization,
+                    swap_space=swap_space,
+                    cpu_offload_gb=cpu_offload_gb,
+                    enforce_eager=enforce_eager,
+                    runner=task,
+                )
+        else:
+            self.model = LLM(
+                model=model_path_id,
+                tokenizer=tokenizer,
+                trust_remote_code=trust_remote_code,
+                enable_lora=enable_lora,
+                tensor_parallel_size=tensor_parallel_size,
+                dtype=dtype,
+                quantization=quantization,
+                seed=seed,
+                gpu_memory_utilization=gpu_memory_utilization,
+                swap_space=swap_space,
+                cpu_offload_gb=cpu_offload_gb,
+                enforce_eager=enforce_eager,
+                runner=task,
+            )
+
+    def add_lora_models(self, lora_model_name, lora_model):
+        """
+        Add a LoRA (Low-Rank Adaptation) model to the exporter.
+
+        Args:
+            lora_model_name (str): The name or identifier for the LoRA model.
+            lora_model: The LoRA model object to be added.
+        """
+        if self.lora_models is None:
+            self.lora_models = {}
+        self.lora_models[lora_model_name] = lora_model
+
+    @property
+    def get_triton_input(self):
+        """
+        Returns the expected Triton model input signature for vLLMExporter.
+
+        Returns:
+            tuple: A tuple of Tensor objects describing the input fields:
+                - prompts (np.bytes_): Input prompt strings.
+                - max_tokens (np.int_, optional): Maximum number of tokens to generate.
+                - min_tokens (np.int_, optional): Minimum number of tokens to generate.
+                - top_k (np.int_, optional): Top-K sampling parameter.
+                - top_p (np.single, optional): Top-P (nucleus) sampling parameter.
+                - temperature (np.single, optional): Sampling temperature.
+                - seed (np.int_, optional): Random seed for generation.
+                - n_log_probs (np.int_, optional): Number of log probabilities to return for generated tokens.
+                - n_prompt_log_probs (np.int_, optional): Number of log probabilities to return for prompt tokens.
+        """
+        return (
+            Tensor(name="prompts", shape=(-1,), dtype=bytes),
+            Tensor(name="max_tokens", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="min_tokens", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="top_k", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="top_p", shape=(-1,), dtype=np.single, optional=True),
+            Tensor(name="temperature", shape=(-1,), dtype=np.single, optional=True),
+            Tensor(name="seed", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="n_log_probs", shape=(-1,), dtype=np.int_, optional=True),
+            Tensor(name="n_prompt_log_probs", shape=(-1,), dtype=np.int_, optional=True),
+        )
+
+    @property
+    def get_triton_output(self):
+        """
+        Returns the expected Triton model output signature for vLLMExporter.
+
+        Returns:
+            tuple: A tuple of Tensor objects describing the output fields:
+                - sentences (np.bytes_): Generated text.
+                - log_probs (np.bytes_): Log probabilities for generated tokens.
+                - prompt_log_probs (np.bytes_): Log probabilities for prompt tokens.
+        """
+        return (
+            Tensor(name="sentences", shape=(-1,), dtype=bytes),
+            Tensor(name="log_probs", shape=(-1,), dtype=bytes),
+            Tensor(name="prompt_log_probs", shape=(-1,), dtype=bytes),
+        )
+
+    @batch
+    @first_value(
+        "max_tokens", "min_tokens", "n_log_probs", "n_prompt_log_probs", "seed", "top_k", "top_p", "temperature"
+    )
+    def triton_infer_fn(self, **inputs: np.ndarray):  # pragma: no cover
+        """
+        Triton inference function for vLLMExporter.
+
+        This function processes input prompts and generates text using vLLM.
+        It supports optional parameters for maximum tokens, minimum tokens,
+        log probabilities, and random seed.
+        """
+        try:
+            # Convert triton-specific inputs
+            prompts = str_ndarray2list(inputs.pop("prompts"))
+
+            # Convert numpy arrays to Python types for triton inputs
+            processed_inputs = {}
+            for key, value in inputs.items():
+                processed_inputs[key] = value
+
+            output_infer = self._infer_fn(prompts, processed_inputs)
+
+            # Remove token_ids and prompt_token_ids as they're not part of Triton output schema and are not required..
+            # These fields are only used by Ray ray_infer_fn to post-process log probabilities for OAI API compatibility
+            output_infer.pop("token_ids", None)
+            output_infer.pop("prompt_token_ids", None)
+
+            # Format output for triton
+            output_infer["sentences"] = cast_output(output_infer["sentences"], np.bytes_)
+            if "log_probs" in output_infer.keys():
+                output_infer["log_probs"] = cast_output(output_infer["log_probs"], np.bytes_)
+            if "prompt_log_probs" in output_infer.keys():
+                output_infer["prompt_log_probs"] = cast_output(output_infer["prompt_log_probs"], np.bytes_)
+
+        except Exception as error:
+            err_msg = "An error occurred: {0}".format(str(error))
+            output_infer = {"sentences": cast_output([err_msg], np.bytes_)}
+
+        return output_infer
+
+    def _infer_fn(self, prompts, inputs):
+        """Shared helper function to prepare inference inputs and execute forward pass.
+
+        Args:
+            prompts: List of input prompts
+            inputs: Dictionary of input parameters
+
+        Returns:
+            output_dict: Dictionary containing generated text and optional log probabilities
+        """
+        infer_input = {"input_texts": prompts}
+
+        # Process common parameters
+        if "max_tokens" in inputs:
+            infer_input["max_tokens"] = int(inputs["max_tokens"])
+        if "min_tokens" in inputs:
+            infer_input["min_tokens"] = int(inputs["min_tokens"])
+        if "n_log_probs" in inputs:
+            infer_input["n_log_probs"] = int(inputs["n_log_probs"])
+        if "n_prompt_log_probs" in inputs:
+            infer_input["n_prompt_log_probs"] = int(inputs["n_prompt_log_probs"])
+        if "seed" in inputs:
+            infer_input["seed"] = int(inputs["seed"])
+        if "top_k" in inputs:
+            infer_input["top_k"] = int(inputs["top_k"])
+        if "top_p" in inputs:
+            infer_input["top_p"] = float(inputs["top_p"])
+        if "temperature" in inputs:
+            infer_input["temperature"] = float(inputs["temperature"])
+        if "lora_model_name" in inputs:
+            infer_input["lora_model_name"] = inputs["lora_model_name"]
+
+        output = self.forward(**infer_input)
+
+        if isinstance(output, dict):
+            return output
+        else:
+            err_msg = "An error occurred: the output format is expected to be a dict."
+            return {"sentences": [err_msg]}
+
+    def post_process_logprobs_to_OAI(
+        self, output_dict: Dict[str, Any], echo: bool = False, n_top_logprobs: int = 0
+    ) -> Dict[str, Any]:
+        """
+        Post-process log probabilities (log-probs and prompt-log-probs from vllm's generate output) to OAI API format.
+
+        This method:
+        1. Extracts log probability values for actual tokens (not full dicts)
+        2. Creates top_logprobs containing n_top_logprobs number of top logprobs
+        3. Excludes the actual/chosen token if it's extra (not in top N)
+        4. If echo is True, merges prompt token logprobs with generated token logprobs
+
+        Args:
+            output_dict (Dict[str, Any]): Output dictionary from forward() containing:
+                - log_probs: Raw log probabilities (JSON strings in numpy array)
+                - prompt_log_probs: Raw prompt log probabilities (if echo is True)
+                - token_ids: Generated token IDs
+                - prompt_token_ids: Prompt token IDs (if echo is True)
+                - sentences: Generated text
+            echo (bool): Whether to include prompt token logprobs
+            n_top_logprobs (int): Number of top logprobs to return per token
+
+        Returns:
+            Dict[str, Any]: Modified output_dict with processed log_probs and top_logprobs:
+                - log_probs: List of lists of float values for actual tokens
+                - top_logprobs: List of lists of dicts with top N tokens and their logprobs
+        """
+        if "log_probs" not in output_dict or "token_ids" not in output_dict:
+            return output_dict
+
+        import json
+
+        # Store original arrays before processing
+        original_log_probs = (
+            output_dict["log_probs"].copy()
+            if isinstance(output_dict["log_probs"], np.ndarray)
+            else output_dict["log_probs"]
+        )
+        original_prompt_log_probs = output_dict.get("prompt_log_probs", None)
+        if original_prompt_log_probs is not None:
+            original_prompt_log_probs = (
+                original_prompt_log_probs.copy()
+                if isinstance(original_prompt_log_probs, np.ndarray)
+                else original_prompt_log_probs
+            )
+
+        # Get tokenizer to decode token IDs
+        tokenizer = self.model.get_tokenizer()
+
+        processed_log_probs = []
+        processed_top_logprobs = []
+
+        for sample_idx in range(len(output_dict["sentences"])):
+            sample_log_probs = []
+            sample_top_logprobs = []
+
+            # If echo is True and prompt_log_probs exist, add prompt token logprobs first
+            if echo and original_prompt_log_probs is not None and "prompt_token_ids" in output_dict:
+                if sample_idx < len(output_dict["prompt_token_ids"]):
+                    prompt_token_ids = output_dict["prompt_token_ids"][sample_idx]
+
+                    # Iterate through prompt tokens
+                    for token_idx, token_id in enumerate(prompt_token_ids):
+                        if sample_idx < len(original_prompt_log_probs):
+                            # Get the logprobs dict for this position
+                            if token_idx < len(original_prompt_log_probs[sample_idx]):
+                                logprobs_str = original_prompt_log_probs[sample_idx][token_idx]
+                                if logprobs_str and logprobs_str != 0:  # Skip padding
+                                    logprobs_dict = json.loads(logprobs_str)
+
+                                    # Decode the actual token_id to match with logprobs_dict keys
+                                    actual_token_str = tokenizer.decode([token_id])
+
+                                    # Find the logprob for the actual token
+                                    if actual_token_str in logprobs_dict:
+                                        sample_log_probs.append(logprobs_dict[actual_token_str])
+                                    else:
+                                        # If exact match not found, the logprobs_dict should have the token
+                                        # Try to find by taking the first (highest prob) entry
+                                        # TODO: athitten check if this is the case for <|end_of_text|> (128001)
+                                        if logprobs_dict:
+                                            # Take the first entry (should be the actual token)
+                                            first_token_logprob = next(iter(logprobs_dict.values()))
+                                            sample_log_probs.append(first_token_logprob)
+                                        else:
+                                            LOGGER.warning(
+                                                f"No logprob found for prompt token_id {token_id} (decoded: '{actual_token_str}')"
+                                            )
+
+                                    # For top_logprobs, sort by value and take top n
+                                    if n_top_logprobs > 0:
+                                        sorted_items = sorted(logprobs_dict.items(), key=lambda x: x[1], reverse=True)
+                                        top_n_items = dict(sorted_items[:n_top_logprobs])
+                                        sample_top_logprobs.append(top_n_items)
+
+            # Add generated token logprobs
+            if sample_idx < len(output_dict["token_ids"]):
+                token_ids = output_dict["token_ids"][sample_idx]
+
+                if sample_idx < len(original_log_probs):
+                    # Iterate through generated tokens
+                    for token_idx, token_id in enumerate(token_ids):
+                        if token_idx < len(original_log_probs[sample_idx]):
+                            logprobs_str = original_log_probs[sample_idx][token_idx]
+                            if logprobs_str and logprobs_str != 0:  # Skip padding
+                                logprobs_dict = json.loads(logprobs_str)
+
+                                # Decode the actual token_id to match with logprobs_dict keys
+                                actual_token_str = tokenizer.decode([token_id])
+
+                                # Find the logprob for the actual token
+                                if actual_token_str in logprobs_dict:
+                                    sample_log_probs.append(logprobs_dict[actual_token_str])
+                                else:
+                                    # If exact match not found, the logprobs_dict should have the token
+                                    # Try to find by taking the first (highest prob) entry
+                                    if logprobs_dict:
+                                        # TODO: athitten check if this is the case for <|end_of_text|> (128001)
+                                        # Take the first entry (should be the actual token)
+                                        first_token_logprob = next(iter(logprobs_dict.values()))
+                                        sample_log_probs.append(first_token_logprob)
+                                    else:
+                                        LOGGER.warning(
+                                            f"No logprob found for generated token_id {token_id} (decoded: '{actual_token_str}')"
+                                        )
+
+                                # For top_logprobs, sort by value and take top n
+                                if n_top_logprobs > 0:
+                                    sorted_items = sorted(logprobs_dict.items(), key=lambda x: x[1], reverse=True)
+                                    top_n_items = dict(sorted_items[:n_top_logprobs])
+                                    sample_top_logprobs.append(top_n_items)
+
+            processed_log_probs.append(sample_log_probs)
+            if n_top_logprobs > 0:
+                processed_top_logprobs.append(sample_top_logprobs)
+
+        # Replace with processed data
+        output_dict["log_probs"] = processed_log_probs
+        if n_top_logprobs > 0 and len(processed_top_logprobs) > 0:
+            output_dict["top_logprobs"] = processed_top_logprobs
+
+        return output_dict
+
+    def ray_infer_fn(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """Ray inference function that processes input dictionary and returns output without byte casting.
+
+        Args:
+            inputs (Dict[str, Any]): Input dictionary containing:
+                - prompts: List of input prompts
+                - max_tokens: Maximum number of tokens to generate (optional)
+                - min_tokens: Minimum number of tokens to generate (optional)
+                - top_k: Top-k sampling parameter (optional)
+                - top_p: Top-p sampling parameter (optional)
+                - temperature: Sampling temperature (optional)
+                - seed: Random seed for generation (optional)
+                - lora_model_name: Name of the LoRA model to use for generation (optional)
+                - compute_logprob: Whether to compute log probabilities (optional)
+                - n_top_logprobs: Number of top log probabilities to return (optional)
+                - echo: Whether to include prompt token log probabilities (optional)
+
+        Returns:
+            Dict[str, Any]: Output dictionary containing:
+                - sentences: List of generated text outputs
+                - log_probs: List of lists of float values, containing log probability values for the actual tokens.
+                  If echo is True, includes prompt token logprobs first, then generated token logprobs.
+                  Otherwise, only generated token logprobs.
+                - top_logprobs: List of lists of dictionaries, where each dict contains the top n_top_logprobs
+                  token strings and their logprob values at each position. If echo is True, includes prompt
+                  token top_logprobs first, then generated token top_logprobs. Otherwise, only generated
+                  token top_logprobs. Format: [[{" token1": -0.1, " token2": -2.5}, ...], ...]
+                - token_ids: Token IDs for generated tokens
+                - prompt_token_ids: Token IDs for prompt tokens (if echo is True)
+        """
+        output_dict = {}
+
+        # Extract prompts - handle both list and single string cases
+        prompts = inputs.get("prompts", [])
+        if isinstance(prompts, str):
+            prompts = [prompts]
+
+        # Extract HuggingFace-style parameters for OAI compatibility
+        compute_logprob = inputs.pop("compute_logprob", False)
+        n_top_logprobs = inputs.pop("n_top_logprobs", 0)
+        echo = inputs.pop("echo", False)
+        apply_chat_template = inputs.pop("apply_chat_template", False)
+
+        # Apply chat template if requested (for Ray inference only)
+        if apply_chat_template:
+            prompts = [self.apply_chat_template(prompt) for prompt in prompts]
+
+        # Map HF-style parameters to vLLM parameters
+        if compute_logprob and n_top_logprobs > 0:
+            inputs["n_log_probs"] = n_top_logprobs
+            if echo:
+                inputs["n_prompt_log_probs"] = n_top_logprobs
+
+        try:
+            output_dict = self._infer_fn(prompts, inputs)
+            LOGGER.warning(f"Output_dict output of _infer_fn: {output_dict}")
+
+            # Post-process log probabilities from _infer_fn to OpenAI API format
+            output_dict = self.post_process_logprobs_to_OAI(output_dict, echo=echo, n_top_logprobs=n_top_logprobs)
+
+        except Exception as error:
+            err_msg = f"An error occurred: {str(error)}"
+            LOGGER.error(err_msg)
+            output_dict["sentences"] = [err_msg] * len(prompts)
+            output_dict["error"] = err_msg
+
+        return output_dict
+
+    def apply_chat_template(self, messages, add_generation_prompt=True):
+        """Apply the chat template to messages using the tokenizer.
+
+        This method uses the vLLM tokenizer's built-in apply_chat_template method
+        to format messages according to the model's expected chat format.
+
+        Args:
+            messages: List of message dictionaries with 'role' and 'content' keys,
+                     or a JSON string representation of messages.
+            add_generation_prompt (bool): Whether to add the generation prompt. Defaults to True.
+
+        Returns:
+            str: The formatted prompt string.
+
+        Raises:
+            ValueError: If the tokenizer does not have a chat template.
+        """
+        import json
+
+        # Handle JSON string input
+        if isinstance(messages, str):
+            messages = json.loads(messages)
+
+        tokenizer = self.model.get_tokenizer()
+
+        # Check if tokenizer has chat_template
+        if not hasattr(tokenizer, "chat_template") or tokenizer.chat_template is None:
+            raise ValueError(
+                "The tokenizer does not have a chat template defined. "
+                "If you would like to evaluate a chat model, ensure your model's tokenizer has a chat template."
+            )
+
+        # Use tokenizer's apply_chat_template method
+        formatted_prompt = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=add_generation_prompt,
+        )
+
+        return formatted_prompt
+
+    def _dict_to_str(self, messages):
+        """Serializes dict to str."""
+        import json
+
+        return json.dumps(messages)
+
+    def forward(
+        self,
+        input_texts: List[str],
+        max_tokens: int = 16,
+        min_tokens: int = 0,
+        top_k: int = 1,
+        top_p: float = 0.1,
+        temperature: float = 1.0,
+        n_log_probs: int = None,
+        n_prompt_log_probs: int = None,
+        seed: int = None,
+        lora_model_name: str = None,
+    ):
+        """
+        Generate text completions for a list of input prompts using the vLLM model.
+
+        Args:
+            input_texts (List[str]): List of input prompt strings.
+            max_tokens (int, optional): Maximum number of tokens to generate for each prompt. Defaults to 16.
+            min_tokens (int, optional): Minimum number of tokens to generate for each prompt. Defaults to 0.
+            top_k (int, optional): The number of highest probability vocabulary tokens to keep for top-k-filtering. Defaults to 1.
+            top_p (float, optional): If set to float < 1, only the most probable tokens with probabilities that add up to top_p or higher are kept for generation. Defaults to 0.1.
+            temperature (float, optional): Sampling temperature. Defaults to 1.0.
+            n_log_probs (int, optional): Number of log probabilities to return for generated tokens. Defaults to None.
+            n_prompt_log_probs (int, optional): Number of log probabilities to return for prompt tokens. Defaults to None.
+            seed (int, optional): Random seed for generation. Defaults to None.
+            lora_model_name (str, optional): Name of the LoRA model to use for generation. Defaults to None.
+
+        Returns:
+            dict: A dictionary containing:
+                - sentences (List[str]): Generated text completions.
+                - token_ids (List[List[int]]): Token IDs for the generated tokens.
+                - log_probs (np.ndarray, optional): Top log probabilities for generated tokens if n_log_probs > 0.
+                - prompt_log_probs (np.ndarray, optional): Top log probabilities for prompt tokens if n_prompt_log_probs > 0.
+                - prompt_token_ids (List[List[int]], optional): Token IDs for prompt tokens at positions where prompt_logprobs is not None.
+        """
+        assert self.model is not None, "Model is not initialized."
+
+        lora_request = None
+        if lora_model_name is not None:
+            if self.lora_models is None:
+                raise Exception("No lora models are available.")
+            assert lora_model_name in self.lora_models.keys(), "Lora model was not added before"
+            lora_request = LoRARequest(lora_model_name, 1, self.lora_models[lora_model_name])
+
+        sampling_params = SamplingParams(
+            max_tokens=max_tokens,
+            min_tokens=min_tokens,
+            logprobs=n_log_probs,
+            prompt_logprobs=n_prompt_log_probs,
+            seed=seed,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+        )
+
+        request_output = self.model.generate(input_texts, sampling_params, lora_request=lora_request)
+
+        output = []
+        top_logprobs = []
+        top_prompt_logprobs = []
+        token_ids_list = []
+        prompt_token_ids_list = []
+
+        for o in request_output:
+            output.append(o.outputs[0].text)
+
+            # Collect generated token IDs
+            token_ids_list.append(o.outputs[0].token_ids)
+
+            if n_log_probs is not None and n_log_probs > 0:
+                lpbs = []
+                for lp in o.outputs[0].logprobs:
+                    lg_items = {}
+                    values = lp.values()
+                    values = sorted(values, key=lambda v: v.rank)
+                    for v in values:
+                        lg_items[str(v.decoded_token)] = v.logprob
+                    lpbs.append(self._dict_to_str(lg_items))
+                top_logprobs.append(lpbs)
+
+            if n_prompt_log_probs is not None and n_prompt_log_probs > 0:
+                lpbs = []
+                prompt_token_ids = []
+                for idx, lp in enumerate(o.prompt_logprobs):
+                    if lp is not None and isinstance(lp, dict):
+                        lg_items = {}
+                        values = lp.values()
+                        values = sorted(values, key=lambda v: v.rank)
+                        for v in values:
+                            lg_items[str(v.decoded_token)] = v.logprob
+
+                        lpbs.append(self._dict_to_str(lg_items))
+                        # Add prompt token ID at this position (where logprobs is not None)
+                        if hasattr(o, "prompt_token_ids") and idx < len(o.prompt_token_ids):
+                            prompt_token_ids.append(o.prompt_token_ids[idx])
+
+                top_prompt_logprobs.append(lpbs)
+                if len(prompt_token_ids) > 0:
+                    prompt_token_ids_list.append(prompt_token_ids)
+
+        output = {"sentences": output}
+
+        # Add generated token IDs
+        if len(token_ids_list) > 0:
+            output["token_ids"] = token_ids_list
+
+        if len(top_logprobs) > 0:
+            max_len = max(len(arr) for arr in top_logprobs)
+            # Pad each array to the maximum length. Pads 0.
+            top_logprobs = np.array([np.pad(arr, (0, max_len - len(arr)), constant_values=0) for arr in top_logprobs])
+            output["log_probs"] = top_logprobs
+
+        if len(top_prompt_logprobs) > 0:
+            max_len = max(len(arr) for arr in top_prompt_logprobs)
+            # Pad each array to the maximum length. Pads 0.
+            top_prompt_logprobs = np.array(
+                [np.pad(arr, (0, max_len - len(arr)), constant_values=0) for arr in top_prompt_logprobs]
+            )
+            output["prompt_log_probs"] = top_prompt_logprobs
+
+        # Add prompt token IDs (only at positions where prompt_logprobs is not None)
+        if len(prompt_token_ids_list) > 0:
+            output["prompt_token_ids"] = prompt_token_ids_list
+
+        return output

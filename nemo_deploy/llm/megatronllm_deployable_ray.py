@@ -1,0 +1,552 @@
+#!/usr/bin/env python3
+# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import json
+import logging
+import os
+import random
+import time
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import ray
+import torch
+from fastapi import FastAPI, HTTPException
+from ray import serve
+from ray.util.scheduling_strategies import NodeAffinitySchedulingStrategy
+
+from ..ray_utils import find_available_port
+from .megatronllm_deployable import MegatronLLMDeployable
+
+LOGGER = logging.getLogger("NeMo")
+
+app = FastAPI()
+
+
+@ray.remote(num_gpus=1)
+class ModelWorker:
+    """Ray actor that loads and runs inference on a shard of the model.
+
+    Each ModelWorker is responsible for a specific rank in the model parallel setup.
+    """
+
+    def __init__(
+        self,
+        megatron_checkpoint_filepath: str,
+        rank: int,
+        world_size: int,
+        tensor_model_parallel_size: int,
+        pipeline_model_parallel_size: int,
+        context_parallel_size: int,
+        expert_model_parallel_size: int,
+        sequence_parallel: bool,
+        master_port: str,
+        master_addr: Optional[str] = None,
+        replica_id: int = 0,
+        enable_cuda_graphs: bool = False,
+        enable_flash_decode: bool = False,
+        legacy_ckpt: bool = False,
+        max_batch_size: int = 32,
+        inference_max_seq_length: int = 4096,
+        random_seed: Optional[int] = None,
+        model_type: str = "gpt",
+        micro_batch_size: Optional[int] = None,
+        legacy_model_format: bool = False,
+        **model_config_kwargs,
+    ):
+        # Use replica-specific environment variables to avoid conflicts
+        os.environ["MASTER_PORT"] = master_port
+        # All ranks must use the SAME MASTER_ADDR (rank 0 node IP)
+        os.environ["MASTER_ADDR"] = master_addr if master_addr else ray._private.services.get_node_ip_address()
+        os.environ["RANK"] = str(rank)
+        os.environ["WORLD_SIZE"] = str(world_size)
+        os.environ["LOCAL_RANK"] = str(rank % torch.cuda.device_count())
+
+        # Set a unique process group name for each replica to avoid conflicts
+        os.environ["TORCH_DISTRIBUTED_GROUP_NAME"] = f"replica_{replica_id}"
+
+        # Use INFO level logging only for important initialization steps
+        if rank == 0:  # Only log from rank 0 to reduce noise
+            LOGGER.info(f"Replica {replica_id} - Initializing workers for world_size={world_size}")
+            LOGGER.info(f"Replica {replica_id} - MASTER_PORT: {os.environ['MASTER_PORT']}")
+            LOGGER.info(f"Replica {replica_id} - MASTER_ADDR: {os.environ['MASTER_ADDR']}")
+
+        try:
+            self.model = MegatronLLMDeployable(
+                megatron_checkpoint_filepath=megatron_checkpoint_filepath,
+                num_devices=world_size,
+                num_nodes=world_size // torch.cuda.device_count(),
+                tensor_model_parallel_size=tensor_model_parallel_size,
+                pipeline_model_parallel_size=pipeline_model_parallel_size,
+                expert_model_parallel_size=expert_model_parallel_size,
+                context_parallel_size=context_parallel_size,
+                sequence_parallel=sequence_parallel,
+                enable_cuda_graphs=enable_cuda_graphs,
+                enable_flash_decode=enable_flash_decode,
+                legacy_ckpt=legacy_ckpt,
+                max_batch_size=max_batch_size,
+                inference_max_seq_length=inference_max_seq_length,
+                random_seed=random_seed,
+                model_type=model_type,
+                micro_batch_size=micro_batch_size,
+                legacy_model_format=legacy_model_format,
+                **model_config_kwargs,
+            )
+            if rank != 0:
+                self.model.generate_other_ranks()
+        except Exception as e:
+            LOGGER.error(f"Replica {replica_id} - Failed to initialize model for rank {rank}: {str(e)}")
+            raise
+
+    def infer(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """Run inference on the model shard."""
+        return self.model.ray_infer_fn(inputs)
+
+
+@serve.deployment(
+    num_replicas=1,
+    ray_actor_options={"num_cpus": 8},
+    max_ongoing_requests=64,
+)
+@serve.ingress(app)
+class MegatronRayDeployable:
+    """A Ray Serve deployment for distributed Megatron LLM models.
+
+    This class coordinates model parallelism across multiple GPUs and nodes,
+    with each shard handled by a separate Ray actor.
+    """
+
+    def __init__(
+        self,
+        megatron_checkpoint_filepath: str,
+        num_gpus: int = 1,
+        tensor_model_parallel_size: int = 1,
+        pipeline_model_parallel_size: int = 1,
+        context_parallel_size: int = 1,
+        expert_model_parallel_size: int = 1,
+        expert_tensor_parallel_size: int = 1,
+        sequence_parallel: bool = False,
+        model_id: str = "megatron-model",
+        enable_cuda_graphs: bool = False,
+        enable_flash_decode: bool = False,
+        legacy_ckpt: bool = False,
+        max_batch_size: int = 32,
+        inference_max_seq_length: int = 4096,
+        random_seed: Optional[int] = None,
+        model_type: str = "gpt",
+        micro_batch_size: Optional[int] = None,
+        batch_wait_timeout_s: float = 0.1,
+        legacy_model_format: bool = False,
+        **model_config_kwargs,
+    ):
+        """Initialize the distributed Megatron LLM model deployment.
+
+        Args:
+            megatron_checkpoint_filepath (str): Path to the Megatron checkpoint directory.
+            num_gpus (int): Number of GPUs to use for the deployment
+            tensor_model_parallel_size (int): Size of tensor model parallelism.
+            pipeline_model_parallel_size (int): Size of pipeline model parallelism.
+            context_parallel_size (int): Size of context parallelism.
+            model_id (str): Identifier for the model in API responses.
+            enable_cuda_graphs (bool): Whether to enable CUDA graphs for faster inference.
+            enable_flash_decode (bool): Whether to enable Flash Attention decode.
+            max_batch_size (int): Maximum batch size for request batching.
+            inference_max_seq_length (int): Maximum sequence length for inference.
+            legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
+            random_seed (int): Random seed for model initialization.
+            model_type (str): Type of model to load.
+            micro_batch_size (Optional[int]): Micro batch size for model execution.
+            batch_wait_timeout_s (float): Max seconds to wait for additional requests before
+                processing a batch. Defaults to 0.1.
+        """
+        try:
+            self.model_id = model_id
+            self.max_batch_size = max_batch_size
+            self.batch_wait_timeout_s = batch_wait_timeout_s
+
+            # Generate a unique replica ID based on the actor handle
+            replica_id = abs(hash(str(self))) % 10000
+
+            # Pre-allocate master port to avoid race conditions between workers
+            # Use replica-specific port to avoid conflicts between replicas
+            base_port = random.randint(29500, 29999) + (replica_id % 100) * 100
+            deploy_node_ip = ray._private.services.get_node_ip_address()
+            master_port = str(find_available_port(base_port, deploy_node_ip))
+            LOGGER.info(f"Replica {replica_id} - Pre-allocated master port: {master_port}")
+
+            # Create workers with proper synchronization for distributed initialization
+            # Rank 0 must be created first as it acts as the master in PyTorch distributed
+            worker_futures = []
+
+            # Create rank 0 worker first
+            # Force rank 0 to run on the same node as this deployment so MASTER_ADDR is routable
+            # Resolve the node_id for this deployment's node
+            deployment_node_id = None
+            for node in ray.nodes():
+                if node.get("Alive") and node.get("NodeManagerAddress") == deploy_node_ip:
+                    deployment_node_id = node.get("NodeID")
+                    break
+
+            # Common arguments for rank 0 worker
+            rank_0_kwargs = dict(
+                megatron_checkpoint_filepath=megatron_checkpoint_filepath,
+                rank=0,
+                world_size=num_gpus,
+                tensor_model_parallel_size=tensor_model_parallel_size,
+                pipeline_model_parallel_size=pipeline_model_parallel_size,
+                context_parallel_size=context_parallel_size,
+                expert_model_parallel_size=expert_model_parallel_size,
+                expert_tensor_parallel_size=expert_tensor_parallel_size,
+                sequence_parallel=sequence_parallel,
+                master_port=master_port,
+                master_addr=deploy_node_ip,
+                replica_id=replica_id,
+                enable_cuda_graphs=enable_cuda_graphs,
+                enable_flash_decode=enable_flash_decode,
+                legacy_ckpt=legacy_ckpt,
+                max_batch_size=max_batch_size,
+                inference_max_seq_length=inference_max_seq_length,
+                random_seed=random_seed,
+                model_type=model_type,
+                micro_batch_size=micro_batch_size,
+                legacy_model_format=legacy_model_format,
+                **model_config_kwargs,
+            )
+
+            # Use node affinity if we found a matching node, otherwise use default scheduling
+            if deployment_node_id is not None:
+                rank_0_worker = ModelWorker.options(
+                    scheduling_strategy=NodeAffinitySchedulingStrategy(node_id=deployment_node_id, soft=True)
+                ).remote(**rank_0_kwargs)
+            else:
+                rank_0_worker = ModelWorker.remote(**rank_0_kwargs)
+            worker_futures.append(rank_0_worker)
+
+            # Wait for rank 0 to start before creating other workers
+            # This ensures the master node is ready for distributed initialization
+            LOGGER.info(f"Replica {replica_id} - Waiting for rank 0 to initialize...")
+            time.sleep(1)  # Give rank 0 time to start the distributed backend
+
+            # Create remaining workers in parallel
+            for rank in range(1, num_gpus):
+                worker = ModelWorker.remote(
+                    megatron_checkpoint_filepath=megatron_checkpoint_filepath,
+                    rank=rank,
+                    world_size=num_gpus,
+                    tensor_model_parallel_size=tensor_model_parallel_size,
+                    pipeline_model_parallel_size=pipeline_model_parallel_size,
+                    context_parallel_size=context_parallel_size,
+                    expert_model_parallel_size=expert_model_parallel_size,
+                    expert_tensor_parallel_size=expert_tensor_parallel_size,
+                    sequence_parallel=sequence_parallel,
+                    master_port=master_port,
+                    master_addr=deploy_node_ip,
+                    replica_id=replica_id,
+                    enable_cuda_graphs=enable_cuda_graphs,
+                    enable_flash_decode=enable_flash_decode,
+                    max_batch_size=max_batch_size,
+                    inference_max_seq_length=inference_max_seq_length,
+                    random_seed=random_seed,
+                    model_type=model_type,
+                    micro_batch_size=micro_batch_size,
+                    legacy_model_format=legacy_model_format,
+                    **model_config_kwargs,
+                )
+                worker_futures.append(worker)
+
+            # Wait for all workers to be created and store them
+            self.workers = worker_futures
+            LOGGER.info(f"Replica {replica_id} - All {num_gpus} workers created successfully")
+
+            # Primary worker for coordinating inference
+            self.primary_worker = self.workers[0]
+
+            LOGGER.info(f"Replica {replica_id} - Initialized {num_gpus} model workers")
+
+            # Set up separate batch queues for completions and chat to prevent
+            # cross-contamination of apply_chat_template between endpoint types
+            self._batched_completions_infer = serve.batch(
+                max_batch_size=self.max_batch_size,
+                batch_wait_timeout_s=self.batch_wait_timeout_s,
+            )(self._batched_infer_impl)
+
+            self._batched_chat_infer = serve.batch(
+                max_batch_size=self.max_batch_size,
+                batch_wait_timeout_s=self.batch_wait_timeout_s,
+            )(self._batched_infer_impl)
+
+            LOGGER.info(
+                f"Replica {replica_id} - Batching enabled: max_batch_size={self.max_batch_size}, "
+                f"batch_wait_timeout_s={self.batch_wait_timeout_s}"
+            )
+
+        except Exception as e:
+            LOGGER.error(f"Error initializing distributed model deployment: {str(e)}")
+            raise
+
+    async def _batched_infer_impl(self, inference_inputs_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Batch handler: merges multiple requests, runs single inference, splits results."""
+        batch_size = len(inference_inputs_list)
+        if batch_size > 1:
+            LOGGER.info(f"Batching {batch_size} requests together")
+
+        # Merge prompts, track per-request counts
+        all_prompts = []
+        prompt_counts = []
+        for inputs in inference_inputs_list:
+            prompts = inputs.get("prompts", [])
+            all_prompts.extend(prompts)
+            prompt_counts.append(len(prompts))
+
+        # First-value semantics for shared parameters (matches PyTriton @first_value pattern)
+        first = inference_inputs_list[0]
+        if batch_size > 1:
+            for param in ["temperature", "top_k", "top_p", "max_length"]:
+                vals = {inputs.get(param) for inputs in inference_inputs_list}
+                if len(vals) > 1:
+                    LOGGER.warning(f"Batched requests have different '{param}': {vals}. Using first request's value.")
+
+        merged_inputs = {
+            "prompts": all_prompts,
+            "max_length": first.get("max_length", 256),
+            "temperature": first.get("temperature", 1.0),
+            "top_k": first.get("top_k", 0),
+            "top_p": first.get("top_p", 0.0),
+            "compute_logprob": first.get("compute_logprob", False),
+            "apply_chat_template": first.get("apply_chat_template", False),
+            "n_top_logprobs": first.get("n_top_logprobs", 0),
+            "echo": first.get("echo", False),
+            "stop_words": first.get("stop_words", None),
+        }
+
+        # Use await instead of ray.get() to avoid blocking the event loop
+        results = await self.primary_worker.infer.remote(merged_inputs)
+
+        # Split results back per-request
+        individual_results = []
+        offset = 0
+        for count in prompt_counts:
+            result = {"sentences": results.get("sentences", [])[offset : offset + count]}
+
+            log_probs = results.get("log_probs", None)
+            if log_probs is not None:
+                result["log_probs"] = log_probs[offset : offset + count]
+
+            top_logprobs = results.get("top_logprobs", None)
+            if top_logprobs is not None:
+                result["top_logprobs"] = top_logprobs[offset : offset + count]
+
+            individual_results.append(result)
+            offset += count
+
+        return individual_results
+
+    @app.post("/v1/completions/")
+    async def completions(self, request: Dict[Any, Any]):
+        """Handle text completion requests."""
+        try:
+            LOGGER.warning(f"request: {request}")
+            if "prompt" in request:
+                request["prompts"] = [request["prompt"]]
+            temperature = request.get("temperature", 0.0)
+            top_p = request.get("top_p", 0.0)
+            if temperature == 0.0 and top_p == 0.0:
+                LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
+                request["top_k"] = 1.0
+
+            # Extract stop words from the request (OpenAI API uses 'stop' field)
+            stop_words = request.get("stop", None)
+            if isinstance(stop_words, str):
+                stop_words = [stop_words]
+
+            # Prepare inference inputs with proper parameter mapping
+            inference_inputs = {
+                "prompts": request.get("prompts", []),
+                "max_length": request.get("max_tokens", 256),
+                "temperature": request.get("temperature", 1.0),
+                "top_k": request.get("top_k", 0),
+                "top_p": request.get("top_p", 0.0),
+                "compute_logprob": True
+                if (request.get("logprobs") is not None and request.get("logprobs", 0) > 0)
+                else False,
+                "apply_chat_template": False,
+                "n_top_logprobs": request.get("logprobs", 0),
+                "echo": request.get("echo", False),
+                "stop_words": stop_words,
+            }
+
+            # Run batched inference (collects concurrent requests automatically)
+            results = await self._batched_completions_infer(inference_inputs)
+            # Extract generated texts from results
+            generated_texts = results.get("sentences", [])
+
+            # Calculate token counts asynchronously
+            prompt_tokens = sum(len(p.split()) for p in request.get("prompts", []))
+            completion_tokens = sum(len(r.split()) for r in generated_texts)
+            total_tokens = prompt_tokens + completion_tokens
+
+            # Convert numpy arrays to Python lists for JSON serialization
+            log_probs_data = results.get("log_probs", None)
+            if log_probs_data is not None and isinstance(log_probs_data, np.ndarray):
+                # log_probs_data is present as list of numpy array, just take the first element to convert to list
+                log_probs_data = log_probs_data.tolist()[0]
+
+            top_log_probs_data = results.get("top_logprobs", None)
+            if top_log_probs_data is not None:
+                # top_log_probs_data[0] is a string, parse it as JSON. top_log_probs_data is list of string, so
+                # just take the first element to convert to json
+                top_log_probs_data = json.loads(top_log_probs_data[0])
+
+            output = {
+                "id": f"cmpl-{int(time.time())}",
+                "object": "text_completion",
+                "created": int(time.time()),
+                "model": self.model_id,
+                "choices": [
+                    {
+                        "text": " ".join(generated_texts),
+                        "index": 0,
+                        "logprobs": (
+                            {
+                                "token_logprobs": log_probs_data,
+                                "top_logprobs": top_log_probs_data,
+                            }
+                        ),
+                        "finish_reason": (
+                            "length"
+                            if generated_texts and len(generated_texts[0]) >= request.get("max_tokens", 256)
+                            else "stop"
+                        ),
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "total_tokens": total_tokens,
+                },
+            }
+            if request.get("echo", False):
+                # output format requires empty logprobs for the 1st token if echo is True
+                output["choices"][0]["logprobs"]["token_logprobs"].insert(0, None)
+            # Comment out the below line to check the output in case if invalid accuracy score or output.
+            LOGGER.warning(f"Output: {output}")
+            return output
+        except Exception as e:
+            LOGGER.error(f"Error during inference: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error during inference: {str(e)}")
+
+    @app.post("/v1/chat/completions/")
+    async def chat_completions(self, request: Dict[Any, Any]):
+        """Handle chat completion requests."""
+        try:
+            LOGGER.warning(f"request: {request}")
+            # Extract parameters from the request dictionary
+            messages = request.get("messages", [])
+
+            # Get sampling parameters
+            temperature = request.get("temperature", 0.0)
+            top_p = request.get("top_p", 0.0)
+            top_k = request.get("top_k", 0)
+
+            # Greedy sampling check: when both temperature and top_p are 0, set top_k to 1
+            if temperature == 0.0 and top_p == 0.0:
+                LOGGER.warning("Both temperature and top_p are 0. Setting top_k to 1 to ensure greedy sampling.")
+                top_k = 1
+
+            # Extract stop words from the request (OpenAI API uses 'stop' field)
+            stop_words = request.get("stop", None)
+            if isinstance(stop_words, str):
+                stop_words = [stop_words]
+
+            # Prepare inference parameters
+            # For chat templates, we need to pass the entire messages list as a single prompt
+            # so that apply_chat_template receives the full conversation context
+            inference_inputs = {
+                "prompts": [messages],
+                "max_length": request.get("max_tokens", 512),
+                "temperature": temperature,
+                "top_k": top_k,
+                "top_p": top_p,
+                "compute_logprob": True if request.get("logprobs") == 1 else False,
+                "apply_chat_template": request.get("apply_chat_template", True),
+                "stop_words": stop_words,
+            }
+
+            # Run batched inference (collects concurrent requests automatically)
+            results = await self._batched_chat_infer(inference_inputs)
+
+            # Extract generated texts from results
+            generated_texts = results["sentences"]
+            # Calculate token counts
+            prompt_tokens = sum(len(str(msg).split()) for msg in messages)
+            completion_tokens = sum(len(r.split()) for r in generated_texts)
+            total_tokens = prompt_tokens + completion_tokens
+
+            # Convert numpy arrays to Python lists for JSON serialization
+            log_probs_data = results.get("log_probs", None)
+            if log_probs_data is not None and isinstance(log_probs_data, np.ndarray):
+                log_probs_data = log_probs_data.tolist()
+
+            output = {
+                "id": f"chatcmpl-{int(time.time())}",
+                "object": "chat.completion",
+                "created": int(time.time()),
+                "model": self.model_id,
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": generated_texts[0] if generated_texts else "",
+                        },
+                        "index": 0,
+                        "logprobs": (
+                            {
+                                "token_logprobs": log_probs_data,
+                                "top_logprobs": log_probs_data,
+                            }
+                            if log_probs_data is not None
+                            else None
+                        ),
+                        "finish_reason": (
+                            "length"
+                            if generated_texts and len(generated_texts[0]) >= inference_inputs["max_length"]
+                            else "stop"
+                        ),
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "total_tokens": total_tokens,
+                },
+            }
+            LOGGER.warning(f"Output: {output}")
+            return output
+        except Exception as e:
+            LOGGER.error(f"Error during chat completion: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error during chat completion: {str(e)}")
+
+    @app.get("/v1/models")
+    async def list_models(self):
+        """List available models."""
+        return {
+            "data": [{"id": self.model_id, "object": "model", "created": int(time.time())}],
+            "object": "list",
+        }
+
+    @app.get("/v1/health")
+    async def health_check(self):
+        """Health check endpoint."""
+        return {"status": "healthy"}

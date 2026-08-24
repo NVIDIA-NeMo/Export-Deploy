@@ -1,0 +1,455 @@
+# Copyright (c) 2025, NVIDIA CORPORATION. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+name: CICD NeMo
+on:
+  schedule:
+    - cron: 0 0 * * *
+  push:
+    branches:
+      - main
+      - "pull-request/[0-9]+"
+      - "deploy-release/*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ github.event.label.name || 'main' }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  pre-flight:
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@cf5acebace78c7c339bc1f804357a991336f1c4d # v1.8.10
+    with:
+      default_runner_prefix: nemo-ci-aws-gpu-x2
+      non_nvidia_runner_prefix: nemo-ci-aws-gpu-x2-ephemeral
+      default_test_data_path: /mnt/datadrive/TestData/nemo-fw/TestData
+      non_nvidia_test_data_path: /mnt/datadrive/TestData/nemo-fw/TestData
+      default_registry: 766267172432.dkr.ecr.us-east-1.amazonaws.com
+      non_nvidia_registry: 766267172432.dkr.ecr.us-east-1.amazonaws.com
+      sso_users_filename: ${{ vars.SSO_USERS_FILENAME }}
+    secrets:
+      NVIDIA_MANAGEMENT_ORG_PAT: ${{ secrets.NVIDIA_MANAGEMENT_ORG_PAT }}
+
+  linting:
+    runs-on: ubuntu-latest
+    needs: [pre-flight]
+    if: |
+      (
+        needs.pre-flight.outputs.is_deployment_workflow == 'false'
+          && needs.pre-flight.outputs.is_ci_workload == 'true'
+      ) || (
+        needs.pre-flight.outputs.is_deployment_workflow == 'false'
+          && needs.pre-flight.outputs.is_ci_workload == 'false'
+          && needs.pre-flight.outputs.docs_only == 'false'
+      )
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.10"
+      - name: Install ruff
+        run: |
+          pip install ruff
+
+      - name: Run ruff
+        run: |
+          ruff check .
+          ruff format --check .
+
+  cicd-wait-in-queue:
+    needs: [pre-flight, linting]
+    runs-on: ubuntu-latest
+    environment: test
+    if: |
+      !(needs.pre-flight.outputs.is_ci_workload == 'true'
+      || needs.pre-flight.outputs.is_deployment_workflow == 'true'
+      || needs.pre-flight.outputs.docs_only == 'true')
+    steps:
+      - name: Running CI tests
+        run: |
+          echo "Running CI tests"
+
+  cicd-container-build:
+    needs: [pre-flight, cicd-wait-in-queue]
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
+    environment: nemo-ci
+    if: |
+      (
+        success()
+        || needs.pre-flight.outputs.is_ci_workload == 'true'
+        || needs.pre-flight.outputs.force_run_all == 'true'
+      )
+      && !cancelled()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Login to NGC
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: nvcr.io
+          username: ${{ secrets.NGC_API_USER }}
+          password: ${{ secrets.NGC_API_KEY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Compute cache keys
+        id: cache_keys
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            KEY="main"
+          else
+            PR_NUMBER=$(echo "${{ github.ref_name }}" | grep -oP '^pull-request/\K[0-9]+$' || true)
+            if [[ -n "$PR_NUMBER" ]]; then
+              KEY="$PR_NUMBER"
+            else
+              KEY=$(echo "${{ github.ref_name }}" | tr '/' '-' | tr -cd '[:alnum:]._-')
+            fi
+          fi
+          REGISTRY="${{ needs.pre-flight.outputs.registry }}"
+          echo "key=$KEY" | tee -a "$GITHUB_OUTPUT"
+          echo "cache-to=type=registry,ref=${REGISTRY}/export-deploy:${KEY}-buildcache,mode=max" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
+      - name: Build and push
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
+        with:
+          file: ./docker/Dockerfile.pytorch
+          push: true
+          context: .
+          build-args: |
+            INFERENCE_FRAMEWORK=inframework
+          cache-from: |
+            type=registry,ref=${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ steps.cache_keys.outputs.key }}-buildcache
+            type=registry,ref=${{ needs.pre-flight.outputs.registry }}/export-deploy:main-buildcache
+          cache-to: ${{ steps.cache_keys.outputs.cache-to }}
+          tags: |
+            ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
+          secrets: |
+            GH_TOKEN=${{ steps.app-token.outputs.token }}
+
+  cicd-unit-tests-vllm:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L0_Unit_Tests_GPU
+            runner: ${{ needs.pre-flight.outputs.runner_prefix }}
+          - script: L0_Unit_Tests_CPU
+            runner: ${{ needs.pre-flight.outputs.runner_prefix }}
+            cpu-only: true
+    needs: [pre-flight, cicd-wait-in-queue, cicd-container-build]
+    if: |
+      (
+        success()
+        || needs.pre-flight.outputs.is_ci_workload == 'true'
+        || needs.pre-flight.outputs.force_run_all == 'true'
+      )
+      && !cancelled()
+    runs-on: ${{ matrix.runner }}
+    name: ${{ matrix.script }}
+    environment: nemo-ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
+      - name: main
+        uses: ./.github/actions/test-template
+        with:
+          script: ${{ matrix.script }}
+          timeout: 60
+          is_unit_test: "true"
+          cpu-only: ${{ matrix.cpu-only || false }}
+          PAT: ${{ steps.app-token.outputs.token }}
+          container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
+          inference-framework: vllm
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ matrix.runner }}
+
+  cicd-e2e-tests-trt-onnx:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L2_ONNX_TRT
+            is_optional: false
+    needs: [pre-flight, cicd-unit-tests-vllm]
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
+    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    environment: nemo-ci
+    if: |
+      (
+        success()
+        || (
+          needs.cicd-wait-in-queue.result == 'skipped'
+          && needs.pre-flight.outputs.is_ci_workload == 'true'
+        )
+      )
+      && !cancelled()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
+      - name: main
+        uses: ./.github/actions/test-template
+        with:
+          script: ${{ matrix.script }}
+          is_optional: ${{ matrix.is_optional }}
+          is_unit_test: "false"
+          timeout: 60
+          PAT: ${{ steps.app-token.outputs.token }}
+          container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
+          inference-framework: trt-onnx
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ needs.pre-flight.outputs.runner_prefix }}
+
+  cicd-e2e-tests-vllm:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L2_Launch_vLLM
+            is_optional: false
+    needs: [cicd-unit-tests-vllm, pre-flight]
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
+    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    environment: nemo-ci
+    if: |
+      (
+        success()
+        || needs.pre-flight.outputs.is_ci_workload == 'true'
+        || needs.pre-flight.outputs.force_run_all == 'true'
+      )
+      && !cancelled()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
+      - name: main
+        uses: ./.github/actions/test-template
+        with:
+          script: ${{ matrix.script }}
+          is_optional: ${{ matrix.is_optional }}
+          is_unit_test: "false"
+          timeout: 60
+          PAT: ${{ steps.app-token.outputs.token }}
+          container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
+          inference-framework: vllm
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ needs.pre-flight.outputs.runner_prefix }}
+
+  cicd-e2e-tests-inframework:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L2_Launch_InFramework
+            is_optional: false
+    needs: [pre-flight, cicd-unit-tests-vllm]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: L2_Launch_InFramework
+            is_optional: false
+    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
+    name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
+    environment: nemo-ci
+    if: |
+      (
+        success()
+        || needs.pre-flight.outputs.is_ci_workload == 'true'
+        || needs.pre-flight.outputs.force_run_all == 'true'
+      )
+      && !cancelled()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
+      - name: main
+        uses: ./.github/actions/test-template
+        with:
+          script: ${{ matrix.script }}
+          is_optional: ${{ matrix.is_optional }}
+          is_unit_test: "false"
+          timeout: 60
+          PAT: ${{ steps.app-token.outputs.token }}
+          container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
+          inference-framework: inframework
+          test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
+          runner: ${{ needs.pre-flight.outputs.runner_prefix }}
+
+  Nemo_CICD_Test:
+    needs:
+      - pre-flight
+      - cicd-unit-tests-vllm
+      - cicd-e2e-tests-vllm
+      - cicd-e2e-tests-inframework
+    if: |
+      (
+        needs.pre-flight.outputs.docs_only == 'true'
+        || needs.pre-flight.outputs.is_deployment_workflow == 'true'
+        || needs.pre-flight.outputs.is_ci_workload == 'true'
+        || always()
+      )
+      && !cancelled()
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Get workflow result
+        id: result
+        shell: bash -x -e -u -o pipefail {0}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+          SKIPPING_IS_ALLOWED: ${{ needs.pre-flight.outputs.docs_only == 'true' || needs.pre-flight.outputs.is_deployment_workflow == 'true' || needs.pre-flight.outputs.is_ci_workload == 'true' }}
+        run: |
+          FAILED_JOBS=$(gh run view $GITHUB_RUN_ID --json jobs --jq '[.jobs[] | select(.status == "completed" and .conclusion != "success")] | length') || echo 0
+
+          if [ "${FAILED_JOBS:-0}" -eq 0 ] || [ "$SKIPPING_IS_ALLOWED" == "true" ]; then
+              echo "✅ All previous jobs completed successfully"
+              exit 0
+          else
+              echo "❌ Found $FAILED_JOBS failed job(s)"
+              # Show which jobs failed
+              gh run view $GITHUB_RUN_ID --json jobs --jq '.jobs[] | select(.status == "completed" and .conclusion != "success") | .name'
+              exit 1
+          fi
+
+  Coverage_Fake:
+    runs-on: ubuntu-latest
+    needs: [Nemo_CICD_Test, pre-flight]
+    if: |
+      (
+        needs.pre-flight.outputs.docs_only == 'true'
+        || needs.pre-flight.outputs.is_deployment_workflow == 'true'
+      )
+      && needs.pre-flight.outputs.is_ci_workload == 'false'
+      && !cancelled()
+    environment: nemo-ci
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
+      - name: Generate fake coverage report
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'success',
+              description: 'No code changes - coverage check skipped',
+              context: 'codecov/patch'
+            });
+
+  Coverage:
+    runs-on: ubuntu-latest
+    needs: [pre-flight, Nemo_CICD_Test]
+    if: |
+      (
+        (needs.pre-flight.outputs.is_ci_workload == 'true' && !failure())
+        || success()
+      )
+      && !cancelled()
+    strategy:
+      matrix:
+        flag: [unit-test, e2e]
+    steps:
+      - name: Get PR info
+        id: get-pr-info
+        if: startsWith(github.ref, 'refs/heads/pull-request/')
+        uses: nv-gha-runners/get-pr-info@090577647b8ddc4e06e809e264f7881650ecdccf # main
+
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Download coverage reports of current branch
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: coverage-${{ matrix.flag }}-*
+
+      - name: Get total coverage of current branch
+        shell: bash -x -e -u -o pipefail {0}
+        if: always()
+        run: |
+          pip install coverage[toml]
+
+          ls -al .
+          ls -al coverage-*/
+          coverage combine --keep $(ls coverage-*/.coverage)
+          coverage report -i
+          rm -rf coverage-*
+          ls -al
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+          flags: ${{ matrix.flag }}
+          base_sha: ${{ fromJSON(steps.get-pr-info.outputs.pr-info || '{}').base.sha }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: coverage-${{ matrix.flag }}-aggregated
+          path: |
+            .coverage
+          include-hidden-files: true
