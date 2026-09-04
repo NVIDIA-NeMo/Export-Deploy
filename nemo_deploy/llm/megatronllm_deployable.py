@@ -205,6 +205,12 @@ class MegatronLLMDeployable(ITritonDeployable):
                     stop_words=stop_words,
                 )
 
+                if log_probs:
+                    dynamic_engine = getattr(self.mcore_engine, "engine", None)
+                    if dynamic_engine is not None:
+                        dynamic_engine.materialize_only_last_token_logits = False
+                        dynamic_engine.context.config.materialize_only_last_token_logits = False
+
                 self.generate(prompts, inference_params)
             else:
                 return
