@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+import inspect
+import typing
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -860,3 +862,20 @@ def test_export_megatron_bridge_with_all_vllm_params(exporter, mock_llm):
         assert call_kwargs["cpu_offload_gb"] == 2
         assert call_kwargs["enforce_eager"] is False
         assert call_kwargs["runner"] == "generate"
+
+
+def test_none_default_args_are_marked_optional():
+    """Parameters that default to None must be annotated as Optional."""
+    try:
+        from nemo_export.vllm_exporter import vLLMExporter
+    except ImportError:
+        pytest.skip("vllm_exporter dependencies not available")
+
+    for method_name in ("export", "forward"):
+        sig = inspect.signature(getattr(vLLMExporter, method_name))
+        for param in sig.parameters.values():
+            if param.default is None and param.annotation is not inspect.Parameter.empty:
+                origin = getattr(param.annotation, "__origin__", None)
+                assert origin is typing.Union, (
+                    f"{method_name}.{param.name} defaults to None but is not Optional"
+                )
