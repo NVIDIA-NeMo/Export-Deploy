@@ -362,7 +362,7 @@ class NemoQueryLLM(NemoQueryLLMBase):
         inputs = {"prompts": prompts}
 
         if min_output_len is not None:
-            inputs["min_output_len"] = np.full(prompts.shape, max_output_len, dtype=np.int_)
+            inputs["min_output_len"] = np.full(prompts.shape, min_output_len, dtype=np.int_)
 
         if max_output_len is not None:
             inputs["max_output_len"] = np.full(prompts.shape, max_output_len, dtype=np.int_)

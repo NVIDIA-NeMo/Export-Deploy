@@ -501,11 +501,14 @@ class TestNemoQueryLLM:
         mock_instance.infer_batch.return_value = {"outputs": np.array([b"test response"])}
         mock_instance.model_config.outputs = [MagicMock(dtype=np.bytes_)]
 
-        # Test query with min_output_len
+        # Test query with min_output_len distinct from max_output_len
         response = query.query_llm(prompts=["test prompt"], min_output_len=10, max_output_len=100)
 
         assert isinstance(response[0], str)
         assert response[0] == "test response"
+        call_kwargs = mock_instance.infer_batch.call_args.kwargs
+        assert call_kwargs["min_output_len"][0] == 10
+        assert call_kwargs["max_output_len"][0] == 100
 
     @patch("nemo_deploy.llm.query_llm.ModelClient")
     def test_query_llm_with_logits_output(self, mock_client, query):
