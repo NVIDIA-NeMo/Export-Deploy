@@ -63,12 +63,10 @@ class TestNemoQueryMultimodal:
         assert result.shape[0] == 1  # Batch dimension
         os.unlink(mock_image)
 
-    @patch("requests.get")
-    def test_setup_media_image_url(self, mock_get, query_multimodal):
-        # Mock the response from requests.get
-        mock_response = MagicMock()
-        mock_response.content = b"fake_image_data"
-        mock_get.return_value = mock_response
+    @patch("nemo_deploy.multimodal.image_url_validator.fetch_image_bytes_safely")
+    def test_setup_media_image_url(self, mock_fetch, query_multimodal):
+        # Mock the safe fetch so no real network I/O happens
+        mock_fetch.return_value = b"fake_image_data"
 
         # Mock Image.open
         with patch("PIL.Image.open") as mock_image_open:

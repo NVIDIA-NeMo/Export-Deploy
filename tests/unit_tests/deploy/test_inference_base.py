@@ -798,6 +798,8 @@ class TestInferenceBase(unittest.TestCase):
 
         mock_setup.assert_called_once()
         mock_megatron_llm.assert_called_once()
+        inference_config = mock_megatron_llm.call_args.kwargs["inference_config"]
+        self.assertFalse(inference_config.materialize_only_last_token_logits)
         self.assertIsNotNone(engine)
 
     @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
@@ -824,6 +826,8 @@ class TestInferenceBase(unittest.TestCase):
 
         mock_setup.assert_called_once()
         mock_megatron_llm.assert_called_once()
+        inference_config = mock_megatron_llm.call_args.kwargs["inference_config"]
+        self.assertFalse(inference_config.materialize_only_last_token_logits)
         self.assertIsNotNone(engine)
 
     @patch("nemo_deploy.llm.inference.inference_base.torch_distributed_init")
