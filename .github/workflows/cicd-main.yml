@@ -31,7 +31,7 @@ permissions:
 
 jobs:
   ephemeral-runner-routing:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_ephemeral_runner_routing.yml@d0878a142525ff79366ca96fbc0b306cd8d64670 # v1.9.0
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_ephemeral_runner_routing.yml@4fe957d4ea5816af1d67fae130bbab4b434c10b3 # v1.9.2
     with:
       lane: ${{ vars.NEMO_CI_EPHEMERAL_LANE }}
       legacy_label: nemo-ci-aws-gpu-x2-ephemeral
@@ -43,7 +43,7 @@ jobs:
     uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_cicd_preflight.yml@d0878a142525ff79366ca96fbc0b306cd8d64670 # v1.9.0
     with:
       default_runner_prefix: nemo-ci-aws-gpu-x2
-      non_nvidia_runner_prefix: ${{ needs.ephemeral-runner-routing.outputs.runner_label }}
+      non_nvidia_runner_prefix: ${{ needs.ephemeral-runner-routing.outputs.runner_label_base }}
       default_test_data_path: /mnt/datadrive/TestData/nemo-fw/TestData
       non_nvidia_test_data_path: /mnt/datadrive/TestData/nemo-fw/TestData
       default_registry: 766267172432.dkr.ecr.us-east-1.amazonaws.com
@@ -95,7 +95,7 @@ jobs:
 
   cicd-container-build:
     needs: [pre-flight, cicd-wait-in-queue]
-    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
+    runs-on: ${{ startsWith(needs.pre-flight.outputs.runner_prefix, 'ephe-v2-') && format('{0}-a{1}', needs.pre-flight.outputs.runner_prefix, github.run_attempt) || needs.pre-flight.outputs.runner_prefix }}
     environment: nemo-ci
     if: |
       (
@@ -166,9 +166,9 @@ jobs:
       matrix:
         include:
           - script: L0_Unit_Tests_GPU
-            runner: ${{ needs.pre-flight.outputs.runner_prefix }}
+            runner: ${{ startsWith(needs.pre-flight.outputs.runner_prefix, 'ephe-v2-') && format('{0}-a{1}', needs.pre-flight.outputs.runner_prefix, github.run_attempt) || needs.pre-flight.outputs.runner_prefix }}
           - script: L0_Unit_Tests_CPU
-            runner: ${{ needs.pre-flight.outputs.runner_prefix }}
+            runner: ${{ startsWith(needs.pre-flight.outputs.runner_prefix, 'ephe-v2-') && format('{0}-a{1}', needs.pre-flight.outputs.runner_prefix, github.run_attempt) || needs.pre-flight.outputs.runner_prefix }}
             cpu-only: true
     needs: [pre-flight, cicd-wait-in-queue, cicd-container-build]
     if: |
@@ -206,7 +206,7 @@ jobs:
 
   cicd-e2e-tests-trt-onnx:
     needs: [pre-flight, cicd-unit-tests-vllm]
-    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
+    runs-on: ${{ startsWith(needs.pre-flight.outputs.runner_prefix, 'ephe-v2-') && format('{0}-a{1}', needs.pre-flight.outputs.runner_prefix, github.run_attempt) || needs.pre-flight.outputs.runner_prefix }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     if: |
@@ -239,11 +239,11 @@ jobs:
           container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: trt-onnx
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner: ${{ needs.pre-flight.outputs.runner_prefix }}
+          runner: ${{ startsWith(needs.pre-flight.outputs.runner_prefix, 'ephe-v2-') && format('{0}-a{1}', needs.pre-flight.outputs.runner_prefix, github.run_attempt) || needs.pre-flight.outputs.runner_prefix }}
 
   cicd-e2e-tests-vllm:
     needs: [cicd-unit-tests-vllm, pre-flight]
-    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
+    runs-on: ${{ startsWith(needs.pre-flight.outputs.runner_prefix, 'ephe-v2-') && format('{0}-a{1}', needs.pre-flight.outputs.runner_prefix, github.run_attempt) || needs.pre-flight.outputs.runner_prefix }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     if: |
@@ -274,11 +274,11 @@ jobs:
           container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: vllm
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner: ${{ needs.pre-flight.outputs.runner_prefix }}
+          runner: ${{ startsWith(needs.pre-flight.outputs.runner_prefix, 'ephe-v2-') && format('{0}-a{1}', needs.pre-flight.outputs.runner_prefix, github.run_attempt) || needs.pre-flight.outputs.runner_prefix }}
 
   cicd-e2e-tests-inframework:
     needs: [pre-flight, cicd-unit-tests-vllm]
-    runs-on: ${{ needs.pre-flight.outputs.runner_prefix }}
+    runs-on: ${{ startsWith(needs.pre-flight.outputs.runner_prefix, 'ephe-v2-') && format('{0}-a{1}', needs.pre-flight.outputs.runner_prefix, github.run_attempt) || needs.pre-flight.outputs.runner_prefix }}
     name: ${{ matrix.is_optional && 'PLEASEFIXME_' || '' }}${{ matrix.script }}
     environment: nemo-ci
     if: |
@@ -309,7 +309,7 @@ jobs:
           container-image: ${{ needs.pre-flight.outputs.registry }}/export-deploy:${{ github.sha }}
           inference-framework: inframework
           test-data-path: ${{ needs.pre-flight.outputs.test_data_path }}
-          runner: ${{ needs.pre-flight.outputs.runner_prefix }}
+          runner: ${{ startsWith(needs.pre-flight.outputs.runner_prefix, 'ephe-v2-') && format('{0}-a{1}', needs.pre-flight.outputs.runner_prefix, github.run_attempt) || needs.pre-flight.outputs.runner_prefix }}
 
   Nemo_CICD_Test:
     needs:
