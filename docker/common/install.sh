@@ -96,7 +96,7 @@ main() {
     if [[ "$USE_UV" == "true" ]]; then
 
         # Install uv
-        UV_VERSION="0.7.2"
+        UV_VERSION="0.8.22"
         curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh
         export PATH="$HOME/.local/bin:$PATH"
         export UV_PROJECT_ENVIRONMENT=/opt/venv
