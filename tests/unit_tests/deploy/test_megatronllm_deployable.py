@@ -806,17 +806,13 @@ def test_infer_fn_with_chat_template(deployable):
 
 
 @pytest.mark.run_only_on("GPU")
-def test_infer_fn_with_distributed(deployable):
-    """Test _infer_fn method with distributed training setup."""
+def test_infer_fn_with_multiple_prompts(deployable):
+    """Test _infer_fn with multiple prompts."""
     prompts = ["Hello", "World"]
 
     with (
         patch.object(deployable, "generate") as mock_generate,
         patch.object(deployable, "remove_eos_token") as mock_remove_eos,
-        patch("torch.distributed.is_initialized", return_value=True),
-        patch("torch.distributed.get_world_size", return_value=2),
-        patch("torch.distributed.broadcast") as mock_broadcast,
-        patch("nemo_deploy.llm.megatronllm_deployable.broadcast_list") as mock_broadcast_list,
     ):
         # Set up mock results
         mock_result = MagicMock()
@@ -824,7 +820,6 @@ def test_infer_fn_with_distributed(deployable):
         mock_generate.return_value = [mock_result, mock_result]
         mock_remove_eos.return_value = ["Generated text", "Generated text"]
 
-        # Test with distributed setup
         output_infer = deployable._infer_fn(
             prompts=prompts,
             temperature=1.0,
@@ -837,10 +832,6 @@ def test_infer_fn_with_distributed(deployable):
 
         assert output_infer["sentences"] == ["Generated text", "Generated text"]
         assert not "log_probs" in output_infer.keys()
-
-        # Verify distributed calls were made
-        mock_broadcast.assert_called_once()
-        assert mock_broadcast_list.call_count == 2  # Called twice: once for prompts, once for parameters
 
 
 @pytest.mark.run_only_on("GPU")

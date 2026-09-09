@@ -587,6 +587,7 @@ class TestMegatronMultimodalDeployable:
 
         # HTTP URL as image source
         image_source = "https://example.com/image.jpg"
+        data_uri = "data:image/jpeg;base64,ZmFrZQ=="
         expected_image = Image.new("RGB", (100, 100))
 
         with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.QwenVLInferenceWrapper", mock_qwenvl_class):
@@ -594,19 +595,27 @@ class TestMegatronMultimodalDeployable:
             with patch("nemo_deploy.multimodal.megatron_multimodal_deployable.isinstance") as mock_isinstance:
                 mock_isinstance.return_value = True
 
-                with patch("qwen_vl_utils.process_vision_info") as mock_process:
-                    mock_process.return_value = (expected_image, None)
+                with patch(
+                    "nemo_deploy.multimodal.image_url_validator.fetch_image_data_uri_safely",
+                    return_value=data_uri,
+                ) as mock_fetch:
+                    with patch("qwen_vl_utils.process_vision_info") as mock_process:
+                        mock_process.return_value = (expected_image, None)
 
-                    result = deployable.process_image_input(image_source)
+                        result = deployable.process_image_input(image_source)
 
-                    # Verify process_vision_info was called with URL
-                    call_args = mock_process.call_args[0][0]
-                    assert len(call_args) == 1
-                    assert call_args[0]["role"] == "user"
-                    assert call_args[0]["content"][0]["type"] == "image"
-                    assert call_args[0]["content"][0]["image"] == image_source
+                        # The raw URL must be fetched under the SSRF guard, never handed
+                        # to process_vision_info directly.
+                        mock_fetch.assert_called_once_with(image_source)
 
-                    assert result == expected_image
+                        # Verify process_vision_info was called with the resulting data URI
+                        call_args = mock_process.call_args[0][0]
+                        assert len(call_args) == 1
+                        assert call_args[0]["role"] == "user"
+                        assert call_args[0]["content"][0]["type"] == "image"
+                        assert call_args[0]["content"][0]["image"] == data_uri
+
+                        assert result == expected_image
 
     def test_process_image_input_with_unsupported_model(self, deployable):
         """Test process_image_input with unsupported model raises ValueError."""
