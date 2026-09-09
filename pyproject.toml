@@ -176,6 +176,11 @@ prerelease = "allow"
 name = "nvidia-resiliency-ext"
 version = "0.6.0"
 
+[[tool.uv.dependency-metadata]]
+name = "fast-hadamard-transform"
+version = "1.0.4.post1"
+requires-dist = ["torch", "packaging", "ninja"]
+
 # torch-memory-saver's build backend reads TMS_CUDA_MAJOR at build time. Keep this in
 # sync with docker/Dockerfile's BASE_IMAGE CUDA major version (currently cuda13.x).
 [tool.uv.extra-build-variables]
