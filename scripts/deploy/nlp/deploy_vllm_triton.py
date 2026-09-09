@@ -110,13 +110,6 @@ def get_args(argv):
         help="GPU memory utilization percentage for vLLM.",
     )
     parser.add_argument(
-        "-sp",
-        "--swap_space",
-        default=4,
-        type=float,
-        help="The size (GiB) of CPU memory per GPU to use as swap space.",
-    )
-    parser.add_argument(
         "-cog",
         "--cpu_offload_gb",
         default=0,
@@ -203,7 +196,6 @@ def nemo_deploy(argv):
             quantization=args.quantization,
             seed=args.seed,
             gpu_memory_utilization=args.gpu_memory_utilization,
-            swap_space=args.swap_space,
             cpu_offload_gb=args.cpu_offload_gb,
             enforce_eager=args.enforce_eager,
             task="generate",
