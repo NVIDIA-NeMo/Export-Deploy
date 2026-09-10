@@ -2914,7 +2914,7 @@ requires-dist = [
     { name = "einops" },
     { name = "fastapi" },
     { name = "fiddle" },
-    { name = "flashinfer-python", marker = "sys_platform != 'darwin'", index = "https://flashinfer.ai/whl/" },
+    { name = "flashinfer-python", marker = "sys_platform != 'darwin'", specifier = "==0.6.8.post1", index = "https://flashinfer.ai/whl/" },
     { name = "hydra-core", specifier = ">1.3,<=1.3.2" },
     { name = "ijson" },
     { name = "lightning", specifier = "<2.5.0" },

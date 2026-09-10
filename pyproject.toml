@@ -207,6 +207,14 @@ name = "flashinfer"
 url = "https://flashinfer.ai/whl/"
 explicit = true
 
+# `[tool.uv.sources]`/`[[tool.uv.index]]` above are only honored by uv's project interface
+# (uv sync/lock/add). The release CI builds the wheel via the pip-compatible interface
+# (`uv pip install -e .`), which does NOT read that config and only reads `[tool.uv.pip]`.
+# flashinfer-cubin/flashinfer-python aren't published on PyPI since 0.6.14, so without this
+# extra index `uv pip install -e .` can't resolve megatron-bridge's flashinfer-cubin pin.
+[tool.uv.pip]
+extra-index-url = ["https://flashinfer.ai/whl/"]
+
 [tool.pytest.ini_options]
 addopts = "--durations=15 -s -rA -x"
 testpaths = ["tests"]
