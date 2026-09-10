@@ -27,8 +27,8 @@ overrides = [
     { name = "datasets", specifier = ">=3.3.0" },
     { name = "fast-hadamard-transform", git = "https://github.com/Dao-AILab/fast-hadamard-transform.git?rev=v1.1.0" },
     { name = "flash-linear-attention", specifier = ">=0.3.0,<0.4.dev0" },
-    { name = "flashinfer-cubin", specifier = "==0.6.8.post1" },
-    { name = "flashinfer-python", specifier = "==0.6.8.post1" },
+    { name = "flashinfer-cubin", specifier = "==0.6.18.post1", index = "https://flashinfer.ai/whl/" },
+    { name = "flashinfer-python", specifier = "==0.6.18.post1", index = "https://flashinfer.ai/whl/" },
     { name = "fsspec", extras = ["http"], specifier = ">=2023.1.0,<=2024.9.0" },
     { name = "mamba-ssm", specifier = ">=2.3.0,<2.4.0" },
     { name = "megatron-energon", extras = ["av-decode"], specifier = ">=6.0,<7.dev0" },
@@ -844,34 +844,10 @@ wheels = [
 
 [[package]]
 name = "cuda-bindings"
-version = "13.0.3"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "platform_machine == 'aarch64' and sys_platform == 'darwin'",
-    "platform_machine != 'aarch64' and sys_platform == 'darwin'",
-]
-dependencies = [
-    { name = "cuda-pathfinder", marker = "sys_platform == 'darwin'" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/61/3c/c33fd3aa5fcc89aa1c135e477a0561f29142ab5fe028ca425fc87f7f0a74/cuda_bindings-13.0.3-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b899e5a513c11eaa18648f9bf5265d8de2a93f76ef66a6bfca0a2887303965cd", size = 11709086, upload-time = "2025-10-21T15:09:00.005Z" },
-    { url = "https://files.pythonhosted.org/packages/21/ac/6b34452a3836c9fbabcd360689a353409d15f500dd9d9ced7f837549e383/cuda_bindings-13.0.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cf41d9e69019939aa15296fa66ea7d3fdb8d2c6383f729f4b1156c8b37808a06", size = 12128303, upload-time = "2025-10-21T15:09:02.889Z" },
-    { url = "https://files.pythonhosted.org/packages/a8/76/ad9cc2f0496886c37aefbc00256197a6043a3f04bbe959481e6908310afe/cuda_bindings-13.0.3-cp312-cp312-win_amd64.whl", hash = "sha256:6b12ccd98f447aea9589d32caf9efda0c193994080752a60f790b646d519fe8c", size = 11237397, upload-time = "2025-10-21T15:09:05.421Z" },
-]
-
-[[package]]
-name = "cuda-bindings"
 version = "13.1.1"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "platform_machine == 'aarch64' and sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "platform_machine != 'aarch64' and sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm'",
-    "sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-vllm'",
-    "sys_platform != 'darwin' and extra != 'extra-18-nemo-export-deploy-trt-onnx' and extra != 'extra-18-nemo-export-deploy-vllm'",
-]
 dependencies = [
-    { name = "cuda-pathfinder", marker = "sys_platform != 'darwin' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "cuda-pathfinder" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/53/3d/c8ed9d169843091f3f0d6b8218e826fd59520a37e0434c204feada597988/cuda_bindings-13.1.1-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1e75ad0cb863330df784236d289612d71ca855c013d19ae00e5693574abd6915", size = 15530160, upload-time = "2025-12-09T22:05:55.386Z" },
@@ -880,11 +856,25 @@ wheels = [
 ]
 
 [[package]]
+name = "cuda-core"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cuda-pathfinder" },
+    { name = "numpy" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e6/a6/34fd3fb8ca5f338cf4c1953db301388ed62714457739c5ceca442686e0c5/cuda_core-1.2.0-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c80d766c86d2c9e43674d4ba734450b7708eab3fab52f3757be339b8d6948466", size = 6211011, upload-time = "2026-09-03T00:12:31.046Z" },
+    { url = "https://files.pythonhosted.org/packages/12/93/9d93e929e26707ad976a607cb3a3bf87106261418ed81720890ec3be7e71/cuda_core-1.2.0-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cd36063535f75a88c4eb44ba9a678441491a5f67a72f62c2e3b797e8a052d438", size = 6608833, upload-time = "2026-09-03T00:12:32.833Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/09/88aeee7c744258539ff758db140fdd01a1213a04af1c7938e3074c71ce86/cuda_core-1.2.0-cp312-cp312-win_amd64.whl", hash = "sha256:248117d2d8160ba052b49c60ed4e6c970e8fcdc311ef9523a086dc4574d40c77", size = 5953729, upload-time = "2026-09-03T00:12:34.566Z" },
+]
+
+[[package]]
 name = "cuda-pathfinder"
-version = "1.3.3"
+version = "1.8.1"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/02/4dbe7568a42e46582248942f54dc64ad094769532adbe21e525e4edf7bc4/cuda_pathfinder-1.3.3-py3-none-any.whl", hash = "sha256:9984b664e404f7c134954a771be8775dfd6180ea1e1aef4a5a37d4be05d9bbb1", size = 27154, upload-time = "2025-12-04T22:35:08.996Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/e6/22df83f82f9bc26cb1c42265cf14d34d4908dba2a0f261bd7b28244acb00/cuda_pathfinder-1.8.1-py3-none-any.whl", hash = "sha256:ae0137ff9e56ea97499bcbf54f5f2778ec25f3266715ac86da192a795af982a8", size = 62552, upload-time = "2026-09-02T16:55:28.64Z" },
 ]
 
 [[package]]
@@ -892,8 +882,8 @@ name = "cuda-python"
 version = "13.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cuda-bindings", version = "13.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "cuda-pathfinder", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux') or (sys_platform == 'linux' and extra == 'extra-18-nemo-export-deploy-trt-onnx') or (sys_platform == 'linux' and extra != 'extra-18-nemo-export-deploy-vllm') or (sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "cuda-bindings" },
+    { name = "cuda-pathfinder" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cd/08/b5e3b9822662d72d540d830531e3ab6a7cabbda3dd56175696aabccfeb76/cuda_python-13.1.1-py3-none-any.whl", hash = "sha256:944cc4fe6482673d28dd545797a28840945a1668739328fa2ad1e9be4f7050d9", size = 8038, upload-time = "2025-12-09T22:13:10.719Z" },
@@ -901,15 +891,15 @@ wheels = [
 
 [[package]]
 name = "cuda-tile"
-version = "1.3.0"
+version = "1.6.0rc10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "typing-extensions" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f3/49/4592bc94ca05a07c7947ea114fd12734c8497f2daffee9faa79a03e39fb5/cuda_tile-1.3.0-cp312-cp312-manylinux2014_aarch64.whl", hash = "sha256:375316b64c51ee7cfadb2f170a30c1547bc41eb39f1e233a6556713857d2e81f", size = 245744, upload-time = "2026-04-20T15:52:09.621Z" },
-    { url = "https://files.pythonhosted.org/packages/40/76/84cb68be463c827bf79da9fa0aa5140838de6455ef6f438bbe0ffa75d378/cuda_tile-1.3.0-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:e4865acbff1172aaee304bf9c550586088d8b4545a384423597a590899386709", size = 247301, upload-time = "2026-04-20T15:51:04.042Z" },
-    { url = "https://files.pythonhosted.org/packages/db/6f/d2fd16c2b0d878021dc703eea5f8fe09599d6b04bdc2531a36fc617751fd/cuda_tile-1.3.0-cp312-cp312-win_amd64.whl", hash = "sha256:93e20ed31e46e5bf704fb31d13e1c08338d2177838798876f7ee9ec4384b75ba", size = 240923, upload-time = "2026-04-20T15:52:14.939Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/28/6b22715b8ca3518d7454d97ca8932f66ea1db05f60ee503f0ea01e112682/cuda_tile-1.6.0rc10-cp312-cp312-manylinux2014_aarch64.whl", hash = "sha256:d466117302bbe9b5a70efbe8db875c2b8e87547ecd66eef0d892cb36342b3895", size = 378624, upload-time = "2026-09-04T21:04:50.139Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/6d/f47c1a402a717222c64f5c8856752137230fb67288b9bc6e1ca9e38981fe/cuda_tile-1.6.0rc10-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:be405305105e0540d1b55a63eded159027b633986a095a4452cbfe63d4e3aa05", size = 382233, upload-time = "2026-09-04T21:04:16.005Z" },
+    { url = "https://files.pythonhosted.org/packages/80/49/2b888ea84e0e504d020edf3b98064b942b0776f0011a17c841404c974931/cuda_tile-1.6.0rc10-cp312-cp312-win_amd64.whl", hash = "sha256:223bb1c7e45bb5978b92f7d88121122e23195202c962f3c60f3199712e7b84f6", size = 354518, upload-time = "2026-09-04T21:03:03.699Z" },
 ]
 
 [[package]]
@@ -1386,21 +1376,23 @@ wheels = [
 
 [[package]]
 name = "flashinfer-cubin"
-version = "0.6.8.post1"
-source = { registry = "https://pypi.org/simple" }
+version = "0.6.18.post1"
+source = { registry = "https://flashinfer.ai/whl/" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/11/b7/5e3b1a8c67031b421a8bd29c2bc29b900a550bb3392e8bda18bb15b5e476/flashinfer_cubin-0.6.8.post1-py3-none-any.whl", hash = "sha256:43636d4cd39e694a83d76a89f87fefcdf4cecb4c4f7dd22dac25ec368c1e901f", size = 295154113, upload-time = "2026-04-18T18:28:21.738Z" },
+    { url = "https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.18.post1/flashinfer_cubin-0.6.18.post1-py3-none-any.whl", hash = "sha256:bbacb5b8bbf429e43bf2740bb45551d981f41d0462842e36ee6fb3e3452763ab" },
 ]
 
 [[package]]
 name = "flashinfer-python"
-version = "0.6.8.post1"
-source = { registry = "https://pypi.org/simple" }
+version = "0.6.18.post1"
+source = { registry = "https://flashinfer.ai/whl/" }
 dependencies = [
     { name = "apache-tvm-ffi" },
     { name = "click" },
+    { name = "cuda-python" },
     { name = "cuda-tile" },
     { name = "einops" },
+    { name = "nccl4py" },
     { name = "ninja" },
     { name = "numpy" },
     { name = "nvidia-cudnn-frontend" },
@@ -1412,9 +1404,8 @@ dependencies = [
     { name = "torch", marker = "sys_platform == 'never' or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/53/1e/2760fef9e74abc4480961048e5790b4c9e955872fb4d7d97900cfddced5a/flashinfer_python-0.6.8.post1.tar.gz", hash = "sha256:b18e4121baf9b93fa9a9f368ba9b981a0342895f50ab9dddc224aeb964ed346f", size = 6675885, upload-time = "2026-04-18T18:28:13.299Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/73/6d/1e8a8533913e33a50a486332ce0673f4fdb860f6eb9ed450327c5c1762cb/flashinfer_python-0.6.8.post1-py3-none-any.whl", hash = "sha256:818f9b8cc2fe66c42a1f6264be4841ac8821ada703685a02cfccb2b5124a710b", size = 9385316, upload-time = "2026-04-18T18:28:10.285Z" },
+    { url = "https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.18.post1/flashinfer_python-0.6.18.post1-py3-none-any.whl", hash = "sha256:adb6d2952b47131138e108bd2999b1fe18b71f1a4c0b2684f168753db9563991" },
 ]
 
 [[package]]
@@ -1893,8 +1884,7 @@ name = "humming-kernels"
 version = "0.1.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cuda-bindings", version = "13.0.3", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'darwin' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
-    { name = "cuda-bindings", version = "13.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra == 'extra-18-nemo-export-deploy-vllm') or (extra == 'extra-18-nemo-export-deploy-trt-onnx' and extra == 'extra-18-nemo-export-deploy-vllm')" },
+    { name = "cuda-bindings" },
     { name = "jinja2" },
     { name = "numpy" },
     { name = "nvidia-ml-py" },
@@ -2818,6 +2808,21 @@ wheels = [
 ]
 
 [[package]]
+name = "nccl4py"
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cuda-core" },
+    { name = "cuda-pathfinder" },
+    { name = "numpy" },
+    { name = "packaging" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/0f/b96a70cb2e8b6a8e62e323a6a828bb7d567ab61bde25f5a754fd5bf3b732/nccl4py-0.5.0-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c746674a3ec0a46492efd98ffcb641f48b42313ca6347c8e4944eb0030dedd5a", size = 3508497, upload-time = "2026-09-01T17:34:51.839Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/d8/4f259f648702739d5b041c8b6b97438acadb461690bbfcc6681e0ff90cdc/nccl4py-0.5.0-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:51156cbc35eb9122b870aa7ba1244d0c4781266442036c2bb3e1abb7e88d9376", size = 3572033, upload-time = "2026-09-01T17:35:14.125Z" },
+]
+
+[[package]]
 name = "nemo-export-deploy"
 source = { editable = "." }
 dependencies = [
@@ -2909,7 +2914,7 @@ requires-dist = [
     { name = "einops" },
     { name = "fastapi" },
     { name = "fiddle" },
-    { name = "flashinfer-python", marker = "sys_platform != 'darwin'", specifier = "==0.6.8.post1" },
+    { name = "flashinfer-python", marker = "sys_platform != 'darwin'", specifier = "==0.6.18.post1", index = "https://flashinfer.ai/whl/" },
     { name = "hydra-core", specifier = ">1.3,<=1.3.2" },
     { name = "ijson" },
     { name = "lightning", specifier = "<2.5.0" },

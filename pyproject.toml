@@ -67,7 +67,7 @@ dependencies = [
     "wandb==0.27.2",
     "webdataset>=0.2.86",
     "nvidia-pytriton ; platform_system != 'Darwin' ",
-    "flashinfer-python==0.6.8.post1 ; platform_system != 'Darwin'",
+    "flashinfer-python==0.6.18.post1 ; platform_system != 'Darwin'",
     "Pillow ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "decord ; platform_system != 'Darwin' and platform_machine != 'aarch64'",
     "pyparsing>2.0.2",
@@ -106,6 +106,10 @@ nemo-run = ["nemo-run"]
 [tool.uv.sources]
 xformers = [{ index = "pytorch-cu130" }]
 torch = [{ index = "pytorch-cu130" }]
+# flashinfer-cubin isn't published to PyPI since 0.6.14; both packages are pulled from
+# flashinfer's own wheel index, same as vLLM's requirements/cuda.txt.
+flashinfer-python = [{ index = "flashinfer" }]
+flashinfer-cubin = [{ index = "flashinfer" }]
 vllm = [
     { index = "pytorch-cu130", marker = "python_version < '3.9' and platform_machine == 'x86_64'" },
     { index = "pypi", marker = "platform_machine == 'aarch64'" },
@@ -150,7 +154,6 @@ override-dependencies = [
     "transformer-engine[pytorch]>=2.16.0a0,<2.19.0",
     "open-clip-torch>=3.2.0",
     "megatron-energon[av-decode]>=6.0,<7.dev0",
-    "flashinfer-python==0.6.8.post1",
     "datasets>=3.3.0",
     "flash-linear-attention>=0.3.0,<0.4.dev0",
     "patchelf; sys_platform=='never'",
@@ -164,8 +167,11 @@ override-dependencies = [
     "opencv-python-headless; sys_platform == 'never'",
     "cryptography>=43.0.0,<47",
     "onnx<1.20.0",
-    "flashinfer-python==0.6.8.post1",
-    "flashinfer-cubin==0.6.8.post1",
+    # flashinfer-python and flashinfer-cubin must be kept in lockstep (flashinfer-python does a
+    # runtime version-match check); flashinfer-cubin isn't published to PyPI since 0.6.14, so both
+    # are sourced from flashinfer's own wheel index below. Pin matches vLLM's own requirements/cuda.txt.
+    "flashinfer-python==0.6.18.post1",
+    "flashinfer-cubin==0.6.18.post1",
     "fast-hadamard-transform @ git+https://github.com/Dao-AILab/fast-hadamard-transform.git@v1.1.0",  # pin 1.1.0; PyPI sdist is incomplete, install from git tag (see DSv4/GLM-5 READMEs)
     "nvidia-cudnn-frontend==1.26.0",
     "nvidia-cutlass-dsl[cu13]; sys_platform == 'never'",    # Rely on system site packages install
@@ -194,6 +200,11 @@ explicit = true
 [[tool.uv.index]]
 name = "pytorch-cu130"
 url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[[tool.uv.index]]
+name = "flashinfer"
+url = "https://flashinfer.ai/whl/"
 explicit = true
 
 [tool.pytest.ini_options]
