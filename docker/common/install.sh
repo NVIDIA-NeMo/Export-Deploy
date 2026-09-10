@@ -96,7 +96,7 @@ main() {
     if [[ "$USE_UV" == "true" ]]; then
 
         # Install uv
-        UV_VERSION="0.7.2"
+        UV_VERSION="0.8.22"
         curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh
         export PATH="$HOME/.local/bin:$PATH"
         export UV_PROJECT_ENVIRONMENT=/opt/venv
@@ -139,17 +139,18 @@ main() {
             UV_ARGS=()
         fi
 
-        UV_ARGS+=("--extra" "$INFERENCE_FRAMEWORK")
-
         # Create virtual environment and install dependencies
         uv venv ${UV_PROJECT_ENVIRONMENT} --system-site-packages
 
         # Install dependencies
+        # Note: `--only-group` and `--extra` are mutually exclusive, so the extra is only
+        # passed to the second (`--all-groups`) sync.
         uv sync --locked --only-group build ${UV_ARGS[@]}
         uv sync \
             --link-mode copy \
             --locked \
-            --all-groups ${UV_ARGS[@]}
+            --all-groups ${UV_ARGS[@]} \
+            --extra "$INFERENCE_FRAMEWORK"
         # Install the package
         uv pip install --no-deps -e .
         # Remove pyelftools to address dependency/license issues.

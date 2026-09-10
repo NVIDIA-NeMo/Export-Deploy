@@ -112,7 +112,6 @@ class vLLMExporter(ITritonDeployable):
         quantization: str = None,
         seed: int = 0,
         gpu_memory_utilization: float = 0.9,
-        swap_space: float = 4,
         cpu_offload_gb: float = 0,
         enforce_eager: bool = False,
         task: Literal["auto", "generate", "embedding"] = "auto",
@@ -132,7 +131,6 @@ class vLLMExporter(ITritonDeployable):
             quantization (str, optional): Quantization type. Defaults to None.
             seed (int, optional): Random seed. Defaults to 0.
             gpu_memory_utilization (float, optional): Fraction of GPU memory to use. Defaults to 0.9.
-            swap_space (float, optional): Amount of swap space (in GB) to use. Defaults to 4.
             cpu_offload_gb (float, optional): Amount of CPU offload memory (in GB). Defaults to 0.
             enforce_eager (bool, optional): Whether to enforce eager execution. Defaults to False.
             task (Literal["auto", "generate", "embedding"], optional): Task type for vLLM. Defaults to "auto".
@@ -203,7 +201,6 @@ class vLLMExporter(ITritonDeployable):
                     quantization=quantization,
                     seed=seed,
                     gpu_memory_utilization=gpu_memory_utilization,
-                    swap_space=swap_space,
                     cpu_offload_gb=cpu_offload_gb,
                     enforce_eager=enforce_eager,
                     runner=task,
@@ -219,7 +216,6 @@ class vLLMExporter(ITritonDeployable):
                 quantization=quantization,
                 seed=seed,
                 gpu_memory_utilization=gpu_memory_utilization,
-                swap_space=swap_space,
                 cpu_offload_gb=cpu_offload_gb,
                 enforce_eager=enforce_eager,
                 runner=task,
