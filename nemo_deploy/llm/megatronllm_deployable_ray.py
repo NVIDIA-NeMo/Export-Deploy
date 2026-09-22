@@ -104,8 +104,6 @@ class ModelWorker:
                 legacy_model_format=legacy_model_format,
                 **model_config_kwargs,
             )
-            if rank != 0:
-                self.model.generate_other_ranks()
         except Exception as e:
             LOGGER.error(f"Replica {replica_id} - Failed to initialize model for rank {rank}: {str(e)}")
             raise

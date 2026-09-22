@@ -205,12 +205,6 @@ class MegatronLLMDeployable(ITritonDeployable):
                     stop_words=stop_words,
                 )
 
-                if log_probs:
-                    dynamic_engine = getattr(self.mcore_engine, "engine", None)
-                    if dynamic_engine is not None:
-                        dynamic_engine.materialize_only_last_token_logits = False
-                        dynamic_engine.context.config.materialize_only_last_token_logits = False
-
                 self.generate(prompts, inference_params)
             else:
                 return
@@ -400,22 +394,6 @@ class MegatronLLMDeployable(ITritonDeployable):
         if apply_chat_template:
             prompts = [self.apply_chat_template(prompt) for prompt in prompts]
 
-        if torch.distributed.is_initialized():
-            if torch.distributed.get_world_size() > 1:
-                torch.distributed.broadcast(torch.tensor([0], dtype=torch.long, device="cuda"), src=0)
-                broadcast_list(prompts, src=0)
-                broadcast_list(
-                    data=[
-                        temperature,
-                        top_k,
-                        top_p,
-                        num_tokens_to_generate,
-                        log_probs,
-                        stop_words,
-                    ],
-                    src=0,
-                )
-
         # cast top_k,top_p to native int, float since typecheck assert statements added in MCore0.13 error otherwise
         # skip_prompt_log_probs=False (default) includes prompt tokens in top-N logprobs when top_logprobs>0.
         inference_params = SamplingParams(
@@ -428,17 +406,6 @@ class MegatronLLMDeployable(ITritonDeployable):
             skip_prompt_log_probs=not bool(top_logprobs),
             stop_words=stop_words,
         )
-
-        # Mcore's dynamic inference engine defaults materialize_only_last_token_logits=True for
-        # performance, but prompt log probs require all token logits to be materialized
-        # (prompt log probs are required for logprob eval benchmarks).
-        # Toggle it on both the engine and the context config (controls the
-        # model forward pass and log prob calculations).
-        dynamic_engine = getattr(self.mcore_engine, "engine", None)
-        needs_all_logits = log_probs or bool(top_logprobs)
-        if dynamic_engine is not None and needs_all_logits:
-            dynamic_engine.materialize_only_last_token_logits = False
-            dynamic_engine.context.config.materialize_only_last_token_logits = False
 
         results = self.generate(prompts, inference_params)
         # Handle DynamicInferenceRequestRecord objects by merging them into a single request
