@@ -135,6 +135,38 @@ class TestHuggingFaceLLMDeploy:
             )
             assert deployer.model == mock_peft_model.from_pretrained.return_value
 
+    def test_initialization_omits_tp_plan_when_none(self, mock_model, mock_tokenizer):
+        """A tp_plan of None is not forwarded to from_pretrained."""
+        with (
+            patch(
+                "transformers.AutoModelForCausalLM.from_pretrained",
+                return_value=mock_model,
+            ) as mock_from_pretrained,
+            patch(
+                "transformers.AutoTokenizer.from_pretrained",
+                return_value=mock_tokenizer,
+            ),
+        ):
+            HuggingFaceLLMDeploy(hf_model_id_path="test/model", task="text-generation", tp_plan=None)
+            mock_from_pretrained.assert_called_once()
+            assert "tp_plan" not in mock_from_pretrained.call_args.kwargs
+
+    def test_initialization_forwards_tp_plan_when_set(self, mock_model, mock_tokenizer):
+        """A non-None tp_plan is forwarded to from_pretrained."""
+        with (
+            patch(
+                "transformers.AutoModelForCausalLM.from_pretrained",
+                return_value=mock_model,
+            ) as mock_from_pretrained,
+            patch(
+                "transformers.AutoTokenizer.from_pretrained",
+                return_value=mock_tokenizer,
+            ),
+        ):
+            HuggingFaceLLMDeploy(hf_model_id_path="test/model", task="text-generation", tp_plan="auto")
+            mock_from_pretrained.assert_called_once()
+            assert mock_from_pretrained.call_args.kwargs["tp_plan"] == "auto"
+
     def test_triton_input_output_config(self):
         deployer = HuggingFaceLLMDeploy(model=MagicMock(), tokenizer=MagicMock(), task="text-generation")
 
