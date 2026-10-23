@@ -100,7 +100,12 @@ class HFRayDeployable:
                 from nemo_export.vllm_exporter import vLLMExporter
 
                 vllm_exporter = vLLMExporter()
-                vllm_exporter.export(model_path_id=hf_model_id_path, model_format="hf", **kwargs)
+                vllm_exporter.export(
+                    model_path_id=hf_model_id_path,
+                    model_format="hf",
+                    trust_remote_code=trust_remote_code,
+                    **kwargs,
+                )
                 self.model = vllm_exporter
             else:
                 self.model = HuggingFaceLLMDeploy(
