@@ -4,10 +4,15 @@
         "url": "https://docs.nvidia.com/nemo/export-deploy/nightly/"
     },
     {
-        "name": "0.7.0 (latest)",
-        "version": "0.7.0",
+        "name": "0.8.0 (latest)",
+        "version": "0.8.0",
         "url": "https://docs.nvidia.com/nemo/export-deploy/latest/",
         "preferred": true
+    },
+    {
+        "name": "0.7.0",
+        "version": "0.7.0",
+        "url": "https://docs.nvidia.com/nemo/export-deploy/0.7.0/"
     },
     {
         "name": "0.6.0",
