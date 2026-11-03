@@ -244,6 +244,29 @@ def test_completions_without_logprobs_request(mock_ray_deployment):
 
 
 @pytest.mark.run_only_on("GPU")
+def test_completions_with_echo_without_logprobs_request(mock_ray_deployment):
+    """Test that echo=True without logprobs does not fail on missing token_logprobs."""
+    request = {
+        "prompt": "Test",
+        "max_tokens": 5,
+        "echo": True,
+        # No logprobs parameter
+    }
+
+    mock_results = {
+        "sentences": ["Test Generated text"],
+    }
+
+    mock_ray_deployment._batched_completions_infer = AsyncMock(return_value=mock_results)
+    output = asyncio.run(mock_ray_deployment.completions(request))
+
+    assert output["choices"][0]["text"] == "Test Generated text"
+    logprobs = output["choices"][0]["logprobs"]
+    assert logprobs["token_logprobs"] is None
+    assert logprobs["top_logprobs"] is None
+
+
+@pytest.mark.run_only_on("GPU")
 def test_completions_complete_output_structure(mock_ray_deployment):
     """Test complete output structure matches OpenAI API format exactly."""
     request = {

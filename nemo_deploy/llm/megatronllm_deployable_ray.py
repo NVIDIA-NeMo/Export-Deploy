@@ -437,7 +437,7 @@ class MegatronRayDeployable:
                     "total_tokens": total_tokens,
                 },
             }
-            if request.get("echo", False):
+            if request.get("echo", False) and log_probs_data is not None:
                 # output format requires empty logprobs for the 1st token if echo is True
                 output["choices"][0]["logprobs"]["token_logprobs"].insert(0, None)
             # Comment out the below line to check the output in case if invalid accuracy score or output.
