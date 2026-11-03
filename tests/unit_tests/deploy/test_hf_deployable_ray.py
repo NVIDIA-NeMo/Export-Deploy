@@ -246,6 +246,33 @@ class TestHFRayDeployable:
             with pytest.raises(Exception, match="Test error"):
                 mock_hfray_class(hf_model_id_path="test/model")
 
+    @pytest.mark.parametrize("trust_remote_code", [True, False])
+    def test_init_vllm_backend_passes_trust_remote_code(self, trust_remote_code):
+        """Test that trust_remote_code reaches vLLMExporter.export when use_vllm_backend is set."""
+        from nemo_deploy.llm.hf_deployable_ray import HFRayDeployable
+
+        # serve.deployment and serve.ingress wrap the class; pick the user-defined one so the real
+        # __init__ runs without a Ray Serve replica context.
+        deployable_cls = next(
+            cls for cls in HFRayDeployable.func_or_class.__mro__ if "_setup_unique_distributed_parameters" in vars(cls)
+        )
+
+        with (
+            patch.object(deployable_cls, "_setup_unique_distributed_parameters"),
+            patch("nemo_export.vllm_exporter.vLLMExporter") as mock_exporter_cls,
+        ):
+            deployable_cls(
+                hf_model_id_path="test/model",
+                trust_remote_code=trust_remote_code,
+                use_vllm_backend=True,
+            )
+
+        mock_exporter_cls.return_value.export.assert_called_once_with(
+            model_path_id="test/model",
+            model_format="hf",
+            trust_remote_code=trust_remote_code,
+        )
+
     def test_setup_unique_distributed_parameters(self, mock_hfray_class, mock_os_env):
         """Test setting up unique distributed parameters."""
         instance = mock_hfray_class(hf_model_id_path="test/model", device_map="auto")
