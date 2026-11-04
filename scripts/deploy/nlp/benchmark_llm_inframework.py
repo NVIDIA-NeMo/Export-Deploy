@@ -102,6 +102,9 @@ def run_benchmark(
 ) -> Dict[str, Any]:
     """Run a benchmark of the LLM deployment.
 
+    Each prompt in a synchronous batch shares its client-observed completion
+    latency. Throughput is the number of prompts divided by total batch time.
+
     Args:
         url: URL of the Triton server
         model_name: Name of the model to query
@@ -120,6 +123,7 @@ def run_benchmark(
     """
     nemo_query = NemoQueryLLMPyTorch(url, model_name)
     latencies = []
+    total_batch_time = 0.0
     outputs = []
 
     # Warmup phase
@@ -150,7 +154,7 @@ def run_benchmark(
             prompt_idx = (start_idx + i) % len(TEST_PROMPTS)
             batch_prompts.append(TEST_PROMPTS[prompt_idx])
 
-        start_time = time.time()
+        start_time = time.perf_counter()
         result = nemo_query.query_llm(
             prompts=batch_prompts,
             max_length=max_output_len,
@@ -160,16 +164,15 @@ def run_benchmark(
             compute_logprob=compute_logprob,
             init_timeout=init_timeout,
         )
-        end_time = time.time()
+        end_time = time.perf_counter()
 
-        # Calculate per-query latency
         batch_latency = end_time - start_time
-        per_query_latency = batch_latency / current_batch_size
+        total_batch_time += batch_latency
 
         for i in range(current_batch_size):
-            latencies.append(per_query_latency)
+            latencies.append(batch_latency)
             outputs.append(result[i] if isinstance(result, list) else result)
-            print(f"Query {start_idx + i + 1}/{num_queries} completed in {per_query_latency:.2f} seconds")
+            print(f"Query {start_idx + i + 1}/{num_queries} completed in {batch_latency:.2f} seconds")
 
     # Calculate statistics
     latencies = np.array(latencies)
@@ -181,7 +184,7 @@ def run_benchmark(
         "min_latency": np.min(latencies),
         "max_latency": np.max(latencies),
         "std_latency": np.std(latencies),
-        "queries_per_second": 1.0 / np.mean(latencies),
+        "queries_per_second": num_queries / total_batch_time,
         "total_queries": num_queries,
         "warmup_queries": warmup,
         "batch_size": batch_size,
