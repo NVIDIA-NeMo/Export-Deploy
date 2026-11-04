@@ -297,59 +297,44 @@ class MegatronRayDeployable:
             raise
 
     async def _batched_infer_impl(self, inference_inputs_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Batch handler: merges multiple requests, runs single inference, splits results."""
+        """Batch requests with matching generation settings and split results."""
         batch_size = len(inference_inputs_list)
         if batch_size > 1:
             LOGGER.info(f"Batching {batch_size} requests together")
 
-        # Merge prompts, track per-request counts
-        all_prompts = []
-        prompt_counts = []
-        for inputs in inference_inputs_list:
-            prompts = inputs.get("prompts", [])
-            all_prompts.extend(prompts)
-            prompt_counts.append(len(prompts))
-
-        # First-value semantics for shared parameters (matches PyTriton @first_value pattern)
-        first = inference_inputs_list[0]
-        if batch_size > 1:
-            for param in ["temperature", "top_k", "top_p", "max_length"]:
-                vals = {inputs.get(param) for inputs in inference_inputs_list}
-                if len(vals) > 1:
-                    LOGGER.warning(f"Batched requests have different '{param}': {vals}. Using first request's value.")
-
-        merged_inputs = {
-            "prompts": all_prompts,
-            "max_length": first.get("max_length", 256),
-            "temperature": first.get("temperature", 1.0),
-            "top_k": first.get("top_k", 0),
-            "top_p": first.get("top_p", 0.0),
-            "compute_logprob": first.get("compute_logprob", False),
-            "apply_chat_template": first.get("apply_chat_template", False),
-            "n_top_logprobs": first.get("n_top_logprobs", 0),
-            "echo": first.get("echo", False),
-            "stop_words": first.get("stop_words", None),
+        defaults = {
+            "max_length": 256,
+            "temperature": 1.0,
+            "top_k": 0,
+            "top_p": 0.0,
+            "compute_logprob": False,
+            "apply_chat_template": False,
+            "n_top_logprobs": 0,
+            "echo": False,
+            "stop_words": None,
         }
+        groups = []
+        for index, inputs in enumerate(inference_inputs_list):
+            parameters = {name: inputs.get(name, default) for name, default in defaults.items()}
+            group = next((g for g in groups if g[0] == parameters), None)
+            if group is None:
+                group = (parameters, [])
+                groups.append(group)
+            group[1].append((index, inputs.get("prompts", [])))
 
-        # Use await instead of ray.get() to avoid blocking the event loop
-        results = await self.primary_worker.infer.remote(merged_inputs)
-
-        # Split results back per-request
-        individual_results = []
-        offset = 0
-        for count in prompt_counts:
-            result = {"sentences": results.get("sentences", [])[offset : offset + count]}
-
-            log_probs = results.get("log_probs", None)
-            if log_probs is not None:
-                result["log_probs"] = log_probs[offset : offset + count]
-
-            top_logprobs = results.get("top_logprobs", None)
-            if top_logprobs is not None:
-                result["top_logprobs"] = top_logprobs[offset : offset + count]
-
-            individual_results.append(result)
-            offset += count
+        individual_results = [None] * batch_size
+        for parameters, requests in groups:
+            all_prompts = [prompt for _, prompts in requests for prompt in prompts]
+            results = await self.primary_worker.infer.remote({"prompts": all_prompts, **parameters})
+            offset = 0
+            for index, prompts in requests:
+                count = len(prompts)
+                result = {"sentences": results.get("sentences", [])[offset : offset + count]}
+                for name in ("log_probs", "top_logprobs"):
+                    if results.get(name) is not None:
+                        result[name] = results[name][offset : offset + count]
+                individual_results[index] = result
+                offset += count
 
         return individual_results
 
