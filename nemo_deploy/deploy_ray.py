@@ -29,9 +29,12 @@ try:
     from nemo_deploy.llm.megatronllm_deployable_ray import MegatronRayDeployable
     from nemo_deploy.multimodal.megatron_multimodal_deployable_ray import MegatronMultimodalRayDeployable
 
+    _RAY_IMPORT_ERROR = None
     HAVE_RAY = True
-except (ImportError, ModuleNotFoundError, AssertionError):
+except (ImportError, ModuleNotFoundError, AssertionError) as _ray_import_error:
     from unittest.mock import MagicMock
+
+    _RAY_IMPORT_ERROR = _ray_import_error
 
     ray = MagicMock()
     serve = MagicMock()
@@ -98,7 +101,11 @@ class DeployRay:
             Exception: If Ray is not installed.
         """
         if not HAVE_RAY:
-            raise UnavailableError(MISSING_RAY_MSG)
+            msg = MISSING_RAY_MSG
+            if _RAY_IMPORT_ERROR is not None:
+                # Surface the real cause (e.g. ray.serve missing grpc_reflection) instead of hiding it.
+                msg = f"{msg} Original import error: {type(_RAY_IMPORT_ERROR).__name__}: {_RAY_IMPORT_ERROR}"
+            raise UnavailableError(msg) from _RAY_IMPORT_ERROR
 
         # Initialize Ray with proper configuration
         if num_cpus is None:
