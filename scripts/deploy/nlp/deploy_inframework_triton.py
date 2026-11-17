@@ -188,6 +188,14 @@ def get_args(argv):
         help="Enable flash decoding",
     )
     parser.add_argument(
+        "--flash_attention_version",
+        type=int,
+        choices=[2, 3, 4],
+        default=None,
+        help="Pin the FlashAttention generation used by Megatron attention (2, 3 or 4). "
+        "Default: auto (FA4 > FA3 > FA2). Use 2 on GPUs where FA4 lacks paged KV support (e.g. Ada, SM 8.x).",
+    )
+    parser.add_argument(
         "-cg",
         "--enable_cuda_graphs",
         default=False,
@@ -279,6 +287,7 @@ def nemo_deploy(argv):
         sequence_parallel=args.sequence_parallel,
         max_batch_size=args.max_batch_size,
         enable_flash_decode=args.enable_flash_decode,
+        flash_attention_version=args.flash_attention_version,
         enable_cuda_graphs=args.enable_cuda_graphs,
         legacy_ckpt=args.legacy_ckpt,
         model_type=args.model_type,
