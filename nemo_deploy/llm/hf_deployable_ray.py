@@ -13,8 +13,10 @@
 # limitations under the License.
 
 
+import asyncio
 import json
 import logging
+import threading
 import time
 from typing import Any, Dict, Optional
 
@@ -88,6 +90,7 @@ class HFRayDeployable:
         """
         try:
             max_memory_dict = None
+            self._inference_lock = threading.Lock()
             self._setup_unique_distributed_parameters()
             if device_map == "balanced":
                 if not max_memory:
@@ -137,6 +140,10 @@ class HFRayDeployable:
             # Set environment variables for torch.distributed
             os.environ["MASTER_ADDR"] = "127.0.0.1"
             os.environ["MASTER_PORT"] = str(unique_port)
+
+    def _run_inference(self, inputs):
+        with self._inference_lock:
+            return self.model.ray_infer_fn(inputs)
 
     @app.post("/v1/completions/")
     async def completions(self, request: Dict[Any, Any]):
@@ -199,7 +206,7 @@ class HFRayDeployable:
             }
 
             # Run tokenization and model inference in the thread pool
-            results = self.model.ray_infer_fn(inference_inputs)
+            results = await asyncio.to_thread(self._run_inference, inference_inputs)
             # Extract generated texts from results
             generated_texts = results.get("sentences", [])
             # Calculate token counts asynchronously
@@ -321,7 +328,7 @@ class HFRayDeployable:
             }
 
             # Run model inference in the thread pool
-            results = self.model.ray_infer_fn(inference_inputs)
+            results = await asyncio.to_thread(self._run_inference, inference_inputs)
             # Extract generated texts from results
             generated_texts = results["sentences"]
 
