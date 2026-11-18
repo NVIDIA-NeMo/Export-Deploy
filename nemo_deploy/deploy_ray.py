@@ -29,9 +29,12 @@ try:
     from nemo_deploy.llm.megatronllm_deployable_ray import MegatronRayDeployable
     from nemo_deploy.multimodal.megatron_multimodal_deployable_ray import MegatronMultimodalRayDeployable
 
+    _RAY_IMPORT_ERROR = None
     HAVE_RAY = True
-except (ImportError, ModuleNotFoundError, AssertionError):
+except (ImportError, ModuleNotFoundError, AssertionError) as _ray_import_error:
     from unittest.mock import MagicMock
+
+    _RAY_IMPORT_ERROR = _ray_import_error
 
     ray = MagicMock()
     serve = MagicMock()
@@ -98,7 +101,11 @@ class DeployRay:
             Exception: If Ray is not installed.
         """
         if not HAVE_RAY:
-            raise UnavailableError(MISSING_RAY_MSG)
+            msg = MISSING_RAY_MSG
+            if _RAY_IMPORT_ERROR is not None:
+                # Surface the real cause (e.g. ray.serve missing grpc_reflection) instead of hiding it.
+                msg = f"{msg} Original import error: {type(_RAY_IMPORT_ERROR).__name__}: {_RAY_IMPORT_ERROR}"
+            raise UnavailableError(msg) from _RAY_IMPORT_ERROR
 
         # Initialize Ray with proper configuration
         if num_cpus is None:
@@ -193,6 +200,7 @@ class DeployRay:
         micro_batch_size: Optional[int] = None,
         batch_wait_timeout_s: float = 0.1,
         legacy_model_format: bool = False,
+        flash_attention_version: Optional[int] = None,
         **model_config_kwargs,
     ):
         """Deploy an inframework Megatron model using Ray Serve.
@@ -215,6 +223,7 @@ class DeployRay:
             num_replicas (int, optional): Number of replicas for deployment. Defaults to 1.
             enable_cuda_graphs (bool, optional): Enable CUDA graphs. Defaults to False.
             enable_flash_decode (bool, optional): Enable Flash Attention decode. Defaults to False.
+            flash_attention_version (Optional[int]): Pin the FlashAttention generation (2, 3 or 4). Defaults to None (auto: FA4 > FA3 > FA2).
             legacy_ckpt (bool, optional): Use legacy checkpoint format. Defaults to False.
             test_mode (bool, optional): Enable test mode. Defaults to False.
             model_type (str, optional): Type of model to load. Defaults to "gpt".
@@ -257,6 +266,7 @@ class DeployRay:
                 model_id=model_id,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
+                flash_attention_version=flash_attention_version,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
                 inference_max_seq_length=inference_max_seq_length,

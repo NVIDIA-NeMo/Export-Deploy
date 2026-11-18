@@ -64,6 +64,7 @@ class ModelWorker:
         model_type: str = "gpt",
         micro_batch_size: Optional[int] = None,
         legacy_model_format: bool = False,
+        flash_attention_version: Optional[int] = None,
         **model_config_kwargs,
     ):
         # Use replica-specific environment variables to avoid conflicts
@@ -95,6 +96,7 @@ class ModelWorker:
                 sequence_parallel=sequence_parallel,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
+                flash_attention_version=flash_attention_version,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
                 inference_max_seq_length=inference_max_seq_length,
@@ -147,6 +149,7 @@ class MegatronRayDeployable:
         micro_batch_size: Optional[int] = None,
         batch_wait_timeout_s: float = 0.1,
         legacy_model_format: bool = False,
+        flash_attention_version: Optional[int] = None,
         **model_config_kwargs,
     ):
         """Initialize the distributed Megatron LLM model deployment.
@@ -160,6 +163,7 @@ class MegatronRayDeployable:
             model_id (str): Identifier for the model in API responses.
             enable_cuda_graphs (bool): Whether to enable CUDA graphs for faster inference.
             enable_flash_decode (bool): Whether to enable Flash Attention decode.
+            flash_attention_version (Optional[int]): Pin the FlashAttention generation (2, 3 or 4). Defaults to None (auto: FA4 > FA3 > FA2).
             max_batch_size (int): Maximum batch size for request batching.
             inference_max_seq_length (int): Maximum sequence length for inference.
             legacy_ckpt (bool): Whether to use legacy checkpoint format. Defaults to False.
@@ -213,6 +217,7 @@ class MegatronRayDeployable:
                 replica_id=replica_id,
                 enable_cuda_graphs=enable_cuda_graphs,
                 enable_flash_decode=enable_flash_decode,
+                flash_attention_version=flash_attention_version,
                 legacy_ckpt=legacy_ckpt,
                 max_batch_size=max_batch_size,
                 inference_max_seq_length=inference_max_seq_length,
@@ -254,6 +259,7 @@ class MegatronRayDeployable:
                     replica_id=replica_id,
                     enable_cuda_graphs=enable_cuda_graphs,
                     enable_flash_decode=enable_flash_decode,
+                    flash_attention_version=flash_attention_version,
                     max_batch_size=max_batch_size,
                     inference_max_seq_length=inference_max_seq_length,
                     random_seed=random_seed,

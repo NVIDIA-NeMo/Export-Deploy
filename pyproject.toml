@@ -51,6 +51,9 @@ dependencies = [
     "pydantic-settings",
     "ray",
     "ray[serve]",
+    # Ray Serve >=2.60 imports grpc_reflection. Keep in the grpcio-tools 1.81.x / protobuf 6.x line;
+    # an unpinned install pulls protobuf 7 and breaks `import ray.serve`.
+    "grpcio-reflection>=1.81,<1.82",
     "uvicorn",
     "tensorstore",
     "zarr>=2.18.2,<3.0.0",

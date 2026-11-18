@@ -829,6 +829,30 @@ class TestInferenceBase(unittest.TestCase):
 
     @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
     @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
+    def test_create_mcore_engine_forwards_flash_attention_version_megatron(self, mock_megatron_llm, mock_setup):
+        """flash_attention_version must reach the megatron/mbridge setup function."""
+        mock_setup.return_value = ([MagicMock()], MagicMock(), MagicMock())
+        mock_megatron_llm.return_value = MagicMock()
+
+        create_mcore_engine(path=self.mock_path, model_format="megatron", flash_attention_version=2)
+
+        self.assertEqual(mock_setup.call_args.kwargs["flash_attention_version"], 2)
+
+    @patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
+    def test_create_mcore_engine_forwards_flash_attention_version_nemo(self, mock_megatron_llm, mock_setup):
+        """flash_attention_version must reach the nemo setup function; default is None (auto)."""
+        mock_setup.return_value = ([MagicMock()], MagicMock())
+        mock_megatron_llm.return_value = MagicMock()
+
+        create_mcore_engine(path=self.mock_path, model_format="nemo", flash_attention_version=3)
+        self.assertEqual(mock_setup.call_args.kwargs["flash_attention_version"], 3)
+
+        create_mcore_engine(path=self.mock_path, model_format="nemo")
+        self.assertIsNone(mock_setup.call_args.kwargs["flash_attention_version"])
+
+    @patch("nemo_deploy.llm.inference.inference_base.setup_megatron_model_and_tokenizer_for_inference")
+    @patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
     def test_create_mcore_engine_coordinator_host_resolves_to_address(
         self,
         mock_megatron_llm,

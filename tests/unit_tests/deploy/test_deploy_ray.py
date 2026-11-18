@@ -19,6 +19,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from nemo_deploy.deploy_ray import DeployRay
+from nemo_export_deploy_common.import_utils import UnavailableError
 
 
 def json_type(value):
@@ -37,6 +38,15 @@ class TestDeployRay(unittest.TestCase):
 
     def tearDown(self):
         self._have_ray_patcher.stop()
+
+    def test_unavailable_error_includes_original_import_error(self):
+        # A broken ray.serve import (e.g. missing grpc_reflection) must not be reported as a bare "ray is missing".
+        cause = ModuleNotFoundError("No module named 'grpc_reflection'")
+        with patch("nemo_deploy.deploy_ray.HAVE_RAY", False), patch("nemo_deploy.deploy_ray._RAY_IMPORT_ERROR", cause):
+            with self.assertRaises(UnavailableError) as ctx:
+                DeployRay()
+        self.assertIn("grpc_reflection", str(ctx.exception))
+        self.assertIs(ctx.exception.__cause__, cause)
 
     @patch("nemo_deploy.deploy_ray.ray")
     def test_init_with_existing_cluster(self, mock_ray):
