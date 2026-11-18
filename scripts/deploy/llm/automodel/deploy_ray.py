@@ -145,6 +145,14 @@ def parse_args():
         help="Whether to enable Flash Attention decode",
     )
     parser.add_argument(
+        "--flash_attention_version",
+        type=int,
+        choices=[2, 3, 4],
+        default=None,
+        help="Pin the FlashAttention generation used by Megatron attention (2, 3 or 4). "
+        "Default: auto (FA4 > FA3 > FA2). Use 2 on GPUs where FA4 lacks paged KV support (e.g. Ada, SM 8.x).",
+    )
+    parser.add_argument(
         "--num_replicas",
         type=int,
         default=1,
@@ -231,6 +239,7 @@ def main():
         num_replicas=args.num_replicas,
         enable_cuda_graphs=args.enable_cuda_graphs,
         enable_flash_decode=args.enable_flash_decode,
+        flash_attention_version=args.flash_attention_version,
         legacy_ckpt=args.legacy_ckpt,
         max_batch_size=args.max_batch_size,
         random_seed=args.random_seed,

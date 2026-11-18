@@ -75,6 +75,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         max_batch_size (int): max batch size for inference. Defaults to 32.
         random_seed (Optional[int]): random seed for inference. Defaults to None.
         enable_flash_decode (bool): enable flash decode for inference. Defaults to False.
+        flash_attention_version (Optional[int]): Pin the FlashAttention generation (2, 3 or 4). Defaults to None (auto: FA4 > FA3 > FA2).
         enable_cuda_graphs (bool): enable CUDA graphs for inference. Defaults to False.`
         legacy_ckpt (bool): use legacy checkpoint format. Defaults to False.
         model_type (str): type of model to load. Defaults to "gpt".
@@ -105,6 +106,7 @@ class MegatronLLMDeployable(ITritonDeployable):
         micro_batch_size: Optional[int] = None,
         buffer_size_gb: float = 10.0,
         legacy_model_format: bool = False,
+        flash_attention_version: Optional[int] = None,
         **model_config_kwargs,
     ):
         if not HAVE_TRITON:
@@ -129,6 +131,7 @@ class MegatronLLMDeployable(ITritonDeployable):
             context_parallel_size=context_parallel_size,
             sequence_parallel=sequence_parallel,
             enable_flash_decode=enable_flash_decode,
+            flash_attention_version=flash_attention_version,
             enable_cuda_graphs=enable_cuda_graphs,
             legacy_ckpt=legacy_ckpt,
             model_type=model_type,

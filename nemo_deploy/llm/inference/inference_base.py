@@ -196,6 +196,7 @@ def setup_megatron_model_and_tokenizer_for_inference(
     sequence_parallel: Optional[bool] = None,
     micro_batch_size: Optional[int] = None,
     model_type: str = "gpt",
+    flash_attention_version: Optional[int] = None,
 ) -> Tuple[List[MegatronModule], MegatronTokenizer]:
     """Initialize a Megatron model and tokenizer for inference from a Megatron-LM/MBridge checkpoint.
 
@@ -251,6 +252,8 @@ def setup_megatron_model_and_tokenizer_for_inference(
         model_config.expert_tensor_parallel_size = expert_tensor_parallel_size
     if sequence_parallel is not None:
         model_config.sequence_parallel = sequence_parallel
+    if flash_attention_version is not None:
+        model_config.flash_attention_version = flash_attention_version
     # Initialize Megatron for inference
     rng_config = RNGConfig(inference_rng_tracker=True)
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
@@ -278,6 +281,7 @@ def setup_model_and_tokenizer_for_inference(
     enable_flash_decode: bool = False,
     enable_cuda_graphs: bool = False,
     legacy_ckpt: bool = False,
+    flash_attention_version: Optional[int] = None,
     **model_config_kwargs,
 ) -> Tuple[List[MegatronModule], MCoreTokenizerWrappper]:
     """Initialize a Megatron-Core model and tokenizer for inference from a NeMo-2.0 checkpoint.
@@ -349,6 +353,10 @@ def setup_model_and_tokenizer_for_inference(
     dist_config = DistributedInitConfig(distributed_backend="nccl")
     torch_distributed_init(dist_config)
     initialize_megatron_for_inference(model_config, dist_config, rng_config, micro_batch_size)
+
+    # Pin the FlashAttention generation (None keeps Megatron's auto selection)
+    if flash_attention_version is not None:
+        model_config.flash_attention_version = flash_attention_version
 
     # Enable flash attention
     if enable_flash_decode:
@@ -454,6 +462,7 @@ def create_mcore_engine(
     micro_batch_size: Optional[int] = None,
     buffer_size_gb: float = 10.0,
     legacy_model_format: bool = False,
+    flash_attention_version: Optional[int] = None,
     **model_config_kwargs,
 ) -> Tuple[MCoreEngineWithCleanup, Union[MCoreTokenizerWrappper, MegatronTokenizer]]:
     """Set up the model, tokenizer and MegatronLLM engine for inference.
@@ -476,6 +485,9 @@ def create_mcore_engine(
         model_format (str): Format of model to load (default: "nemo")
         micro_batch_size (Optional[int]): Micro batch size for model execution
         legacy_model_format (bool): Deprecated; no longer used (DynamicInferenceEngine is always used)
+        flash_attention_version (Optional[int]): Pin the FlashAttention generation (2, 3 or 4). Defaults to None,
+            which lets Megatron choose automatically (FA4 > FA3 > FA2). Use 2 on GPUs where FA4 lacks paged KV
+            support (e.g. Ada, SM 8.x).
     Returns:
         Tuple[MCoreEngineWithCleanup, Union[MCoreTokenizerWrappper, MegatronTokenizer]]: Tuple containing:
             - MCoreEngineWithCleanup: Engine for text generation with proper cleanup
@@ -501,6 +513,7 @@ def create_mcore_engine(
             enable_flash_decode=enable_flash_decode,
             enable_cuda_graphs=enable_cuda_graphs,
             legacy_ckpt=legacy_ckpt,
+            flash_attention_version=flash_attention_version,
             **model_config_kwargs,
         )
         model = modelList[0]
@@ -515,6 +528,7 @@ def create_mcore_engine(
             sequence_parallel=sequence_parallel,
             micro_batch_size=micro_batch_size,
             model_type=model_type,
+            flash_attention_version=flash_attention_version,
         )
         model = modelList[0]
     else:
