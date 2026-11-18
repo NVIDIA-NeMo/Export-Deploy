@@ -100,9 +100,6 @@ def mock_megatron_model():
             ],  # Use regular lists instead of numpy arrays
         }
 
-        # Mock generate_other_ranks for non-rank-0 workers
-        mock_instance.generate_other_ranks = MagicMock()
-
         mock.return_value = mock_instance
         yield mock
 
@@ -441,3 +438,39 @@ class TestMegatronRayDeployable:
 
         health_response = requests.get("http://127.0.0.1:8000/v1/health", timeout=10).json()
         assert health_response["status"] == "healthy"
+
+
+def _model_worker_cls():
+    """Return the undecorated ModelWorker class so __init__ can run without a Ray actor."""
+    metadata = getattr(ModelWorker, "__ray_metadata__", None)
+    return getattr(metadata, "modified_class", ModelWorker)
+
+
+@pytest.mark.parametrize("rank", [0, 1])
+def test_model_worker_init_does_not_run_generate_other_ranks(rank):
+    """No rank may enter generate_other_ranks() during ModelWorker init.
+
+    In coordinator mode the engine loop of non-primary ranks is driven by the MCore
+    coordinator; calling generate() there raises "only valid on the primary rank".
+    """
+    with (
+        patch("nemo_deploy.llm.megatronllm_deployable_ray.MegatronLLMDeployable") as mock_deployable,
+        patch("torch.cuda.device_count", return_value=2),
+        patch.dict(os.environ, {}, clear=False),
+    ):
+        worker = _model_worker_cls()(
+            megatron_checkpoint_filepath="dummy.megatron",
+            rank=rank,
+            world_size=2,
+            tensor_model_parallel_size=2,
+            pipeline_model_parallel_size=1,
+            context_parallel_size=1,
+            expert_model_parallel_size=1,
+            sequence_parallel=False,
+            master_port="29500",
+            master_addr="127.0.0.1",
+        )
+
+        mock_deployable.assert_called_once()
+        mock_deployable.return_value.generate_other_ranks.assert_not_called()
+        assert worker.model is mock_deployable.return_value
