@@ -937,5 +937,26 @@ class TestInferenceBase(unittest.TestCase):
         self.assertEqual(mock_config.sequence_parallel, True)
 
 
+@patch("nemo_deploy.llm.inference.inference_base.MCoreEngineWithCleanup")
+@patch("nemo_deploy.llm.inference.inference_base.MegatronLLM")
+@patch("nemo_deploy.llm.inference.inference_base.InferenceConfig")
+@patch("nemo_deploy.llm.inference.inference_base.setup_model_and_tokenizer_for_inference")
+def test_create_mcore_engine_materializes_all_token_logits(mock_setup, mock_config_cls, mock_llm_cls, mock_cleanup):
+    """The engine must be built with materialize_only_last_token_logits=False.
+
+    Coordinator mode builds one DynamicInferenceEngine per rank, so prompt log probs can only
+    work if every rank is configured at construction time (a per-request toggle on the
+    primary's engine never reaches the other ranks).
+    """
+    mock_setup.return_value = ([MagicMock()], MagicMock())
+
+    create_mcore_engine(path=Path("/fake"), model_format="nemo")
+
+    _, kwargs = mock_config_cls.call_args
+    assert kwargs["materialize_only_last_token_logits"] is False
+    # The same config object is what the engine is built from.
+    assert mock_llm_cls.call_args.kwargs["inference_config"] is mock_config_cls.return_value
+
+
 if __name__ == "__main__":
     unittest.main()
